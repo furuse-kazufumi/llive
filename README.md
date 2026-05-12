@@ -15,6 +15,7 @@ llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashb
 5. **生物学的記憶モデル直接埋め込み** — 海馬-皮質 consolidation cycle、surprise score、phase transition
 6. **形式検証付き promotion** — Lean / Z3 / TLA+ による構造的不変量検査を LLM 評価前に挟む
 7. **llmesh / llove ファミリー統合** — 産業 IoT センサを直接 episodic memory に、TUI で HITL 完結
+8. **TRIZ アイデア出しを内蔵** — 40 原理 + 39×39 矛盾マトリクス + ARIZ + 9 画法を mutation policy として組込み、メトリクスから矛盾を自動検出 → 原理マッピング → RAD 裏付け → CandidateDiff 生成までを自走
 
 ## 既存類似研究との位置づけ
 
