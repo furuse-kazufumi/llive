@@ -1,0 +1,23 @@
+{
+  "mode": "yolo",
+  "granularity": "coarse",
+  "parallelization": true,
+  "commit_docs": true,
+  "model_profile": "inherit",
+  "workflow": {
+    "research": false,
+    "plan_check": true,
+    "verifier": true,
+    "nyquist_validation": false,
+    "auto_advance": true,
+    "_auto_chain_active": true
+  },
+  "planning": {
+    "sub_repos": []
+  },
+  "notes": [
+    "Research フェーズは既存 docs/ + specs/ + raptor RAD コーパス参照で代替するため false",
+    "Granularity coarse: 既存 4 Phase 構造 (MVR / Adaptive / Evolve / Production) を維持",
+    "Model profile inherit: ユーザの Max plan セッションモデルを継承"
+  ]
+}
