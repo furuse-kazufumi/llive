@@ -1,0 +1,288 @@
+# TRIZ 39 工学特性 + llive 固有特性のマッピング
+#
+# FR-24 (TRIZ Principle Mapper) が、llive メトリクスを TRIZ 標準特性へ
+# 翻訳するために参照する。
+#
+# 標準 1-39 は Altshuller の 39 特性、100 番台は llive 固有。
+
+# === 標準 39 工学特性 ===
+
+- id: 1
+  name: weight_of_moving_object
+  jp: 動体の重量
+  llive_mapping: null
+
+- id: 2
+  name: weight_of_stationary_object
+  jp: 静体の重量
+  llive_mapping: null
+
+- id: 3
+  name: length_of_moving_object
+  jp: 動体の長さ
+  llive_mapping: null
+
+- id: 4
+  name: length_of_stationary_object
+  jp: 静体の長さ
+  llive_mapping: container.max_context_length
+
+- id: 5
+  name: area_of_moving_object
+  jp: 動体の面積
+  llive_mapping: null
+
+- id: 6
+  name: area_of_stationary_object
+  jp: 静体の面積
+  llive_mapping: null
+
+- id: 7
+  name: volume_of_moving_object
+  jp: 動体の体積
+  llive_mapping: null
+
+- id: 8
+  name: volume_of_stationary_object
+  jp: 静体の体積
+  llive_mapping: memory.nodes.total_size_bytes
+
+- id: 9
+  name: speed
+  jp: 速度
+  llive_mapping: pipeline.throughput_tokens_per_sec
+  direction: up
+
+- id: 10
+  name: force
+  jp: 力
+  llive_mapping: null
+
+- id: 11
+  name: stress_pressure
+  jp: 応力・圧力
+  llive_mapping: llive.system.load_factor
+
+- id: 12
+  name: shape
+  jp: 形
+  llive_mapping: container.subblock_sequence
+
+- id: 13
+  name: stability_of_composition
+  jp: 物体の安定性
+  llive_mapping: evolution.forgetting_score_abs
+  direction: down
+
+- id: 14
+  name: strength
+  jp: 強度
+  llive_mapping: candidate.score_bundle.task_quality
+
+- id: 15
+  name: durability_of_moving_object
+  jp: 動体の耐久性
+  llive_mapping: adapter.lifetime_runs
+
+- id: 16
+  name: durability_of_stationary_object
+  jp: 静体の耐久性
+  llive_mapping: memory.nodes.avg_age_days
+
+- id: 17
+  name: temperature
+  jp: 温度
+  llive_mapping: router.sampling_temperature
+
+- id: 18
+  name: brightness
+  jp: 明るさ
+  llive_mapping: null
+
+- id: 19
+  name: energy_use_moving
+  jp: 動体の使用エネルギー
+  llive_mapping: pipeline.energy_per_token_joule
+
+- id: 20
+  name: energy_use_stationary
+  jp: 静体の使用エネルギー
+  llive_mapping: idle_power_watts
+
+- id: 21
+  name: power
+  jp: 動力
+  llive_mapping: vram_peak_mb
+
+- id: 22
+  name: loss_of_energy
+  jp: エネルギーの損失
+  llive_mapping: pipeline.idle_compute_ratio
+
+- id: 23
+  name: loss_of_substance
+  jp: 物質の損失
+  llive_mapping: memory.archive_erase_ratio
+
+- id: 24
+  name: loss_of_information
+  jp: 情報の損失
+  llive_mapping: memory.dedup_loss_ratio
+
+- id: 25
+  name: loss_of_time
+  jp: 時間の損失
+  llive_mapping: evolution.eval.duration_s
+  direction: down
+
+- id: 26
+  name: amount_of_substance
+  jp: 物質の量
+  llive_mapping: memory.nodes.count
+  direction: up
+
+- id: 27
+  name: reliability
+  jp: 信頼性
+  llive_mapping: candidate.rollback_rate
+  direction: down
+
+- id: 28
+  name: measurement_accuracy
+  jp: 測定精度
+  llive_mapping: bench.metric_variance
+
+- id: 29
+  name: manufacturing_precision
+  jp: 製造精度
+  llive_mapping: candidate.diff_apply_correctness
+
+- id: 30
+  name: harmful_factors_on_object
+  jp: 物体への有害要因
+  llive_mapping: security.zone_violations.total
+
+- id: 31
+  name: harmful_side_effects
+  jp: 有害な副作用
+  llive_mapping: memory.pollution_ratio
+  direction: down
+
+- id: 32
+  name: manufacturability
+  jp: 製造容易性
+  llive_mapping: container.implementation_complexity
+
+- id: 33
+  name: convenience_of_use
+  jp: 操作容易性
+  llive_mapping: developer.cli_ergonomics_score
+
+- id: 34
+  name: repairability
+  jp: 修理容易性
+  llive_mapping: candidate.rollback_success_rate
+
+- id: 35
+  name: adaptability
+  jp: 適応性・多用途性
+  llive_mapping: candidate.acceptance_rate
+  direction: up
+
+- id: 36
+  name: complexity_of_device
+  jp: 装置の複雑さ
+  llive_mapping: container.total_subblock_count
+  direction: balanced
+
+- id: 37
+  name: difficulty_of_control
+  jp: 制御の困難さ
+  llive_mapping: router.entropy
+  direction: balanced
+
+- id: 38
+  name: level_of_automation
+  jp: 自動化のレベル
+  llive_mapping: evolution.auto_promote_ratio
+  direction: up
+
+- id: 39
+  name: productivity
+  jp: 生産性
+  llive_mapping: pipeline.throughput_requests_per_min
+  direction: up
+
+# === llive 固有特性 (100 番台) ===
+
+- id: 101
+  name: forgetting
+  jp: 忘却 (継続学習)
+  llive_mapping: evolution.bwt_abs
+  direction: down
+  related_standard: [13, 27]
+  rationale: "標準 13 安定性 + 27 信頼性の継続学習側面"
+
+- id: 102
+  name: catastrophic_forgetting
+  jp: 致命的忘却
+  llive_mapping: evolution.catastrophic_drop_events
+  direction: down
+  related_standard: [13, 30]
+
+- id: 103
+  name: memory_pollution
+  jp: メモリ汚染
+  llive_mapping: memory.pollution_ratio
+  direction: down
+  related_standard: [31]
+
+- id: 104
+  name: candidate_acceptance
+  jp: candidate 受容率
+  llive_mapping: candidate.acceptance_rate
+  direction: up
+  related_standard: [35, 39]
+
+- id: 105
+  name: compute_cost
+  jp: 計算コスト
+  llive_mapping: evolution.total_compute_hours
+  direction: down
+  related_standard: [22, 25]
+
+- id: 106
+  name: zone_violation
+  jp: zone 違反
+  llive_mapping: security.cross_zone_violations.total
+  direction: down
+  related_standard: [30, 31]
+
+- id: 107
+  name: route_entropy
+  jp: 経路エントロピー
+  llive_mapping: router.entropy
+  direction: balanced
+  related_standard: [37]
+
+- id: 108
+  name: dead_block_rate
+  jp: dead block 率
+  llive_mapping: subblock.dead_rate
+  direction: down
+  related_standard: [22, 32]
+
+- id: 109
+  name: hitl_burden
+  jp: HITL 負担
+  llive_mapping: hitl.review_requests_per_day
+  direction: balanced
+  related_standard: [33, 38]
+  rationale: "高すぎると人手負担、低すぎると自動化が安全より優先"
+
+- id: 110
+  name: provenance_completeness
+  jp: provenance 完全性
+  llive_mapping: memory.provenance_completeness
+  direction: up
+  related_standard: [27, 24]
