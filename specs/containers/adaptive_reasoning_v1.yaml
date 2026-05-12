@@ -1,0 +1,20 @@
+schema_version: 1
+container_id: adaptive_reasoning_v1
+routing_tags: [reasoning, long_context]
+cost_profile:
+  latency: medium
+  vram: medium
+subblocks:
+  - type: pre_norm
+  - type: causal_attention
+  - type: memory_read
+    config:
+      source: [semantic, episodic]
+      top_k: 4
+  - type: ffn_swiglu
+  - type: memory_write
+    config:
+      policy: surprise_gated
+      target: semantic
+    condition:
+      surprise_gt: 0.3

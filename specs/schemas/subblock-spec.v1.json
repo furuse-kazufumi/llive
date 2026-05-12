@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llive.dev/schemas/subblock-spec.v1.json",
+  "title": "SubBlockSpec",
+  "type": "object",
+  "required": ["schema_version", "name", "version", "io_contract", "plugin_module"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "name":    { "type": "string", "pattern": "^[a-z][a-z0-9_]+$" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "io_contract": {
+      "type": "object",
+      "required": ["input", "output"],
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hidden_dim": { "type": "integer" },
+            "seq_dim":    { "type": "boolean" },
+            "extras":     { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hidden_dim": { "type": "integer" },
+            "seq_dim":    { "type": "boolean" },
+            "extras":     { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "trainable":           { "type": "boolean" },
+    "supports_streaming":  { "type": "boolean" },
+    "latency_cost_per_token_ms": { "type": "number", "minimum": 0 },
+    "vram_cost_mb":        { "type": "number", "minimum": 0 },
+    "config_schema":       { "type": "object" },
+    "plugin_module":       { "type": "string" }
+  }
+}

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llmesh-llive"
-version = "0.0.1"
+version = "0.1.0.dev0"
 description = "Self-evolving modular memory LLM framework — biological memory × formal verification × industrial IoT mesh × TUI HITL"
 readme = "README.md"
 license = "MIT"
@@ -21,22 +21,36 @@ keywords = [
   "tui",
 ]
 classifiers = [
-  "Development Status :: 1 - Planning",
+  "Development Status :: 2 - Pre-Alpha",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3.11",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  # Phase 1 minimum. Filled in as implementation progresses.
+  "jsonschema>=4.21",
+  "pydantic>=2.6",
+  "pyyaml>=6.0",
+  "numpy>=1.26",
+  "duckdb>=0.10",
+  "structlog>=24.1",
+  "typer>=0.12",
 ]
 
 [project.optional-dependencies]
+torch = [
+  "torch>=2.2",
+  "transformers>=4.40",
+  "accelerate>=0.30",
+  "sentence-transformers>=2.7",
+  "faiss-cpu>=1.8",
+]
 dev = [
-  "pytest>=7",
-  "pytest-cov",
-  "ruff",
-  "mypy",
+  "pytest>=8",
+  "pytest-cov>=4.1",
+  "hypothesis>=6.100",
+  "ruff>=0.4",
+  "mypy>=1.10",
 ]
 
 [project.urls]
@@ -45,9 +59,57 @@ Documentation = "https://github.com/furuse-kazufumi/llive/tree/main/docs"
 Issues = "https://github.com/furuse-kazufumi/llive/issues"
 Family = "https://github.com/furuse-kazufumi/llmesh-suite"
 
+[project.scripts]
+llive = "llive.cli.main:app"
+
+[project.entry-points."llive.subblocks"]
+# builtin sub-blocks register themselves via llive.container.subblocks.builtin.register_builtins()
+# external plugins can advertise their entry-points here
+
 [tool.hatch.build.targets.wheel]
-packages = ["llive"]
+packages = ["src/llive"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/llive",
+  "specs",
+  "docs",
+  "scripts",
+  "tests",
+  "README.md",
+  "LICENSE",
+  "pyproject.toml",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "gpu: requires GPU",
+  "slow: slow test, skip in CI",
+  "integration: end-to-end integration test",
+]
+addopts = "-ra --strict-markers"
+
+[tool.coverage.run]
+source = ["src/llive"]
+omit = ["tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
