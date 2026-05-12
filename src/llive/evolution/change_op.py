@@ -33,9 +33,16 @@ def _to_ref(spec: SubBlockRef | dict[str, Any]) -> SubBlockRef:
 
 
 def _find_index(refs: list[SubBlockRef], identifier: str) -> int:
+    # exact name first
     for idx, ref in enumerate(refs):
         if ref.name == identifier:
             return idx
+    # then synthesized name "type#idx"
+    for idx, ref in enumerate(refs):
+        if _resolved_name(ref, idx) == identifier:
+            return idx
+    # finally a bare type match when the ref is anonymous
+    for idx, ref in enumerate(refs):
         if ref.type == identifier and ref.name is None:
             return idx
     raise ChangeOpError(f"sub-block not found: {identifier!r}")
