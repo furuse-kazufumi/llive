@@ -1,0 +1,12 @@
+Hello there.
+What is the capital of France?
+Explain RMSNorm in one sentence.
+Why is continual learning hard for transformer language models?
+Summarize the main differences between Faiss and Qdrant.
+How does surprise-gated memory writing avoid pollution?
+Compare LoRA and full fine-tuning for adapter switching.
+Why is provenance important for memory writes in research platforms?
+Describe a TRIZ contradiction between speed and stability.
+What is the role of episodic memory in a self-evolving LLM?
+Provide one example of a candidate diff that adds a memory_read sub-block.
+What does it mean for a router to choose between fast_path_v1 and adaptive_reasoning_v1?

@@ -62,12 +62,14 @@ def run(
     pipeline = Pipeline(adapter=adapter)
     result = pipeline.run(prompt, max_new_tokens=max_new_tokens, task_tag=task_tag)
 
-    console.print(f"[bold]container[/bold]: {result.container}")
-    console.print(f"[bold]request_id[/bold]: {result.request_id}")
-    console.print(f"[bold]output[/bold]: {result.text}")
-    console.print(f"[bold]subblocks[/bold]: {[t.type for t in result.state.trace]}")
-    console.print(f"[bold]surprise[/bold]: {result.state.surprise}")
-    console.print(f"[bold]memory[/bold]: {len(result.state.memory_accesses)} access(es)")
+    from rich.text import Text
+
+    console.print(Text.assemble(("container: ", "bold"), result.container))
+    console.print(Text.assemble(("request_id: ", "bold"), result.request_id))
+    console.print(Text.assemble(("output: ", "bold"), result.text))
+    console.print(Text.assemble(("subblocks: ", "bold"), repr([t.type for t in result.state.trace])))
+    console.print(Text.assemble(("surprise: ", "bold"), repr(result.state.surprise)))
+    console.print(Text.assemble(("memory: ", "bold"), f"{len(result.state.memory_accesses)} access(es)"))
 
 
 # ---------------------------------------------------------------------------
