@@ -16,5 +16,5 @@ subblocks:
     config:
       policy: surprise_gated
       target: semantic
-    condition:
-      surprise_gt: 0.3
+      # surprise threshold は block 内部で適用 (SurpriseGate.theta, default 0.3)
+      # condition: surprise_gt をここに置くと block 実行前に評価されてしまうため不要
