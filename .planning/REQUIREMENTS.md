@@ -121,22 +121,22 @@
 
 | Requirement | Phase | Status |
 |---|---|---|
-| CORE-01 | Phase 1 | Pending |
-| CORE-02 | Phase 1 | Pending |
-| BC-01 | Phase 1 | Pending |
-| BC-02 | Phase 1 | Pending |
-| BC-03 | Phase 1 | Pending |
-| MEM-01 | Phase 1 | Pending |
-| MEM-02 | Phase 1 | Pending |
-| MEM-03 | Phase 1 | Pending |
-| MEM-04 | Phase 1 | Pending |
-| RTR-01 | Phase 1 | Pending |
-| RTR-02 | Phase 1 | Pending |
-| EVO-01 | Phase 1 | Pending |
-| EVO-02 | Phase 1 | Pending |
-| OBS-01 | Phase 1 | Pending |
-| OBS-02 | Phase 1 | Pending |
-| TRIZ-01 | Phase 1 | Pending |
+| CORE-01 | Phase 1 | Validated (Phase 1) |
+| CORE-02 | Phase 1 | Validated (Phase 1) |
+| BC-01 | Phase 1 | Validated (Phase 1) |
+| BC-02 | Phase 1 | Validated (Phase 1) |
+| BC-03 | Phase 1 | Validated (Phase 1) |
+| MEM-01 | Phase 1 | Validated (Phase 1) |
+| MEM-02 | Phase 1 | Validated (Phase 1) |
+| MEM-03 | Phase 1 | Validated (Phase 1) |
+| MEM-04 | Phase 1 | Validated (Phase 1) |
+| RTR-01 | Phase 1 | Validated (Phase 1) |
+| RTR-02 | Phase 1 | Validated (Phase 1) |
+| EVO-01 | Phase 1 | Validated (Phase 1) |
+| EVO-02 | Phase 1 | Validated (Phase 1) |
+| OBS-01 | Phase 1 | Validated (Phase 1) |
+| OBS-02 | Phase 1 | Validated (Phase 1) |
+| TRIZ-01 | Phase 1 | Validated (Phase 1) |
 | MEM-05 | Phase 2 | Pending |
 | MEM-06 | Phase 2 | Pending |
 | MEM-07 | Phase 2 | Pending |
