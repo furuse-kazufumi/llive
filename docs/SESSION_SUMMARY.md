@@ -32,13 +32,19 @@ a679faa feat(llive): TRIZ 内蔵による自己進化を v0.3 として追加
 
 クリーン（commit 漏れなし、main → origin/main 同期済み）。
 
-## 次のアクション（再開時の推奨）
+## 次のアクション（ユーザ事前承認済 — 上から順番通り進めてよい）
+
+> **2026-05-13 セッション終了時に確認済**: 次セッションでは確認不要、Max plan 自律性ルール (`feedback_max_plan_autonomy.md`) に従って下記を順次自走すること。
 
 **Phase 1 (Minimal Viable Research Platform) 着手**：
 
-1. `/gsd-discuss-phase 1` — Phase 1 のアプローチ議論 + 暗黙仮定の洗い出し
-   - もしくは
-2. `/gsd-plan-phase 1` — 議論スキップして PLAN.md 直接生成
+1. **`/gsd-discuss-phase 1`** — Phase 1 のアプローチ議論 + 暗黙仮定の洗い出し（最初にこれ）
+2. **`/gsd-plan-phase 1`** — PLAN.md 生成（自動チェック含む）
+3. **`/gsd-execute-phase 1`** — Plan に従って実装、wave-based parallelization
+4. **`/gsd-verify-work`** — Success Criteria 検証
+5. Phase 1 完了後 → `/gsd-transition` で Phase 2 へ
+
+各ステップ完了時には commit を打ち、Phase 1 完了時点で v0.1.0 として PyPI 公開を検討（memory `feedback_publishing_workflow.md` に従う）。
 
 Phase 1 のスコープ（`.planning/REQUIREMENTS.md` 参照）：
 - CORE-01/02 (BaseModelAdapter)
