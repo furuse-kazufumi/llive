@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-05-13)
 
 **Core value:** コア重みを再学習せず、新しい能力を安全に追加し続けられる LLM 基盤
-**Current focus:** Phase 0 完了 → Phase 1 (Minimal Viable Research Platform) 着手準備
+**Current focus:** Phase 1 (Minimal Viable Research Platform) 進行中 — 自律実装セッション
 
 ## Current Status
 
@@ -17,7 +17,9 @@ See: .planning/PROJECT.md (updated 2026-05-13)
   - TRIZ リソース 3 ファイル (40 原理 / 39×39 マトリクス / 39+11 特性)
   - GSD ワークフロー初期化完了 (.planning/)
 
-- **Phase 1 (MVR)**: 未着手
+- **Phase 1 (MVR)**: 進行中 (2026-05-13 着手)
+  - ✅ CONTEXT.md (01-CONTEXT.md / 01-DISCUSSION-LOG.md, commit 403d35e)
+  - 🔄 PLAN.md / 実装 (8 時間自律セッション中)
 - **Phase 2 (Adaptive)**: 未着手
 - **Phase 3 (Evolve)**: 未着手
 - **Phase 4 (Production)**: 未着手
@@ -25,32 +27,26 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 ## Next Action
 
 ```
-/gsd-discuss-phase 1
-```
-
-または skip して直接：
-
-```
-/gsd-plan-phase 1
+# 自律セッション中。CONTEXT.md 完了後、PLAN.md → 実装 → テストへ自走。
+# 中断時は SESSION_SUMMARY.md の "次のアクション" 参照。
 ```
 
 ## Active Workspace
 
-- リポジトリ: `D:/projects/llive/` (git init 済、master ブランチ、3 commits)
-- GitHub: 作成依頼中 (`furuse-kazufumi/llive` を public で手動作成 → push 予定)
-- PyPI: 未登録 (Phase 1 完了後に v0.1.0 として `llmesh-llive` で初公開予定)
+- リポジトリ: `D:/projects/llive/` (git init 済、main ブランチ統一済)
+- GitHub: https://github.com/furuse-kazufumi/llive (public, default = main)
+- PyPI: 未登録 (Phase 1 完了後に v0.1.0 として `llmesh-llive` で初公開予定、ユーザ確認が前提)
 
 ## Open Questions / Decisions Pending
 
-- Phase 1 で採用する base model のデフォルト選定
-  - 候補: Qwen2.5-0.5B (開発高速) / TinyLlama 1.1B (CI 軽量) / Qwen2.5-7B (本命想定)
-  - 推奨: 開発時 0.5B〜1.1B、ベンチ時 7B
-- Semantic memory backend の本命
-  - 候補: Faiss (ローカル軽量) / Qdrant (永続化) / pgvector
-  - 推奨: Phase 1 は Faiss、Phase 2 で Qdrant 追加
-- Graph backend
-  - 候補: Kùzu (embedded, fast) / Neo4j (mature) / NetworkX + sqlite (simple)
-  - 推奨: Kùzu
+すべての主要 open question は 01-CONTEXT.md で `--auto` モードにより解決：
+
+- ✅ Base model: Qwen2.5-0.5B (dev) + Phi-3.5-mini (mid) — D-02
+- ✅ Semantic memory: Faiss + JSONL row store — D-11
+- ✅ Episodic memory: DuckDB — D-12
+- ✅ Embedding: sentence-transformers all-MiniLM-L6-v2 — D-13
+
+Phase 2 で再検討する deferred 項目は 01-CONTEXT.md `<deferred>` セクション参照。
 
 ## Recent Activity
 
@@ -59,6 +55,7 @@ See: .planning/PROJECT.md (updated 2026-05-13)
 | 2026-05-13 | Project scaffolding + docs/specs 生成 + 3 commits |
 | 2026-05-13 | TRIZ 内蔵章 (v0.3) + resources 追加 |
 | 2026-05-13 | .planning/ 初期化 (PROJECT.md / REQUIREMENTS.md / ROADMAP.md / STATE.md / config.json) |
+| 2026-05-13 | Phase 1 CONTEXT.md 生成 (commit 403d35e) — 自律実装フェーズ着手 |
 
 ## Configuration
 
@@ -73,4 +70,4 @@ See `.planning/config.json`:
 - Model Profile: Inherit (現セッションモデル継承)
 
 ---
-*Last updated: 2026-05-13 after initialization*
+*Last updated: 2026-05-13 — Phase 1 自律実装セッション着手*
