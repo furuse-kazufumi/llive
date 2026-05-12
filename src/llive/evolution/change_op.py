@@ -181,10 +181,26 @@ class ReorderSubblocks(ChangeOp):
         return new
 
     def invert(self, container_before: ContainerSpec) -> "ReorderSubblocks":
-        original_order = [
-            _resolved_name(ref, idx) for idx, ref in enumerate(container_before.subblocks)
-        ]
-        return ReorderSubblocks(target_container=self.target_container, new_order=original_order)
+        # Apply ourselves once to obtain the post-state's identifier space; then
+        # express the original order in those identifiers.
+        post = self.apply(container_before)
+        inverse_order: list[str] = []
+        used: set[int] = set()
+        for orig_ref in container_before.subblocks:
+            orig_ident = orig_ref.name or orig_ref.type
+            found: int | None = None
+            for j, post_ref in enumerate(post.subblocks):
+                if j in used:
+                    continue
+                post_ident = post_ref.name or post_ref.type
+                if post_ident == orig_ident:
+                    found = j
+                    break
+            if found is None:
+                raise ChangeOpError("reorder invert: cannot match original sub-block in post state")
+            used.add(found)
+            inverse_order.append(_resolved_name(post.subblocks[found], found))
+        return ReorderSubblocks(target_container=self.target_container, new_order=inverse_order)
 
 
 # ---------------------------------------------------------------------------
