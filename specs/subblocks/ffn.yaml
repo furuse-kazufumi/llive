@@ -1,0 +1,65 @@
+# FFN sub-block 群
+
+- schema_version: 1
+  name: ffn_swiglu
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [] }
+    output: { hidden_dim: int, seq_dim: true, extras: [] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.6
+  vram_cost_mb: 200.0
+  config_schema:
+    type: object
+    required: [hidden_size, intermediate_size]
+    properties:
+      hidden_size:       { type: integer }
+      intermediate_size: { type: integer }
+      activation:        { enum: [silu, gelu], default: silu }
+      gate_bias:         { type: boolean, default: false }
+      up_bias:           { type: boolean, default: false }
+      down_bias:         { type: boolean, default: false }
+      fused_gate_up:     { type: boolean, default: false }
+  plugin_module: llive.subblocks.ffn:FFNSwiGLU
+
+- schema_version: 1
+  name: ffn_gelu_linear
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [] }
+    output: { hidden_dim: int, seq_dim: true, extras: [] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.5
+  vram_cost_mb: 180.0
+  config_schema:
+    type: object
+    required: [hidden_size, intermediate_size]
+    properties:
+      hidden_size:       { type: integer }
+      intermediate_size: { type: integer }
+  plugin_module: llive.subblocks.ffn:FFNGeluLinear
+
+- schema_version: 1
+  name: moe_ffn
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [] }
+    output: { hidden_dim: int, seq_dim: true, extras: [router_logits] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.7      # top_k のみ計算なので大幅増にはならない
+  vram_cost_mb: 500.0                 # 全 expert を VRAM に置く前提
+  config_schema:
+    type: object
+    required: [hidden_size, intermediate_size, experts, top_k]
+    properties:
+      hidden_size:       { type: integer }
+      intermediate_size: { type: integer }
+      experts:           { type: integer, minimum: 2 }
+      top_k:             { type: integer, minimum: 1 }
+      activation:        { enum: [silu, gelu], default: silu }
+      gate_method:       { enum: [softmax_topk, switch], default: softmax_topk }
+      load_balance_loss_weight: { type: number, default: 0.01 }
+  plugin_module: llive.subblocks.ffn:MoEFFN

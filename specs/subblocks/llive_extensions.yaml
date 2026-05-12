@@ -1,0 +1,133 @@
+# llive 固有拡張 sub-block 群
+# (公開 LLM テンプレートには optional_extensions として disabled 状態で記載される)
+
+- schema_version: 1
+  name: memory_read
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [task_tag] }
+    output: { hidden_dim: int, seq_dim: true, extras: [memory_kv, retrieved_nodes] }
+  trainable: false
+  supports_streaming: true
+  latency_cost_per_token_ms: 2.0
+  vram_cost_mb: 50.0
+  config_schema:
+    type: object
+    properties:
+      source:      { type: array, items: { enum: [semantic, episodic, structural, parameter] }, default: [semantic, episodic] }
+      top_k:       { type: integer, default: 8, minimum: 1 }
+      rerank:      { type: boolean, default: true }
+      summarize:   { type: boolean, default: false }   # 重い、デフォルト OFF
+      cross_zone:  { type: boolean, default: false }    # FR-17、署名検証必須
+  plugin_module: llive.subblocks.memory:MemoryRead
+
+- schema_version: 1
+  name: memory_write
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [surprise_score, surprise_uncertainty] }
+    output: { hidden_dim: int, seq_dim: true, extras: [written_node_id] }
+  trainable: false
+  supports_streaming: false
+  latency_cost_per_token_ms: 0.5      # async でも OK
+  vram_cost_mb: 10.0
+  config_schema:
+    type: object
+    properties:
+      policy:    { enum: [always, surprise_gated, surprise_bayesian, confidence_drop, human], default: surprise_gated }
+      threshold: { type: number, default: 0.7 }
+      zone:      { enum: [trusted, quarantine], default: trusted }
+      ttl_days:  { type: integer | null, default: null }
+  plugin_module: llive.subblocks.memory:MemoryWrite
+
+- schema_version: 1
+  name: reflective_probe
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [] }
+    output: { hidden_dim: int, seq_dim: true, extras: [surprise_score, surprise_uncertainty, confidence] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.3
+  vram_cost_mb: 20.0
+  config_schema:
+    type: object
+    properties:
+      method: { enum: [linear_probe, mc_dropout, ensemble, variational], default: linear_probe }
+      every_n_blocks: { type: integer, default: 4 }
+  plugin_module: llive.subblocks.probe:ReflectiveProbe
+
+- schema_version: 1
+  name: compress
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [] }
+    output: { hidden_dim: int, seq_dim: true, extras: [] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.2
+  vram_cost_mb: 15.0
+  config_schema:
+    type: object
+    required: [method]
+    properties:
+      method:      { enum: [low_rank_projection, token_pooling, gist_token, attention_sink] }
+      rank:        { type: integer, default: 256 }
+      output_seq_len_ratio: { type: number, default: 0.5 }
+  plugin_module: llive.subblocks.compress:Compress
+
+- schema_version: 1
+  name: verifier_head
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [] }
+    output: { hidden_dim: int, seq_dim: false, extras: [verification_score, contradiction_logits] }
+  trainable: true
+  supports_streaming: false
+  latency_cost_per_token_ms: 0.4
+  vram_cost_mb: 30.0
+  config_schema:
+    type: object
+    properties:
+      head_type: { enum: [classification, regression, contrastive], default: classification }
+      num_classes: { type: integer, default: 2 }
+  plugin_module: llive.subblocks.verifier:VerifierHead
+
+- schema_version: 1
+  name: adapter
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [task_tag] }
+    output: { hidden_dim: int, seq_dim: true, extras: [] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.15
+  vram_cost_mb: 5.0
+  config_schema:
+    type: object
+    properties:
+      method:       { enum: [lora, ia3, dora, prefix, prompt], default: lora }
+      rank:         { type: integer, default: 8 }
+      alpha:        { type: number, default: 16 }
+      dropout:      { type: number, default: 0.05 }
+      selector:     { enum: [static, task_conditioned, route_conditioned, surprise_modulated], default: static }
+      adapter_id:   { type: string }
+      signed:       { type: boolean, default: false }   # FR-18
+  plugin_module: llive.subblocks.adapter:Adapter
+
+- schema_version: 1
+  name: lora_switch
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [task_tag] }
+    output: { hidden_dim: int, seq_dim: true, extras: [] }
+  trainable: false
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.05
+  vram_cost_mb: 0.0
+  config_schema:
+    type: object
+    properties:
+      candidates: { type: array, items: { type: string } }   # adapter_id の集合
+      router:     { enum: [task_tag, learned, bandit], default: task_tag }
+  plugin_module: llive.subblocks.adapter:LoRASwitch

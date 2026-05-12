@@ -1,0 +1,48 @@
+# llive
+
+> **Self-evolving modular memory LLM framework** — 生物学的記憶モデル × 形式検証 × 産業 IoT メッシュ × TUI HITL の交差点で設計された自己進化型 LLM 基盤。
+
+llive は、固定された Decoder-only LLM コアの周辺に、可変長 BlockContainer・4 層外部記憶（semantic / episodic / structural / parameter）・審査付き構造進化を組み合わせることで、コア重みを再学習せず新能力を継続的に取り込める研究開発フレームワークです。
+
+llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashboard）の両ファミリーと統合運用できることを第一級要件としています。
+
+## 設計の核
+
+1. **固定コア + 可変周辺** — Adapter / LoRA / 外部記憶 / 可変 BlockContainer で能力を吸収
+2. **4 層メモリの責務分離** — semantic（知識）/ episodic（経験）/ structural（関係）/ parameter（差分重み）
+3. **宣言的構造記述** — sub-block 列を YAML で表現、AI が提案・比較しやすい
+4. **審査付き自己進化** — オンラインは memory write と軽微 routing のみ、構造変更はオフライン審査経由
+5. **生物学的記憶モデル直接埋め込み** — 海馬-皮質 consolidation cycle、surprise score、phase transition
+6. **形式検証付き promotion** — Lean / Z3 / TLA+ による構造的不変量検査を LLM 評価前に挟む
+7. **llmesh / llove ファミリー統合** — 産業 IoT センサを直接 episodic memory に、TUI で HITL 完結
+
+## 既存類似研究との位置づけ
+
+| 既存系 | 重なる範囲 | llive の差別化 |
+|---|---|---|
+| MemGPT / LongMem | 階層メモリ | 4 層分離 + phase transition + 署名 zone |
+| AutoML-Zero / NAS-LLM | 構造探索 | 形式検証 gate + multi-precision shadow + 失敗データ化 |
+| Self-Refine / Reflexion | 自己批評 | online/offline 分離 + llove TUI HITL staging |
+| MERA / ModularLLM | モジュラー化 | 可変長 BlockContainer YAML + plugin registry |
+| AutoGPT 系 | エージェント | llmesh 産業 IoT 直結 + llove TUI |
+
+## ステータス
+
+- **2026-05-13**: プロジェクト発足。要件定義 v0.1 → v0.2 拡充完了。
+- 現在: Phase 0 — schema / interface 設計、ディレクトリ構造の確立フェーズ。
+
+## ドキュメント
+
+- [要件定義 v0.1（原型）](docs/requirements_v0.1.md)
+- [要件定義 v0.2 追補章（TRIZ + 設計パターン + llmesh/llove 統合）](docs/requirements_v0.2_addendum.md)
+
+## ファミリー
+
+- **[llmesh](https://github.com/furuse-kazufumi/llmesh)** — マルチプロトコル LLM ゲートウェイ、産業 IoT 対応
+- **[llove](https://github.com/furuse-kazufumi/llove)** — TUI dashboard、可視化と HITL
+- **[llmesh-suite](https://github.com/furuse-kazufumi/llmesh-suite)** — llmesh + llove のメタパッケージ
+- **llive** — 自己進化型モジュラー記憶 LLM 基盤（本リポジトリ）
+
+## ライセンス
+
+MIT

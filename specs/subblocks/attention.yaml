@@ -1,0 +1,78 @@
+# Attention sub-block 群
+
+- schema_version: 1
+  name: multi_head_attention
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [attention_mask, position_ids, past_kv] }
+    output: { hidden_dim: int, seq_dim: true, extras: [present_kv] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.5
+  vram_cost_mb: 100.0
+  config_schema:
+    type: object
+    required: [num_heads, head_dim]
+    properties:
+      num_heads:      { type: integer, minimum: 1 }
+      num_kv_heads:   { type: integer, minimum: 1 }
+      head_dim:       { type: integer, minimum: 8 }
+      rope_theta:     { type: number, default: 10000.0 }
+      rope_scaling:   { type: object }
+      causal:         { type: boolean, default: true }
+      sliding_window: { type: integer | null, default: null }
+      qk_norm:        { type: boolean, default: false }
+      bias_q:         { type: boolean, default: false }
+      bias_k:         { type: boolean, default: false }
+      bias_v:         { type: boolean, default: false }
+      bias_o:         { type: boolean, default: false }
+      fused_qkv:      { type: boolean, default: false }
+  plugin_module: llive.subblocks.attention:MultiHeadAttention
+
+- schema_version: 1
+  name: grouped_query_attention
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [attention_mask, position_ids, past_kv] }
+    output: { hidden_dim: int, seq_dim: true, extras: [present_kv] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.4
+  vram_cost_mb: 60.0      # KV を共有することで VRAM 削減
+  config_schema:
+    type: object
+    required: [num_heads, num_kv_heads, head_dim]
+    properties:
+      num_heads:      { type: integer, minimum: 1 }
+      num_kv_heads:   { type: integer, minimum: 1 }
+      head_dim:       { type: integer }
+      rope_theta:     { type: number, default: 10000.0 }
+      rope_scaling:   { type: object }
+      causal:         { type: boolean, default: true }
+      sliding_window: { type: integer | null, default: null }
+      qk_norm:        { type: boolean, default: false }
+      bias_q:         { type: boolean, default: false }
+      bias_k:         { type: boolean, default: false }
+      bias_v:         { type: boolean, default: false }
+      bias_o:         { type: boolean, default: false }
+  plugin_module: llive.subblocks.attention:GroupedQueryAttention
+
+- schema_version: 1
+  name: cross_memory_attention
+  version: "1.0.0"
+  io_contract:
+    input:  { hidden_dim: int, seq_dim: true, extras: [memory_kv] }
+    output: { hidden_dim: int, seq_dim: true, extras: [] }
+  trainable: true
+  supports_streaming: true
+  latency_cost_per_token_ms: 0.3
+  vram_cost_mb: 50.0
+  config_schema:
+    type: object
+    required: [num_heads, head_dim]
+    properties:
+      num_heads: { type: integer }
+      head_dim:  { type: integer }
+      causal:    { type: boolean, default: false }   # 通常は memory に causal 不要
+      zone_aware: { type: boolean, default: true }   # FR-17 quarantine 配慮
+  plugin_module: llive.subblocks.attention:CrossMemoryAttention
