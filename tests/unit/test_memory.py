@@ -71,8 +71,10 @@ def test_episodic_memory_write_and_recent(tmp_path):
     ep = EpisodicMemory(db_path=tmp_path / "ep.duckdb")
     try:
         prov = Provenance(source_type="test", source_id="t1")
-        ep.write(EpisodicEvent(content="event A", provenance=prov))
-        ep.write(EpisodicEvent(content="event B", provenance=prov))
+        t_early = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        t_late = datetime(2026, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+        ep.write(EpisodicEvent(content="event A", provenance=prov, ts=t_early))
+        ep.write(EpisodicEvent(content="event B", provenance=prov, ts=t_late))
         assert ep.count() == 2
         recent = ep.query_recent(limit=1)
         assert recent[0].content == "event B"
