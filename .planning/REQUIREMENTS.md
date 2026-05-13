@@ -107,6 +107,27 @@
 - [ ] **EVO-09**: 30 日連続稼働 + 人手介入ゼロ + forgetting 悪化ゼロ
 - [ ] **EVO-10**: HITL UI で日 50 件 candidate を捌ける UX
 
+## v0.4 Requirements (LLM Wiki integration — Phase 2〜4 に分配実装)
+
+詳細は `docs/requirements_v0.4_llm_wiki.md` を参照。Karpathy の LLM Wiki パターン (2026-04) と llive memory fabric の構造的同型を活用し、設計の説明可能性と外向き位置づけを強化する。
+
+### Wiki Page 構造化 (Phase 2)
+
+- [ ] **LLW-01**: ConceptPage を第一級表現として導入 (concept_id / title / summary / linked_entries / linked_concepts / provenance / schema_version)
+- [ ] **LLW-02**: Hippocampal Consolidation Scheduler を Wiki Compiler として再定義 (FR-12 拡張)
+- [ ] **LLW-03**: ConceptPage の page_type 別 JSON Schema (`specs/wiki_schemas/`)
+- [ ] **LLW-06**: 外部生ソース ingest CLI (`llive wiki ingest`)
+
+### Wiki 矛盾検出と履歴 (Phase 3)
+
+- [ ] **LLW-04**: Contradiction Detector が ConceptPage 内容からも矛盾抽出 (FR-23 拡張)
+- [ ] **LLW-05**: Wiki diff (add_concept / merge / split) を ChangeOp に追加 (EVO-02 拡張)
+
+### Wiki UI と RAG 連携 (Phase 4)
+
+- [ ] **LLW-07**: llove TUI で ConceptPage 閲覧 + グラフ viz + HITL 編集 (OBS-03 拡張)
+- [ ] **LLW-08**: RAG (memory_read) が Wiki 層を優先 query、概念単位で context 返す
+
 ## Out of Scope
 
 | Feature | Reason |
