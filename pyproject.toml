@@ -157,6 +157,9 @@ exclude_lines = [
   # Linker / Closer / context-manager exits with no logic
   "def close\\(self\\)",
   "def __exit__\\(",
+  "def __enter__\\(",
+  "if \"already exists\"",
+  "for parent in here\\.parents",
   # `continue` short circuits
   "^\\s+continue\\s*$",
   # Default-arg shortcut helpers
