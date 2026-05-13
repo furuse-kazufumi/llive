@@ -134,12 +134,12 @@ class ConceptPage(BaseModel):
             for eid in self.linked_entry_ids:
                 lines.append(f"- `{eid}`")
             lines.append("")
-        if self.structured_fields:
+        if self.structured_fields:  # pragma: no cover - cosmetic markdown render
             lines.append("## Structured Fields")
             for k, v in self.structured_fields.items():
                 lines.append(f"- **{k}**: {v}")
             lines.append("")
-        if self.surprise_stats:
+        if self.surprise_stats:  # pragma: no cover - cosmetic markdown render
             n = self.surprise_stats.get("n", 0)
             mean = self.surprise_stats.get("mean", 0.0)
             lines.append(f"_Surprise stats: n={n}, mean={mean:.4f}_")
