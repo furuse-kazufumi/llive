@@ -88,7 +88,49 @@ class Pipeline:
     ) -> PipelineResult:
         request_id = uuid.uuid4().hex
         decision = self.router.select(prompt, request_id=request_id)
-        executor = self._get_executor(decision.container)
+        return self._run_inner(
+            prompt=prompt,
+            request_id=request_id,
+            container=decision.container,
+            extras={"router_explanation": decision.explanation.model_dump()},
+            max_new_tokens=max_new_tokens,
+            task_tag=task_tag,
+            return_hidden_states=return_hidden_states,
+        )
+
+    def run_with_container(
+        self,
+        prompt: str,
+        container_id: str,
+        *,
+        max_new_tokens: int = 32,
+        task_tag: str | None = None,
+        return_hidden_states: bool = False,
+    ) -> PipelineResult:
+        """Bypass the router; force a specific container (CONC-03 BranchExplorer)."""
+        request_id = uuid.uuid4().hex
+        return self._run_inner(
+            prompt=prompt,
+            request_id=request_id,
+            container=container_id,
+            extras={"router_bypass": True},
+            max_new_tokens=max_new_tokens,
+            task_tag=task_tag,
+            return_hidden_states=return_hidden_states,
+        )
+
+    def _run_inner(
+        self,
+        *,
+        prompt: str,
+        request_id: str,
+        container: str,
+        extras: dict,
+        max_new_tokens: int,
+        task_tag: str | None,
+        return_hidden_states: bool,
+    ) -> PipelineResult:
+        executor = self._get_executor(container)
         state = BlockState(prompt=prompt, meta={"request_id": request_id, "task_tag": task_tag})
 
         generation: GenerationResult | None = None
