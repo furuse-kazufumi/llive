@@ -134,7 +134,7 @@ class Pipeline:
         state = BlockState(prompt=prompt, meta={"request_id": request_id, "task_tag": task_tag})
 
         generation: GenerationResult | None = None
-        if self.adapter is not None:
+        if self.adapter is not None:  # pragma: no cover - real adapter requires torch
             try:
                 generation = self.adapter.generate(
                     prompt, max_new_tokens=max_new_tokens, return_hidden_states=return_hidden_states
