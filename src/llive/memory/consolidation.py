@@ -290,7 +290,10 @@ class Consolidator:
         llm: CompileLLM | None = None,
         gate: BayesianSurpriseGate | None = None,
         config: ConsolidatorConfig | None = None,
+        edge_weight_updater: "EdgeWeightUpdater | None" = None,
     ) -> None:
+        from llive.memory.edge_weight import EdgeWeightUpdater  # local import: avoid circular
+
         self.episodic = episodic
         self.structural = structural
         self.encoder = encoder or MemoryEncoder(prefer_fallback=True)
@@ -298,6 +301,7 @@ class Consolidator:
         self.config = config or ConsolidatorConfig()
         self.llm = llm or _select_llm(self.config.llm_model)
         self.gate = gate or BayesianSurpriseGate(k=0.5, min_samples=4, cold_start_theta=0.2)
+        self.edge_weight_updater = edge_weight_updater or EdgeWeightUpdater(structural)
         self._lock = threading.Lock()
 
     # -- main cycle -------------------------------------------------------
