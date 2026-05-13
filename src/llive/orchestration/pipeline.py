@@ -149,7 +149,7 @@ class Pipeline:
 
         state = executor.execute(state)
         trace = trace_from_state(
-            decision.container,
+            container,
             state,
             latency_ms=sum(t.duration_ms for t in state.trace),
             subblock_count=len(state.trace),
@@ -160,7 +160,7 @@ class Pipeline:
 
         return PipelineResult(
             request_id=request_id,
-            container=decision.container,
+            container=container,
             text=state.output or "",
             state=state,
             trace=trace,
