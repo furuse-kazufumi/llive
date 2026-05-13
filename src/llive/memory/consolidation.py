@@ -226,7 +226,7 @@ def _greedy_clusters(
     min_size: int,
 ) -> list[list[int]]:
     """Simple O(n^2) greedy cosine clustering. Used when HDBSCAN is unavailable."""
-    if embeddings.size == 0:
+    if embeddings.size == 0:  # pragma: no cover - defensive guard
         return []
     normed = _l2(embeddings)
     clusters: list[list[int]] = []
