@@ -21,17 +21,20 @@ See: .planning/PROJECT.md (updated 2026-05-13)
   - 16/16 requirements validated, 49 tests pass, 82% coverage
   - PyPI 公開済: https://pypi.org/project/llmesh-llive/0.1.1/ (tag v0.1.1)
   - 詳細: `.planning/phases/01-mvr/01-VERIFICATION.md`
-- **Phase 2 (Adaptive)**: 進行中 (2026-05-13 着手)
-  - ✅ CONTEXT.md (02-CONTEXT.md / 02-DISCUSSION-LOG.md, commit 2e4d8e4)
-  - 13 requirements (v2 9 + LLW 4) を 40 D-XX として確定
-  - 次: PLAN.md → wave 分解 → 実装
-- **Phase 3 (Evolve)**: 未着手
+- **Phase 2 (Adaptive)**: ✅ 完了 (2026-05-13)
+  - 02-CONTEXT.md / 02-PLAN.md / 02-VERIFICATION.md 揃い
+  - 24 requirements (v2 9 + LLW 4 + AC 8 + CONC 3) 実装
+  - 308 tests pass / 99% coverage / 0 lint warnings (commit 0fbd8e6)
+  - 詳細: `.planning/phases/02-adaptive/02-VERIFICATION.md`
+- **Phase 3 (Evolve)**: 未着手 — 次の着工対象
 - **Phase 4 (Production)**: 未着手
+- **Phase 5-7 (Rust acceleration)**: 要件のみ定義済 — `docs/requirements_v0.7_rust_acceleration.md` (RUST-01〜14)
 
 ## Next Action
 
 ```
-# Phase 2 PLAN.md → 実装 着工
+# Phase 3 (Controlled Self-Evolution) discuss-phase → PLAN.md → 実装
+# 別軸: v0.2.0 PyPI 公開 (ユーザ確認後)
 # 中断時は SESSION_SUMMARY.md の "次のアクション" 参照。
 ```
 
