@@ -169,15 +169,20 @@ class AnthropicCompileLLM(CompileLLM):  # pragma: no cover - requires API key
         cluster_texts: list[str],
         existing_pages: list[ConceptPage],
     ) -> str:
+        # LLW-AC-03 Evidence-anchored prompt — raw events are authoritative
         existing = "\n".join(f"- [{p.concept_id}] {p.title}: {p.summary[:160]}" for p in existing_pages[:30])
         cluster = "\n".join(f"- {t.strip()[:300]}" for t in cluster_texts[:20])
         return (
-            "You are a Wiki compiler. Decide what to do with a cluster of related events.\n"
+            "You are a Wiki compiler. Decide what to do with a cluster of related raw events.\n\n"
+            "IMPORTANT (anti-circulation): RAW EVENTS BELOW ARE AUTHORITATIVE.\n"
+            "Existing concept pages are working drafts and may contain mistakes.\n"
+            "Do not adjust facts to fit existing pages. Prefer the raw evidence.\n"
+            "If a cluster contradicts an existing page, prefer split or update; never merge.\n\n"
             "Respond ONLY with a JSON object with keys: action (new|update|merge|split), "
             "title (string), summary (string, <= 1500 chars), target_concept_id (string|null), "
             "merged_concept_ids (list of strings).\n\n"
-            f"Existing concept pages:\n{existing or '(none)'}\n\n"
-            f"Cluster of events:\n{cluster}\n"
+            f"=== Authoritative raw events ===\n{cluster}\n\n"
+            f"=== Working-draft existing pages (may be wrong) ===\n{existing or '(none)'}\n"
         )
 
     def _parse(self, text: str) -> CompileDecision:
