@@ -63,7 +63,7 @@ class MemoryEncoder:
         if not force_fallback:
             self._try_load()
 
-    def _try_load(self) -> None:
+    def _try_load(self) -> None:  # pragma: no cover - requires sentence-transformers
         try:
             from sentence_transformers import SentenceTransformer
 
@@ -73,7 +73,7 @@ class MemoryEncoder:
 
     @property
     def dim(self) -> int:
-        if self._model is not None:
+        if self._model is not None:  # pragma: no cover - requires sentence-transformers
             return int(self._model.get_sentence_embedding_dimension() or DEFAULT_DIM)
         return self._fallback_dim
 
