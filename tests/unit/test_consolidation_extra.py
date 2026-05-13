@@ -132,7 +132,8 @@ def test_apply_decision_returns_none_when_no_events():
         page = cons._apply_decision(decision, [], existing_pages=[])
         assert page is None
     finally:
-        ep.close(); sm.close()
+        ep.close()
+        sm.close()
 
 
 def test_cycle_with_empty_episodic_returns_zero(cons):
