@@ -97,9 +97,22 @@ class BayesianSurpriseGate:
         new_embedding: np.ndarray,
         memory_embeddings: np.ndarray | None,
     ) -> float:
-        """Compute raw surprise (`1 - max cosine`), identical to Phase 1."""
+        """Compute raw surprise (`1 - max cosine`).
+
+        When the optional Rust extension (``llive.rust_ext``) is installed,
+        the cosine kernel runs in Rust under ``py.allow_threads``; otherwise
+        falls back to the original numpy path. Both backends return
+        bit-equivalent results to within 1e-6 (RUST-13 parity).
+        """
         if memory_embeddings is None or memory_embeddings.size == 0:
             return 1.0
+        from llive import rust_ext
+
+        if rust_ext.HAS_RUST:
+            new_flat = np.asarray(new_embedding, dtype=np.float32).reshape(-1).tolist()
+            mem_2d = np.atleast_2d(np.asarray(memory_embeddings, dtype=np.float32))
+            mem_lists = [row.tolist() for row in mem_2d]
+            return rust_ext.compute_surprise(new_flat, mem_lists)
         new = _l2_normalize(np.atleast_2d(new_embedding))
         mem = _l2_normalize(np.atleast_2d(memory_embeddings))
         sims = (new @ mem.T).flatten()
