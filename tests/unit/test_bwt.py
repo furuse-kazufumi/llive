@@ -67,5 +67,6 @@ def test_diagonal_and_final_per_task():
 
 def test_begin_task_is_idempotent():
     m = BWTMeter()
-    m.begin_task("a"); m.begin_task("a")
+    m.begin_task("a")
+    m.begin_task("a")
     assert m.task_order == ["a"]
