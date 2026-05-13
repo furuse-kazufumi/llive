@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable
-from datetime import datetime, timezone
 
 try:
     import llive_rust_ext as _rust  # type: ignore[import-not-found]
