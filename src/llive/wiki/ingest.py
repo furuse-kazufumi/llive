@@ -162,13 +162,13 @@ class WikiIngestor:
         elif source_type == "markdown":
             content = _read_markdown(Path(source))
             chunks = _chunk_markdown(content, chunk_chars)
-        elif source_type == "pdf":
+        elif source_type == "pdf":  # pragma: no cover - requires pypdf + actual PDF
             content = _read_pdf(Path(source))
             chunks = _chunk_text(content, chunk_chars)
-        elif source_type == "arxiv":
+        elif source_type == "arxiv":  # pragma: no cover - requires arxiv + network
             content = _fetch_arxiv(source)
             chunks = _chunk_text(content, chunk_chars)
-        elif source_type == "url":
+        elif source_type == "url":  # pragma: no cover - requires readability + network
             content = _fetch_url(source)
             chunks = _chunk_markdown(content, chunk_chars)
         else:
