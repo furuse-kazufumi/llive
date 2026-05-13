@@ -2,14 +2,12 @@
 
 Scans :class:`ConceptPage` content for *internal* contradictions:
 
-1. **Statement-level** — page contains two summary fragments that share
-   key noun phrases but assert opposite facts (e.g. "X enables Y" vs
-   "X prevents Y"). Phase 3 MVR detects this only via an explicit
-   ``contradicts`` annotation in the page metadata.
-2. **Edge-level** — two outgoing ``contradicts`` edges that ultimately
-   resolve to the same destination concept.
-3. **Provenance-level** — derived_from event chain references the same
-   source twice with conflicting confidence values.
+1. **Statement-level** — page's ``structured_fields["contradicts"]`` carries
+   explicit annotations (list of ``{description, severity}`` dicts).
+2. **Edge-level** — duplicate ``linked_concept_ids`` (same slug appears
+   multiple times) imply the consolidation pass merged conflicting edges.
+3. **Provenance-level** — ``provenance.derived_from`` contains the same
+   source id more than once (a soft hint of conflicting evidence).
 
 The detector is purely structural; LLM-based natural-language contradiction
 detection is deferred to Phase 4 (LLW-07 HITL workflow). Its output feeds
@@ -20,6 +18,7 @@ according to detected contradictions.
 from __future__ import annotations
 
 import uuid
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -43,89 +42,71 @@ class WikiContradiction:
 
 
 def _provenance_conflicts(page: ConceptPage) -> list[WikiContradiction]:
-    """Find duplicate source_ids in provenance.derived_from with conflicting confidence."""
+    """Same source id appearing multiple times in derived_from."""
+    if page.provenance is None:
+        return []
+    derived = list(page.provenance.derived_from)
+    if not derived:
+        return []
+    counts = Counter(derived)
     out: list[WikiContradiction] = []
-    derived = list(getattr(page.provenance, "derived_from", []) or [])
-    seen: dict[str, float] = {}
-    for entry in derived:
-        if isinstance(entry, dict):
-            src = entry.get("source_id") or entry.get("event_id")
-            conf = float(entry.get("confidence", 1.0))
-        else:
-            src, conf = str(entry), 1.0
-        if src is None:
-            continue
-        if src in seen and abs(seen[src] - conf) > 0.3:
-            out.append(
-                WikiContradiction(
-                    contradiction_id=f"wcon_{uuid.uuid4().hex[:10]}",
-                    page_id=page.page_id,
-                    kind="provenance",
-                    description=(
-                        f"source {src!r} appears with conflicting confidence "
-                        f"({seen[src]:.2f} vs {conf:.2f})"
-                    ),
-                    severity=min(1.0, abs(seen[src] - conf)),
-                    evidence={"source": src, "values": [seen[src], conf]},
-                )
-            )
-        else:
-            seen[src] = conf
-    return out
-
-
-def _edge_conflicts(page: ConceptPage) -> list[WikiContradiction]:
-    """Two ``contradicts`` edges resolving to the same destination concept."""
-    out: list[WikiContradiction] = []
-    dests: dict[str, int] = {}
-    for edge in getattr(page, "linked_concepts", []) or []:
-        if isinstance(edge, dict):
-            rel = edge.get("rel_type", "linked_concept")
-            dst = edge.get("concept_id") or edge.get("dst")
-        else:
-            rel = getattr(edge, "rel_type", "linked_concept")
-            dst = getattr(edge, "concept_id", None) or getattr(edge, "dst", None)
-        if rel != "contradicts" or dst is None:
-            continue
-        dests[dst] = dests.get(dst, 0) + 1
-    for dst, n in dests.items():
+    for src, n in counts.items():
         if n >= 2:
             out.append(
                 WikiContradiction(
                     contradiction_id=f"wcon_{uuid.uuid4().hex[:10]}",
-                    page_id=page.page_id,
+                    page_id=page.concept_id,
+                    kind="provenance",
+                    description=f"source {src!r} appears {n} times in derived_from",
+                    severity=min(1.0, 0.3 + 0.2 * (n - 1)),
+                    evidence={"source": src, "count": n},
+                )
+            )
+    return out
+
+
+def _edge_conflicts(page: ConceptPage) -> list[WikiContradiction]:
+    """Duplicate slug in linked_concept_ids — a stale merge survives."""
+    if not page.linked_concept_ids:
+        return []
+    counts = Counter(page.linked_concept_ids)
+    out: list[WikiContradiction] = []
+    for slug, n in counts.items():
+        if n >= 2:
+            out.append(
+                WikiContradiction(
+                    contradiction_id=f"wcon_{uuid.uuid4().hex[:10]}",
+                    page_id=page.concept_id,
                     kind="edge",
-                    description=f"{n} contradicts edges resolve to {dst!r}",
-                    severity=min(1.0, 0.4 + 0.2 * n),
-                    evidence={"dst": dst, "count": n},
+                    description=f"linked_concept {slug!r} listed {n} times",
+                    severity=min(1.0, 0.4 + 0.2 * (n - 1)),
+                    evidence={"slug": slug, "count": n},
                 )
             )
     return out
 
 
 def _statement_conflicts(page: ConceptPage) -> list[WikiContradiction]:
-    """Look for explicit ``contradicts`` block in optional page metadata."""
-    extra = getattr(page, "extra", None) or getattr(page, "metadata", None) or {}
-    if not isinstance(extra, dict):
+    """Look for ``structured_fields['contradicts']`` annotations."""
+    flags = page.structured_fields.get("contradicts") if page.structured_fields else None
+    if not isinstance(flags, list):
         return []
-    flags = extra.get("contradicts") or []
     out: list[WikiContradiction] = []
-    if isinstance(flags, list):
-        for flag in flags:
-            if not isinstance(flag, dict):
-                continue
-            desc = str(flag.get("description", "explicit contradiction flag"))
-            sev = float(flag.get("severity", 0.6))
-            out.append(
-                WikiContradiction(
-                    contradiction_id=f"wcon_{uuid.uuid4().hex[:10]}",
-                    page_id=page.page_id,
-                    kind="statement",
-                    description=desc,
-                    severity=min(1.0, max(0.0, sev)),
-                    evidence={"raw": flag},
-                )
+    for flag in flags:
+        if not isinstance(flag, dict):
+            continue
+        desc = str(flag.get("description", "explicit contradiction flag"))
+        sev = float(flag.get("severity", 0.6))
+        out.append(
+            WikiContradiction(
+                contradiction_id=f"wcon_{uuid.uuid4().hex[:10]}",
+                page_id=page.concept_id,
+                kind="statement",
+                description=desc,
+                severity=min(1.0, max(0.0, sev)),
+                evidence={"raw": flag},
             )
+        )
     return out
 
 
