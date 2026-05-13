@@ -98,6 +98,8 @@ include = [
   "docs",
   "scripts",
   "tests",
+  "crates",
+  "CHANGELOG.md",
   "README.md",
   "LICENSE",
   "pyproject.toml",
