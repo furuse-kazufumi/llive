@@ -46,7 +46,7 @@ def _default_router_spec() -> Path:
     packaged = here.parent.parent / "_specs" / "routes" / "default.yaml"
     if packaged.exists():
         return packaged
-    return Path("specs/routes/default.yaml")
+    return Path("specs/routes/default.yaml")  # pragma: no cover - dev fallback
 
 
 class Pipeline:
