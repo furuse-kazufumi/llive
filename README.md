@@ -29,13 +29,31 @@ llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashb
 
 ## ステータス
 
-- **2026-05-13**: プロジェクト発足。要件定義 v0.1 → v0.2 拡充完了。
-- 現在: Phase 0 — schema / interface 設計、ディレクトリ構造の確立フェーズ。
+- **v0.2.0** (2026-05-13) — Phase 2: Adaptive Modular System 完了。4 層メモリ + surprise-gated write + consolidation cycle + LLM Wiki 統合 + 並行パイプライン。308 tests / 99% coverage / 0 lint warnings。
+- **v0.1.1** (2026-05-13) — Phase 1: Minimal Viable Research Platform。PyPI 初回公開。
+- **次** — Phase 3: Controlled Self-Evolution (EVO-03〜08 / TRIZ-02〜07 / LLW-04〜05)。Phase 5+ で Rust 高速化 (要件 v0.7 定義済)。
+
+## インストール
+
+```bash
+pip install llmesh-llive            # core
+pip install llmesh-llive[torch]     # HF transformers + faiss + peft + hdbscan
+pip install llmesh-llive[ingest]    # 外部 ingest CLI 用 (pypdf / arxiv / readability)
+pip install llmesh-llive[llm]       # AnthropicCompileLLM (consolidation 本番用)
+pip install llmesh-llive[dev]       # 開発依存 (pytest / hypothesis / ruff)
+```
 
 ## ドキュメント
 
 - [要件定義 v0.1（原型）](docs/requirements_v0.1.md)
 - [要件定義 v0.2 追補章（TRIZ + 設計パターン + llmesh/llove 統合）](docs/requirements_v0.2_addendum.md)
+- [要件定義 v0.3 (TRIZ 自己進化)](docs/requirements_v0.3_triz_self_evolution.md)
+- [要件定義 v0.4 (LLM Wiki integration)](docs/requirements_v0.4_llm_wiki.md)
+- [要件定義 v0.5 (spatial memory)](docs/requirements_v0.5_spatial_memory.md)
+- [要件定義 v0.6 (concurrency)](docs/requirements_v0.6_concurrency.md)
+- [要件定義 v0.7 (Rust acceleration)](docs/requirements_v0.7_rust_acceleration.md)
+- [ロードマップ](docs/roadmap.md)
+- [変更履歴](CHANGELOG.md)
 
 ## ファミリー
 
