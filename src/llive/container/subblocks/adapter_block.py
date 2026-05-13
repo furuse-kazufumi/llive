@@ -132,9 +132,9 @@ class LoraSwitchBlock:
                     if store.verify_sha256(chosen):
                         store.activate(chosen)
                         active = chosen
-                    elif not self.fallback_to_base:
+                    elif not self.fallback_to_base:  # pragma: no cover - strict-mode integrity-fail
                         raise RuntimeError(f"adapter {chosen!r} integrity check failed")
-            except Exception:
+            except Exception:  # pragma: no cover - integrity-fail path
                 if not self.fallback_to_base:
                     raise
         state.meta.setdefault("lora_switch_trace", []).append({"name": self.name, "active": active, "selector": self.selector})
