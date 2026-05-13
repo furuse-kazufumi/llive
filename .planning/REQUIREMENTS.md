@@ -228,14 +228,29 @@
 | LLW-05 | Phase 3 | Pending |
 | LLW-07 | Phase 4 | Pending |
 | LLW-08 | Phase 4 | Pending |
+| RUST-01 | Phase 5 | Pending |
+| RUST-02 | Phase 5 | Pending |
+| RUST-03 | Phase 5 | Pending |
+| RUST-04 | Phase 5 | Pending |
+| RUST-05 | Phase 5 | Pending |
+| RUST-06 | Phase 5 | Pending |
+| RUST-10 | Phase 5 | Pending |
+| RUST-12 | Phase 5 | Pending |
+| RUST-13 | Phase 5 | Pending |
+| RUST-14 | Phase 5 | Pending |
+| RUST-07 | Phase 6 | Pending |
+| RUST-08 | Phase 6 | Pending |
+| RUST-11 | Phase 6 | Pending |
+| RUST-09 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 (Phase 1) requirements: 16 total ✅ Validated (Phase 1)
 - v2 (Phase 2) requirements: 9 + 4 LLW = 13 total
 - v3 (Phase 3) requirements: 12 + 2 LLW = 14 total
 - v4 (Phase 4) requirements: 9 + 2 LLW = 11 total
-- Mapped to phases: 54 / 54 ✓
+- v0.7 (Phase 5-7) Rust acceleration: 14 total (10 P5 + 3 P6 + 1 P7)
+- Mapped to phases: 68 / 68 ✓
 
 ---
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-13 after initialization*
+*Last updated: 2026-05-13 — v0.7 Rust acceleration addendum (RUST-01〜14)*
