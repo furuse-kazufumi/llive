@@ -4,7 +4,8 @@
 **Core Value:** コア重みを再学習せず、新しい能力を安全に追加し続けられる LLM 基盤
 
 > このファイルは `.planning/PROJECT.md` の Requirements セクションを **REQ-ID 化** + **トレーサビリティ**付きで整理したもの。
-> 詳細な FR-XX 仕様は `docs/requirements_v0.[123]*.md` を参照（こちらは GSD ワークフロー用の編成）。
+> 詳細な FR-XX 仕様は `docs/requirements_v0.[1234]*.md` を参照（こちらは GSD ワークフロー用の編成）。
+> v0.4 で **LLM Wiki パターン (Karpathy 2026-04)** との対応関係を整理し、LLW-01〜08 を追加。
 
 ## v1 Requirements (Phase 1 MVR スコープ)
 
