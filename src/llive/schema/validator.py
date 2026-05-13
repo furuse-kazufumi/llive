@@ -32,8 +32,15 @@ _SCHEMA_FILES = {
 }
 
 
+def _packaged_schema_path(filename: str) -> Path | None:
+    """Look for the schema as a packaged resource at llive/_specs/schemas/."""
+    here = Path(__file__).resolve()
+    candidate = here.parent.parent / "_specs" / "schemas" / filename
+    return candidate if candidate.exists() else None
+
+
 def _project_root() -> Path:
-    """Locate the project root by walking up from this file."""
+    """Locate a development-tree project root with specs/schemas/."""
     here = Path(__file__).resolve()
     for parent in here.parents:
         if (parent / "specs" / "schemas").is_dir():
@@ -45,8 +52,15 @@ def _project_root() -> Path:
 def _load_schema(name: str) -> dict[str, Any]:
     if name not in _SCHEMA_FILES:
         raise KeyError(f"unknown schema {name!r}")
+    filename = _SCHEMA_FILES[name]
+    # 1) prefer the schemas shipped inside the wheel
+    packaged = _packaged_schema_path(filename)
+    if packaged is not None:
+        with packaged.open("r", encoding="utf-8") as fh:
+            return json.load(fh)
+    # 2) fall back to the development tree (`specs/schemas/` at project root)
     root = _project_root()
-    schema_path = root / "specs" / "schemas" / _SCHEMA_FILES[name]
+    schema_path = root / "specs" / "schemas" / filename
     with schema_path.open("r", encoding="utf-8") as fh:
         return json.load(fh)
 
