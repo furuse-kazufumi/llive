@@ -86,7 +86,7 @@ class MemoryEncoder:
         items: list[str] = [texts] if single else list(texts)
         if not items:
             return np.zeros((0, self.dim), dtype=np.float32)
-        if self._model is not None:
+        if self._model is not None:  # pragma: no cover - requires sentence-transformers
             arr = np.asarray(
                 self._model.encode(items, normalize_embeddings=True, show_progress_bar=False),
                 dtype=np.float32,
