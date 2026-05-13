@@ -6,7 +6,36 @@
 
 ### Planned (Phase 5+ continuation)
 
-- RUST-02 完全並列化 (rayon)、RUST-03 (edge weight bulk decay)、RUST-05 (jsonschema-rs)、RUST-06 (crossbeam audit sink)、RUST-07 (ChangeOp Rust 移植)、RUST-08 (hora/arroy HNSW)、RUST-09 (tokio async)、RUST-10 (phf TRIZ matrix)、RUST-11 (Z3 bridge)。`docs/requirements_v0.7_rust_acceleration.md` 参照。
+- RUST-02 完全並列化 (rayon)、RUST-05 (jsonschema-rs drop-in)、RUST-06 (crossbeam audit sink)、RUST-07 (ChangeOp Rust 移植)、RUST-08 (hora/arroy HNSW)、RUST-09 (tokio async)、RUST-10 (phf TRIZ matrix)、RUST-11 (Z3 bridge)。`docs/requirements_v0.7_rust_acceleration.md` 参照。
+
+## [0.5.0] — 2026-05-14
+
+Phase 5 first wire-in リリース。v0.4.0 skeleton で確立した Rust kernel を実際のホットパスに接続。
+
+### Added (Phase 5 — wire-in)
+
+- **RUST-03**: `bulk_time_decay(edges, tau_map)` Rust kernel — `(rel_type, weight, age_days)` 三つ組のバッチに `exp(-age/tau)` を一括適用。GIL 解放 `py.allow_threads`、未登録 rel_type は passthrough、`tau <= 0` は no-op。
+- **BayesianSurpriseGate (MEM-07) wire-in**: `compute_surprise` が `llive.rust_ext.HAS_RUST` 検出で Rust 経路に自動委譲、不在時 numpy fallback。1e-6 parity 保証 (RUST-13)。
+- **EdgeWeightUpdater (AC-10) wire-in**: `apply_time_decay` が `rust_ext.bulk_time_decay` で全 edge を 1 パスで precompute、その後 Kùzu delete-and-reinsert を実行。Python fallback 完全互換。
+- 追加 parity test 5 件 (`bulk_time_decay` Hypothesis 50 ケース + 既知値 4 件) — Rust ⇄ Python 一致を 1e-9 tolerance で担保。
+
+### Changed
+
+- `pyproject.toml`: 0.4.0 → 0.5.0。
+- `crates/llive_rust_ext/Cargo.toml`: 0.4.0 → 0.5.0。
+- `src/llive/rust_ext/__init__.py`: `bulk_time_decay` 公開、`__all__` 拡張。
+
+### Quality gates
+
+- **Tests**: 444 passed (v0.4.0 baseline 439 + RUST-03 parity 5)
+- **Coverage**: 98%
+- **Lint**: ruff `All checks passed!`
+- **Rust build**: `cargo build --release` clean、`maturin develop --release` green
+- **Parity**: Hypothesis 100 ケース (compute_surprise 50 + jaccard 50 + bulk_time_decay 50) で Rust ⇄ Python 全合致
+
+### Deferred (per v0.7 doc principles)
+
+- RUST-02 rayon 並列化、RUST-05/06/07/08/09/10/11。Phase 6+ で意味論固定後に着手。
 
 ## [0.4.0] — 2026-05-14
 
