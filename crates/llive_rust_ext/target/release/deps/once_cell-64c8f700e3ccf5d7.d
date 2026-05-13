@@ -1,0 +1,9 @@
+D:\projects\llive\crates\llive_rust_ext\target\release\deps\once_cell-64c8f700e3ccf5d7.d: C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\lib.rs C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\imp_std.rs C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\race.rs
+
+D:\projects\llive\crates\llive_rust_ext\target\release\deps\libonce_cell-64c8f700e3ccf5d7.rlib: C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\lib.rs C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\imp_std.rs C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\race.rs
+
+D:\projects\llive\crates\llive_rust_ext\target\release\deps\libonce_cell-64c8f700e3ccf5d7.rmeta: C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\lib.rs C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\imp_std.rs C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\race.rs
+
+C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\lib.rs:
+C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\imp_std.rs:
+C:\Users\puruy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\once_cell-1.21.4\src\race.rs:
