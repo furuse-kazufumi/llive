@@ -3,13 +3,14 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-13 22:53:39
+- **最終更新**: 2026-05-13 22:56:03
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
+1edfae4 docs: stop-hook regenerated SESSION_SUMMARY.md
 0fbd8e6 test(02-adaptive): 99% coverage + 0 lint warnings
 2a420e6 auto: pyproject.toml 編集前 (2026-05-13 22:52)
 61d2d00 auto: structural.py 編集前 (2026-05-13 22:52)
@@ -19,7 +20,6 @@
 d7a892c auto: pyproject.toml 編集前 (2026-05-13 22:50)
 03cff40 auto: concept.py 編集前 (2026-05-13 22:50)
 0935a1b auto: adapter_block.py 編集前 (2026-05-13 22:49)
-cfa0883 auto: adapter_block.py 編集前 (2026-05-13 22:49)
 ```
 
 ## 現在の git status
@@ -31,6 +31,7 @@ cfa0883 auto: adapter_block.py 編集前 (2026-05-13 22:49)
 ## 直近 2 時間に変更されたファイル
 
 ```
+22:53 docs/SESSION_SUMMARY.md
 22:53 .pytest_cache/v/cache/nodeids
 22:53 .ruff_cache/0.15.12/10638194744700293557
 22:52 .coverage
@@ -45,7 +46,6 @@ cfa0883 auto: adapter_block.py 編集前 (2026-05-13 22:49)
 22:49 .hypothesis/constants/9991b0800865f39f
 22:49 src/llive/container/subblocks/adapter_block.py
 22:49 src/llive/wiki/ingest.py
-22:45 .hypothesis/constants/a7a0327db19a46e6
 ```
 
 ---
