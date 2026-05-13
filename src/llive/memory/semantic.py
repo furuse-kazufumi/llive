@@ -109,7 +109,7 @@ class SemanticMemory:
             raise ValueError(f"query dim {embedding.shape[-1]} != index dim {self.dim}")
         q = _l2_normalize(np.asarray(embedding, dtype=np.float32).reshape(1, self.dim))
         with self._lock:
-            if self.use_faiss:
+            if self.use_faiss:  # pragma: no cover - requires faiss-cpu
                 scores, idxs = self._index.search(q, min(top_k, len(self._entries)))  # type: ignore[union-attr]
                 pairs = list(zip(idxs[0].tolist(), scores[0].tolist()))
             else:
