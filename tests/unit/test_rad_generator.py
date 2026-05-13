@@ -93,8 +93,10 @@ def test_candidate_to_json_round_trip():
 
 
 def test_evidence_dataclass_immutable():
+    from dataclasses import FrozenInstanceError
+
     e = RadEvidence(domain="d", cluster="c", relevance=0.7)
-    with pytest.raises(Exception):  # frozen dataclass
+    with pytest.raises(FrozenInstanceError):
         e.domain = "x"  # type: ignore[misc]
 
 
