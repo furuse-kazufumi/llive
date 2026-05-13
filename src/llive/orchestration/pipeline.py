@@ -32,20 +32,37 @@ class PipelineResult:
     extras: dict[str, Any]
 
 
+def _default_containers_dir() -> Path:
+    """Prefer the packaged `_specs/containers/` if present, else dev tree."""
+    here = Path(__file__).resolve()
+    packaged = here.parent.parent / "_specs" / "containers"
+    if packaged.is_dir():
+        return packaged
+    return Path("specs/containers")
+
+
+def _default_router_spec() -> Path:
+    here = Path(__file__).resolve()
+    packaged = here.parent.parent / "_specs" / "routes" / "default.yaml"
+    if packaged.exists():
+        return packaged
+    return Path("specs/routes/default.yaml")
+
+
 class Pipeline:
     """Bind a router, a container directory, and (optionally) an HFAdapter."""
 
     def __init__(
         self,
         *,
-        containers_dir: Path | str = "specs/containers",
-        router_spec: Path | str = "specs/routes/default.yaml",
+        containers_dir: Path | str | None = None,
+        router_spec: Path | str | None = None,
         adapter: BaseModelAdapter | None = None,
         backends: _builtin.MemoryBackends | None = None,
         write_trace_to_disk: bool = True,
     ) -> None:
-        self.containers_dir = Path(containers_dir)
-        self.router = RouterEngine(router_spec)
+        self.containers_dir = Path(containers_dir) if containers_dir is not None else _default_containers_dir()
+        self.router = RouterEngine(router_spec if router_spec is not None else _default_router_spec())
         self.adapter = adapter
         self.write_trace_to_disk = bool(write_trace_to_disk)
         if backends is not None:
