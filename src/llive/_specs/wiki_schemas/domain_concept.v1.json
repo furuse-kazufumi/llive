@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llive.dev/wiki_schemas/domain_concept.v1.json",
+  "title": "domain_concept (LLW-03)",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "domain":      { "type": "string" },
+    "synonyms":    { "type": "array", "items": { "type": "string" } },
+    "definition":  { "type": "string" },
+    "see_also":    { "type": "array", "items": { "type": "string" } }
+  }
+}
