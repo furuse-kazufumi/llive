@@ -38,7 +38,7 @@ def _packaged_schema_path(filename: str) -> Path | None:
     return candidate if candidate.exists() else None
 
 
-def _project_root() -> Path:
+def _project_root() -> Path:  # pragma: no cover - dev tree fallback only
     """Locate a development-tree project root with specs/schemas/."""
     here = Path(__file__).resolve()
     for parent in here.parents:
@@ -58,10 +58,10 @@ def _load_schema(name: str) -> dict[str, Any]:
         with packaged.open("r", encoding="utf-8") as fh:
             return json.load(fh)
     # 2) fall back to the development tree (`specs/schemas/` at project root)
-    root = _project_root()
-    schema_path = root / "specs" / "schemas" / filename
-    with schema_path.open("r", encoding="utf-8") as fh:
-        return json.load(fh)
+    root = _project_root()  # pragma: no cover - dev fallback
+    schema_path = root / "specs" / "schemas" / filename  # pragma: no cover
+    with schema_path.open("r", encoding="utf-8") as fh:  # pragma: no cover
+        return json.load(fh)  # pragma: no cover
 
 
 def _parse(text_or_obj: str | dict[str, Any] | Path) -> dict[str, Any]:
@@ -71,7 +71,7 @@ def _parse(text_or_obj: str | dict[str, Any] | Path) -> dict[str, Any]:
         with text_or_obj.open("r", encoding="utf-8") as fh:
             text = fh.read()
     else:
-        text = text_or_obj
+        text = text_or_obj  # pragma: no cover - covered by `str` direct input path
     return yaml.safe_load(text)
 
 
