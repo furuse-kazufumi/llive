@@ -3,49 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-13 23:45:13
+- **最終更新**: 2026-05-14 00:18:44
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-ca9528a docs(02-adaptive): VERIFICATION.md reflect actual 99% coverage + 0 lint
-8a8edb5 auto: 02-VERIFICATION.md 編集前 (2026-05-13 23:25)
-f5fa60b release(v0.2.0): Phase 2 Adaptive Modular System ready for PyPI
-f68bf71 chore: untrack accidentally committed .smoke-venv/ + add to .gitignore
-9b20165 auto: .gitignore 編集前 (2026-05-13 23:22)
-5a4f55b auto: main.py 編集前 (2026-05-13 23:18)
-b43e4ed auto: pyproject.toml 編集前 (2026-05-13 23:15)
-2e06a13 auto: README.md 編集前 (2026-05-13 23:15)
-5cbe7ff auto: test_consolidation_extra.py 編集前 (2026-05-13 23:13)
-7b3f429 auto: test_consolidation_extra.py 編集前 (2026-05-13 23:13)
+4293bb4 release(v0.4.0): Phase 5 Rust acceleration skeleton (RUST-01/02/04/13)
+4d9864c auto: pyproject.toml 編集前 (2026-05-14 00:16)
+2d266c2 auto: CHANGELOG.md 編集前 (2026-05-14 00:16)
+83072ab auto: CHANGELOG.md 編集前 (2026-05-14 00:16)
+174f319 auto: pyproject.toml 編集前 (2026-05-14 00:15)
+054b1f5 auto: pyproject.toml 編集前 (2026-05-14 00:15)
+936a68c auto: __init__.py 編集前 (2026-05-14 00:14)
+c4a141d auto: lib.rs 編集前 (2026-05-14 00:14)
+fc325aa release(v0.3.0): Phase 3 (Evolve MVR) + Phase 4 (Security MVR) bundle
+7489544 auto: README.md 編集前 (2026-05-14 00:08)
 ```
 
 ## 現在の git status
 
 ```
-M docs/SESSION_SUMMARY.md
+(clean)
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-23:26 docs/SESSION_SUMMARY.md
-23:25 .pytest_cache/v/cache/nodeids
-23:25 .planning/phases/02-adaptive/02-VERIFICATION.md
-23:22 .gitignore
-23:19 .ruff_cache/0.15.12/10638194744700293557
-23:19 .hypothesis/constants/393c26dcb4e34135
-23:18 src/llive/cli/main.py
-23:15 pyproject.toml
-23:15 README.md
-23:14 CHANGELOG.md
-23:13 .ruff_cache/0.15.12/7457577932985440971
-23:13 .ruff_cache/0.15.12/12334922619133000292
-23:13 tests/unit/test_consolidation_extra.py
-23:13 tests/unit/test_change_op_extra.py
-23:13 tests/property/test_change_op_invert.py
+00:16 pyproject.toml
+00:16 CHANGELOG.md
+00:15 .ruff_cache/0.15.12/10638194744700293557
+00:15 .pytest_cache/v/cache/nodeids
+00:15 .pytest_cache/v/cache/lastfailed
+00:15 .hypothesis/constants/f4dc3900018c1e25
+00:14 src/llive/rust_ext/__init__.py
+00:14 crates/llive_rust_ext/src/lib.rs
+00:14 .ruff_cache/0.15.12/7457577932985440971
+00:13 .hypothesis/examples/94c379cee370bdd3/f6b5f54e22d526d8
+00:13 .hypothesis/examples/94c379cee370bdd3/ecb7c6a2e04ff783
+00:13 .hypothesis/examples/94c379cee370bdd3/ddf93e12aeb7aa60
+00:13 .hypothesis/examples/94c379cee370bdd3/ddefd233ec2f044f
+00:13 .hypothesis/examples/94c379cee370bdd3/c89f6dd963dbdad1
+00:13 .hypothesis/examples/94c379cee370bdd3/ae3051bccf4e081c
 ```
 
 ---
