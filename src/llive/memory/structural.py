@@ -213,29 +213,32 @@ class StructuralMemory:
         rel_type: str | None = None,
         direction: str = "out",
         limit: int = 100,
+        min_weight: float | None = None,
     ) -> list[GraphNode]:
         if direction not in ("out", "in", "both"):
             raise ValueError("direction must be 'out', 'in', or 'both'")
         params: dict[str, Any] = {"id": node_id, "lim": int(limit)}
-        rel_filter = ""
+        if rel_type is not None and rel_type not in VALID_EDGE_TYPES:
+            raise ValueError(f"invalid rel_type {rel_type!r}")
+        cond_parts = ["n.id = $id"]
         if rel_type is not None:
-            if rel_type not in VALID_EDGE_TYPES:
-                raise ValueError(f"invalid rel_type {rel_type!r}")
-            rel_filter = " WHERE e.rel_type = $rt"
+            cond_parts.append("e.rel_type = $rt")
             params["rt"] = rel_type
+        if min_weight is not None:
+            cond_parts.append("e.weight >= $minw")
+            params["minw"] = float(min_weight)
+        cond = " WHERE " + " AND ".join(cond_parts)
         if direction == "out":
             pat = "(n:MemoryNode)-[e:MemoryEdge]->(m:MemoryNode)"
-            cond = " WHERE n.id = $id" + (" AND e.rel_type = $rt" if rel_type else "")
         elif direction == "in":
             pat = "(m:MemoryNode)-[e:MemoryEdge]->(n:MemoryNode)"
-            cond = " WHERE n.id = $id" + (" AND e.rel_type = $rt" if rel_type else "")
         else:  # both
             pat = "(n:MemoryNode)-[e:MemoryEdge]-(m:MemoryNode)"
-            cond = " WHERE n.id = $id" + (" AND e.rel_type = $rt" if rel_type else "")
         with self._lock:
             result = self._conn.execute(
                 "MATCH " + pat + cond +
-                " RETURN m.id, m.memory_type, m.zone, m.payload, m.provenance, m.created_at LIMIT $lim",
+                " RETURN m.id, m.memory_type, m.zone, m.payload, m.provenance, m.created_at, e.weight"
+                " ORDER BY e.weight DESC LIMIT $lim",
                 params,
             )
             rows: list[GraphNode] = []
