@@ -22,10 +22,12 @@ from __future__ import annotations
 import threading
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from llive.memory.provenance import Provenance
 
 if TYPE_CHECKING:
-    from llive.memory.structural import MemoryNode, StructuralMemory
+    from llive.memory.structural import GraphNode, StructuralMemory
 
 
 class ZoneAccessDenied(PermissionError):
