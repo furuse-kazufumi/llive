@@ -148,7 +148,9 @@ def register_phase2_subblocks(registry: SubBlockRegistry) -> None:
         registry.register("lora_switch", LoraSwitchBlock.factory)
 
 
-# Auto-register on import so containers can use these immediately
-from llive.container.registry import get_registry as _get_registry
+# Auto-register on import so containers can use these immediately.
+# This import lives at the bottom because we need the factory classes defined
+# above to be visible when register_phase2_subblocks runs.
+from llive.container.registry import get_registry as _get_registry  # noqa: E402
 
 register_phase2_subblocks(_get_registry())
