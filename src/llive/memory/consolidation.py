@@ -138,7 +138,7 @@ class MockCompileLLM(CompileLLM):
 class AnthropicCompileLLM(CompileLLM):  # pragma: no cover - requires API key
     """Calls Claude Haiku via the official Anthropic SDK."""
 
-    def __init__(self, model: str, max_tokens: int = 1024) -> None:
+    def __init__(self, model: str, max_tokens: int = 1024) -> None:  # pragma: no cover
         try:
             import anthropic  # type: ignore[import-not-found]
         except ModuleNotFoundError as exc:
@@ -150,7 +150,7 @@ class AnthropicCompileLLM(CompileLLM):  # pragma: no cover - requires API key
         self.model = model
         self.max_tokens = max_tokens
 
-    def __call__(
+    def __call__(  # pragma: no cover
         self,
         cluster_texts: list[str],
         existing_pages: list[ConceptPage],
@@ -164,12 +164,11 @@ class AnthropicCompileLLM(CompileLLM):  # pragma: no cover - requires API key
         text = "".join(b.text for b in response.content if hasattr(b, "text"))
         return self._parse(text)
 
-    def _build_prompt(
+    def _build_prompt(  # pragma: no cover
         self,
         cluster_texts: list[str],
         existing_pages: list[ConceptPage],
     ) -> str:
-        # LLW-AC-03 Evidence-anchored prompt — raw events are authoritative
         existing = "\n".join(f"- [{p.concept_id}] {p.title}: {p.summary[:160]}" for p in existing_pages[:30])
         cluster = "\n".join(f"- {t.strip()[:300]}" for t in cluster_texts[:20])
         return (
@@ -185,7 +184,7 @@ class AnthropicCompileLLM(CompileLLM):  # pragma: no cover - requires API key
             f"=== Working-draft existing pages (may be wrong) ===\n{existing or '(none)'}\n"
         )
 
-    def _parse(self, text: str) -> CompileDecision:
+    def _parse(self, text: str) -> CompileDecision:  # pragma: no cover
         match = re.search(r"\{.*\}", text, flags=re.DOTALL)
         if not match:
             raise ValueError(f"LLM returned no JSON: {text[:120]}")
