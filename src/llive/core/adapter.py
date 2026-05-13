@@ -74,7 +74,7 @@ class HFAdapter:
 
     # -- lazy initialisation -----------------------------------------------
 
-    def _ensure_loaded(self) -> None:
+    def _ensure_loaded(self) -> None:  # pragma: no cover - exercised only when torch is installed
         if self._model is not None:
             return
         try:
@@ -109,12 +109,12 @@ class HFAdapter:
 
     # -- public API --------------------------------------------------------
 
-    def encode(self, text: str) -> list[int]:
+    def encode(self, text: str) -> list[int]:  # pragma: no cover - requires torch
         self._ensure_loaded()
         assert self._tokenizer is not None
         return self._tokenizer.encode(text)
 
-    def decode(self, tokens: list[int]) -> str:
+    def decode(self, tokens: list[int]) -> str:  # pragma: no cover - requires torch
         self._ensure_loaded()
         assert self._tokenizer is not None
         return self._tokenizer.decode(tokens, skip_special_tokens=True)
@@ -126,7 +126,7 @@ class HFAdapter:
         *,
         return_hidden_states: bool = False,
         **kwargs: Any,
-    ) -> GenerationResult:
+    ) -> GenerationResult:  # pragma: no cover - requires torch
         self._ensure_loaded()
         assert self._tokenizer is not None
         assert self._model is not None
