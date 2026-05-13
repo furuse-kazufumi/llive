@@ -36,7 +36,7 @@ def _packaged_dir() -> Path | None:
     return candidate if candidate.is_dir() else None
 
 
-def _dev_dir() -> Path | None:
+def _dev_dir() -> Path | None:  # pragma: no cover - dev-tree fallback only
     here = Path(__file__).resolve()
     for parent in here.parents:
         cand = parent / "specs" / "wiki_schemas"
@@ -50,10 +50,10 @@ def _schema_path(page_type: str) -> Path:
     packaged = _packaged_dir()
     if packaged is not None and (packaged / fname).exists():
         return packaged / fname
-    dev = _dev_dir()
-    if dev is not None and (dev / fname).exists():
+    dev = _dev_dir()  # pragma: no cover - dev fallback
+    if dev is not None and (dev / fname).exists():  # pragma: no cover
         return dev / fname
-    raise FileNotFoundError(f"wiki schema not found for page_type {page_type!r}")
+    raise FileNotFoundError(f"wiki schema not found for page_type {page_type!r}")  # pragma: no cover
 
 
 @cache
