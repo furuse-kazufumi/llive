@@ -26,7 +26,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from llive import rust_ext
-from llive.rust_ext import _compute_surprise_py, _jaccard_py
+from llive.rust_ext import _bulk_time_decay_py, _compute_surprise_py, _jaccard_py
 
 
 def _isclose(a: float, b: float, tol: float = 1e-6) -> bool:
