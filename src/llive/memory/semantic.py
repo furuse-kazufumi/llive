@@ -179,7 +179,7 @@ class SemanticMemory:
                     )
             if self._entries:
                 mat = np.stack([e.embedding for e in self._entries], axis=0)
-                if self.use_faiss:
+                if self.use_faiss:  # pragma: no cover - requires faiss-cpu
                     self._index.add(mat)  # type: ignore[union-attr]
                 else:
                     self._matrix = mat
