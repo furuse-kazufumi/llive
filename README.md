@@ -29,17 +29,19 @@ llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashb
 
 ## ステータス
 
+- **v0.3.0** (2026-05-14) — Phase 3 (Controlled Self-Evolution MVR) + Phase 4 (Production Security MVR) 同時リリース。Z3 静的検証 / Failed Reservoir / Reverse-Evo Monitor / TRIZ Self-Reflection / Wiki ChangeOp / Quarantined Zone / Ed25519 Signed Adapter / SHA-256 Audit Chain。429 tests / 98% coverage / 0 lint。
 - **v0.2.0** (2026-05-13) — Phase 2: Adaptive Modular System 完了。4 層メモリ + surprise-gated write + consolidation cycle + LLM Wiki 統合 + 並行パイプライン。308 tests / 99% coverage / 0 lint warnings。
 - **v0.1.1** (2026-05-13) — Phase 1: Minimal Viable Research Platform。PyPI 初回公開。
-- **次** — Phase 3: Controlled Self-Evolution (EVO-03〜08 / TRIZ-02〜07 / LLW-04〜05)。Phase 5+ で Rust 高速化 (要件 v0.7 定義済)。
+- **次** — Phase 5+ Rust 高速化 (要件 v0.7 定義済、`Phase 4 完了 + EVO 安定後の措置`原則で段階着手)。
 
 ## インストール
 
 ```bash
-pip install llmesh-llive            # core
+pip install llmesh-llive            # core (cryptography 同梱、Ed25519 署名・SHA-256 audit 利用可)
 pip install llmesh-llive[torch]     # HF transformers + faiss + peft + hdbscan
 pip install llmesh-llive[ingest]    # 外部 ingest CLI 用 (pypdf / arxiv / readability)
 pip install llmesh-llive[llm]       # AnthropicCompileLLM (consolidation 本番用)
+pip install llmesh-llive[verify]    # Z3 SMT 検証レイヤ (EVO-04 Static Verifier)
 pip install llmesh-llive[dev]       # 開発依存 (pytest / hypothesis / ruff)
 ```
 
