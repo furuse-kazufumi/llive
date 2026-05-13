@@ -106,21 +106,33 @@ class QuarantinedMemoryView:
 
     # -- writes ------------------------------------------------------------
 
-    def add_node(self, node: MemoryNode) -> str:
-        target = getattr(node, "zone", "") or ""
-        if not self.policy.can_write(target):
+    def add_node(
+        self,
+        memory_type: str,
+        payload: dict[str, Any] | None = None,
+        *,
+        zone: str = "trusted",
+        provenance: Provenance | None = None,
+        node_id: str | None = None,
+    ) -> str:
+        if not self.policy.can_write(zone):
             raise ZoneAccessDenied(
-                f"zone {self.viewer_zone!r} cannot write into {target!r}"
+                f"zone {self.viewer_zone!r} cannot write into {zone!r}"
             )
-        return self.structural.add_node(node)
+        return self.structural.add_node(
+            memory_type=memory_type,
+            payload=payload,
+            zone=zone,
+            provenance=provenance,
+            node_id=node_id,
+        )
 
     # -- reads -------------------------------------------------------------
 
-    def get_node(self, node_id: str) -> MemoryNode | None:
-        result = self._get_node_via_neighbors(node_id)
-        if result is None:
+    def get_node(self, node_id: str) -> GraphNode | None:
+        node = self.structural.get_node(node_id)
+        if node is None:
             return None
-        node = result
         node_zone = getattr(node, "zone", "") or ""
         signed_by = None
         if node.provenance is not None:
@@ -131,32 +143,24 @@ class QuarantinedMemoryView:
             )
         return node
 
-    def list_nodes(self, *, memory_type: str | None = None) -> list[MemoryNode]:
+    def list_nodes(self, *, memory_type: str | None = None) -> list[GraphNode]:
         nodes = self.structural.list_nodes(memory_type=memory_type)
         return [n for n in nodes if self._readable(n)]
 
-    def query_neighbors(self, node_id: str, *, rel_type: str | None = None) -> list[MemoryNode]:
+    def query_neighbors(self, node_id: str, *, rel_type: str | None = None) -> list[GraphNode]:
         nodes = self.structural.query_neighbors(node_id, rel_type=rel_type)
         return [n for n in nodes if self._readable(n)]
 
     # -- internals ---------------------------------------------------------
 
-    def _readable(self, node: MemoryNode) -> bool:
+    def _readable(self, node: GraphNode) -> bool:
         node_zone = getattr(node, "zone", "") or ""
         signed_by = None
         if node.provenance is not None:
             signed_by = getattr(node.provenance, "signed_by", "") or None
         return self.policy.can_read(node_zone, signed_by=signed_by)
 
-    def _get_node_via_neighbors(self, node_id: str) -> MemoryNode | None:
-        # StructuralMemory.list_nodes returns every node; scan for the one we need.
-        # Phase 4 MVR — Phase 5 will route this through a Rust-side fast lookup.
-        for node in self.structural.list_nodes():
-            if getattr(node, "id", None) == node_id:
-                return node
-        return None
-
-    def filter(self, nodes: Iterable[MemoryNode]) -> list[MemoryNode]:
+    def filter(self, nodes: Iterable[GraphNode]) -> list[GraphNode]:
         """Out-of-band helper: filter an already-fetched node list."""
         return [n for n in nodes if self._readable(n)]
 
