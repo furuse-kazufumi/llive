@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llmesh-llive"
-version = "0.1.0"
+version = "0.1.1"
 description = "Self-evolving modular memory LLM framework — biological memory × formal verification × industrial IoT mesh × TUI HITL"
 readme = "README.md"
 license = "MIT"
