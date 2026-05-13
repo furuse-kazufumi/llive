@@ -55,10 +55,70 @@ def test_on_contradiction_decreases_weight(sm, updater):
 def test_weight_clipped_to_zero(sm, updater):
     a, b = _two_pages(sm)
     sm.add_edge(a, b, "linked_concept", weight=0.06)
-    updater.on_contradiction(a, b)  # 0.06 - 0.1 = -0.04 → clipped to 0
-    # below threshold → pruned
+    updater.on_contradiction(a, b)  # 0.06 - 0.1 = -0.04 → clipped to 0, below floor → pruned
     edges = updater._fetch_all_edges()
     assert edges == []
+
+
+def test_dormant_zone_keeps_edge_for_resurrection(sm, updater):
+    """Weights between floor (0.02) and min_keep (0.05) should stay as dormant."""
+    a, b = _two_pages(sm)
+    sm.add_edge(a, b, "linked_concept", weight=0.04)
+    # adjustment that lands in dormant zone (above floor, below min_keep)
+    updater._adjust(a, b, "linked_concept", -0.005, reason="test")
+    edges = updater._fetch_all_edges()
+    assert len(edges) == 1
+    assert updater.config.floor_weight <= edges[0].weight < updater.config.min_weight_keep
+
+
+def test_random_boost_can_resurrect(sm, updater):
+    import random as _r
+
+    a, b = _two_pages(sm)
+    sm.add_edge(a, b, "linked_concept", weight=0.03)  # dormant
+    # Force random_boost to always fire so we deterministically observe a boost.
+    updater._rng = _r.Random(0)
+    updater.config.random_boost_probability = 1.0
+    boosted = updater.random_boost()
+    assert boosted == 1
+    edges = updater._fetch_all_edges()
+    assert edges[0].weight > 0.03
+
+
+def test_visit_count_updates_on_read_hit(sm, updater):
+    a, b = _two_pages(sm)
+    sm.add_edge(a, b, "linked_concept", weight=0.5)
+    assert updater.visit_count(a, b, "linked_concept") == 0
+    updater.on_read_hit(a, [b])
+    updater.on_read_hit(a, [b])
+    assert updater.visit_count(a, b, "linked_concept") == 2
+    assert updater.total_visits() == 2
+
+
+def test_exploration_score_unvisited_edge_higher():
+    from llive.memory.edge_weight import EdgeWeightConfig, EdgeWeightUpdater
+
+    # No structural backend needed for pure scoring math
+    upd = EdgeWeightUpdater.__new__(EdgeWeightUpdater)
+    upd.config = EdgeWeightConfig()
+    s_high_visits = upd.exploration_score(weight=0.5, visit_count=100, total_visits=200)
+    s_low_visits = upd.exploration_score(weight=0.5, visit_count=0, total_visits=200)
+    assert s_low_visits > s_high_visits
+
+
+def test_rank_neighbors_combines_weight_and_visits(sm, updater):
+    a = sm.add_node("concept", payload={"i": 0})
+    b = sm.add_node("concept", payload={"i": 1})
+    c = sm.add_node("concept", payload={"i": 2})
+    # b has higher weight, c is unvisited but lower weight
+    sm.add_edge(a, b, "linked_concept", weight=0.6)
+    sm.add_edge(a, c, "linked_concept", weight=0.3)
+    # Mark b as visited many times
+    updater._visit_counts[(a, b, "linked_concept")] = 50
+    edges = [(a, b, "linked_concept", 0.6), (a, c, "linked_concept", 0.3)]
+    ranked = updater.rank_neighbors(edges, c=2.0)
+    # c (unvisited) should bubble up despite lower raw weight
+    assert ranked[0][0] == c
 
 
 def test_weight_clipped_to_one(sm, updater):
