@@ -1,0 +1,89 @@
+# Phi-3.5-mini-instruct Decoder-only LLM の ContainerSpec 化
+#
+# 出典: HuggingFace `microsoft/Phi-3.5-mini-instruct` の config.json
+#
+# 特徴:
+# - サイズが小さい (3.8B params) ので開発時の高速イテレーション向け
+# - blocksparse + dense の混合 attention だが、簡易テンプレートでは dense のみ採用
+# - longrope rope scaling
+
+schema_version: 1
+container_id: phi_3_5_mini_v1
+routing_tags: [reasoning, instruction, code, fast-iteration, low-vram]
+cost_profile:
+  latency: low
+  vram: low
+  est_flops_per_token: 2500000000
+
+model_metadata:
+  family: phi
+  hf_id: microsoft/Phi-3.5-mini-instruct
+  num_hidden_layers: 32
+  hidden_size: 3072
+  intermediate_size: 8192
+  num_attention_heads: 32
+  num_key_value_heads: 32             # Phi-3.5-mini は MHA (GQA ではない)
+  head_dim: 96
+  norm: rms_norm
+  norm_eps: 1.0e-5
+  activation: silu
+  position: rope
+  rope_theta: 10000.0
+  rope_scaling:
+    rope_type: longrope
+    long_factor: [<truncated>]        # 公開 longrope パラメータ。実装時に config.json から直接読む
+    short_factor: [<truncated>]
+    original_max_position_embeddings: 4096
+  max_position_embeddings: 131072
+  vocab_size: 32064
+  tie_word_embeddings: false
+
+# Phi-3.5 の block: fused QKV + fused gate_up を使うが、テンプレートでは標準展開で記述
+subblocks:
+  - type: pre_norm
+    name: input_layernorm
+    config: { method: rms_norm, eps: 1.0e-5 }
+
+  - type: multi_head_attention        # Phi-3.5-mini は MHA
+    name: self_attn
+    config:
+      num_heads: 32
+      num_kv_heads: 32
+      head_dim: 96
+      rope_theta: 10000.0
+      rope_scaling:
+        type: longrope
+        original_max_position_embeddings: 4096
+      causal: true
+      fused_qkv: true                 # 実装時の最適化フラグ
+      qk_norm: false
+      bias: false
+
+  - type: residual
+    name: attn_residual
+
+  - type: pre_norm
+    name: post_attention_layernorm
+    config: { method: rms_norm, eps: 1.0e-5 }
+
+  - type: ffn_swiglu
+    name: mlp
+    config:
+      hidden_size: 3072
+      intermediate_size: 8192
+      activation: silu
+      fused_gate_up: true
+      gate_bias: false
+      up_bias: false
+      down_bias: false
+
+  - type: residual
+    name: ffn_residual
+
+optional_extensions:
+  - type: memory_read
+    enabled: false
+  - type: memory_write
+    enabled: false
+  - type: reflective_probe
+    enabled: false

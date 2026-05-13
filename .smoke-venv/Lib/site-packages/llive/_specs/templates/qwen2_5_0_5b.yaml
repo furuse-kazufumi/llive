@@ -1,0 +1,17 @@
+# Phase 1 開発・CI デフォルトモデル (D-02)
+# Qwen2.5-0.5B：CPU でも動く軽量モデル、Phase 1 の "動くこと" 最優先構成。
+schema_version: 1
+model:
+  name: "Qwen/Qwen2.5-0.5B"
+  tokenizer: "Qwen/Qwen2.5-0.5B"
+  context_length: 32768
+  dtype: "float32"          # CPU/Windows でも動かしやすく
+  device_map: "auto"
+  trust_remote_code: false
+
+container: "fast_path_v1"     # default container for `llive run`
+
+notes:
+  - "Phase 1 CONTEXT.md D-02: 開発・CI デフォルトモデル。"
+  - "中性能テストは specs/templates/phi_3_5_mini.yaml を使用。"
+  - "7B+ モデルは GPU 推奨。"

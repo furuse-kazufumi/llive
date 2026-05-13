@@ -1,0 +1,9 @@
+schema_version: 1
+# Phase 1 で実装する 2 経路 (RTR-01)。
+# 短プロンプト → fast_path_v1, それ以外 → adaptive_reasoning_v1 (fallback)
+routes:
+  - container: fast_path_v1
+    when:
+      prompt_length_lt: 256
+  - container: adaptive_reasoning_v1
+    # 空 when: は default fallback

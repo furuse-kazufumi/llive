@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llive.dev/schemas/container-spec.v1.json",
+  "title": "ContainerSpec",
+  "type": "object",
+  "required": ["schema_version", "container_id", "subblocks"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "container_id":   { "type": "string", "pattern": "^[a-z][a-z0-9_]+_v\\d+$" },
+    "routing_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "cost_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "latency": { "enum": ["low", "medium", "high"] },
+        "vram":    { "enum": ["low", "medium", "high"] },
+        "est_flops_per_token": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "subblocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/SubBlockRef" }
+    },
+    "nested_containers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/NestedContainer" }
+    }
+  },
+  "$defs": {
+    "SubBlockRef": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type":   { "type": "string" },
+        "name":   { "type": "string" },
+        "config": { "type": "object" },
+        "condition": { "$ref": "#/$defs/ConditionSpec" }
+      }
+    },
+    "NestedContainer": {
+      "type": "object",
+      "required": ["target", "container_ref"],
+      "additionalProperties": false,
+      "properties": {
+        "target":        { "type": "string" },
+        "condition":     { "$ref": "#/$defs/ConditionSpec" },
+        "container_ref": { "type": "string" }
+      }
+    },
+    "ConditionSpec": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["surprise_gt"],
+          "additionalProperties": false,
+          "properties": { "surprise_gt": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "required": ["task_tag"],
+          "additionalProperties": false,
+          "properties": { "task_tag": { "type": "string" } }
+        },
+        {
+          "type": "object",
+          "required": ["route_depth_lt"],
+          "additionalProperties": false,
+          "properties": { "route_depth_lt": { "type": "integer" } }
+        },
+        {
+          "type": "object",
+          "required": ["all_of"],
+          "additionalProperties": false,
+          "properties": {
+            "all_of": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/ConditionSpec" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["any_of"],
+          "additionalProperties": false,
+          "properties": {
+            "any_of": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/ConditionSpec" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
