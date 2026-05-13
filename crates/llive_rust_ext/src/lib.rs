@@ -99,10 +99,54 @@ fn jaccard(a: Vec<u32>, b: Vec<u32>) -> f32 {
     inter as f32 / union as f32
 }
 
+/// Edge-weight time decay (RUST-03 baseline).
+///
+/// Inputs:
+///   * `edges`: list of `(rel_type, weight, age_days)` triples.
+///   * `tau_map_keys` / `tau_map_values`: parallel arrays mapping rel_type → tau_days.
+///     Rel types absent from the map are returned unchanged (weight passes through).
+///
+/// Output: list of new weights, one per input edge, in the original order.
+/// Decay formula: `new_weight = weight * exp(-age_days / tau)` when tau > 0.
+#[pyfunction]
+fn bulk_time_decay(
+    py: Python<'_>,
+    edges: Vec<(String, f64, f64)>,
+    tau_map_keys: Vec<String>,
+    tau_map_values: Vec<f64>,
+) -> PyResult<Vec<f64>> {
+    if tau_map_keys.len() != tau_map_values.len() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "tau_map_keys / tau_map_values length mismatch",
+        ));
+    }
+    let mut tau_lookup: std::collections::HashMap<String, f64> =
+        std::collections::HashMap::with_capacity(tau_map_keys.len());
+    for (k, v) in tau_map_keys.into_iter().zip(tau_map_values.into_iter()) {
+        tau_lookup.insert(k, v);
+    }
+    py.allow_threads(|| {
+        let out: Vec<f64> = edges
+            .into_iter()
+            .map(|(rel, weight, age_days)| {
+                let tau = tau_lookup.get(&rel).copied().unwrap_or(0.0);
+                if tau <= 0.0 {
+                    weight
+                } else {
+                    let factor = (-age_days / tau).exp();
+                    weight * factor
+                }
+            })
+            .collect();
+        Ok(out)
+    })
+}
+
 #[pymodule]
 fn llive_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", VERSION)?;
     m.add_function(wrap_pyfunction!(compute_surprise, m)?)?;
     m.add_function(wrap_pyfunction!(jaccard, m)?)?;
+    m.add_function(wrap_pyfunction!(bulk_time_decay, m)?)?;
     Ok(())
 }
