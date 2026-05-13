@@ -17,7 +17,7 @@ SUBBLOCK_TYPES = ["pre_norm", "causal_attention", "ffn_swiglu", "memory_read", "
 
 
 def _make_container(types: list[str], names: list[str | None]) -> ContainerSpec:
-    refs = [SubBlockRef(type=t, name=n) for t, n in zip(types, names)]
+    refs = [SubBlockRef(type=t, name=n) for t, n in zip(types, names, strict=True)]
     return ContainerSpec(schema_version=1, container_id="adaptive_reasoning_v1", subblocks=refs)
 
 
