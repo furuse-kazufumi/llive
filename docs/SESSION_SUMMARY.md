@@ -3,49 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-13 23:07:40
+- **最終更新**: 2026-05-13 23:45:13
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-09864cc docs(req): add v0.7 Rust acceleration addendum (RUST-01〜14)
-7212d6c auto: STATE.md 編集前 (2026-05-13 23:05)
-983385a auto: roadmap.md 編集前 (2026-05-13 23:04)
-42d8ff8 auto: REQUIREMENTS.md 編集前 (2026-05-13 23:04)
-cb32949 auto: REQUIREMENTS.md 編集前 (2026-05-13 23:04)
-1edfae4 docs: stop-hook regenerated SESSION_SUMMARY.md
-0fbd8e6 test(02-adaptive): 99% coverage + 0 lint warnings
-2a420e6 auto: pyproject.toml 編集前 (2026-05-13 22:52)
-61d2d00 auto: structural.py 編集前 (2026-05-13 22:52)
-7ee6b3f auto: structural.py 編集前 (2026-05-13 22:52)
+ca9528a docs(02-adaptive): VERIFICATION.md reflect actual 99% coverage + 0 lint
+8a8edb5 auto: 02-VERIFICATION.md 編集前 (2026-05-13 23:25)
+f5fa60b release(v0.2.0): Phase 2 Adaptive Modular System ready for PyPI
+f68bf71 chore: untrack accidentally committed .smoke-venv/ + add to .gitignore
+9b20165 auto: .gitignore 編集前 (2026-05-13 23:22)
+5a4f55b auto: main.py 編集前 (2026-05-13 23:18)
+b43e4ed auto: pyproject.toml 編集前 (2026-05-13 23:15)
+2e06a13 auto: README.md 編集前 (2026-05-13 23:15)
+5cbe7ff auto: test_consolidation_extra.py 編集前 (2026-05-13 23:13)
+7b3f429 auto: test_consolidation_extra.py 編集前 (2026-05-13 23:13)
 ```
 
 ## 現在の git status
 
 ```
-(clean)
+M docs/SESSION_SUMMARY.md
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-23:05 .planning/STATE.md
-23:04 docs/roadmap.md
-23:04 .planning/REQUIREMENTS.md
-23:03 docs/requirements_v0.7_rust_acceleration.md
-23:00 .pytest_cache/v/cache/nodeids
-23:00 .pytest_cache/v/cache/lastfailed
-22:56 docs/SESSION_SUMMARY.md
-22:53 .ruff_cache/0.15.12/10638194744700293557
-22:52 .coverage
-22:52 .hypothesis/constants/c22e18b14889a3c3
-22:52 .hypothesis/constants/547ea6c14300d619
-22:52 pyproject.toml
-22:52 src/llive/memory/structural.py
-22:52 src/llive/orchestration/pipeline.py
-22:50 .hypothesis/constants/01e5881ac4d06d7a
+23:26 docs/SESSION_SUMMARY.md
+23:25 .pytest_cache/v/cache/nodeids
+23:25 .planning/phases/02-adaptive/02-VERIFICATION.md
+23:22 .gitignore
+23:19 .ruff_cache/0.15.12/10638194744700293557
+23:19 .hypothesis/constants/393c26dcb4e34135
+23:18 src/llive/cli/main.py
+23:15 pyproject.toml
+23:15 README.md
+23:14 CHANGELOG.md
+23:13 .ruff_cache/0.15.12/7457577932985440971
+23:13 .ruff_cache/0.15.12/12334922619133000292
+23:13 tests/unit/test_consolidation_extra.py
+23:13 tests/unit/test_change_op_extra.py
+23:13 tests/property/test_change_op_invert.py
 ```
 
 ---
