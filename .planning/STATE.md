@@ -17,25 +17,30 @@ See: .planning/PROJECT.md (updated 2026-05-13)
   - TRIZ リソース 3 ファイル (40 原理 / 39×39 マトリクス / 39+11 特性)
   - GSD ワークフロー初期化完了 (.planning/)
 
-- **Phase 1 (MVR)**: 進行中 (2026-05-13 着手)
-  - ✅ CONTEXT.md (01-CONTEXT.md / 01-DISCUSSION-LOG.md, commit 403d35e)
-  - 🔄 PLAN.md / 実装 (8 時間自律セッション中)
-- **Phase 2 (Adaptive)**: 未着手
+- **Phase 1 (MVR)**: ✅ 完了 (2026-05-13)
+  - 16/16 requirements validated, 49 tests pass, 82% coverage
+  - PyPI 公開済: https://pypi.org/project/llmesh-llive/0.1.1/ (tag v0.1.1)
+  - 詳細: `.planning/phases/01-mvr/01-VERIFICATION.md`
+- **Phase 2 (Adaptive)**: 進行中 (2026-05-13 着手)
+  - ✅ CONTEXT.md (02-CONTEXT.md / 02-DISCUSSION-LOG.md, commit 2e4d8e4)
+  - 13 requirements (v2 9 + LLW 4) を 40 D-XX として確定
+  - 次: PLAN.md → wave 分解 → 実装
 - **Phase 3 (Evolve)**: 未着手
 - **Phase 4 (Production)**: 未着手
 
 ## Next Action
 
 ```
-# 自律セッション中。CONTEXT.md 完了後、PLAN.md → 実装 → テストへ自走。
+# Phase 2 PLAN.md → 実装 着工
 # 中断時は SESSION_SUMMARY.md の "次のアクション" 参照。
 ```
 
 ## Active Workspace
 
-- リポジトリ: `D:/projects/llive/` (git init 済、main ブランチ統一済)
+- リポジトリ: `D:/projects/llive/` (main ブランチ統一済、origin/main sync)
 - GitHub: https://github.com/furuse-kazufumi/llive (public, default = main)
-- PyPI: 未登録 (Phase 1 完了後に v0.1.0 として `llmesh-llive` で初公開予定、ユーザ確認が前提)
+- PyPI: ✅ v0.1.1 公開済 (https://pypi.org/project/llmesh-llive/0.1.1/)
+- Phase 2 完了で v0.2.0 PyPI 公開予定 (ユーザ確認後)
 
 ## Open Questions / Decisions Pending
 
