@@ -252,9 +252,9 @@ def _greedy_clusters(
     return [c for c in clusters if len(c) >= min_size]
 
 
-def _hdbscan_clusters(embeddings: np.ndarray, min_size: int) -> list[list[int]] | None:
+def _hdbscan_clusters(embeddings: np.ndarray, min_size: int) -> list[list[int]] | None:  # pragma: no cover - requires hdbscan
     """Try HDBSCAN; return None if unavailable. Allows graceful fallback."""
-    try:  # pragma: no cover - optional dep
+    try:
         import hdbscan  # type: ignore[import-not-found]
     except ModuleNotFoundError:
         return None
@@ -265,7 +265,7 @@ def _hdbscan_clusters(embeddings: np.ndarray, min_size: int) -> list[list[int]] 
     buckets: dict[int, list[int]] = {}
     for idx, lbl in enumerate(labels):
         if lbl == -1:
-            continue  # noise
+            continue
         buckets.setdefault(int(lbl), []).append(idx)
     return list(buckets.values())
 
