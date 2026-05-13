@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from llive.memory.provenance import Provenance
-from llive.memory.structural import MemoryNode, StructuralMemory
+from llive.memory.structural import StructuralMemory
 from llive.security.zones import (
     QuarantinedMemoryView,
     ZoneAccessDenied,
@@ -26,18 +26,13 @@ def _clear_zones_before_after():
 @pytest.fixture
 def sm(tmp_path):
     storage = tmp_path / "kuzu"
-    sm = StructuralMemory(db_path=storage)
-    yield sm
-    sm.close()
+    s = StructuralMemory(db_path=storage)
+    yield s
+    s.close()
 
 
-def _node(zone: str, *, node_id: str | None = None, signed_by: str = "") -> MemoryNode:
-    return MemoryNode(
-        id=node_id or f"n-{zone}-{abs(hash(zone)) % 100000}",
-        memory_type="concept",
-        zone=zone,
-        provenance=Provenance(source_type="test", source_id="t", signed_by=signed_by),
-    )
+def _prov(signed_by: str = "") -> Provenance:
+    return Provenance(source_type="test", source_id="t", signed_by=signed_by)
 
 
 def test_zone_policy_can_read_self():
@@ -83,25 +78,23 @@ def test_register_and_lookup_zone():
 def test_quarantined_view_blocks_cross_zone_write(sm):
     register_zone(ZonePolicy(zone="public"))
     view = QuarantinedMemoryView(sm, viewer_zone="public")
-    n = _node("private")
     with pytest.raises(ZoneAccessDenied):
-        view.add_node(n)
+        view.add_node("concept", {"k": "v"}, zone="private", provenance=_prov())
 
 
 def test_quarantined_view_allows_same_zone_write(sm):
     register_zone(ZonePolicy(zone="public"))
     view = QuarantinedMemoryView(sm, viewer_zone="public")
-    n = _node("public")
-    nid = view.add_node(n)
-    assert nid == n.id
+    nid = view.add_node("concept", {"k": "v"}, zone="public", provenance=_prov())
+    assert isinstance(nid, str)
 
 
 def test_quarantined_view_blocks_cross_zone_read(sm):
     register_zone(ZonePolicy(zone="public"))
     register_zone(ZonePolicy(zone="private", allowed_writes={"*"}))
     private_view = QuarantinedMemoryView(sm, viewer_zone="private")
-    private_view.add_node(_node("public", node_id="n1"))
-    private_view.add_node(_node("private", node_id="n2"))
+    private_view.add_node("concept", {}, zone="public", provenance=_prov())
+    private_view.add_node("concept", {}, zone="private", provenance=_prov())
     public_view = QuarantinedMemoryView(sm, viewer_zone="public")
     listed = public_view.list_nodes()
     zones = {n.zone for n in listed}
@@ -114,8 +107,12 @@ def test_signature_required_lets_signed_through(sm):
     )
     register_zone(ZonePolicy(zone="sensor", allowed_writes={"*"}))
     sensor_view = QuarantinedMemoryView(sm, viewer_zone="sensor")
-    sensor_view.add_node(_node("sensor", node_id="signed", signed_by="alice"))
-    sensor_view.add_node(_node("sensor", node_id="unsigned"))
+    sensor_view.add_node(
+        "concept", {}, zone="sensor", provenance=_prov(signed_by="alice"), node_id="signed"
+    )
+    sensor_view.add_node(
+        "concept", {}, zone="sensor", provenance=_prov(), node_id="unsigned"
+    )
     trusted_view = QuarantinedMemoryView(sm, viewer_zone="trusted")
     listed = trusted_view.list_nodes()
     ids = {n.id for n in listed}
@@ -125,7 +122,6 @@ def test_signature_required_lets_signed_through(sm):
 
 def test_unregistered_viewer_defaults_to_wildcard(sm):
     view = QuarantinedMemoryView(sm, viewer_zone="undeclared")
-    # No policy registered for 'undeclared' -> default is open access
     assert view.policy.can_read("any")
     assert view.policy.can_write("any")
 
@@ -140,7 +136,22 @@ def test_get_node_respects_policy(sm):
     register_zone(ZonePolicy(zone="public"))
     register_zone(ZonePolicy(zone="private", allowed_writes={"*"}))
     private_view = QuarantinedMemoryView(sm, viewer_zone="private")
-    private_view.add_node(_node("private", node_id="hidden"))
+    private_view.add_node(
+        "concept", {}, zone="private", provenance=_prov(), node_id="hidden"
+    )
     public_view = QuarantinedMemoryView(sm, viewer_zone="public")
     with pytest.raises(ZoneAccessDenied):
         public_view.get_node("hidden")
+
+
+def test_filter_helper(sm):
+    register_zone(ZonePolicy(zone="public", allowed_reads={"shared"}))
+    register_zone(ZonePolicy(zone="shared", allowed_writes={"*"}))
+    register_zone(ZonePolicy(zone="secret", allowed_writes={"*"}))
+    shared_view = QuarantinedMemoryView(sm, viewer_zone="shared")
+    shared_view.add_node("concept", {}, zone="shared", provenance=_prov(), node_id="s1")
+    shared_view.add_node("concept", {}, zone="secret", provenance=_prov(), node_id="x1")
+    public = QuarantinedMemoryView(sm, viewer_zone="public")
+    all_nodes = sm.list_nodes()
+    filtered = public.filter(all_nodes)
+    assert {n.id for n in filtered} == {"s1"}

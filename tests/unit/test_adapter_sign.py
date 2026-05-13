@@ -97,8 +97,8 @@ def test_verify_fails_with_wrong_public_key(keypair, tmp_path):
 
 def test_load_private_key_type_check(tmp_path):
     # Write a non-Ed25519 key file
-    from cryptography.hazmat.primitives.asymmetric.rsa import generate_private_key
     from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.rsa import generate_private_key
     rsa = generate_private_key(public_exponent=65537, key_size=2048)
     p = tmp_path / "rsa.pem"
     p.write_bytes(
@@ -113,8 +113,8 @@ def test_load_private_key_type_check(tmp_path):
 
 
 def test_load_public_key_type_check(tmp_path):
-    from cryptography.hazmat.primitives.asymmetric.rsa import generate_private_key
     from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.rsa import generate_private_key
     rsa = generate_private_key(public_exponent=65537, key_size=2048)
     p = tmp_path / "rsa.pub.pem"
     p.write_bytes(
