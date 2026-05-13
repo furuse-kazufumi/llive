@@ -150,12 +150,15 @@ def test_time_decay_reduces_weight(sm, updater):
     assert edges[0].weight < 0.3
 
 
-def test_prune_removes_low_weight(sm, updater):
+def test_prune_only_below_floor(sm, updater):
     a, b = _two_pages(sm)
-    sm.add_edge(a, b, "linked_concept", weight=0.04)  # below min_weight_keep 0.05
+    sm.add_edge(a, b, "linked_concept", weight=0.04)  # in dormant zone (>= floor 0.02, < keep 0.05)
     deleted = updater.prune()
+    assert deleted == 0  # dormant edges are preserved
+    assert len(updater._fetch_all_edges()) == 1
+    # but explicit threshold removes them
+    deleted = updater.prune(threshold=0.05)
     assert deleted == 1
-    assert updater._fetch_all_edges() == []
 
 
 def test_log_jsonl_appends(sm, updater, tmp_path):
