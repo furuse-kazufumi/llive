@@ -33,11 +33,8 @@ fn compute_surprise(
             return Ok(1.0_f32);
         }
         let dim = new.len();
-        let new_norm = l2_norm(&new);
-        if new_norm == 0.0 {
-            return Ok(1.0_f32);
-        }
-        let mut max_sim: f32 = -1.0;
+        // Dim mismatches are validated *before* numerics so the error surface
+        // matches the pure-Python fallback regardless of vector magnitudes.
         for row in &memory_embeddings {
             if row.len() != dim {
                 return Err(pyo3::exceptions::PyValueError::new_err(format!(
@@ -45,6 +42,13 @@ fn compute_surprise(
                     row.len()
                 )));
             }
+        }
+        let new_norm = l2_norm(&new);
+        if new_norm == 0.0 {
+            return Ok(1.0_f32);
+        }
+        let mut max_sim: f32 = -1.0;
+        for row in &memory_embeddings {
             let row_norm = l2_norm(row);
             if row_norm == 0.0 {
                 continue;
