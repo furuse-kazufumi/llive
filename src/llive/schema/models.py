@@ -39,7 +39,7 @@ class AnyOfCondition(_Strict):
     any_of: list[ConditionSpec]
 
 
-ConditionSpec = Union[
+ConditionSpec = Union[  # noqa: UP007 — pydantic discriminator needs explicit Union here
     SurpriseGtCondition,
     TaskTagCondition,
     RouteDepthLtCondition,
