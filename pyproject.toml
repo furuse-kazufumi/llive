@@ -102,7 +102,12 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "RUF"]
-ignore = ["E501"]
+ignore = [
+  "E501",   # line too long (handled by formatter)
+  "B008",   # typer.Option / typer.Argument idiomatic in defaults
+  "RUF002", # full-width em-dash / hyphens are intentional in Japanese docstrings
+  "RUF003", # likewise for ambiguous Unicode in comments
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
