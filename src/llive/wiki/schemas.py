@@ -8,13 +8,12 @@ the packaged copy first, then fall back to the dev tree.
 from __future__ import annotations
 
 import json
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError
-
 
 KNOWN_PAGE_TYPES = (
     "domain_concept",
@@ -57,7 +56,7 @@ def _schema_path(page_type: str) -> Path:
     raise FileNotFoundError(f"wiki schema not found for page_type {page_type!r}")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_schema(page_type: str) -> dict[str, Any]:
     with _schema_path(page_type).open("r", encoding="utf-8") as fh:
         return json.load(fh)

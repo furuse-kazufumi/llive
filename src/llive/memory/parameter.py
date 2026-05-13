@@ -19,10 +19,9 @@ import os
 import shutil
 import threading
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 import duckdb
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,7 +30,7 @@ from llive.memory.provenance import Provenance
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _default_data_dir() -> Path:

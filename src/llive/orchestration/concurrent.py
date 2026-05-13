@@ -43,7 +43,7 @@ class ConcurrentPipeline:
         self._executor = ThreadPoolExecutor(max_workers=self.max_workers)
         self._closed = False
 
-    def __enter__(self) -> "ConcurrentPipeline":
+    def __enter__(self) -> ConcurrentPipeline:
         return self
 
     def __exit__(self, *_args) -> None:
@@ -84,7 +84,7 @@ class BranchExplorer:
         self._executor = ThreadPoolExecutor(max_workers=self.max_workers)
         self._closed = False
 
-    def __enter__(self) -> "BranchExplorer":
+    def __enter__(self) -> BranchExplorer:
         return self
 
     def __exit__(self, *_args) -> None:

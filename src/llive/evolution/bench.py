@@ -20,7 +20,7 @@ import json
 import os
 import time
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -152,7 +152,7 @@ class BenchHarness:
         candidate_arm = self._run_arm("candidate", candidate_spec, prompts)
 
         result = BenchResult(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             baseline_container=baseline_container,
             candidate_id=candidate_diff.candidate_id,
             dataset=str(dataset_path),

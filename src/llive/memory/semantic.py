@@ -13,7 +13,6 @@ import threading
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -71,7 +70,7 @@ class SemanticMemory:
         self,
         dim: int,
         data_dir: Path | str | None = None,
-        use_faiss: Optional[bool] = None,
+        use_faiss: bool | None = None,
     ) -> None:
         self.dim = int(dim)
         self.data_dir = Path(data_dir) if data_dir else _default_data_dir()
@@ -111,7 +110,7 @@ class SemanticMemory:
         with self._lock:
             if self.use_faiss:  # pragma: no cover - requires faiss-cpu
                 scores, idxs = self._index.search(q, min(top_k, len(self._entries)))  # type: ignore[union-attr]
-                pairs = list(zip(idxs[0].tolist(), scores[0].tolist()))
+                pairs = list(zip(idxs[0].tolist(), scores[0].tolist(), strict=False))
             else:
                 assert self._matrix is not None
                 sims = (self._matrix @ q.T).flatten()

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import json
-from functools import lru_cache
-from importlib.resources import files
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +47,7 @@ def _project_root() -> Path:
     raise RuntimeError("could not locate project root with specs/schemas/")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_schema(name: str) -> dict[str, Any]:
     if name not in _SCHEMA_FILES:
         raise KeyError(f"unknown schema {name!r}")

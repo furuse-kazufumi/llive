@@ -79,7 +79,10 @@ class HFAdapter:
             return
         try:
             import torch  # type: ignore[import-not-found]
-            from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore[import-not-found]
+            from transformers import (  # type: ignore[import-not-found]
+                AutoModelForCausalLM,
+                AutoTokenizer,
+            )
         except ModuleNotFoundError as exc:
             raise ModuleNotFoundError(
                 "HFAdapter requires the `torch` extra: install with "

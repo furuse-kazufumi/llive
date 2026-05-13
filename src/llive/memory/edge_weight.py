@@ -34,16 +34,17 @@ import math
 import os
 import random
 import threading
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from llive.memory.structural import VALID_EDGE_TYPES, StructuralMemory
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _default_log_path() -> Path:
@@ -136,7 +137,7 @@ class EdgeWeightUpdater:
         """Apply exp(-Δt / τ) decay to every decayable edge."""
         ref = now or _utcnow()
         if ref.tzinfo is None:
-            ref = ref.replace(tzinfo=timezone.utc)
+            ref = ref.replace(tzinfo=UTC)
         rows = self._fetch_all_edges(rel_types=tuple(self.config.decay_tau_days.keys()))
         updates = 0
         for row in rows:
@@ -145,7 +146,7 @@ class EdgeWeightUpdater:
                 continue
             created = row.created_at
             if created.tzinfo is None:
-                created = created.replace(tzinfo=timezone.utc)
+                created = created.replace(tzinfo=UTC)
             age_days = max(0.0, (ref - created).total_seconds() / 86400.0)
             factor = math.exp(-age_days / tau)
             new_weight = row.weight * factor

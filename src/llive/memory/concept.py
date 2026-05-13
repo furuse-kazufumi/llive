@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +20,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from llive.memory.bayesian_surprise import WelfordStats
 from llive.memory.provenance import Provenance
 from llive.memory.structural import StructuralMemory
-
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 
@@ -31,7 +30,7 @@ def _slugify(text: str) -> str:
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _default_wiki_dir() -> Path:
@@ -72,7 +71,7 @@ class ConceptPage(BaseModel):
         page_type: str = "domain_concept",
         provenance: Provenance | None = None,
         **fields: Any,
-    ) -> "ConceptPage":
+    ) -> ConceptPage:
         return cls(
             concept_id=_slugify(title),
             title=title,
@@ -82,10 +81,10 @@ class ConceptPage(BaseModel):
             structured_fields=fields,
         )
 
-    def with_summary(self, summary: str) -> "ConceptPage":
+    def with_summary(self, summary: str) -> ConceptPage:
         return self.model_copy(update={"summary": summary, "last_updated_at": _utcnow()})
 
-    def add_linked_entry(self, entry_id: str) -> "ConceptPage":
+    def add_linked_entry(self, entry_id: str) -> ConceptPage:
         if entry_id in self.linked_entry_ids:
             return self
         return self.model_copy(
@@ -95,7 +94,7 @@ class ConceptPage(BaseModel):
             }
         )
 
-    def add_linked_concept(self, concept_id: str) -> "ConceptPage":
+    def add_linked_concept(self, concept_id: str) -> ConceptPage:
         if concept_id in self.linked_concept_ids:
             return self
         return self.model_copy(
@@ -105,7 +104,7 @@ class ConceptPage(BaseModel):
             }
         )
 
-    def update_surprise(self, value: float) -> "ConceptPage":
+    def update_surprise(self, value: float) -> ConceptPage:
         stats = WelfordStats.from_dict(self.surprise_stats) if self.surprise_stats else WelfordStats()
         stats.update(value)
         return self.model_copy(update={"surprise_stats": stats.to_dict(), "last_updated_at": _utcnow()})

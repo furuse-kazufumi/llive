@@ -25,9 +25,7 @@ import os
 import re
 import threading
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Callable
+from datetime import UTC, datetime
 
 import numpy as np
 
@@ -40,7 +38,7 @@ from llive.memory.structural import StructuralMemory
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 # ---------------------------------------------------------------------------
@@ -289,7 +287,7 @@ class Consolidator:
         llm: CompileLLM | None = None,
         gate: BayesianSurpriseGate | None = None,
         config: ConsolidatorConfig | None = None,
-        edge_weight_updater: "EdgeWeightUpdater | None" = None,
+        edge_weight_updater: EdgeWeightUpdater | None = None,
     ) -> None:
         from llive.memory.edge_weight import EdgeWeightUpdater  # local import: avoid circular
 

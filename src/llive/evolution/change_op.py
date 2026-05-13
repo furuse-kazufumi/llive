@@ -61,7 +61,7 @@ class ChangeOp(ABC):
     def apply(self, container: ContainerSpec) -> ContainerSpec: ...
 
     @abstractmethod
-    def invert(self, container_before: ContainerSpec) -> "ChangeOp": ...
+    def invert(self, container_before: ContainerSpec) -> ChangeOp: ...
 
 
 # ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ class InsertSubblock(ChangeOp):
             new.subblocks.insert(idx + 1, new_spec)
         return new
 
-    def invert(self, container_before: ContainerSpec) -> "RemoveSubblock":
+    def invert(self, container_before: ContainerSpec) -> RemoveSubblock:
         # After `apply`, the inserted sub-block will be identified by `spec.name or spec.type`.
         new_spec = _to_ref(self.spec)
         ident = new_spec.name or new_spec.type
@@ -116,7 +116,7 @@ class RemoveSubblock(ChangeOp):
         del new.subblocks[idx]
         return new
 
-    def invert(self, container_before: ContainerSpec) -> "InsertSubblock":
+    def invert(self, container_before: ContainerSpec) -> InsertSubblock:
         idx = _find_index(container_before.subblocks, self.target_subblock)
         original = deepcopy(container_before.subblocks[idx])
         # `after` references the previous block (or "head" if removing the first)
@@ -145,7 +145,7 @@ class ReplaceSubblock(ChangeOp):
         new.subblocks[idx] = _to_ref(self.to)
         return new
 
-    def invert(self, container_before: ContainerSpec) -> "ReplaceSubblock":
+    def invert(self, container_before: ContainerSpec) -> ReplaceSubblock:
         idx = _find_index(container_before.subblocks, self.from_)
         original = deepcopy(container_before.subblocks[idx])
         new_spec = _to_ref(self.to)
@@ -180,7 +180,7 @@ class ReorderSubblocks(ChangeOp):
         new.subblocks = reordered
         return new
 
-    def invert(self, container_before: ContainerSpec) -> "ReorderSubblocks":
+    def invert(self, container_before: ContainerSpec) -> ReorderSubblocks:
         # Apply ourselves once to obtain the post-state's identifier space; then
         # express the original order in those identifiers.
         post = self.apply(container_before)
@@ -208,9 +208,9 @@ class ReorderSubblocks(ChangeOp):
 # ---------------------------------------------------------------------------
 
 
-def build_change_op(model) -> ChangeOp:  # noqa: ANN001
+def build_change_op(model) -> ChangeOp:
     """Translate a pydantic ChangeOpModel into a concrete ChangeOp."""
-    action = getattr(model, "action")
+    action = model.action
     if action == "insert_subblock":
         return InsertSubblock(
             target_container=model.target_container, after=model.after, spec=model.spec

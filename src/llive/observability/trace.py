@@ -6,7 +6,7 @@ import json
 import os
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _default_trace_path() -> Path:
@@ -63,7 +63,7 @@ def write_trace(trace: RouteTrace, path: Path | str | None = None) -> Path:
     return target
 
 
-def trace_from_state(container: str, state, **metrics: float) -> RouteTrace:  # noqa: ANN001
+def trace_from_state(container: str, state, **metrics: float) -> RouteTrace:
     """Build a `RouteTrace` from a `BlockState` after execution.
 
     Accepted state attributes: `trace: list[SubblockTraceItem]`, `memory_accesses: list[dict]`.

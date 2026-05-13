@@ -32,11 +32,11 @@ class RouteDepthLtCondition(_Strict):
 
 
 class AllOfCondition(_Strict):
-    all_of: list["ConditionSpec"]
+    all_of: list[ConditionSpec]
 
 
 class AnyOfCondition(_Strict):
-    any_of: list["ConditionSpec"]
+    any_of: list[ConditionSpec]
 
 
 ConditionSpec = Union[
@@ -169,15 +169,7 @@ class SetMemoryPolicyModel(_ChangeBase):
 
 
 ChangeOpModel = Annotated[
-    Union[
-        InsertSubblockModel,
-        RemoveSubblockModel,
-        ReplaceSubblockModel,
-        ReorderSubblocksModel,
-        AddRoutingTagModel,
-        SetAdapterModel,
-        SetMemoryPolicyModel,
-    ],
+    InsertSubblockModel | RemoveSubblockModel | ReplaceSubblockModel | ReorderSubblocksModel | AddRoutingTagModel | SetAdapterModel | SetMemoryPolicyModel,
     Field(discriminator="action"),
 ]
 

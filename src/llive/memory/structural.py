@@ -18,7 +18,7 @@ import os
 import threading
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +28,7 @@ from llive.memory.provenance import Provenance
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _default_db_path() -> Path:
@@ -277,7 +277,7 @@ class StructuralMemory:
             self._conn = None  # type: ignore[assignment]
             self._db = None  # type: ignore[assignment]
 
-    def __enter__(self) -> "StructuralMemory":
+    def __enter__(self) -> StructuralMemory:
         return self
 
     def __exit__(self, *_args) -> None:

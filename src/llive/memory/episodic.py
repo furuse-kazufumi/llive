@@ -7,7 +7,7 @@ import os
 import threading
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +24,7 @@ def _default_db_path() -> Path:
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass
@@ -115,7 +115,7 @@ class EpisodicMemory:
         with self._lock:
             self._conn.close()
 
-    def __enter__(self) -> "EpisodicMemory":
+    def __enter__(self) -> EpisodicMemory:
         return self
 
     def __exit__(self, *_args) -> None:

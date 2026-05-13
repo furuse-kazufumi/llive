@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Provenance(BaseModel):
@@ -31,5 +31,5 @@ class Provenance(BaseModel):
         return self.model_dump_json()
 
     @classmethod
-    def from_json(cls, text: str) -> "Provenance":
+    def from_json(cls, text: str) -> Provenance:
         return cls.model_validate_json(text)

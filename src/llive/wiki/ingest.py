@@ -13,13 +13,12 @@ fallback) and each chunk is written to ``EpisodicMemory`` with a
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from llive.memory.episodic import EpisodicEvent, EpisodicMemory
 from llive.memory.provenance import Provenance
-
 
 # Chunk target ~500 tokens; we approximate with characters (≈4 chars/token).
 DEFAULT_CHUNK_CHARS = 2000

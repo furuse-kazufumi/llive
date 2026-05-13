@@ -14,7 +14,7 @@ class SubBlock(Protocol):
     name: str
     type: str
 
-    def __call__(self, state: "BlockState") -> "BlockState": ...  # noqa: F821 (forward ref)
+    def __call__(self, state: BlockState) -> BlockState: ...  # noqa: F821 (forward ref)
 
 
 SubBlockFactory = Callable[[dict[str, Any]], SubBlock]

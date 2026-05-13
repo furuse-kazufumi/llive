@@ -57,7 +57,7 @@ class AdapterBlock:
             fallback_to_base=bool(config.get("fallback_to_base", True)),
         )
 
-    def __call__(self, state):  # noqa: ANN001
+    def __call__(self, state):
         active = "base"
         if self.adapter_id is not None:
             try:
@@ -97,7 +97,7 @@ class LoraSwitchBlock:
             fallback_to_base=bool(config.get("fallback_to_base", True)),
         )
 
-    def _choose(self, state) -> str | None:  # noqa: ANN001
+    def _choose(self, state) -> str | None:
         if not self.adapters:
             return None
         if self.selector == "round_robin":
@@ -119,7 +119,7 @@ class LoraSwitchBlock:
                 return ad_id
         return self.adapters[0]
 
-    def __call__(self, state):  # noqa: ANN001
+    def __call__(self, state):
         chosen = self._choose(state)
         active = "base"
         if chosen is not None:

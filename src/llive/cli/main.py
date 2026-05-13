@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -35,7 +34,7 @@ def run(
     prompt: str = typer.Option(..., "--prompt", "-p", help="Prompt text"),
     max_new_tokens: int = typer.Option(32, "--max-new-tokens", "-n"),
     mock: bool = typer.Option(False, "--mock", help="Skip HFAdapter (no torch required)"),
-    task_tag: Optional[str] = typer.Option(None, "--task-tag"),
+    task_tag: str | None = typer.Option(None, "--task-tag"),
 ):
     """Run a single inference through the llive pipeline."""
     from llive.core.adapter import AdapterConfig, HFAdapter
@@ -84,7 +83,7 @@ def bench(
     dataset: Path = typer.Option(..., "--dataset", "-d", help="Prompt dataset path"),
     containers_dir: Path = typer.Option(Path("specs/containers"), "--containers-dir"),
     router_spec: Path = typer.Option(Path("specs/routes/default.yaml"), "--router"),
-    out_dir: Optional[Path] = typer.Option(None, "--out"),
+    out_dir: Path | None = typer.Option(None, "--out"),
 ):
     """Run an A/B bench between a baseline container and a candidate diff."""
     from llive.evolution.bench import BenchHarness
@@ -205,7 +204,7 @@ def schema_show(name: str = typer.Argument(...)):
 @schema_app.command("validate")
 def schema_validate(
     target: Path = typer.Argument(..., help="YAML file to validate"),
-    kind: Optional[str] = typer.Option(None, "--kind", help="container|subblock|candidate (auto-detect by filename if omitted)"),
+    kind: str | None = typer.Option(None, "--kind", help="container|subblock|candidate (auto-detect by filename if omitted)"),
 ):
     from llive.schema.validator import (
         SchemaValidationError,

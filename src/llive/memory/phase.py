@@ -15,8 +15,8 @@ metadata only (so audit trails survive right-to-be-forgotten requests).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Protocol
+from datetime import UTC, datetime
+from typing import Protocol
 
 PHASES = ("hot", "warm", "cold", "archived", "erased")
 
@@ -29,7 +29,7 @@ DEFAULT_THRESHOLDS_DAYS: dict[tuple[str, str], int] = {
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass

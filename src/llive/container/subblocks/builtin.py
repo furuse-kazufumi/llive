@@ -31,7 +31,7 @@ class _MarkerBlock:
     name: str
     type: str
 
-    def __call__(self, state):  # noqa: ANN001
+    def __call__(self, state):
         # marker sub-blocks are no-op pass-throughs for Phase 1
         return state
 
@@ -101,7 +101,7 @@ class MemoryReadBlock:
         srcs = config.get("source") or config.get("sources") or ["semantic", "episodic"]
         return cls(sources=tuple(srcs), top_k=int(config.get("top_k", 4)))
 
-    def __call__(self, state):  # noqa: ANN001
+    def __call__(self, state):
         backends = get_memory_backends()
         retrieved: list[str] = []
         if "semantic" in self.sources:
@@ -149,7 +149,7 @@ class MemoryWriteBlock:
             source_type=str(config.get("source_type", "llm_generation")),
         )
 
-    def __call__(self, state):  # noqa: ANN001
+    def __call__(self, state):
         content = state.output or state.prompt
         if not content:
             return state

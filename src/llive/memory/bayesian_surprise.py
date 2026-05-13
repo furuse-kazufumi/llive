@@ -50,7 +50,7 @@ class WelfordStats:
         return {"n": self.n, "mean": self.mean, "m2": self.m2}
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "WelfordStats":
+    def from_dict(cls, data: dict[str, Any]) -> WelfordStats:
         return cls(n=int(data.get("n", 0)), mean=float(data.get("mean", 0.0)), m2=float(data.get("m2", 0.0)))
 
 
@@ -131,7 +131,7 @@ class BayesianSurpriseGate:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "BayesianSurpriseGate":
+    def from_dict(cls, data: dict[str, Any]) -> BayesianSurpriseGate:
         gate = cls(
             k=float(data.get("k", 1.0)),
             min_samples=int(data.get("min_samples", 8)),

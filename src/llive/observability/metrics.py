@@ -6,7 +6,7 @@ import math
 import os
 import threading
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -61,7 +61,7 @@ class MetricsStore:
         )
 
     def record(self, run_id: str, key: str, value: float, ts: datetime | None = None) -> None:
-        when = ts or datetime.now(timezone.utc)
+        when = ts or datetime.now(UTC)
         with self._lock:
             self._conn.execute(
                 "INSERT INTO metrics (ts, run_id, key, value) VALUES (?, ?, ?, ?)",
@@ -69,7 +69,7 @@ class MetricsStore:
             )
 
     def record_many(self, run_id: str, items: dict[str, float], ts: datetime | None = None) -> None:
-        when = ts or datetime.now(timezone.utc)
+        when = ts or datetime.now(UTC)
         with self._lock:
             self._conn.executemany(
                 "INSERT INTO metrics (ts, run_id, key, value) VALUES (?, ?, ?, ?)",

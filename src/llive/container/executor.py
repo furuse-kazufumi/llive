@@ -45,7 +45,7 @@ class BlockState:
     trace: list[SubblockTraceItem] = field(default_factory=list)
     memory_accesses: list[dict[str, Any]] = field(default_factory=list)
 
-    def with_output(self, output: str) -> "BlockState":
+    def with_output(self, output: str) -> BlockState:
         self.output = output
         return self
 
@@ -62,18 +62,18 @@ def _eval_condition(cond: ConditionSpec | None, state: BlockState) -> bool:
         return True
     # Pydantic v2 union → discriminator by present attribute
     if hasattr(cond, "surprise_gt"):
-        threshold = float(getattr(cond, "surprise_gt"))
+        threshold = float(cond.surprise_gt)
         return (state.surprise or 0.0) > threshold
     if hasattr(cond, "task_tag"):
-        wanted = getattr(cond, "task_tag")
+        wanted = cond.task_tag
         return state.meta.get("task_tag") == wanted
     if hasattr(cond, "route_depth_lt"):
-        threshold = int(getattr(cond, "route_depth_lt"))
+        threshold = int(cond.route_depth_lt)
         return int(state.meta.get("route_depth", 0)) < threshold
     if hasattr(cond, "all_of"):
-        return all(_eval_condition(c, state) for c in getattr(cond, "all_of"))
+        return all(_eval_condition(c, state) for c in cond.all_of)
     if hasattr(cond, "any_of"):
-        return any(_eval_condition(c, state) for c in getattr(cond, "any_of"))
+        return any(_eval_condition(c, state) for c in cond.any_of)
     return True
 
 
@@ -85,7 +85,7 @@ class BlockContainerExecutor:
         spec: ContainerSpec | dict[str, Any] | str,
         registry: SubBlockRegistry | None = None,
         *,
-        container_resolver: "ContainerResolver | None" = None,
+        container_resolver: ContainerResolver | None = None,
         max_nest_depth: int = 3,
     ) -> None:
         if isinstance(spec, ContainerSpec):
@@ -126,7 +126,7 @@ class BlockContainerExecutor:
             raise NestedContainerError(
                 f"max_nest_depth={self.max_nest_depth} exceeded at container {self.spec.container_id}"
             )
-        visited_next = _visited + (self.spec.container_id,)
+        visited_next = (*_visited, self.spec.container_id)
 
         for step in self._steps:
             if not _eval_condition(step.ref.condition, state):
