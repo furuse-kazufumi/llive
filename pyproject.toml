@@ -68,9 +68,7 @@ llive = "llive.cli.main:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llive"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"src/llive/_specs" = "llive/_specs"
+# src/llive/_specs/ is automatically included because it lives under the package tree
 
 [tool.hatch.build.targets.sdist]
 include = [
