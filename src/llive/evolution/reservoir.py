@@ -185,7 +185,7 @@ class FailedCandidateReservoir:
         sql = (
             "SELECT candidate_id, rejected_at, reason, rejector, diff, score_bundle, "
             "mutation_policy, contradiction_id, notes "
-            f"FROM failed_candidates{where} ORDER BY rejected_at DESC LIMIT ?"
+            f"FROM failed_candidates{where} ORDER BY seq DESC LIMIT ?"
         )
         args.append(limit)
         with self._lock:
