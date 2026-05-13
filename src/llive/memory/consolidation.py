@@ -357,11 +357,28 @@ class Consolidator:
             else:
                 result.pages_updated += 1
 
-        # Wire concept→concept edges co-occurring in this cycle
+        # Wire concept→concept edges co-occurring in this cycle.
+        # LLW-AC-09 edge weight semantics: linked_concept weight = Jaccard(linked_entries_a, linked_entries_b)
+        # Empty intersection means no shared evidence — skip the edge entirely so spurious
+        # links don't pollute the graph.
+        touched_pages: dict[str, set[str]] = {}
+        for cid in page_ids_touched:
+            page = self.repo.get(cid)
+            touched_pages[cid] = set(page.linked_entry_ids) if page else set()
         for i in range(len(page_ids_touched)):
             for j in range(i + 1, len(page_ids_touched)):
+                a_id = page_ids_touched[i]
+                b_id = page_ids_touched[j]
+                a = touched_pages.get(a_id, set())
+                b = touched_pages.get(b_id, set())
+                union = a | b
+                if not union:
+                    continue
+                weight = len(a & b) / len(union)
+                if weight <= 0.0:
+                    continue
                 try:
-                    self.repo.link_concept(page_ids_touched[i], page_ids_touched[j], weight=0.5)
+                    self.repo.link_concept(a_id, b_id, weight=float(weight))
                     result.edges_added += 1
                 except Exception as exc:  # pragma: no cover
                     result.errors.append(f"edge: {exc}")
