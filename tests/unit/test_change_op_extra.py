@@ -88,7 +88,7 @@ def test_build_change_op_unknown_action(monkeypatch):
     class _Fake:
         action = "set_memory_policy"  # schema-reserved but not implemented in Phase 1
         memory_type = "semantic"
-        policy = {}
+        policy: typing.ClassVar[dict] = {}
 
     with pytest.raises(ChangeOpError):
         build_change_op(_Fake())
