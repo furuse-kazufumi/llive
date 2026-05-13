@@ -76,13 +76,16 @@ def _compute_surprise_py(
     if not memory_embeddings:
         return 1.0
     dim = len(new)
+    # Validate dimensions first so the error surface is independent of
+    # vector magnitudes (mirrors the Rust kernel for RUST-13 parity).
+    for row in memory_embeddings:
+        if len(row) != dim:
+            raise ValueError(f"dim mismatch: new={dim}, row={len(row)}")
     new_norm = _l2_norm(new)
     if new_norm == 0.0:
         return 1.0
     max_sim = -1.0
     for row in memory_embeddings:
-        if len(row) != dim:
-            raise ValueError(f"dim mismatch: new={dim}, row={len(row)}")
         row_norm = _l2_norm(row)
         if row_norm == 0.0:
             continue
