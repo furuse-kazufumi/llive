@@ -117,7 +117,17 @@ class BlockContainerExecutor:
     def subblock_types(self) -> list[str]:
         return [s.ref.type for s in self._steps]
 
-    def execute(self, state: BlockState) -> BlockState:
+    def execute(self, state: BlockState, _visited: tuple[str, ...] = ()) -> BlockState:
+        if self.spec.container_id in _visited:
+            raise NestedContainerError(
+                f"circular nested_container reference: {self.spec.container_id} already in chain {_visited}"
+            )
+        if len(_visited) >= self.max_nest_depth:
+            raise NestedContainerError(
+                f"max_nest_depth={self.max_nest_depth} exceeded at container {self.spec.container_id}"
+            )
+        visited_next = _visited + (self.spec.container_id,)
+
         for step in self._steps:
             if not _eval_condition(step.ref.condition, state):
                 state.trace.append(
@@ -143,4 +153,34 @@ class BlockContainerExecutor:
             state.trace.append(
                 SubblockTraceItem(name=step.name, type=step.ref.type, duration_ms=duration_ms)
             )
+            # nested_container: 該当 sub-block の name が nesting target なら展開
+            for nested in self.spec.nested_containers:
+                if nested.target == step.name and _eval_condition(nested.condition, state):
+                    if self.container_resolver is None:
+                        raise NestedContainerError(
+                            f"nested_container at {step.name} requires container_resolver"
+                        )
+                    nested_spec = self.container_resolver(nested.container_ref)
+                    nested_exec = BlockContainerExecutor(
+                        nested_spec,
+                        registry=self.registry,
+                        container_resolver=self.container_resolver,
+                        max_nest_depth=self.max_nest_depth,
+                    )
+                    state.trace.append(
+                        SubblockTraceItem(
+                            name=f"nested:{nested.container_ref}",
+                            type="nested_container",
+                            duration_ms=0.0,
+                            note=f"entering depth={len(visited_next)}",
+                        )
+                    )
+                    state = nested_exec.execute(state, _visited=visited_next)
         return state
+
+
+class NestedContainerError(RuntimeError):
+    """Raised on nested_container resolution failure (cycle, depth, missing resolver)."""
+
+
+ContainerResolver = Callable[[str], ContainerSpec]
