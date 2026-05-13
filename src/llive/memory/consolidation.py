@@ -287,9 +287,9 @@ class Consolidator:
         llm: CompileLLM | None = None,
         gate: BayesianSurpriseGate | None = None,
         config: ConsolidatorConfig | None = None,
-        edge_weight_updater: EdgeWeightUpdater | None = None,
+        edge_weight_updater: "EdgeWeightUpdater | None" = None,
     ) -> None:
-        from llive.memory.edge_weight import EdgeWeightUpdater  # local import: avoid circular
+        from llive.memory.edge_weight import EdgeWeightUpdater  # local import: avoid circular  # noqa: F401
 
         self.episodic = episodic
         self.structural = structural
