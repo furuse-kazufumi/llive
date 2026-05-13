@@ -86,11 +86,8 @@ routes:
 
 
 def test_router_features_from_prompt_with_extras():
-    eng = RouterEngine(_spec(Path("specs/routes/default.yaml"), ""))  # use packaged default
-    # actually we want from the existing default
-    from llive.router.engine import RouterEngine as RE
-
-    eng = RE()
+    # No-arg constructor uses the packaged default route spec
+    eng = RouterEngine()
     feats = eng.features_from_prompt("hello there", extra={"task_tag": "qa"})
     assert feats["task_tag"] == "qa"
     assert feats["prompt_length"] == 11
