@@ -99,7 +99,7 @@ def test_apply_decision_merge_path(cons):
     # Need to seed episodic events with IDs that overlap with the existing page.
     from llive.memory.episodic import EpisodicEvent
 
-    for content, eid in zip(("merge ev a", "merge ev b"), shared_ids):
+    for content, eid in zip(("merge ev a", "merge ev b"), shared_ids, strict=True):
         cons.episodic.write(
             EpisodicEvent(
                 content=content,
