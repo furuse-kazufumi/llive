@@ -158,11 +158,10 @@ class EdgeWeightUpdater:
         edges_payload = [(row.rel_type, row.weight, age) for row, age in zip(rows, ages, strict=True)]
         new_weights = rust_ext.bulk_time_decay(edges_payload, dict(self.config.decay_tau_days))
         updates = 0
-        for row, age, new_weight in zip(rows, ages, new_weights, strict=True):
+        for row, new_weight in zip(rows, new_weights, strict=True):
             tau = self.config.decay_tau_days.get(row.rel_type)
             if tau is None or tau <= 0:
                 continue
-            del age  # age is captured in new_weight already; keep loop signature explicit
             if self._replace_edge(row, new_weight, reason="time_decay"):
                 updates += 1
         return updates
