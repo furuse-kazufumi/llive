@@ -367,18 +367,53 @@ class Consolidator:
                     result.errors.append(f"edge: {exc}")
         return result
 
+    def _enforce_diversity(
+        self,
+        decision: CompileDecision,
+        cluster_events: list[EpisodicEvent],
+        existing_pages: list[ConceptPage],
+    ) -> CompileDecision:
+        """LLW-AC-04: downgrade merge to new when overlap is too low."""
+        if decision.action != "merge" or not decision.merged_concept_ids:
+            return decision
+        new_evidence = {e.event_id for e in cluster_events}
+        for cid in decision.merged_concept_ids:
+            target = next((p for p in existing_pages if p.concept_id == cid), None)
+            if target is None:
+                continue
+            old_evidence = set(target.linked_entry_ids)
+            if not old_evidence:
+                continue
+            overlap_ratio = len(new_evidence & old_evidence) / max(
+                1, len(new_evidence | old_evidence)
+            )
+            if overlap_ratio < 0.3:
+                return CompileDecision(
+                    action="new",
+                    title=decision.title,
+                    summary=decision.summary,
+                    target_concept_id=None,
+                    merged_concept_ids=[],
+                    page_type=decision.page_type,
+                )
+        return decision
+
     def _apply_decision(
         self,
         decision: CompileDecision,
         cluster_events: list[EpisodicEvent],
         existing_pages: list[ConceptPage],
     ) -> ConceptPage | None:
+        # LLW-AC-01 source-anchored provenance: derived_from must include raw events
         provenance = Provenance(
             source_type="wiki_compiler",
             source_id=f"cycle_{_utcnow().isoformat()}",
             derived_from=[e.event_id for e in cluster_events],
             confidence=0.8,
         )
+        if not provenance.derived_from:
+            # never produce a page with no raw-event anchor
+            return None
         if decision.action == "merge" and decision.merged_concept_ids:
             target_id = decision.target_concept_id or decision.merged_concept_ids[0]
             target_page = self.repo.get(target_id)
