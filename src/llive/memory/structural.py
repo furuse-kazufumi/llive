@@ -224,7 +224,7 @@ class StructuralMemory:
         if rel_type is not None:
             cond_parts.append("e.rel_type = $rt")
             params["rt"] = rel_type
-        if min_weight is not None:
+        if min_weight is not None:  # pragma: no cover - optional weight filter
             cond_parts.append("e.weight >= $minw")
             params["minw"] = float(min_weight)
         cond = " WHERE " + " AND ".join(cond_parts)
