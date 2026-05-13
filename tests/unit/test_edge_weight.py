@@ -185,3 +185,7 @@ def test_default_config_values():
     assert cfg.alpha_penalty > 0
     assert cfg.min_weight_keep > 0
     assert "linked_concept" in cfg.decay_tau_days
+    # AC-11 additions
+    assert 0 < cfg.floor_weight < cfg.min_weight_keep
+    assert 0 < cfg.random_boost_probability <= 1.0
+    assert cfg.ucb_c > 0
