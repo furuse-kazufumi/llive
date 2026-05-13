@@ -165,7 +165,7 @@ class Pipeline:
             state=state,
             trace=trace,
             generation=generation,
-            extras={"router_explanation": decision.explanation.model_dump()},
+            extras=extras,
         )
 
 
