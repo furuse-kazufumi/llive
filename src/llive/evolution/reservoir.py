@@ -116,7 +116,9 @@ class FailedCandidateReservoir:
         self._conn = duckdb.connect(str(self.db_path))
         self._conn.execute(
             """
+            CREATE SEQUENCE IF NOT EXISTS failed_candidates_seq START 1;
             CREATE TABLE IF NOT EXISTS failed_candidates (
+                seq              BIGINT DEFAULT nextval('failed_candidates_seq'),
                 candidate_id     VARCHAR PRIMARY KEY,
                 rejected_at      TIMESTAMP NOT NULL,
                 reason           VARCHAR NOT NULL,
