@@ -80,7 +80,7 @@ def test_failed_proposals_spool_to_reservoir(tmp_path):
         top_k_principles=3,
     )
     session.observe_many(_samples())
-    proposals, summary = session.run_once(bad)
+    _, summary = session.run_once(bad)
     assert summary.n_failed >= 1
     failures = reservoir.list(reason="verifier")
     assert len(failures) >= 1
