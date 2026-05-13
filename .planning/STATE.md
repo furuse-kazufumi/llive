@@ -26,15 +26,22 @@ See: .planning/PROJECT.md (updated 2026-05-13)
   - 24 requirements (v2 9 + LLW 4 + AC 8 + CONC 3) 実装
   - 308 tests pass / 99% coverage / 0 lint warnings (commit 0fbd8e6)
   - 詳細: `.planning/phases/02-adaptive/02-VERIFICATION.md`
-- **Phase 3 (Evolve)**: 未着手 — 次の着工対象
-- **Phase 4 (Production)**: 未着手
-- **Phase 5-7 (Rust acceleration)**: 要件のみ定義済 — `docs/requirements_v0.7_rust_acceleration.md` (RUST-01〜14)
+- **Phase 3 (Evolve MVR)**: ✅ 完了 (2026-05-14)
+  - EVO-04 (Z3 static verifier) / EVO-06 (Reservoir) / EVO-07 (Reverse Monitor)
+  - TRIZ-02 (Contradiction) / TRIZ-03 (Principle Mapper) / TRIZ-04 (RAD Idea Generator) / TRIZ-07 (Self-Reflection)
+  - LLW-04 (Wiki Contradiction) / LLW-05 (Wiki diff ChangeOp)
+  - 9 件 MVR 実装、EVO-03/05/08 / TRIZ-05/06 は v0.3.1+ へ延期
+- **Phase 4 (Production Security MVR)**: ✅ 完了 (2026-05-14)
+  - SEC-01 (Quarantined Memory Zone) / SEC-02 (Ed25519 Signed Adapter) / SEC-03 (SHA-256 audit chain)
+  - 3 件 MVR 実装、SEC-04 (mTLS/OIDC) / INT-01/02/03 (llmesh-MQTT / SPC / llove Arena) は v0.4.0+ infra 対応待ち
+  - 429 tests pass / 98% coverage / 0 lint warnings
+- **Phase 5-7 (Rust acceleration)**: 要件定義済 (`docs/requirements_v0.7_rust_acceleration.md`)、実装は要件自身の「Phase 4 完了後の措置」原則に従って後続セッションで段階着手
 
 ## Next Action
 
 ```
-# Phase 3 (Controlled Self-Evolution) discuss-phase → PLAN.md → 実装
-# 別軸: v0.2.0 PyPI 公開 (ユーザ確認後)
+# v0.3.0 PyPI 公開 (Phase 3 + Phase 4 bundle)
+# Phase 5+ (Rust skeleton) は別セッションで意味論凍結確認後に着手
 # 中断時は SESSION_SUMMARY.md の "次のアクション" 参照。
 ```
 
