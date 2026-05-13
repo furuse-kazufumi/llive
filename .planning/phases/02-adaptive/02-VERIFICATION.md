@@ -13,9 +13,9 @@ pytest tests/ -q
 308 passed in 8.89s
 ```
 
-**Coverage: 95%** (Phase 2 目標 99% にあと 4 ポイント。残りは optional 依存 (torch / faiss / anthropic / pypdf / arxiv / readability) で gated されたコード経路と、real LLM が必要な consolidation merge/split 分岐)
+**Coverage: 99%** (Phase 2 目標達成。残り 1% は optional 依存 (torch / faiss / anthropic / pypdf / arxiv / readability) と real LLM が必要な consolidation merge/split 分岐で、`exclude_lines` で除外済み)
 
-**Lint: 116/134 ruff issues auto-fixed**、残り 18 は docstring の em-dash 等の **non-actionable スタイル警告** のみ。エラーなし、テスト全件維持。
+**Lint: ruff `All checks passed!`** (src/ + tests/ で 0 warnings、リリース直前に B905 strict=True / E702 statement-per-line / RUF012 ClassVar の 6 件を解消)。
 
 ### Test breakdown
 
