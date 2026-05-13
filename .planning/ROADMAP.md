@@ -143,6 +143,10 @@ Phase は基本 sequential。但し:
 - マルチエージェント llive (複数 llive ノードが連携進化)
 - Public benchmark contribution (CLOC, CORE50 等への投稿)
 - 商用支援 (managed cloud / self-hosted エンタープライズ)
+- **Phase 5 — Spatial Memory / Metrology-Grade Gaussian Tokens** (`docs/requirements_v0.5_spatial_memory.md`)
+  - 3DGS の SH係数を VQ 量子化して LLM トークンとして扱う研究テーマ
+  - 5 層目メモリ (`memory_type=spatial`) + Gaussian-level 計測精度保存 + クロス時間 diff + CAD anchoring
+  - 論文化想定 (CVPR / ICCV / ICRA / IROS / CASE / IEEE T-ASE / IEEE T-IM)、実装はゆっくり
 
 ---
 *Last updated: 2026-05-13 after initialization*
