@@ -13,11 +13,22 @@ Subcommand layout::
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import typer
 from rich.console import Console
 from rich.table import Table
+
+# Force UTF-8 stdout/stderr so em-dashes and other non-ASCII glyphs render
+# correctly on Japanese Windows (cp932) terminals. No-op on UTF-8 platforms.
+for _stream in (sys.stdout, sys.stderr):
+    reconfigure = getattr(_stream, "reconfigure", None)
+    if reconfigure is not None:
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
 
 console = Console()
 app = typer.Typer(no_args_is_help=True, help="llive — self-evolving modular memory LLM framework")
