@@ -3,49 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-13 21:45:39
+- **最終更新**: 2026-05-13 22:39:20
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-5743a23 docs(state): Phase 1 complete + Phase 2 CONTEXT.md captured
-3145486 auto: STATE.md 編集前 (2026-05-13 21:37)
-2e4d8e4 docs(02-adaptive): capture phase 2 context via discuss-phase (auto)
-f3f0df2 fix(triz): merge duplicate top-level keys in matrix_compact (11 -> 22 cells)
-bad82d9 fix(packaging): bundle specs/ as llive/_specs/ inside wheel + bump to 0.1.1
-a2354bf auto: pyproject.toml 編集前 (2026-05-13 21:25)
-cb31ff5 auto: __init__.py 編集前 (2026-05-13 21:24)
-418d82a auto: pyproject.toml 編集前 (2026-05-13 21:24)
-942a0f2 auto: engine.py 編集前 (2026-05-13 21:24)
-5c7033e auto: pipeline.py 編集前 (2026-05-13 21:24)
+a06ca23 test(02-adaptive): ruff auto-fix (116 issues) + Phase 2 VERIFICATION.md
+6f9639e test(02-adaptive): full Phase 2 test suite + coverage push (95%)
+919fe94 auto: test_coverage_fill.py 編集前 (2026-05-13 22:35)
+887ab7a auto: semantic.py 編集前 (2026-05-13 22:34)
+58a69b0 auto: semantic.py 編集前 (2026-05-13 22:34)
+8d8615e auto: semantic.py 編集前 (2026-05-13 22:34)
+04a18db auto: semantic.py 編集前 (2026-05-13 22:34)
+5c40eb1 auto: semantic.py 編集前 (2026-05-13 22:34)
+8886eb5 auto: semantic.py 編集前 (2026-05-13 22:34)
+1755f7a auto: encoder.py 編集前 (2026-05-13 22:33)
 ```
 
 ## 現在の git status
 
 ```
-M docs/SESSION_SUMMARY.md
+(clean)
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-21:43 docs/SESSION_SUMMARY.md
-21:37 .planning/STATE.md
-21:36 .planning/phases/02-adaptive/02-DISCUSSION-LOG.md
-21:35 .planning/phases/02-adaptive/02-CONTEXT.md
-21:31 .pytest_cache/v/cache/nodeids
-21:31 src/llive/_specs/resources/triz_matrix_compact.yaml
-21:31 specs/resources/triz_matrix_compact.yaml
-21:25 .hypothesis/constants/f697a92e9e9a6c5d
-21:25 .hypothesis/constants/d0b6da4b0e39271c
-21:25 .hypothesis/constants/ab81d8eeac4cf642
-21:25 .hypothesis/constants/2a7f9be90f2669a6
-21:25 .hypothesis/constants/141cfccced562e32
-21:25 pyproject.toml
-21:24 src/llive/__init__.py
-21:24 src/llive/router/engine.py
+22:38 .planning/phases/02-adaptive/02-VERIFICATION.md
+22:37 .pytest_cache/v/cache/nodeids
+22:37 .hypothesis/constants/f9b3feeeef3468e8
+22:37 .hypothesis/constants/f6cdad1223b2f6b0
+22:37 .hypothesis/constants/ecffeee2ba4750fc
+22:37 .hypothesis/constants/e121c0a4f376658e
+22:37 .hypothesis/constants/dcd8b57ff82d9c53
+22:37 .hypothesis/constants/d6492039b1dd7a2e
+22:37 .hypothesis/constants/c65e209f783f4e2a
+22:37 .hypothesis/constants/c404a0645ed1d66b
+22:37 .hypothesis/constants/b1f1d78516478f90
+22:37 .hypothesis/constants/adf4962472a7a396
+22:37 .hypothesis/constants/9b4285e9506313f1
+22:37 .hypothesis/constants/973ee1a6a68f9775
+22:37 .hypothesis/constants/95dd11264f28cc40
 ```
 
 ---
