@@ -1,0 +1,97 @@
+# Qwen2.5-7B Decoder-only LLM の ContainerSpec 化
+#
+# 出典: HuggingFace `Qwen/Qwen2.5-7B-Instruct` の config.json
+#       および公開モデルカード (https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
+# 検証手順: scripts/inspect_hf_model.py で config.json を取得して再現可能
+#
+# 用途:
+# - Phase 1 MVR の出発点 (BaseModelAdapter のリファレンス)
+# - Llive 上に Qwen2.5 系を載せる際の標準テンプレート
+# - 他モデルとの比較ベンチマーク基準
+
+schema_version: 1
+container_id: qwen2_5_7b_v1
+routing_tags: [reasoning, instruction, chinese, japanese, long-context]
+cost_profile:
+  latency: medium
+  vram: medium
+  est_flops_per_token: 4500000000   # 概算
+
+# モデル全体メタデータ (llive 拡張)
+model_metadata:
+  family: qwen
+  hf_id: Qwen/Qwen2.5-7B-Instruct
+  num_hidden_layers: 28
+  hidden_size: 3584
+  intermediate_size: 18944
+  num_attention_heads: 28
+  num_key_value_heads: 4              # GQA
+  head_dim: 128
+  norm: rms_norm
+  norm_eps: 1.0e-6
+  activation: silu                    # SwiGLU の片肺
+  position: rope
+  rope_theta: 1000000.0
+  max_position_embeddings: 32768
+  vocab_size: 151643
+  tie_word_embeddings: false
+
+# 1 Transformer block = ContainerSpec で記述
+# Qwen2.5 の block: x → RMSNorm → GQA(28/4) → +res → RMSNorm → SwiGLU FFN → +res
+subblocks:
+  - type: pre_norm
+    name: input_layernorm
+    config: { method: rms_norm, eps: 1.0e-6 }
+
+  - type: grouped_query_attention
+    name: self_attn
+    config:
+      num_heads: 28
+      num_kv_heads: 4
+      head_dim: 128
+      rope_theta: 1000000.0
+      causal: true
+      qk_norm: false
+      bias_q: true                    # Qwen2.5 は qkv bias あり
+      bias_k: true
+      bias_v: true
+      bias_o: false
+
+  - type: residual
+    name: attn_residual
+
+  - type: pre_norm
+    name: post_attention_layernorm
+    config: { method: rms_norm, eps: 1.0e-6 }
+
+  - type: ffn_swiglu
+    name: mlp
+    config:
+      hidden_size: 3584
+      intermediate_size: 18944
+      activation: silu
+      gate_bias: false
+      up_bias: false
+      down_bias: false
+
+  - type: residual
+    name: ffn_residual
+
+# llive で評価時に追加する任意 sub-block (template では disabled)
+optional_extensions:
+  - type: memory_read
+    enabled: false
+    config:
+      source: [semantic, episodic]
+      top_k: 8
+      insert_position: after_self_attn
+
+  - type: memory_write
+    enabled: false
+    config:
+      policy: surprise_gated
+      insert_position: end_of_block
+
+  - type: reflective_probe
+    enabled: false
+    config: { every_n_blocks: 4 }
