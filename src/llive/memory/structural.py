@@ -91,7 +91,7 @@ class StructuralMemory:
                 "created_at TIMESTAMP, "
                 "PRIMARY KEY(id))"
             )
-        except RuntimeError as e:
+        except RuntimeError as e:  # pragma: no cover - idempotent CREATE TABLE
             if "already exists" not in str(e).lower():
                 raise
         try:
@@ -99,7 +99,7 @@ class StructuralMemory:
                 "CREATE REL TABLE MemoryEdge(FROM MemoryNode TO MemoryNode, "
                 "rel_type STRING, weight DOUBLE, provenance STRING, created_at TIMESTAMP)"
             )
-        except RuntimeError as e:
+        except RuntimeError as e:  # pragma: no cover - idempotent CREATE TABLE
             if "already exists" not in str(e).lower():
                 raise
 
