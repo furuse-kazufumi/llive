@@ -165,7 +165,7 @@ class SemanticMemory:
             return
         with self._lock:
             self._entries.clear()
-            if self.use_faiss:
+            if self.use_faiss:  # pragma: no cover - requires faiss-cpu
                 self._index.reset()  # type: ignore[union-attr]
             else:
                 self._matrix = None
