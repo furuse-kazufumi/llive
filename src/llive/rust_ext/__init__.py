@@ -34,7 +34,7 @@ except ImportError:
     _rust = None
     HAS_RUST = False
     __backend__ = "python"
-    __version__ = "0.4.0+python_fallback"
+    __version__ = "0.5.0+python_fallback"
 
 
 def compute_surprise(
