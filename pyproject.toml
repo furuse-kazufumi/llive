@@ -137,6 +137,10 @@ exclude_lines = [
   "raise KeyError",
   "raise RuntimeError",
   "raise ValueError",
+  "raise ChangeOpError",
+  "raise NestedContainerError",
+  "raise SchemaValidationError",
+  "raise WikiSchemaError",
   # Environment-detection fallbacks
   "return Path\\(",
   "if env:",
