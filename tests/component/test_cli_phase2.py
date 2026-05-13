@@ -196,7 +196,7 @@ def test_cli_bench_smoke(project_root: Path, tmp_path):
 
 
 def test_cli_root_help_lists_subcommands():
-    res = runner.invoke(app, [])
+    res = runner.invoke(app, ["--help"])
     assert res.exit_code == 0
     for sub in ("run", "bench", "memory", "schema", "route", "triz"):
         assert sub in res.stdout
