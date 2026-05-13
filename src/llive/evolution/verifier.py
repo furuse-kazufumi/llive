@@ -216,13 +216,15 @@ def _smt_verify(
             solver.add(a == prev["a"])
             solver.add(r == prev["r"])
             solver.add(w == prev["w"])
-        # invariants on the new state
-        solver.add(n >= inv.min_blocks)
-        solver.add(n <= inv.max_blocks)
-        if inv.require_attention:
-            solver.add(a >= 1)
-        if inv.require_memory_pair:
-            solver.add(z3.Implies(r >= 1, w >= 1))
+    # invariants on the FINAL state only (intermediate states may transiently
+    # violate them, e.g. inserting memory_read before its matching memory_write)
+    final = states[-1]
+    solver.add(final["n"] >= inv.min_blocks)
+    solver.add(final["n"] <= inv.max_blocks)
+    if inv.require_attention:
+        solver.add(final["a"] >= 1)
+    if inv.require_memory_pair:
+        solver.add(z3.Implies(final["r"] >= 1, final["w"] >= 1))
     res = solver.check()
     if res == z3.sat:
         return True, [], None
