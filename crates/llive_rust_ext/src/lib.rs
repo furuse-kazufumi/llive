@@ -15,7 +15,7 @@
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
-const VERSION: &str = "0.4.0";
+const VERSION: &str = "0.5.0";
 
 /// Cosine-similarity surprise: `1 - max_i cosine(new, mem[i])`, clipped to `[0, 1]`.
 ///
