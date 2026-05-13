@@ -106,3 +106,52 @@ def test_deterministic_under_seeded_random():
     a = rust_ext.compute_surprise(list(new), [list(r) for r in mem])
     b = rust_ext.compute_surprise(list(new), [list(r) for r in mem])
     assert a == b
+
+
+# ---------------------------------------------------------------------------
+# bulk_time_decay (RUST-03 baseline)
+# ---------------------------------------------------------------------------
+
+_REL_STRATEGY = st.sampled_from(["linked_concept", "co_occurs_with", "temporal_after", "unknown"])
+_EDGE_STRATEGY = st.tuples(
+    _REL_STRATEGY,
+    st.floats(min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False),
+    st.floats(min_value=0.0, max_value=100.0, allow_nan=False, allow_infinity=False),
+)
+
+
+@settings(max_examples=50, deadline=None)
+@given(
+    edges=st.lists(_EDGE_STRATEGY, min_size=0, max_size=30),
+    tau_linked=st.floats(min_value=0.5, max_value=60.0, allow_nan=False),
+    tau_coocc=st.floats(min_value=0.5, max_value=60.0, allow_nan=False),
+)
+def test_bulk_time_decay_parity(edges, tau_linked, tau_coocc):
+    tau_map = {"linked_concept": tau_linked, "co_occurs_with": tau_coocc, "temporal_after": 14.0}
+    py = _bulk_time_decay_py(edges, tau_map)
+    active = rust_ext.bulk_time_decay(edges, tau_map)
+    assert len(py) == len(active)
+    for a, b in zip(py, active, strict=True):
+        assert _isclose(a, b, tol=1e-9), (a, b)
+
+
+def test_bulk_time_decay_unknown_rel_passthrough():
+    edges = [("unknown_rel", 0.7, 12.0)]
+    out = rust_ext.bulk_time_decay(edges, {"linked_concept": 30.0})
+    assert out == [0.7]
+
+
+def test_bulk_time_decay_zero_tau_passthrough():
+    edges = [("foo", 0.5, 7.0)]
+    out = rust_ext.bulk_time_decay(edges, {"foo": 0.0})
+    assert out == [0.5]
+
+
+def test_bulk_time_decay_empty_input():
+    assert rust_ext.bulk_time_decay([], {"x": 10.0}) == []
+
+
+def test_bulk_time_decay_known_value():
+    # exp(-7 / 14) ≈ 0.6065306597126334
+    out = rust_ext.bulk_time_decay([("linked_concept", 1.0, 7.0)], {"linked_concept": 14.0})
+    assert _isclose(out[0], math.exp(-0.5), tol=1e-6)
