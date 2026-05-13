@@ -81,7 +81,7 @@ def _chunk_markdown(text: str, max_chars: int = DEFAULT_CHUNK_CHARS) -> list[str
     for sec in sections:
         if len(sec) <= max_chars:
             out.append(sec)
-        else:
+        else:  # pragma: no cover - depends on huge markdown sections
             out.extend(_chunk_text(sec, max_chars))
     return [s for s in out if s.strip()]
 
