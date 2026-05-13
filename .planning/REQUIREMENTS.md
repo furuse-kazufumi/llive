@@ -128,6 +128,36 @@
 - [ ] **LLW-07**: llove TUI で ConceptPage 閲覧 + グラフ viz + HITL 編集 (OBS-03 拡張)
 - [ ] **LLW-08**: RAG (memory_read) が Wiki 層を優先 query、概念単位で context 返す
 
+## v0.7 Requirements (Rust acceleration — Phase 5 以降に分配実装)
+
+詳細は `docs/requirements_v0.7_rust_acceleration.md` を参照。早期最適化禁止、Phase 5 で意味論凍結後に PyO3 経由でドロップイン置換。
+
+### Native extension 基盤 (Phase 5)
+
+- [ ] **RUST-01**: PyO3 + maturin による Rust extension skeleton + 自動 fallback
+- [ ] **RUST-12**: GitHub Actions による wheel cross-build (Linux/macOS/Windows、x86_64/arm64)
+- [ ] **RUST-13**: Rust ⇄ Python parity test (Hypothesis + proptest、bit-exact < 1e-6)
+- [ ] **RUST-14**: pytest-benchmark + criterion による退行検出ハーネス (5× ゲート)
+
+### Numeric / memory hotspot (Phase 5)
+
+- [ ] **RUST-02**: Bayesian surprise kernel (rust-numpy + ndarray + rayon、5ms 目標 / 100k 行)
+- [ ] **RUST-03**: Edge weight bulk decay (rayon 並列 + Kùzu bulk transaction、目標 8s → 600ms)
+- [ ] **RUST-04**: Jaccard / cosine kernel library (set-of-ids u32 化、10-30× 高速)
+- [ ] **RUST-05**: jsonschema-rs によるバリデータ差し替え (10-50× 高速)
+- [ ] **RUST-06**: JSONL audit sink (crossbeam-channel + writer-thread、GIL 解放)
+- [ ] **RUST-10**: TRIZ matrix lookup を phf で静的化 (起動時 0ms)
+
+### Formal verification 接合 (Phase 6)
+
+- [ ] **RUST-07**: ChangeOp engine の Rust 移植 (Z3 verifier との統合、proptest parity 100k 件)
+- [ ] **RUST-11**: Z3 SMT bridge (`z3.rs` ラッパー、Static Verifier の本格運用基盤)
+- [ ] **RUST-08**: ANN backend (hora / arroy) を optional 化、Faiss-CPU 依存緩和
+
+### Concurrency reimagined (Phase 7)
+
+- [ ] **RUST-09**: tokio + pyo3-async-runtimes による Concurrent Pipeline 再実装
+
 ## Out of Scope
 
 | Feature | Reason |
