@@ -1,26 +1,30 @@
-"""Dynamic edge weight updater (LLW-AC-10).
+"""Dynamic edge weight updater (LLW-AC-10) + exploration balance (LLW-AC-11).
 
 Weights stored in :class:`StructuralMemory` MemoryEdges are not static —
-they must react to actual Wiki usage. This module wires the 5 update
-triggers from LLW-AC-10:
+they must react to actual Wiki usage. AC-10 wires the deterministic
+triggers:
 
-* ``on_read_hit``           — memory_read on a page reinforces its outgoing
-                              ``linked_concept`` edges.
-* ``on_consolidation``       — Consolidator drops a re-derived weight in
-                              after each Wiki Compile cycle (handled by
-                              :class:`llive.memory.consolidation.Consolidator`).
-* ``apply_time_decay``       — exponential decay applied by a cron job.
-* ``on_contradiction``       — diversity / merge rejection downweighs the
-                              proposed link.
-* ``on_surprise``            — high surprise injections boost adjacent
-                              edges so fresh evidence becomes a hub.
+* ``on_read_hit``       — memory_read reinforces outgoing edges.
+* ``apply_time_decay``  — exponential decay applied by a cron job.
+* ``on_contradiction``  — diversity / merge rejection downweighs.
+* ``on_surprise``       — high surprise injections boost adjacent edges.
+* ``prune``             — physically remove dead edges.
+
+AC-11 adds the stochastic balance:
+
+* ``random_boost``       — coin-flip resurrection of dormant edges.
+* ``exploration_score``  — UCB1 score combining weight + visit count.
+* ``rank_neighbors``     — return neighbours ordered by exploration score.
+* Visit counts tracked via :meth:`on_read_hit`.
 
 Each call writes a JSONL audit row to ``logs/edge_weight.jsonl`` so the
 weight history is reviewable from llove HITL or external tooling.
 
 Kùzu does not yet support partial UPDATE through our wrapper, so weight
 changes are realised by *deleting* and *re-inserting* the same edge with
-the new weight. Pruning (w < min_weight_keep) skips the re-insert.
+the new weight. Edges with weight below ``floor_weight`` are physically
+deleted; edges between ``floor_weight`` and ``min_weight_keep`` are kept
+as *dormant* so ``random_boost`` can resurrect them.
 """
 
 from __future__ import annotations
@@ -28,6 +32,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import random
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -59,6 +64,15 @@ class EdgeWeightConfig:
         }
     )
     min_weight_keep: float = 0.05
+    # --- LLW-AC-11 exploration / exploitation balance ---
+    floor_weight: float = 0.02
+    """Below this weight an edge is physically deleted (no chance of comeback)."""
+    random_boost_probability: float = 0.05
+    """Probability that a candidate edge is randomly boosted during ``random_boost``."""
+    random_boost_amount: float = 0.05
+    """Boost amount applied when an edge wins the random_boost coin flip."""
+    ucb_c: float = 1.0
+    """Exploration coefficient (UCB1)."""
 
 
 @dataclass
@@ -78,11 +92,15 @@ class EdgeWeightUpdater:
         structural: StructuralMemory,
         config: EdgeWeightConfig | None = None,
         log_path: Path | str | None = None,
+        rng: random.Random | None = None,
     ) -> None:
         self.structural = structural
         self.config = config or EdgeWeightConfig()
         self.log_path = Path(log_path) if log_path is not None else _default_log_path()
         self._lock = threading.Lock()
+        # LLW-AC-11 visit tracking (in-memory; Phase 4 will persist on the edge schema)
+        self._visit_counts: dict[tuple[str, str, str], int] = {}
+        self._rng = rng or random.Random()
 
     # -- public hooks -----------------------------------------------------
 
@@ -90,6 +108,8 @@ class EdgeWeightUpdater:
         """Reinforce outgoing linked_concept edges from ``src_id`` to each neighbour."""
         n = 0
         for dst_id in neighbor_ids:
+            key = (src_id, dst_id, "linked_concept")
+            self._visit_counts[key] = self._visit_counts.get(key, 0) + 1
             if self._adjust(src_id, dst_id, "linked_concept", self.config.alpha_read, reason="read_hit"):
                 n += 1
         return n
@@ -115,7 +135,6 @@ class EdgeWeightUpdater:
     def apply_time_decay(self, now: datetime | None = None) -> int:
         """Apply exp(-Δt / τ) decay to every decayable edge."""
         ref = now or _utcnow()
-        # Kùzu may return naive datetimes; normalise both sides to UTC for arithmetic.
         if ref.tzinfo is None:
             ref = ref.replace(tzinfo=timezone.utc)
         rows = self._fetch_all_edges(rel_types=tuple(self.config.decay_tau_days.keys()))
@@ -135,8 +154,13 @@ class EdgeWeightUpdater:
         return updates
 
     def prune(self, threshold: float | None = None) -> int:
-        """Delete edges whose weight is below ``threshold`` (default ``min_weight_keep``)."""
-        thr = self.config.min_weight_keep if threshold is None else float(threshold)
+        """Delete edges whose weight is below ``threshold`` (default ``floor_weight``).
+
+        Note: in AC-11 semantics, edges below ``min_weight_keep`` but above
+        ``floor_weight`` are kept as dormant. ``prune`` only deletes those that fell below
+        the absolute floor.
+        """
+        thr = self.config.floor_weight if threshold is None else float(threshold)
         rows = self._fetch_all_edges()
         deleted = 0
         for row in rows:
@@ -152,6 +176,58 @@ class EdgeWeightUpdater:
                 })
                 deleted += 1
         return deleted
+
+    # -- LLW-AC-11 exploration ------------------------------------------
+
+    def random_boost(self, rel_types: tuple[str, ...] | None = None) -> int:
+        """Stochastically boost edges so dormant branches stay reachable."""
+        rows = self._fetch_all_edges(rel_types=rel_types)
+        boosted = 0
+        for row in rows:
+            if self._rng.random() < self.config.random_boost_probability:
+                if self._adjust(
+                    row.src_id,
+                    row.dst_id,
+                    row.rel_type,
+                    self.config.random_boost_amount,
+                    reason="random_boost",
+                ):
+                    boosted += 1
+        return boosted
+
+    def total_visits(self) -> int:
+        return int(sum(self._visit_counts.values()))
+
+    def visit_count(self, src_id: str, dst_id: str, rel_type: str) -> int:
+        return int(self._visit_counts.get((src_id, dst_id, rel_type), 0))
+
+    def exploration_score(
+        self,
+        weight: float,
+        visit_count: int,
+        total_visits: int | None = None,
+        c: float | None = None,
+    ) -> float:
+        """UCB1-flavoured score: weight + c * sqrt(ln(N + 1) / (n + 1))."""
+        n_total = total_visits if total_visits is not None else self.total_visits()
+        coef = self.config.ucb_c if c is None else float(c)
+        return float(weight) + coef * math.sqrt(math.log(n_total + 1) / (int(visit_count) + 1))
+
+    def rank_neighbors(
+        self,
+        edges: Iterable[tuple[str, str, str, float]],
+        c: float | None = None,
+    ) -> list[tuple[str, float]]:
+        """Given (src, dst, rel_type, weight) tuples, return [(dst, score), ...] sorted DESC."""
+        n_total = self.total_visits()
+        coef = self.config.ucb_c if c is None else float(c)
+        ranked: list[tuple[str, float]] = []
+        for src, dst, rel_type, weight in edges:
+            visits = self._visit_counts.get((src, dst, rel_type), 0)
+            score = self.exploration_score(weight, visits, total_visits=n_total, c=coef)
+            ranked.append((dst, score))
+        ranked.sort(key=lambda x: x[1], reverse=True)
+        return ranked
 
     # -- internals --------------------------------------------------------
 
@@ -233,10 +309,13 @@ class EdgeWeightUpdater:
 
     def _replace_edge(self, row: _EdgeRow, new_weight: float, *, reason: str) -> bool:
         old_weight = row.weight
-        if new_weight < self.config.min_weight_keep:
+        # LLW-AC-11: only physically delete when below the absolute floor.
+        # Edges between floor_weight and min_weight_keep are kept as dormant so
+        # random_boost can resurrect them.
+        if new_weight < self.config.floor_weight:
             self._delete_edge(row.src_id, row.dst_id, row.rel_type)
             self._log({
-                "op": "delete_below_threshold",
+                "op": "delete_below_floor",
                 "src": row.src_id,
                 "dst": row.dst_id,
                 "rel_type": row.rel_type,
@@ -247,6 +326,7 @@ class EdgeWeightUpdater:
             return True
         self._delete_edge(row.src_id, row.dst_id, row.rel_type)
         self.structural.add_edge(row.src_id, row.dst_id, row.rel_type, weight=new_weight)
+        dormant = new_weight < self.config.min_weight_keep
         self._log({
             "op": "adjust",
             "src": row.src_id,
@@ -254,6 +334,7 @@ class EdgeWeightUpdater:
             "rel_type": row.rel_type,
             "old_weight": old_weight,
             "new_weight": new_weight,
+            "dormant": dormant,
             "reason": reason,
         })
         return True
