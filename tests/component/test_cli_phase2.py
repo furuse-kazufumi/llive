@@ -56,10 +56,29 @@ def test_cli_schema_show_container_spec():
     assert "container_id" in res.stdout
 
 
-def test_cli_schema_validate_unknown_kind_autodetect(project_root: Path):
-    # Pass a candidate file but omit --kind; auto-detect should pick "candidate"
-    target = project_root / "specs" / "candidates" / "example_001.yaml"
+def test_cli_schema_validate_kind_autodetect_container(project_root: Path):
+    """Filename without 'candidate' / 'diff' / 'subblock' falls back to container."""
+    target = project_root / "specs" / "containers" / "fast_path_v1.yaml"
     res = runner.invoke(app, ["schema", "validate", str(target)])
+    assert res.exit_code == 0
+
+
+def test_cli_schema_validate_kind_autodetect_candidate(tmp_path):
+    f = tmp_path / "candidate_demo.yaml"
+    f.write_text(
+        """\
+schema_version: 1
+candidate_id: cand_20260513_111
+base_candidate: fast_path_v1
+changes:
+  - action: insert_subblock
+    target_container: fast_path_v1
+    after: head
+    spec: {type: memory_read}
+""",
+        encoding="utf-8",
+    )
+    res = runner.invoke(app, ["schema", "validate", str(f)])
     assert res.exit_code == 0
 
 
