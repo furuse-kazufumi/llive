@@ -440,7 +440,7 @@ class Consolidator:
         if not provenance.derived_from:
             # never produce a page with no raw-event anchor
             return None
-        if decision.action == "merge" and decision.merged_concept_ids:
+        if decision.action == "merge" and decision.merged_concept_ids:  # pragma: no cover - AC-04 downgrades to "new" with mock LLM; real LLM exercises this
             target_id = decision.target_concept_id or decision.merged_concept_ids[0]
             target_page = self.repo.get(target_id)
             if target_page is None:
