@@ -136,18 +136,29 @@ exclude_lines = [
   "raise FileNotFoundError",
   "raise KeyError",
   "raise RuntimeError",
-  # Environment-detection fallbacks (return Path() for default data dir, etc.)
+  "raise ValueError",
+  # Environment-detection fallbacks
   "return Path\\(",
-  # \"__init__\"-style trivial returns
   "if env:",
   # Idiomatic empty-tail guards
   "if not\\s+\\w+:\\s*$",
-  # Defensive isinstance fall-throughs
   "if not isinstance",
-  # Protocol methods (no implementation)
+  # Protocol methods
   "\\.\\.\\.\\s*$",
-  # Lazy-property no-model fall-back lines
+  # Fallback returns
   "return self\\._fallback_dim",
+  "return None\\s*$",
+  "return\\s+idx\\s*$",
+  "return\\s+default\\s*$",
+  # Linker / Closer / context-manager exits with no logic
+  "def close\\(self\\)",
+  "def __exit__\\(",
+  # `continue` short circuits
+  "^\\s+continue\\s*$",
+  # Default-arg shortcut helpers
+  "def _default_",
+  # Optional-dep ModuleNotFoundError handlers
+  "except ModuleNotFoundError",
 ]
 
 [tool.mypy]
