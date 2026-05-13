@@ -190,13 +190,21 @@
 | INT-04 | Phase 4 | Pending |
 | EVO-09 | Phase 4 | Pending |
 | EVO-10 | Phase 4 | Pending |
+| LLW-01 | Phase 2 | Pending |
+| LLW-02 | Phase 2 | Pending |
+| LLW-03 | Phase 2 | Pending |
+| LLW-06 | Phase 2 | Pending |
+| LLW-04 | Phase 3 | Pending |
+| LLW-05 | Phase 3 | Pending |
+| LLW-07 | Phase 4 | Pending |
+| LLW-08 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 (Phase 1) requirements: 16 total
-- v2 (Phase 2) requirements: 9 total
-- v3 (Phase 3) requirements: 12 total
-- v4 (Phase 4) requirements: 9 total
-- Mapped to phases: 46 / 46 ✓
+- v1 (Phase 1) requirements: 16 total ✅ Validated (Phase 1)
+- v2 (Phase 2) requirements: 9 + 4 LLW = 13 total
+- v3 (Phase 3) requirements: 12 + 2 LLW = 14 total
+- v4 (Phase 4) requirements: 9 + 2 LLW = 11 total
+- Mapped to phases: 54 / 54 ✓
 
 ---
 *Requirements defined: 2026-05-13*
