@@ -4,9 +4,38 @@
 
 ## [Unreleased]
 
-### Planned
+### Planned (Phase 5+ continuation)
 
-- Phase 5+ Rust 高速化 (RUST-01〜14) — 要件 v0.7 で確定済、実装は本要件自身の「Phase 4 完了 + EVO 系安定後の措置」原則に従って後続セッションで段階着手予定。
+- RUST-02 完全並列化 (rayon)、RUST-03 (edge weight bulk decay)、RUST-05 (jsonschema-rs)、RUST-06 (crossbeam audit sink)、RUST-07 (ChangeOp Rust 移植)、RUST-08 (hora/arroy HNSW)、RUST-09 (tokio async)、RUST-10 (phf TRIZ matrix)、RUST-11 (Z3 bridge)。`docs/requirements_v0.7_rust_acceleration.md` 参照。
+
+## [0.4.0] — 2026-05-14
+
+Phase 5: Rust acceleration **skeleton** リリース。RUST-01 + RUST-02 baseline + RUST-04 baseline + RUST-13 parity harness をハンドル。実際の hot-path 並列化 (rayon) は v0.4.x で逐次マージ。
+
+### Added (Phase 5 — Rust skeleton)
+
+- **RUST-01**: `crates/llive_rust_ext/` Cargo workspace + PyO3 0.22 ベース skeleton。`maturin develop --release --manifest-path crates/llive_rust_ext/Cargo.toml` で editable install。
+- **RUST-02 baseline**: `compute_surprise(new, mem) -> f32` — cosine similarity ベースの surprise kernel。py.allow_threads で GIL 解放。dim 検査は短絡前に必ず実行 (parity 担保)。
+- **RUST-04 baseline**: `jaccard(a, b) -> f32` — u32 ソート済み id 集合の linear-merge 交差。
+- **RUST-13**: Hypothesis ベース parity test (`tests/property/test_rust_python_parity.py`)。Rust ⇄ Python fallback が 1e-6 以下で一致することを 50 ケース × 2 関数で検査。
+- `src/llive/rust_ext/__init__.py` — `HAS_RUST` flag + `__backend__` 自己診断 + pure-Python fallback。`pip install llmesh-llive` 単独 (Rust なし) でも全機能利用可、性能のみ Python 速度。
+- `specs/rust_ffi/overview.md` — ABI contract / GIL handling / determinism rules / future hotspot order。
+
+### Deferred to v0.4.x+ (per v0.7 doc principles)
+
+- RUST-02 完全並列化 (rayon 並列 cosine)、RUST-03/05/06/07/08/09/10/11 全 hotspot。Phase 4 安定確認後の段階着手とする (`docs/requirements_v0.7_rust_acceleration.md` § 2「意味論先行・最適化後追従」)。
+
+### Changed
+
+- `pyproject.toml`: version 0.3.0 → 0.4.0。`[rust]` extra (`maturin>=1.5`) 新設。Rust 拡張本体は別ホイール (`llive_rust_ext`) として配布、本 PyPI パッケージは Python のみ。
+
+### Quality gates
+
+- **Tests**: 439 passed (Phase 3+4 baseline 429 + RUST-13 parity 10)
+- **Coverage**: 98% (Rust 経路は parity test で間接カバー)
+- **Lint**: ruff `All checks passed!`
+- **Rust build**: `cargo build --release` clean、`maturin develop --release` 成功
+- **Parity**: Hypothesis 50 ケース × 2 関数で Rust ⇄ Python 一致
 
 ## [0.3.0] — 2026-05-14
 
