@@ -39,7 +39,8 @@ def test_summary_empty():
 
 def test_positive_bwt_when_later_tasks_help():
     m = BWTMeter()
-    m.begin_task("a"); m.begin_task("b")
+    m.begin_task("a")
+    m.begin_task("b")
     m.record("a", 0, 0.7)
     m.record("a", 1, 0.75)  # got better after task b
     m.record("b", 1, 0.8)
