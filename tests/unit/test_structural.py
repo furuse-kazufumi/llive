@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from llive.memory.provenance import Provenance
-from llive.memory.structural import StructuralMemory, VALID_EDGE_TYPES, VALID_NODE_TYPES
+from llive.memory.structural import VALID_EDGE_TYPES, VALID_NODE_TYPES, StructuralMemory
 
 
 @pytest.fixture

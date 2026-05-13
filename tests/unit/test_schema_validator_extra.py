@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from llive.schema import validator as _validator
 from llive.schema.validator import (
     SchemaValidationError,
     get_schema,
@@ -14,7 +15,6 @@ from llive.schema.validator import (
     validate_container_spec,
     validate_subblock_spec,
 )
-from llive.schema import validator as _validator
 
 
 def test_known_schemas_lists_all():

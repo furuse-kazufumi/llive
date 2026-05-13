@@ -13,7 +13,6 @@ from typer.testing import CliRunner
 
 from llive.cli.main import app
 
-
 runner = CliRunner()
 
 

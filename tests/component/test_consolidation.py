@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import os
-
+import numpy as np
 import pytest
 
 from llive.memory.concept import ConceptPageRepo
@@ -18,7 +17,6 @@ from llive.memory.consolidation import (
 from llive.memory.episodic import EpisodicEvent, EpisodicMemory
 from llive.memory.provenance import Provenance
 from llive.memory.structural import StructuralMemory
-import numpy as np
 
 
 @pytest.fixture(autouse=True)

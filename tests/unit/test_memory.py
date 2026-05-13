@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 
@@ -71,8 +71,8 @@ def test_episodic_memory_write_and_recent(tmp_path):
     ep = EpisodicMemory(db_path=tmp_path / "ep.duckdb")
     try:
         prov = Provenance(source_type="test", source_id="t1")
-        t_early = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        t_late = datetime(2026, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+        t_early = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
+        t_late = datetime(2026, 1, 2, 0, 0, 0, tzinfo=UTC)
         ep.write(EpisodicEvent(content="event A", provenance=prov, ts=t_early))
         ep.write(EpisodicEvent(content="event B", provenance=prov, ts=t_late))
         assert ep.count() == 2
@@ -86,9 +86,9 @@ def test_episodic_memory_range(tmp_path):
     ep = EpisodicMemory(db_path=tmp_path / "ep.duckdb")
     try:
         prov = Provenance(source_type="test", source_id="t1")
-        t0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
-        t1 = datetime(2026, 1, 2, tzinfo=timezone.utc)
-        t2 = datetime(2026, 1, 3, tzinfo=timezone.utc)
+        t0 = datetime(2026, 1, 1, tzinfo=UTC)
+        t1 = datetime(2026, 1, 2, tzinfo=UTC)
+        t2 = datetime(2026, 1, 3, tzinfo=UTC)
         ep.write(EpisodicEvent(content="A", provenance=prov, ts=t0))
         ep.write(EpisodicEvent(content="B", provenance=prov, ts=t1))
         ep.write(EpisodicEvent(content="C", provenance=prov, ts=t2))

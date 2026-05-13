@@ -117,10 +117,12 @@ def test_apply_decision_merge_path(cons):
 
 def test_apply_decision_returns_none_when_no_events():
     """_apply_decision is internal but defensive against empty event lists."""
-    from llive.memory.consolidation import Consolidator
+    import os
 
     # Manually call with no events — should return None
-    import tempfile, os
+    import tempfile
+
+    from llive.memory.consolidation import Consolidator
     os.environ["LLIVE_DATA_DIR"] = tempfile.mkdtemp()
     ep = EpisodicMemory()
     sm = StructuralMemory()

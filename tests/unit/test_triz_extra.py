@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from llive.triz import loader as _loader
@@ -11,7 +9,6 @@ from llive.triz.loader import (
     Attribute,
     Principle,
     load_attributes,
-    load_matrix,
     load_principles,
     lookup_principles,
 )

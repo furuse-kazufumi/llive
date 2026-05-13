@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from llive.wiki.schemas import KNOWN_PAGE_TYPES, WikiSchemaError, list_page_types, validate_page_fields
+from llive.wiki.schemas import (
+    KNOWN_PAGE_TYPES,
+    WikiSchemaError,
+    list_page_types,
+    validate_page_fields,
+)
 
 
 def test_known_page_types_match_listed():

@@ -13,7 +13,6 @@ from llive.evolution.change_op import (
 )
 from llive.schema.models import ContainerSpec, SubBlockRef
 
-
 SUBBLOCK_TYPES = ["pre_norm", "causal_attention", "ffn_swiglu", "memory_read", "memory_write"]
 
 

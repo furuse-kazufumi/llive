@@ -142,7 +142,7 @@ def test_time_decay_reduces_weight(sm, updater):
     a, b = _two_pages(sm)
     sm.add_edge(a, b, "linked_concept", weight=0.6)
     # decay 30 days into the future relative to creation
-    later = _dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(days=30)
+    later = _dt.datetime.now(_dt.UTC) + _dt.timedelta(days=30)
     updated = updater.apply_time_decay(now=later)
     assert updated >= 1
     edges = updater._fetch_all_edges()

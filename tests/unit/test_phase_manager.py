@@ -12,8 +12,7 @@ from llive.memory.phase import (
     PhaseRecord,
 )
 
-
-_NOW = _dt.datetime(2026, 5, 13, 12, 0, 0, tzinfo=_dt.timezone.utc)
+_NOW = _dt.datetime(2026, 5, 13, 12, 0, 0, tzinfo=_dt.UTC)
 
 
 def _record(entry_id, phase="hot", days_ago=0, **kw):

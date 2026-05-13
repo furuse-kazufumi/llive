@@ -7,7 +7,6 @@ import pytest
 from llive.container.executor import (
     BlockContainerExecutor,
     BlockState,
-    NestedContainerError,
     _eval_condition,
 )
 from llive.schema.models import (
@@ -109,7 +108,7 @@ def test_executor_raises_inside_subblock():
         name = "boom"
         type = "boom"
 
-        def __call__(self, state):  # noqa: ANN001
+        def __call__(self, state):
             raise RuntimeError("kaboom")
 
     from llive.container.registry import SubBlockRegistry

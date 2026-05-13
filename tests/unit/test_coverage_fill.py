@@ -5,10 +5,6 @@ Each function targets one or two specific missing lines from `pytest --cov-repor
 
 from __future__ import annotations
 
-import os
-import tempfile
-from pathlib import Path
-
 import numpy as np
 import pytest
 
@@ -197,9 +193,9 @@ def test_phase_reason_string_format():
     rec = PhaseRecord(
         entry_id="x",
         phase="hot",
-        last_access_at=_dt.datetime(2026, 1, 1, tzinfo=_dt.timezone.utc),
+        last_access_at=_dt.datetime(2026, 1, 1, tzinfo=_dt.UTC),
     )
-    now = _dt.datetime(2026, 1, 15, tzinfo=_dt.timezone.utc)
+    now = _dt.datetime(2026, 1, 15, tzinfo=_dt.UTC)
     events = MemoryPhaseManager().evaluate([rec], now=now)
     assert events[0].reason.startswith("age=")
 
@@ -212,9 +208,9 @@ def test_phase_evaluate_on_unknown_phase_string():
     rec = PhaseRecord(
         entry_id="x",
         phase="madeup",
-        last_access_at=_dt.datetime(2026, 1, 1, tzinfo=_dt.timezone.utc),
+        last_access_at=_dt.datetime(2026, 1, 1, tzinfo=_dt.UTC),
     )
-    now = _dt.datetime(2026, 1, 15, tzinfo=_dt.timezone.utc)
+    now = _dt.datetime(2026, 1, 15, tzinfo=_dt.UTC)
     events = MemoryPhaseManager().evaluate([rec], now=now)
     # unknown phase -> no next phase -> no transition
     assert events == []

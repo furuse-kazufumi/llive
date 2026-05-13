@@ -13,7 +13,7 @@ from llive.evolution.change_op import (
     apply_diff,
     build_change_op,
 )
-from llive.schema.models import CandidateDiff, ContainerSpec, SubBlockRef
+from llive.schema.models import ContainerSpec, SubBlockRef
 from llive.schema.validator import validate_candidate_diff
 
 
