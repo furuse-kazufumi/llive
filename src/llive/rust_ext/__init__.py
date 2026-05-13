@@ -65,6 +65,23 @@ def jaccard(a: Iterable[int], b: Iterable[int]) -> float:
     return _jaccard_py(a_sorted, b_sorted)
 
 
+def bulk_time_decay(
+    edges: list[tuple[str, float, float]],
+    tau_map: dict[str, float],
+) -> list[float]:
+    """Apply ``new = w * exp(-age / tau)`` to a batch of (rel_type, weight, age_days).
+
+    Rel types absent from ``tau_map`` are passed through unchanged. Returns
+    new weights in the original input order.
+    """
+    if _rust is not None:
+        keys = list(tau_map.keys())
+        values = [float(tau_map[k]) for k in keys]
+        triples = [(str(r), float(w), float(a)) for (r, w, a) in edges]
+        return [float(v) for v in _rust.bulk_time_decay(triples, keys, values)]
+    return _bulk_time_decay_py(edges, tau_map)
+
+
 # -- pure-Python fallbacks ----------------------------------------------------
 
 
