@@ -27,7 +27,7 @@ def _packaged_resources_dir() -> Path | None:
     return candidate if candidate.is_dir() else None
 
 
-def _project_root() -> Path:
+def _project_root() -> Path:  # pragma: no cover - dev tree fallback only
     """Development-tree fallback: walk up until specs/resources/ is found."""
     here = Path(__file__).resolve()
     for parent in here.parents:
@@ -43,12 +43,12 @@ def _resource_path(*candidates: str) -> Path:
             p = packaged / name
             if p.exists():
                 return p
-    base = _project_root() / "specs" / "resources"
-    for name in candidates:
+    base = _project_root() / "specs" / "resources"  # pragma: no cover - dev fallback
+    for name in candidates:  # pragma: no cover
         p = base / name
         if p.exists():
             return p
-    raise FileNotFoundError(f"none of {candidates} exist under packaged or {base}")
+    raise FileNotFoundError(f"none of {candidates} exist under packaged or {base}")  # pragma: no cover
 
 
 @dataclass(frozen=True)
