@@ -86,15 +86,19 @@ def test_one_pass_guarantee_no_chain(cons):
             return super().__call__(cluster_texts, existing_pages)
 
     cons.llm = _SpyLLM()
+    # Two well-separated topics so the greedy clusterer forms two groups.
     for t in [
-        "alpha alpha alpha alpha cluster one content here",
-        "alpha alpha alpha similar cluster one variant",
-        "beta beta beta beta cluster two content here",
-        "beta beta beta similar cluster two variant",
+        "memory consolidation runs nightly to compress data",
+        "memory consolidation reduces forgetting through replay",
+        "memory consolidation cycles strengthen long-term storage",
+        "router selection depends on prompt task tag",
+        "router rules in YAML define container selection",
+        "router fallback to adaptive when no rule matches",
     ]:
         _ev(cons.episodic, t)
     cons.run_once()
-    # Both clusters should have seen the same (pre-cycle) existing pages count
+    # Both clusters should have seen the same (pre-cycle) existing pages count.
+    # The cluster count depends on the embedding back-end; require at least 2.
     assert len(seen_existing_counts) >= 2
     assert all(c == seen_existing_counts[0] for c in seen_existing_counts)
 
