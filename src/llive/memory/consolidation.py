@@ -321,7 +321,9 @@ class Consolidator:
                 self.config.cluster_similarity_threshold,
                 self.config.cluster_min_size,
             )
-        existing_pages = self.repo.list_all(limit=200)
+        # LLW-AC-05 one-pass guarantee: snapshot existing pages BEFORE this cycle; any
+        # pages we create during the cycle are NOT visible to subsequent clusters.
+        existing_pages_snapshot = self.repo.list_all(limit=200)
 
         result = CycleResult(sampled=len(events), clusters=len(cluster_indices))
         calls = 0
@@ -333,18 +335,20 @@ class Consolidator:
             cluster_texts = [texts[i] for i in cluster]
             cluster_events = [events[i] for i in cluster]
             try:
-                decision = self.llm(cluster_texts, existing_pages)
+                # LLW-AC-03 enforced: LLM only sees the pre-cycle snapshot of pages,
+                # never pages this cycle just created.
+                decision = self.llm(cluster_texts, existing_pages_snapshot)
             except Exception as exc:  # pragma: no cover - defensive
                 result.errors.append(f"llm: {exc}")
                 continue
             calls += 1
+            # LLW-AC-04 diversity preservation: downgrade unjustified merges
+            decision = self._enforce_diversity(decision, cluster_events, existing_pages_snapshot)
             result.decisions.append(decision)
-            page = self._apply_decision(decision, cluster_events, existing_pages)
+            page = self._apply_decision(decision, cluster_events, existing_pages_snapshot)
             if page is None:
                 continue
             page_ids_touched.append(page.concept_id)
-            # refresh existing for next iteration so subsequent clusters see the updates
-            existing_pages = [p for p in existing_pages if p.concept_id != page.concept_id] + [page]
             # Track surprise stats globally
             surprise_value = 1.0 if decision.action == "new" else 0.5
             self.gate.update(surprise_value)
