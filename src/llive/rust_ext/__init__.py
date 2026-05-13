@@ -124,10 +124,25 @@ def _jaccard_py(a: list[int], b: list[int]) -> float:
     return len(sa & sb) / union_n
 
 
+def _bulk_time_decay_py(
+    edges: list[tuple[str, float, float]],
+    tau_map: dict[str, float],
+) -> list[float]:
+    out: list[float] = []
+    for rel, weight, age_days in edges:
+        tau = float(tau_map.get(rel, 0.0))
+        if tau <= 0.0:
+            out.append(float(weight))
+        else:
+            out.append(float(weight) * math.exp(-float(age_days) / tau))
+    return out
+
+
 __all__ = [
     "HAS_RUST",
     "__backend__",
     "__version__",
+    "bulk_time_decay",
     "compute_surprise",
     "jaccard",
 ]
