@@ -19,11 +19,11 @@ import numpy as np
 
 from llive.memory.provenance import Provenance
 
-try:
+try:  # pragma: no cover - import branch tested separately
     import faiss  # type: ignore[import-not-found]
 
     _HAS_FAISS = True
-except Exception:
+except Exception:  # pragma: no cover - exercised when faiss missing
     faiss = None  # type: ignore[assignment]
     _HAS_FAISS = False
 
