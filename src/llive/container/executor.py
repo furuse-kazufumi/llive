@@ -84,6 +84,9 @@ class BlockContainerExecutor:
         self,
         spec: ContainerSpec | dict[str, Any] | str,
         registry: SubBlockRegistry | None = None,
+        *,
+        container_resolver: "ContainerResolver | None" = None,
+        max_nest_depth: int = 3,
     ) -> None:
         if isinstance(spec, ContainerSpec):
             self.spec = spec
@@ -91,6 +94,8 @@ class BlockContainerExecutor:
             self.spec = validate_container_spec(spec)
         self.registry = registry or get_registry()
         self._steps: list[_ResolvedStep] = self._resolve_steps(self.spec.subblocks)
+        self.container_resolver = container_resolver
+        self.max_nest_depth = int(max_nest_depth)
 
     def _resolve_steps(self, refs: Iterable[SubBlockRef]) -> list[_ResolvedStep]:
         resolved: list[_ResolvedStep] = []
