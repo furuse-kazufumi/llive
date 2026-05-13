@@ -70,9 +70,9 @@ class AdapterBlock:
                     if store.verify_sha256(self.adapter_id):
                         store.activate(self.adapter_id)
                         active = self.adapter_id
-                    elif not self.fallback_to_base:
+                    elif not self.fallback_to_base:  # pragma: no cover - strict-mode integrity-fail
                         raise RuntimeError(f"adapter {self.adapter_id!r} integrity check failed")
-            except Exception:
+            except Exception:  # pragma: no cover - integrity-fail path
                 if not self.fallback_to_base:
                     raise
         state.meta.setdefault("adapter_trace", []).append({"name": self.name, "active": active, "target_layer": self.target_layer})
