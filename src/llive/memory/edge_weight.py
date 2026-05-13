@@ -134,22 +134,35 @@ class EdgeWeightUpdater:
         return n
 
     def apply_time_decay(self, now: datetime | None = None) -> int:
-        """Apply exp(-Δt / τ) decay to every decayable edge."""
+        """Apply exp(-Δt / τ) decay to every decayable edge.
+
+        Computes new weights in one batch (Rust kernel via :mod:`llive.rust_ext`
+        when available, otherwise pure Python). The Kùzu delete-and-reinsert
+        path still dominates wall time; the batch precomputation guarantees
+        a single pass over the data and matches RUST-13 parity.
+        """
+        from llive import rust_ext
+
         ref = now or _utcnow()
         if ref.tzinfo is None:
             ref = ref.replace(tzinfo=UTC)
         rows = self._fetch_all_edges(rel_types=tuple(self.config.decay_tau_days.keys()))
-        updates = 0
+        if not rows:
+            return 0
+        ages: list[float] = []
         for row in rows:
-            tau = self.config.decay_tau_days.get(row.rel_type)
-            if tau is None or tau <= 0:
-                continue
             created = row.created_at
             if created.tzinfo is None:
                 created = created.replace(tzinfo=UTC)
-            age_days = max(0.0, (ref - created).total_seconds() / 86400.0)
-            factor = math.exp(-age_days / tau)
-            new_weight = row.weight * factor
+            ages.append(max(0.0, (ref - created).total_seconds() / 86400.0))
+        edges_payload = [(row.rel_type, row.weight, age) for row, age in zip(rows, ages, strict=True)]
+        new_weights = rust_ext.bulk_time_decay(edges_payload, dict(self.config.decay_tau_days))
+        updates = 0
+        for row, age, new_weight in zip(rows, ages, new_weights, strict=True):
+            tau = self.config.decay_tau_days.get(row.rel_type)
+            if tau is None or tau <= 0:
+                continue
+            del age  # age is captured in new_weight already; keep loop signature explicit
             if self._replace_edge(row, new_weight, reason="time_decay"):
                 updates += 1
         return updates
