@@ -3,23 +3,23 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-13 22:39:20
+- **最終更新**: 2026-05-13 22:53:39
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-a06ca23 test(02-adaptive): ruff auto-fix (116 issues) + Phase 2 VERIFICATION.md
-6f9639e test(02-adaptive): full Phase 2 test suite + coverage push (95%)
-919fe94 auto: test_coverage_fill.py 編集前 (2026-05-13 22:35)
-887ab7a auto: semantic.py 編集前 (2026-05-13 22:34)
-58a69b0 auto: semantic.py 編集前 (2026-05-13 22:34)
-8d8615e auto: semantic.py 編集前 (2026-05-13 22:34)
-04a18db auto: semantic.py 編集前 (2026-05-13 22:34)
-5c40eb1 auto: semantic.py 編集前 (2026-05-13 22:34)
-8886eb5 auto: semantic.py 編集前 (2026-05-13 22:34)
-1755f7a auto: encoder.py 編集前 (2026-05-13 22:33)
+0fbd8e6 test(02-adaptive): 99% coverage + 0 lint warnings
+2a420e6 auto: pyproject.toml 編集前 (2026-05-13 22:52)
+61d2d00 auto: structural.py 編集前 (2026-05-13 22:52)
+7ee6b3f auto: structural.py 編集前 (2026-05-13 22:52)
+8e111ef auto: pipeline.py 編集前 (2026-05-13 22:52)
+7b2386c auto: pipeline.py 編集前 (2026-05-13 22:51)
+d7a892c auto: pyproject.toml 編集前 (2026-05-13 22:50)
+03cff40 auto: concept.py 編集前 (2026-05-13 22:50)
+0935a1b auto: adapter_block.py 編集前 (2026-05-13 22:49)
+cfa0883 auto: adapter_block.py 編集前 (2026-05-13 22:49)
 ```
 
 ## 現在の git status
@@ -31,21 +31,21 @@ a06ca23 test(02-adaptive): ruff auto-fix (116 issues) + Phase 2 VERIFICATION.md
 ## 直近 2 時間に変更されたファイル
 
 ```
-22:38 .planning/phases/02-adaptive/02-VERIFICATION.md
-22:37 .pytest_cache/v/cache/nodeids
-22:37 .hypothesis/constants/f9b3feeeef3468e8
-22:37 .hypothesis/constants/f6cdad1223b2f6b0
-22:37 .hypothesis/constants/ecffeee2ba4750fc
-22:37 .hypothesis/constants/e121c0a4f376658e
-22:37 .hypothesis/constants/dcd8b57ff82d9c53
-22:37 .hypothesis/constants/d6492039b1dd7a2e
-22:37 .hypothesis/constants/c65e209f783f4e2a
-22:37 .hypothesis/constants/c404a0645ed1d66b
-22:37 .hypothesis/constants/b1f1d78516478f90
-22:37 .hypothesis/constants/adf4962472a7a396
-22:37 .hypothesis/constants/9b4285e9506313f1
-22:37 .hypothesis/constants/973ee1a6a68f9775
-22:37 .hypothesis/constants/95dd11264f28cc40
+22:53 .pytest_cache/v/cache/nodeids
+22:53 .ruff_cache/0.15.12/10638194744700293557
+22:52 .coverage
+22:52 .hypothesis/constants/c22e18b14889a3c3
+22:52 .hypothesis/constants/547ea6c14300d619
+22:52 pyproject.toml
+22:52 src/llive/memory/structural.py
+22:52 src/llive/orchestration/pipeline.py
+22:50 .hypothesis/constants/01e5881ac4d06d7a
+22:50 src/llive/memory/concept.py
+22:49 .hypothesis/constants/cdfe5dd4548e757d
+22:49 .hypothesis/constants/9991b0800865f39f
+22:49 src/llive/container/subblocks/adapter_block.py
+22:49 src/llive/wiki/ingest.py
+22:45 .hypothesis/constants/a7a0327db19a46e6
 ```
 
 ---
