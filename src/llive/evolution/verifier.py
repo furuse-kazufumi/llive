@@ -115,7 +115,7 @@ def verify_diff(
     # structural simulation — apply every op then check invariants on the
     # final state. Intermediate states may transiently violate invariants
     # (e.g. memory_read inserted before its matching memory_write); only
-    # the end-state must be valid.
+    # the end-state must be valid. Empty diffs still check the initial state.
     current = before
     for i, op in enumerate(ops):
         try:
@@ -124,7 +124,8 @@ def verify_diff(
             return VerificationResult(ok=False, reasons=[f"op[{i}] apply failed: {exc}"])
     final_violations = _check_invariants_now(current.subblocks, inv)
     if final_violations:
-        reasons.extend(f"final state: {v}" for v in final_violations)
+        label = "initial state" if not ops else "final state"
+        reasons.extend(f"{label}: {v}" for v in final_violations)
     if reasons:
         return VerificationResult(ok=False, reasons=reasons, smt_used=False)
     if not (use_smt and _HAS_Z3):
