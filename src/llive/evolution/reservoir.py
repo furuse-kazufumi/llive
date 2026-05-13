@@ -215,18 +215,20 @@ class FailedCandidateReservoir:
 
     def sample(self, *, k: int = 5, mutation_policy: str | None = None) -> list[FailedCandidate]:
         """Random sample for mutation-policy learning."""
+        k = max(0, int(k))
         conds: list[str] = []
         args: list[Any] = []
         if mutation_policy is not None:
             conds.append("mutation_policy = ?")
             args.append(mutation_policy)
         where = (" WHERE " + " AND ".join(conds)) if conds else ""
+        # DuckDB's USING SAMPLE requires a constant — interpolate ``k`` directly
+        # after sanitising it via int() above.
         sql = (
             "SELECT candidate_id, rejected_at, reason, rejector, diff, score_bundle, "
             "mutation_policy, contradiction_id, notes "
-            f"FROM failed_candidates{where} USING SAMPLE ?"
+            f"FROM failed_candidates{where} USING SAMPLE {k}"
         )
-        args.append(int(k))
         with self._lock:
             rows = self._conn.execute(sql, args).fetchall()
         return [_row_to_obj(r) for r in rows]
