@@ -187,7 +187,7 @@ class SemanticMemory:
     # -- internals ---------------------------------------------------------
 
     def _refresh_search_state_locked(self, new_vec: np.ndarray) -> None:
-        if self.use_faiss:
+        if self.use_faiss:  # pragma: no cover - requires faiss-cpu
             self._index.add(new_vec.reshape(1, self.dim))  # type: ignore[union-attr]
         else:
             row = new_vec.reshape(1, self.dim)
