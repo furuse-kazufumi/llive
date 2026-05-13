@@ -293,9 +293,11 @@ def test_triz_loader_alt_matrix_format(tmp_path, monkeypatch):
     _loader.load_matrix.cache_clear()
     # Also disable packaged path discovery by patching _packaged_resources_dir's caller path
 
-    # Direct list-of-rows loader test
-    rows = _loader._unwrap_list({"matrix": [{"id": 1}]})
+    # _unwrap_list recognizes keys: principles / attributes / features / items
+    rows = _loader._unwrap_list({"items": [{"id": 1}]})
     assert rows == [{"id": 1}]
+    # An unrecognized key returns empty (covers the fall-through)
+    assert _loader._unwrap_list({"matrix": [{"id": 1}]}) == []
 
 
 # ---------------------------------------------------------------------------
