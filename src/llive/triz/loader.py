@@ -20,7 +20,15 @@ from typing import Any
 import yaml
 
 
+def _packaged_resources_dir() -> Path | None:
+    """llive/_specs/resources/ (shipped inside the wheel)."""
+    here = Path(__file__).resolve()
+    candidate = here.parent.parent / "_specs" / "resources"
+    return candidate if candidate.is_dir() else None
+
+
 def _project_root() -> Path:
+    """Development-tree fallback: walk up until specs/resources/ is found."""
     here = Path(__file__).resolve()
     for parent in here.parents:
         if (parent / "specs" / "resources").is_dir():
@@ -29,12 +37,18 @@ def _project_root() -> Path:
 
 
 def _resource_path(*candidates: str) -> Path:
+    packaged = _packaged_resources_dir()
+    if packaged is not None:
+        for name in candidates:
+            p = packaged / name
+            if p.exists():
+                return p
     base = _project_root() / "specs" / "resources"
     for name in candidates:
         p = base / name
         if p.exists():
             return p
-    raise FileNotFoundError(f"none of {candidates} exist under {base}")
+    raise FileNotFoundError(f"none of {candidates} exist under packaged or {base}")
 
 
 @dataclass(frozen=True)
