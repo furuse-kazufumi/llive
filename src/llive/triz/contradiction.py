@@ -197,9 +197,9 @@ def detect_from_samples(
 
 
 __all__ = [
+    "DEFAULT_REGISTRY",
     "Contradiction",
     "ContradictionDetector",
-    "DEFAULT_REGISTRY",
     "MetricSpec",
     "detect_from_samples",
 ]

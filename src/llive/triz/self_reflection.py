@@ -25,7 +25,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from llive.evolution.change_op import apply_diff, build_change_op
+from llive.evolution.change_op import apply_diff
 from llive.evolution.reservoir import FailedCandidate, FailedCandidateReservoir
 from llive.evolution.verifier import Invariants, VerificationResult, verify_diff
 from llive.schema.models import CandidateDiff, ContainerSpec

@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
-from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
