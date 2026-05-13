@@ -38,6 +38,7 @@ dependencies = [
   "kuzu>=0.4",
   "apscheduler>=3.10",
   "safetensors>=0.4",
+  "cryptography>=42.0",
 ]
 
 [project.optional-dependencies]
