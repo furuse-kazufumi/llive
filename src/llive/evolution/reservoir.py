@@ -242,19 +242,18 @@ class FailedCandidateReservoir:
             total = int(row[0])
             if total <= keep_last:
                 return 0
-            cutoff_row = self._conn.execute(
-                "SELECT rejected_at FROM failed_candidates ORDER BY rejected_at DESC "
-                "LIMIT 1 OFFSET ?",
-                [keep_last - 1] if keep_last > 0 else [0],
-            ).fetchone()
-            if cutoff_row is None:
-                return 0
-            cutoff = cutoff_row[0]
             if keep_last == 0:
                 # delete everything
                 self._conn.execute("DELETE FROM failed_candidates")
                 return total
-            self._conn.execute("DELETE FROM failed_candidates WHERE rejected_at < ?", [cutoff])
+            cutoff_row = self._conn.execute(
+                "SELECT seq FROM failed_candidates ORDER BY seq DESC LIMIT 1 OFFSET ?",
+                [keep_last - 1],
+            ).fetchone()
+            if cutoff_row is None:
+                return 0  # pragma: no cover
+            cutoff_seq = cutoff_row[0]
+            self._conn.execute("DELETE FROM failed_candidates WHERE seq < ?", [cutoff_seq])
             remaining = int(
                 self._conn.execute("SELECT COUNT(*) FROM failed_candidates").fetchone()[0]
             )
