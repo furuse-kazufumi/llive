@@ -115,13 +115,19 @@ class EdgeWeightUpdater:
     def apply_time_decay(self, now: datetime | None = None) -> int:
         """Apply exp(-Δt / τ) decay to every decayable edge."""
         ref = now or _utcnow()
+        # Kùzu may return naive datetimes; normalise both sides to UTC for arithmetic.
+        if ref.tzinfo is None:
+            ref = ref.replace(tzinfo=timezone.utc)
         rows = self._fetch_all_edges(rel_types=tuple(self.config.decay_tau_days.keys()))
         updates = 0
         for row in rows:
             tau = self.config.decay_tau_days.get(row.rel_type)
             if tau is None or tau <= 0:
                 continue
-            age_days = max(0.0, (ref - row.created_at).total_seconds() / 86400.0)
+            created = row.created_at
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            age_days = max(0.0, (ref - created).total_seconds() / 86400.0)
             factor = math.exp(-age_days / tau)
             new_weight = row.weight * factor
             if self._replace_edge(row, new_weight, reason="time_decay"):
