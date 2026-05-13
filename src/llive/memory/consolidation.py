@@ -386,6 +386,13 @@ class Consolidator:
                     result.edges_added += 1
                 except Exception as exc:  # pragma: no cover
                     result.errors.append(f"edge: {exc}")
+        # LLW-AC-10 cycle completion hooks: prune dead edges so the graph stays sparse.
+        try:
+            pruned = self.edge_weight_updater.prune()
+            if pruned:
+                result.errors.append(f"info: pruned {pruned} low-weight edges")
+        except Exception as exc:  # pragma: no cover - defensive
+            result.errors.append(f"prune: {exc}")
         return result
 
     def _enforce_diversity(
