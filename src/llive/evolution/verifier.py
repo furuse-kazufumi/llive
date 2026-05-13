@@ -156,6 +156,13 @@ def _smt_verify(
     solver.add(a0 == initial_sig.get("causal_attention", 0))
     solver.add(r0 == initial_sig.get("memory_read", 0))
     solver.add(w0 == initial_sig.get("memory_write", 0))
+    # pin invariants on initial state too (so zero-op diffs are still verified)
+    solver.add(n0 >= inv.min_blocks)
+    solver.add(n0 <= inv.max_blocks)
+    if inv.require_attention:
+        solver.add(a0 >= 1)
+    if inv.require_memory_pair:
+        solver.add(z3.Implies(r0 >= 1, w0 >= 1))
     for i, op in enumerate(ops):
         prev = states[-1]
         n = z3.Int(f"n_{i+1}")
