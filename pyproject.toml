@@ -121,9 +121,10 @@ addopts = "-ra --strict-markers"
 [tool.coverage.run]
 source = ["src/llive"]
 omit = [
-  "src/llive/core/adapter.py",  # HFAdapter requires torch; pragma'd extensively
+  "tests/*",
+  "*/__init__.py",
+  "src/llive/core/adapter.py",  # HFAdapter requires torch (entirely optional path)
 ]
-omit = ["tests/*", "*/__init__.py"]
 
 [tool.coverage.report]
 exclude_lines = [
