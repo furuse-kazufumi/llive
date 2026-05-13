@@ -73,7 +73,10 @@ class RouterEngine:
     @staticmethod
     def _load(spec_path: Path | str | None) -> dict[str, Any]:
         if spec_path is None:
-            spec_path = Path("specs/routes/default.yaml")
+            # 1) prefer the packaged default at llive/_specs/routes/default.yaml
+            here = Path(__file__).resolve()
+            packaged = here.parent.parent / "_specs" / "routes" / "default.yaml"
+            spec_path = packaged if packaged.exists() else Path("specs/routes/default.yaml")
         path = Path(spec_path)
         with path.open("r", encoding="utf-8") as fh:
             data = yaml.safe_load(fh)
