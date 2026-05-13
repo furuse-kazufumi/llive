@@ -143,13 +143,54 @@ gantt
 
 llmesh-suite メタパッケージへの **llive 追加** は Phase 4 完了時点（PyPI `llmesh-llive` v0.4.0）を想定。
 
+## Phase 5: Rust Acceleration Layer (v0.5.0)
+
+**Goal**: Python 純粋実装で意味論を凍結したうえで、ホットパス (Bayesian surprise / edge weight bulk decay / Jaccard / schema validate / audit sink / TRIZ matrix) を PyO3 + maturin で Rust 化、5× 以上の高速化を達成。
+
+### Milestones
+
+- **M5.1 Rust Extension Skeleton** — `crates/llive_rust_ext/`、maturin ビルド統合、`[rust]` extra 分離 (RUST-01)
+- **M5.2 Numeric Kernels** — surprise compute / edge decay / Jaccard / cosine (RUST-02/03/04)
+- **M5.3 Schema + Audit + TRIZ** — jsonschema-rs / crossbeam audit sink / phf TRIZ matrix (RUST-05/06/10)
+- **M5.4 Wheel CI Matrix** — Linux/macOS/Windows × x86_64/arm64 cross-build (RUST-12)
+- **M5.5 Parity + Benchmark Harness** — Hypothesis + proptest parity, pytest-benchmark + criterion (RUST-13/14)
+
+**Acceptance**: `pip install llmesh-llive[rust]` 全 OS 成功 / Rust 拡張 ON/OFF 両方で 308 tests 全通過 / 5 ベンチで 5× 以上の改善。
+
+## Phase 6: Formal Verification × Rust Bridge (v0.6.0)
+
+**Goal**: Phase 3 で立ち上がる Static Verifier (FR-13) を Rust 側で本格運用、ChangeOp engine の bit-exact Rust 移植で formal-verification gate を完成。
+
+### Milestones
+
+- **M6.1 ChangeOp Rust Migration** — invert / apply / compose、proptest 100k 件 parity (RUST-07)
+- **M6.2 Z3 SMT Bridge** — `z3.rs` ラッパー、context lifecycle Rust 管理 (RUST-11)
+- **M6.3 Optional HNSW Backend** — hora / arroy で Faiss-CPU 依存緩和 (RUST-08)
+
+**Acceptance**: Phase 3 EVO テストが Rust ON/OFF で同一結果 / Z3 verifier latency 50% 削減。
+
+## Phase 7: Concurrency Reimagined (v0.7.0)
+
+**Goal**: GIL 律速の ThreadPoolExecutor を tokio + pyo3-async-runtimes に置換、CONC-04 snapshot reads と統合。
+
+### Milestones
+
+- **M7.1 Async Pipeline Executor** — tokio ベースの並行ランタイム、Python `asyncio.Future` 橋渡し (RUST-09)
+- **M7.2 Snapshot Isolation** — `Arc<Snapshot>` で CONC-04 を自然実装
+
+**Acceptance**: 16-task fan-out で P99 latency 改善 / CONC-04 が Rust 側で動作。
+
 ## バージョニング戦略
 
-- `0.0.x`: Phase 0 (現在), scaffolding
+- `0.0.x`: Phase 0 (完了), scaffolding
 - `0.1.x`: Phase 1 完了
 - `0.2.x`: Phase 2 完了
 - `0.3.x`: Phase 3 完了
-- `1.0.0`: Phase 4 完了 + production PoC 合格
+- `0.4.x`: Phase 4 完了
+- `0.5.x`: Phase 5 完了 (Rust numeric/audit hotspots)
+- `0.6.x`: Phase 6 完了 (Rust formal verification bridge)
+- `0.7.x`: Phase 7 完了 (Rust async concurrency)
+- `1.0.0`: production PoC 合格 (全フェーズ収束、llove F18 v2.0 と同期可能)
 
 ## リスクと先送り判断
 
