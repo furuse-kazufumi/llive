@@ -10,6 +10,7 @@ Public API (kept stable across backends):
 
 * ``compute_surprise(new_embedding, memory_embeddings) -> float``
 * ``jaccard(a, b) -> float``
+* ``bulk_time_decay(edges, ref_time, tau_map) -> list[(src, dst, rel_type, new_weight)]``
 * ``HAS_RUST`` boolean flag, ``__backend__`` string ("rust" or "python")
 
 Callers that need a guaranteed Rust backend can ``import llive.rust_ext``
