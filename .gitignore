@@ -43,3 +43,7 @@ checkpoints/
 candidates/_tmp/
 memory/_cache/
 bench/_runs/
+
+# RAD コーパス (knowledge base, large, regenerable via scripts/import_rad.py)
+data/rad/
+!data/rad/README.md
