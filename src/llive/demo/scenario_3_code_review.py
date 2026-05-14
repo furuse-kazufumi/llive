@@ -123,6 +123,8 @@ class CodeReviewScenario(Scenario):
     titles: ClassVar[dict[str, str]] = {
         "ja": "RAD ヒント注入つきコードレビュー",
         "en": "Code review with RAD hint injection",
+        "zh": "带 RAD 提示注入的代码审查",
+        "ko": "RAD 힌트 주입을 곁들인 코드 리뷰",
     }
 
     def run(self, ctx: ScenarioContext) -> dict[str, Any]:
