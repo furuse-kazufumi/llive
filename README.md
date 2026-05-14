@@ -29,10 +29,13 @@ llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashb
 
 ## ステータス
 
+- **v0.5.0** (2026-05-14) — Phase 5 first wire-in。`BayesianSurpriseGate.compute_surprise` (MEM-07) と `EdgeWeightUpdater.apply_time_decay` (RUST-03) を Rust kernel 経路へ自動委譲、不在時 numpy fallback、1e-6 parity 保証。**444 tests / 0 lint** (v0.4.0 baseline 439 + RUST-03 parity 5)。pyo3 0.24.2 (CVE-clean)。
+- **v0.4.0** (2026-05-14) — Phase 5 Rust acceleration **skeleton**。`crates/llive_rust_ext/` PyO3 0.22 + maturin scaffold、RUST-01 / RUST-02 baseline (`compute_surprise`) / RUST-04 baseline (`jaccard`) / RUST-13 Hypothesis parity harness。**439 tests**。
 - **v0.3.0** (2026-05-14) — Phase 3 (Controlled Self-Evolution MVR) + Phase 4 (Production Security MVR) 同時リリース。Z3 静的検証 / Failed Reservoir / Reverse-Evo Monitor / TRIZ Self-Reflection / Wiki ChangeOp / Quarantined Zone / Ed25519 Signed Adapter / SHA-256 Audit Chain。429 tests / 98% coverage / 0 lint。
 - **v0.2.0** (2026-05-13) — Phase 2: Adaptive Modular System 完了。4 層メモリ + surprise-gated write + consolidation cycle + LLM Wiki 統合 + 並行パイプライン。308 tests / 99% coverage / 0 lint warnings。
 - **v0.1.1** (2026-05-13) — Phase 1: Minimal Viable Research Platform。PyPI 初回公開。
-- **次** — Phase 5+ Rust 高速化 (要件 v0.7 定義済、`Phase 4 完了 + EVO 安定後の措置`原則で段階着手)。
+- **[Unreleased]** — F25 (g) `LoveBridge` writer (llive ↔ llmesh ↔ llove を MCP 経由で繋ぐ shim)、+16 tests。
+- **次** — Phase 5 残 (RUST-02 rayon 並列、RUST-05 jsonschema-rs、RUST-06 crossbeam audit sink、RUST-07 ChangeOp、RUST-08 hora HNSW、RUST-09 tokio async、RUST-10 phf TRIZ、RUST-11 Z3 bridge) を意味論固定後に段階着手。
 
 ## インストール
 
