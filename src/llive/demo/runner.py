@@ -9,15 +9,32 @@ scenario so they cannot accidentally see each other's state.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import os
 import shutil
 import sys
 import tempfile
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import ClassVar
 
 from llive.demo.i18n import current_lang
+
+
+@contextlib.contextmanager
+def _scoped_lang(lang: str) -> Iterator[None]:
+    """Temporarily set ``LLIVE_DEMO_LANG`` for the duration of a scenario."""
+    prev = os.environ.get("LLIVE_DEMO_LANG")
+    os.environ["LLIVE_DEMO_LANG"] = lang
+    try:
+        yield
+    finally:
+        if prev is None:
+            os.environ.pop("LLIVE_DEMO_LANG", None)
+        else:
+            os.environ["LLIVE_DEMO_LANG"] = prev
 
 # ---------------------------------------------------------------------------
 # Context
