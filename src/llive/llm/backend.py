@@ -281,7 +281,7 @@ class OllamaBackend(LLMBackend):
         import urllib.error
         import urllib.request
 
-        body = {
+        body: dict[str, Any] = {
             "model": request.model or self.model,
             "prompt": request.prompt,
             "stream": False,
@@ -293,6 +293,9 @@ class OllamaBackend(LLMBackend):
         }
         if request.system:
             body["system"] = request.system
+        if request.images:
+            # Ollama expects top-level "images": [<base64>, ...]
+            body["images"] = [_normalise_image(im)[1] for im in request.images]
         data = json.dumps(body).encode("utf-8")
         url = f"{self.host}/api/generate"
         req = urllib.request.Request(
