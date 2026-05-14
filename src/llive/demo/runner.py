@@ -15,6 +15,7 @@ import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import ClassVar
 
 from llive.demo.i18n import current_lang
 
