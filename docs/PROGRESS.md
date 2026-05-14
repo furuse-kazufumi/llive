@@ -28,18 +28,53 @@ Phase C-2 で MCP server 化することで Ollama / LM Studio / Claude Desktop 
 - `data/rad/README.md` 新規 (レイアウト・取り込み手順・環境変数解決順を説明)
 - Dry-run で 49 分野 / 44,864 files / 112.1 MB を確認後、本番取り込み実行
 
+### What (Phase B / C-1 / C-2 / C-1.1 / C-2.1 を同セッションで完了)
+
+- **Phase B (知識庫 API)** — `src/llive/memory/rad/`:
+  loader / query / append / skills / types。`RadCorpusIndex` に
+  読み + 書き API を統合、path traversal 防御、corpus2skill 階層スキル検出。
+  Consolidator (`rad_index=...`) で ConceptPage を `_learned/<page_type>/`
+  へミラー、provenance に `derived_from=[event_ids]` で LLW-AC-01 維持。
+- **Phase C-1 (LLM backend abstraction)** — `src/llive/llm/`:
+  Mock / Anthropic / OpenAI / Ollama の 4 backend、`GenerateRequest` /
+  `GenerateResponse` 統一。resolve_backend() で env 自動解決
+  (`LLIVE_LLM_BACKEND` > `ANTHROPIC_API_KEY` > `OPENAI_API_KEY` > `OLLAMA_HOST` > mock)。
+- **Phase C-1.1 (VLM 拡張)** — `GenerateRequest.images: list[bytes | Path | str]`、
+  `_normalise_image()` で magic bytes / 拡張子 / base64 を判別。
+  Ollama (top-level images)、Anthropic (image blocks)、OpenAI (data:URI image_url)
+  すべての backend に画像経路を実装。
+- **Phase C-2 (MCP server)** — `src/llive/mcp/`:
+  tools.py (transport 非依存) + server.py (公式 mcp 1.0+ stdio)。
+  5 基本 tool: `list_rad_domains` / `get_domain_info` / `query_rad` /
+  `read_document` / `append_learning`。スモークテストで実際の mcp
+  client から spawn → initialize → list_tools → call_tool round-trip 検証。
+- **Phase C-2.1 (vlm / coding MCP tool)** — `tool_vlm_describe_image`
+  (画像 + optional `domain_hint` で RAD grounding)、`tool_code_complete`
+  (temperature=0.0)、`tool_code_review` (`security_corpus_v2` から top-N
+  ヒント注入で Cursor / Continue.dev / Claude Desktop からセキュリティ
+  レビュー)。
+- **ドキュメント**: ROADMAP に「RAD 横断エピック」(SemVer 衝突解消)、
+  CHANGELOG [Unreleased]、`docs/mcp_integration.md` (Claude Desktop /
+  LM Studio / Open WebUI / Cursor / Continue.dev 設定例) を追加。
+
 ### State (現在地)
 
-- **Phase A 完了**: `data/rad/` 配下に 49 分野コピー済、`_index.json` 生成済
-- Phase B 着手前: `src/llive/memory/rad/` モジュール追加が次
-- Phase C-2 着手前: MCP server (`src/llive/mcp/server.py`)、VLM/コーディング tool 設計
+- ✓ RAD-A 取り込み層: 49 分野 / 44,864 docs / 112.1 MB コピー済
+- ✓ RAD-B 知識庫 API + Consolidator 統合
+- ✓ RAD-C-1 LLM backend (text + VLM 拡張)
+- ✓ RAD-C-2 MCP server + smoke E2E (mcp 1.0+ stdio で 5 tool 動作確認)
+- ✓ RAD-C-2.1 vlm / coding tool (3 追加 = 計 8 tool)
+- **441 → 518 tests / 全 PASS / ruff clean**
+- コミット: a75ccd4 / 28107dd / d9c23ff / 1b2022f
 
 ### 次
 
-- **Phase B**: `RadCorpusIndex` (loader/query/skills/append + provenance.json) + `semantic.py` / `consolidation.py` 接続 + `tests/unit/test_rad_*.py`
-- **Phase C-2**: MCP server で `query_rad` / `recall_memory` / `append_learning` を tool 化
-- **C-1 (並行)**: LLM backend abstraction (OpenAI / Anthropic / Ollama / llama-cpp) + VLM (LLaVA/Qwen2.5-VL/Phi-3.5-vision) + coding LLM
-- corpus2skill 階層スキル (`.claude/skills/corpus/<name>/`) の自動検出を `skills.py` で実装、INDEX.md があれば優先
+- RAD-C-3: OpenAI 互換 HTTP server (Ollama から llive を直接呼べる経路)
+- RAD-C-1.2: コーディング特化モデル明示サポート (DeepSeek-Coder / Qwen2.5-Coder
+  の prompt template 整備)
+- 拡張 tool: `recall_memory` (semantic memory + encoder 接続が必要)
+- 実機検証: Claude Desktop に MCP 設定を入れて `query_rad` / `code_review`
+  を実呼び出し
 
 ---
 
