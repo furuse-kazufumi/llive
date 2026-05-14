@@ -253,11 +253,27 @@ class OpenAIBackend(LLMBackend):
         self._client = openai.OpenAI(**kwargs)
         self.model = model or self.DEFAULT_MODEL
 
+    @property
+    def supports_vlm(self) -> bool:
+        return True
+
     def generate(self, request: GenerateRequest) -> GenerateResponse:  # pragma: no cover - requires API key
-        messages: list[dict[str, str]] = []
+        messages: list[dict[str, Any]] = []
         if request.system:
             messages.append({"role": "system", "content": request.system})
-        messages.append({"role": "user", "content": request.prompt})
+        if request.images:
+            user_content: list[dict[str, Any]] = [{"type": "text", "text": request.prompt}]
+            for im in request.images:
+                media, b64 = _normalise_image(im)
+                user_content.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{media};base64,{b64}"},
+                    }
+                )
+            messages.append({"role": "user", "content": user_content})
+        else:
+            messages.append({"role": "user", "content": request.prompt})
         resp = self._client.chat.completions.create(
             model=request.model or self.model,
             messages=messages,
