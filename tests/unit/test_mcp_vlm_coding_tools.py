@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from llive.llm import GenerateRequest, GenerateResponse, LLMBackend, MockBackend
+from llive.llm import GenerateRequest, GenerateResponse, LLMBackend
 from llive.mcp.tools import (
     dispatch,
     tool_code_complete,
