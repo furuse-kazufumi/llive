@@ -92,6 +92,8 @@ class ConsolidationMirrorScenario(Scenario):
     titles: ClassVar[dict[str, str]] = {
         "ja": "生物学的記憶モデルから RAD への書き戻し",
         "en": "Biological memory consolidation -> RAD mirror",
+        "zh": "生物学记忆模型回写到 RAD",
+        "ko": "생물학적 기억 모델에서 RAD 로 회수",
     }
 
     def run(self, ctx: ScenarioContext) -> dict[str, Any]:
