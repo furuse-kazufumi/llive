@@ -70,7 +70,7 @@ def _seed_corpus(root: Path) -> Path:
 
 class QuickTourScenario(Scenario):
     id = "rad-quick-tour"
-    titles = {
+    titles: ClassVar[dict[str, str]] = {
         "ja": "RAD 読み API のクイックツアー",
         "en": "RAD read-API quick tour",
     }
