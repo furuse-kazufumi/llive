@@ -114,7 +114,7 @@ def test_ollama_generate_via_mocked_urlopen() -> None:
 
     captured: dict[str, Any] = {}
 
-    def fake_urlopen(req: Any, timeout: float | None = None) -> _Resp:  # noqa: ARG001
+    def fake_urlopen(req: Any, timeout: float | None = None) -> _Resp:
         captured["url"] = req.full_url
         captured["body"] = json.loads(req.data.decode("utf-8"))
         captured["timeout"] = timeout
