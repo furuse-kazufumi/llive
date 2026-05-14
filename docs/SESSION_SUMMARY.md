@@ -3,49 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-14 00:18:44
+- **最終更新**: 2026-05-14 06:37:14
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-4293bb4 release(v0.4.0): Phase 5 Rust acceleration skeleton (RUST-01/02/04/13)
-4d9864c auto: pyproject.toml 編集前 (2026-05-14 00:16)
-2d266c2 auto: CHANGELOG.md 編集前 (2026-05-14 00:16)
-83072ab auto: CHANGELOG.md 編集前 (2026-05-14 00:16)
-174f319 auto: pyproject.toml 編集前 (2026-05-14 00:15)
-054b1f5 auto: pyproject.toml 編集前 (2026-05-14 00:15)
-936a68c auto: __init__.py 編集前 (2026-05-14 00:14)
-c4a141d auto: lib.rs 編集前 (2026-05-14 00:14)
-fc325aa release(v0.3.0): Phase 3 (Evolve MVR) + Phase 4 (Security MVR) bundle
-7489544 auto: README.md 編集前 (2026-05-14 00:08)
+6dd6994 release(v0.5.0): Phase 5 first wire-in — RUST-03 + BayesianSurprise + EdgeWeight
+41ace8f auto: CHANGELOG.md 編集前 (2026-05-14 06:31)
+3dafdf8 auto: CHANGELOG.md 編集前 (2026-05-14 06:31)
+2ac9c56 auto: __init__.py 編集前 (2026-05-14 06:30)
+4dd5ee5 auto: lib.rs 編集前 (2026-05-14 06:30)
+94f6e83 auto: Cargo.toml 編集前 (2026-05-14 06:30)
+dd65ac2 auto: pyproject.toml 編集前 (2026-05-14 06:30)
+bf57174 auto: edge_weight.py 編集前 (2026-05-14 06:29)
+64e803b auto: edge_weight.py 編集前 (2026-05-14 06:29)
+3f41033 auto: test_rust_python_parity.py 編集前 (2026-05-14 06:28)
 ```
 
 ## 現在の git status
 
 ```
-(clean)
+M docs/SESSION_SUMMARY.md
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-00:16 pyproject.toml
-00:16 CHANGELOG.md
-00:15 .ruff_cache/0.15.12/10638194744700293557
-00:15 .pytest_cache/v/cache/nodeids
-00:15 .pytest_cache/v/cache/lastfailed
-00:15 .hypothesis/constants/f4dc3900018c1e25
-00:14 src/llive/rust_ext/__init__.py
-00:14 crates/llive_rust_ext/src/lib.rs
-00:14 .ruff_cache/0.15.12/7457577932985440971
-00:13 .hypothesis/examples/94c379cee370bdd3/f6b5f54e22d526d8
-00:13 .hypothesis/examples/94c379cee370bdd3/ecb7c6a2e04ff783
-00:13 .hypothesis/examples/94c379cee370bdd3/ddf93e12aeb7aa60
-00:13 .hypothesis/examples/94c379cee370bdd3/ddefd233ec2f044f
-00:13 .hypothesis/examples/94c379cee370bdd3/c89f6dd963dbdad1
-00:13 .hypothesis/examples/94c379cee370bdd3/ae3051bccf4e081c
+06:33 docs/SESSION_SUMMARY.md
+06:31 CHANGELOG.md
+06:30 src/llive/rust_ext/__init__.py
+06:30 crates/llive_rust_ext/src/lib.rs
+06:30 crates/llive_rust_ext/Cargo.toml
+06:30 pyproject.toml
+06:30 .ruff_cache/0.15.12/10638194744700293557
+06:30 .pytest_cache/v/cache/nodeids
+06:30 .hypothesis/constants/e3658feab3fec12b
+06:30 src/llive/memory/edge_weight.py
+06:29 .ruff_cache/0.15.12/7457577932985440971
+06:29 .hypothesis/constants/3503c0ec05a293df
+06:28 .hypothesis/constants/0f2a651ed925525b
+06:28 tests/property/test_rust_python_parity.py
+06:27 src/llive/memory/bayesian_surprise.py
 ```
 
 ---
