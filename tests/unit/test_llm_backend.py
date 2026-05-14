@@ -87,7 +87,9 @@ def test_get_default_caches() -> None:
 
 
 def test_backend_supports_flags() -> None:
-    assert MockBackend().supports_vlm is False
+    # MockBackend now claims VLM support (Phase C-1.1) so it can be used as a
+    # test backend for vlm_describe_image without needing Ollama.
+    assert MockBackend().supports_vlm is True
     assert MockBackend().supports_coding is False
     # Ollama claims VLM + coding support (it hosts those model families)
     ol = OllamaBackend()
