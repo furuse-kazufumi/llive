@@ -153,3 +153,23 @@ def test_run_all_completes(capsys: pytest.CaptureFixture[str]) -> None:
         # Either succeeded, or recorded an error string — never raised
         if not r.get("ok"):
             assert "error" in r
+
+
+def test_cli_loop_repeats_scenario(capsys: pytest.CaptureFixture[str]) -> None:
+    from llive.demo.runner import main
+
+    rc = main(["--only", "1", "--loop", "2", "--lang", "ja"])
+    assert rc == 0
+    captured = capsys.readouterr()
+    # Iteration banner must appear once for iteration 2/2 (iteration 1 is silent)
+    assert "iteration 2/2" in captured.out
+
+
+def test_cli_list_flag(capsys: pytest.CaptureFixture[str]) -> None:
+    from llive.demo.runner import main
+
+    rc = main(["--list"])
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "rad-quick-tour" in captured.out
+    assert "consolidation-mirror" in captured.out
