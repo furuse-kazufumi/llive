@@ -4,6 +4,52 @@
 
 ## [Unreleased]
 
+### Added — INT-03 (F25 g): LoveBridge writer (llove ↔ llmesh ↔ llive)
+
+llove リポジトリの `docs/llove_jsonl_v1.md` v1 仕様 (Phase 2 OBS-03 凍結)
+に従い、llive が 3 種データ (bwt_summary / route_trace / concept_update)
+を JSONL writer + optional MCP push の 2 経路で publish できる薄い shim
+を追加。Phase 4 deferred の INT-03 (llove Arena) 起点として実装。
+
+#### 新規モジュール
+
+- `src/llive/observability/llove_bridge.py`:
+  - `LoveBridge(node_id, ingest_url, logs_dir, push_enabled)` dataclass
+  - 3 emitter メソッド: `emit_bwt_summary` / `emit_route_trace` /
+    `emit_concept_update` — caller が JSONL も MCP push も気にせず
+    呼べる
+  - 既存 `bwt.py` / `trace.py` には触らない (llive 本体の breaking
+    change ゼロ、bridge は完全な独立 module)
+  - JSONL 出力先: `$LLIVE_DATA_DIR/logs/llove/{bwt,route_trace,memory_link}.jsonl`
+    (llove_jsonl_v1.md spec 準拠)
+  - MCP push: 環境変数 `LLIVE_MCP_INGEST_URL` または `ingest_url=`
+    引数で指定。`POST {url}/timeline/ingest`。失敗は fail-closed
+    (JSONL は成功、HTTP は warn only、UI に伝播しない)
+  - **task_id (UUID v4) 必須**: llmesh ingest endpoint の検証に合わせ
+    fail-fast。caller 未指定なら `uuid.uuid4()` で生成
+  - 依存ゼロ (stdlib `urllib.request` のみ)
+- `tests/unit/test_llove_bridge.py` 16 件:
+  - emit_bwt_summary: JSONL write / UUID v4 自動生成 / non-UUID
+    reject / UUID v1 reject / 複数 run append (5 件)
+  - emit_route_trace: JSONL write / optional defaults / invalid
+    task_id reject (3 件)
+  - emit_concept_update: JSONL write / 空 concept_id reject /
+    title fallback (3 件)
+  - MCP push: urlopen monkey-patch で URL/body/method/headers 検証 /
+    HTTP error fail-closed / URL 未設定で push しない / push_enabled
+    で完全無効化 / LLIVE_MCP_INGEST_URL env 経由 (5 件)
+
+#### F25 全体フローの状態
+
+- Phase 0-e: llove 側 完了 (mock 駆動 + 設計凍結)
+- Phase f: llmesh `/timeline/ingest` endpoint 完了 (commit 8d7eec3)
+- Phase g (本リリース): llive LoveBridge writer 完了
+- Phase h (E2E 統合検証): 残
+
+これで llive で `bridge.emit_bwt_summary(...)` を呼ぶだけで、llmesh の
+TimelineStore に event が届き、llove TUI の BWTDashboard が表示する
+パイプラインが**コードとしては完成**。実機 E2E 検証は別セッション。
+
 ### Planned (Phase 5+ continuation)
 
 - RUST-02 完全並列化 (rayon)、RUST-05 (jsonschema-rs drop-in)、RUST-06 (crossbeam audit sink)、RUST-07 (ChangeOp Rust 移植)、RUST-08 (hora/arroy HNSW)、RUST-09 (tokio async)、RUST-10 (phf TRIZ matrix)、RUST-11 (Z3 bridge)。`docs/requirements_v0.7_rust_acceleration.md` 参照。
