@@ -180,19 +180,21 @@ def run_all(
     """Run every registered scenario in order."""
     results: list[dict[str, object]] = []
     scenarios = list_scenarios()
-    for i, sc in enumerate(scenarios, start=1):
-        ctx, tmp = _make_context(lang=lang or current_lang(), quiet=quiet)
-        if not quiet:
-            print(f"\n==[ {i}/{len(scenarios)} {sc.id} :: {sc.title(ctx.lang)} ]==", flush=True)
-        try:
-            summary = sc.run(ctx)
-            results.append({"id": sc.id, "ok": True, "summary": summary})
-        except Exception as exc:  # demo は止めない: 失敗を記録して次へ
-            results.append({"id": sc.id, "ok": False, "error": str(exc)})
+    effective_lang = lang or current_lang()
+    with _scoped_lang(effective_lang):
+        for i, sc in enumerate(scenarios, start=1):
+            ctx, tmp = _make_context(lang=effective_lang, quiet=quiet)
             if not quiet:
-                print(f"  [!] scenario failed: {exc}", flush=True)
-        finally:
-            _cleanup(tmp, keep_artifacts)
+                print(f"\n==[ {i}/{len(scenarios)} {sc.id} :: {sc.title(ctx.lang)} ]==", flush=True)
+            try:
+                summary = sc.run(ctx)
+                results.append({"id": sc.id, "ok": True, "summary": summary})
+            except Exception as exc:  # demo は止めない: 失敗を記録して次へ
+                results.append({"id": sc.id, "ok": False, "error": str(exc)})
+                if not quiet:
+                    print(f"  [!] scenario failed: {exc}", flush=True)
+            finally:
+                _cleanup(tmp, keep_artifacts)
     return results
 
 
