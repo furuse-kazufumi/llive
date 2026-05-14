@@ -4,6 +4,68 @@
 
 ## [Unreleased]
 
+### Added — TRIZ ベース demo パッケージ + 学習用 HTML 技術資料 — 2026-05-15
+
+RAD 横断エピックの動作を <strong>30 秒〜2 分の mini scenario</strong>で再生できる
+demo パッケージを追加。ユーザ要望「TRIZ に基づきデモの拡充」+「技術資料 HTML」
+に応えるもの。
+
+#### TRIZ 発明原理の適用 (memory:project_f25_demo_polish の教訓と統合)
+
+- #1 分割 — 1 機能 1 デモ、混ぜない
+- #15 動的化 — synthetic 入力で結果が動く
+- #25 セルフサービス — API キー / 実 RAD 不要、mock backend で完結
+- #19 周期的アクション — 何度回しても安全 (tmp_path で隔離)
+- #35 パラメータ変更 — 同じ tool で入力を変えると差分が見える
+- #24 仲介 — RAD が LLM の知識仲介、汎用 LLM が specialised reviewer に
+- #5 結合 — 読み層と書き層を単一 Index に統合
+
+#### 新規モジュール
+
+- `src/llive/demo/` (~800 行、stdlib + mcp + 既存 llive のみ)
+  - `__main__.py`: `python -m llive.demo` entry
+  - `i18n.py`: 軽量 i18n (gettext 不使用、純 dict、ja/en)
+  - `runner.py`: Scenario 基底 + ScenarioContext + _scoped_lang + CLI
+  - `scenario_1_quick_tour.py`: 3 docs × 3 queries で score 差を提示
+  - `scenario_2_append_roundtrip.py`: append_learning + provenance + 即時検索
+  - `scenario_3_code_review.py`: 脆弱 C コード + security_corpus_v2 ヒント注入
+  - `scenario_4_mcp_roundtrip.py`: mcp 公式 client で subprocess 経路を E2E
+  - `scenario_5_openai_http.py`: ephemeral port + RAD on/off 差分
+
+#### MCP server の log silencing
+
+- `src/llive/mcp/server.py`: `LLIVE_MCP_LOG_LEVEL` env で出力レベルを制御
+  (scenario 4 が WARNING にして INFO ログがデモに混じらないように)
+
+#### ドキュメント
+
+- `docs/v0.2_rad_techdoc.html`: 単一 HTML 学習用技術資料
+  - Mermaid 図 (全体アーキテクチャ + Consolidator → RAD mirror フロー)
+  - サイドバー目次 (sticky、IntersectionObserver で active 強調)
+  - ライト / ダーク両対応 (`prefers-color-scheme`)
+  - 各 Phase の設計判断 + 学習要点 10 項目
+- `docs/demos.html`: 5 scenario の showcase
+  - コピーボタン (clipboard API)
+  - 言語切替 (ja/en、`data-lang` 属性で出し分け)
+  - expand/collapse all、`Esc` で畳む
+
+#### テスト (tests/unit/test_demo_scenarios.py、13 cases)
+
+- 全 5 scenario の登録順固定
+- `_scoped_lang` の前後 env 復元 (2 cases)
+- 各 scenario を quiet=True で完走確認
+- 期待ナレーション文字列が出力に含まれること (ja/en)
+- run_all() が全 5 結果を返すこと
+- 既存 527 → 540 tests / 全 PASS / ruff clean
+
+#### 実機磨き (memory:feedback_scenario_iterative 「smoke だけで OK にせず 1 個ずつ磨く」)
+
+- Scenario 1: step counter の 1/3→2/3→3/3 進行を担保
+- Scenario 2: ステップ数を 1/2 + 2/2 に揃え一貫性確保
+- Scenario 3: ヒントパスを file name のみに短縮、step 余白整理
+- Scenario 4: MCP server INFO ログを WARNING へ抑制
+- Scenario 5: RAD on/off の hints 0 → 1 件差分を明示
+
 ### Added — RAD 横断エピック (RAD-A / RAD-B / RAD-C-2) — 2026-05-15
 
 Raptor 由来の RAD コーパス (49 分野・44,864 docs・~112 MB) を llive 配下に
