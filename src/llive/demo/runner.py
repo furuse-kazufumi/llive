@@ -214,7 +214,11 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--only", help="run a single scenario by 1-based index or id")
     p.add_argument("--list", action="store_true", help="list available scenarios and exit")
-    p.add_argument("--lang", choices=["ja", "en"], help="narration language (default: $LLIVE_DEMO_LANG | ja)")
+    p.add_argument(
+        "--lang",
+        choices=["ja", "en", "zh", "ko"],
+        help="narration language (default: $LLIVE_DEMO_LANG | ja)",
+    )
     p.add_argument("--quiet", action="store_true", help="suppress narration (summary only)")
     p.add_argument("--keep-artifacts", action="store_true", help="keep tmp dirs after each scenario")
     p.add_argument(
