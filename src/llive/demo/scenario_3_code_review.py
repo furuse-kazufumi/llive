@@ -100,7 +100,7 @@ def _seed_security_corpus(root):  # type: ignore[no-untyped-def]
 
 class CodeReviewScenario(Scenario):
     id = "code-review"
-    titles = {
+    titles: ClassVar[dict[str, str]] = {
         "ja": "RAD ヒント注入つきコードレビュー",
         "en": "Code review with RAD hint injection",
     }
