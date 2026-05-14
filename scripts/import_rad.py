@@ -228,15 +228,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str]) -> int:
+    # Windows cp932 でも絵文字 / em-dash を吐けるよう stdout を UTF-8 に再設定
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     args = parse_args(argv)
     source = resolve_source(args.source)
     dest = resolve_dest(args.dest)
-    only = [s for s in args.corpora.split(",")] if args.corpora else None
+    only = list(args.corpora.split(",")) if args.corpora else None
 
     print(f"[import_rad] source = {source}")
     print(f"[import_rad] dest   = {dest}")
     if args.dry_run:
-        print("[import_rad] DRY RUN — no files will be modified")
+        print("[import_rad] DRY RUN -- no files will be modified")
 
     try:
         corpora = list_corpora(source, include_legacy=args.include_legacy, only=only)
