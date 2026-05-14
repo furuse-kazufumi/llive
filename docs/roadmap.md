@@ -215,13 +215,13 @@ Phase 1 MVR と並走する横断エピック。生物学的記憶モデルの s
 接続し、Ollama / LM Studio / Claude Desktop / Open WebUI から MCP 経由で呼び出せる
 **ローカルファースト記憶 LLM** として実用化する。VLM とコーディング特化 LLM も視野。
 
-### Epic A. RAD 取り込み層 (`data/rad/` + `scripts/import_rad.py`) — v0.2.0 完了
+### Epic RAD-A. 取り込み層 (`data/rad/` + `scripts/import_rad.py`) — 完了 2026-05-15
 
 - 49 分野・44,864 docs・~112 MB を `data/rad/<分野>_v2/` に物理コピー
 - stdlib のみ、サイズ + mtime 差分、`--mirror` で削除も同期
 - `_index.json` メタ生成、`_learned/` 書き層を予約
 
-### Epic B. 知識庫 API (`src/llive/memory/rad/`) — v0.2.1 目標
+### Epic RAD-B. 知識庫 API (`src/llive/memory/rad/`) — 完了 2026-05-15
 
 - **B.1 RadCorpusIndex (読み)**: `loader.py` / `query.py` / `skills.py`
   - 環境変数 `LLIVE_RAD_DIR` → `RAPTOR_CORPUS_DIR` → `data/rad/` の解決
@@ -230,31 +230,44 @@ Phase 1 MVR と並走する横断エピック。生物学的記憶モデルの s
 - **B.2 書き層 (`append_learning`)**: `_learned/<分野>/<doc-id>.md` + `provenance.json`
   - 生物学的記憶モデル (`semantic.py` / `consolidation.py`) からの書き戻し経路
   - episodic → consolidation → semantic → RAD 書き戻し
-- **B.3 テスト**: `tests/unit/test_rad_loader.py`, `test_rad_query.py`, `test_rad_append.py`
+- **B.3 Consolidator 統合**: `Consolidator(rad_index=...)` → ConceptPage が
+  自動的に `_learned/<page_type>/<concept_id>.md` にミラー、出典は
+  `derived_from=[event_ids]` で生イベントへ追跡可能 (LLW-AC-01 維持)
+- **B.4 テスト**: `tests/unit/test_rad.py` (25 cases) +
+  `test_consolidation_rad_mirror.py` (4 cases)
 
-### Epic C. 外部 LLM 連携 — v0.2.2 目標
+### Epic RAD-C. 外部 LLM 連携 — 進行中
 
 - **C-1 LLM backend abstraction** — `src/llive/llm/backend.py`
   - OpenAI 互換 / Anthropic / Ollama / llama-cpp の薄いアダプタ
   - **VLM 対応**: LLaVA / Qwen2.5-VL / Phi-3.5-vision / Llama 3.2 Vision (multimodal 入力)
   - **コーディング特化**: Qwen2.5-Coder / DeepSeek-Coder / Code Llama
-- **C-2 MCP server** — `src/llive/mcp/server.py`
-  - tools: `query_rad`, `recall_memory`, `append_learning`
-  - VLM tools: `vlm_describe_image` (画像 + RAD コンテキスト)
-  - coding tools: `code_complete`, `code_review` (`security_corpus_v2` 活用)
+- **C-2 MCP server** — `src/llive/mcp/server.py` — 完了 2026-05-15
+  - tools: `list_rad_domains`, `get_domain_info`, `query_rad`, `read_document`,
+    `append_learning` (`tools.py` で transport-independent な純 Python 実装)
   - 接続先: Claude Desktop / LM Studio / Open WebUI / Cursor / Continue.dev
+  - pyproject: `[mcp]`, `[vlm]`, `[coding]` extras 追加
+- **C-2.1 拡張 tool (後続)**: VLM (`vlm_describe_image`) +
+  coding (`code_complete`, `code_review`) + memory (`recall_memory`)
 - **C-3 OpenAI 互換 HTTP server (任意)** — Ollama 等が直接 llive を呼べる
 
-### バージョニング
+### マイルストーン (SemVer に占有させず名前付き)
 
-- `0.2.0` = Epic A 完了 (取り込み層)
-- `0.2.1` = Epic B 完了 (知識庫 API)
-- `0.2.2` = Epic C-2 完了 (MCP server) + C-1 (backend abstraction)
-- `0.2.3` = Epic C-1 拡張 (VLM + コーディング特化 LLM 完全対応) + C-3
+注意: 主軸 SemVer は Phase 1-7 に予約済 (`0.2.x = Phase 2 完了`, etc.) のため、
+RAD エピックは横断的な作業として独立に扱い、リリースに混ぜる際は
+build メタ (`+rad-a`, `+rad-b`) で識別する。SemVer 番号は占有しない。
+
+- ✓ **RAD-A**: 取り込み層 (完了)
+- ✓ **RAD-B.1-B.4**: 知識庫 API + Consolidator 統合 (完了)
+- ✓ **RAD-C-2**: MCP server (基本 tool 5 つ完了)
+- ⧖ **RAD-C-1**: LLM backend abstraction (text → VLM → coding)
+- □ **RAD-C-2.1**: VLM / coding / recall_memory tool 拡張
+- □ **RAD-C-3**: OpenAI 互換 HTTP server (Ollama 直叩き)
 
 ### 受け入れ基準
 
-- Phase A: `py -3.11 scripts/import_rad.py` で 49 分野コピー完了、`_index.json` 生成
-- Phase B: `RadCorpusIndex.query("buffer overflow", domain="security_corpus_v2")` で関連 doc 返却、生物学的記憶モデルから `append_learning` 経由で `_learned/` に書き込まれる
-- Phase C-2: Claude Desktop の MCP 設定で llive サーバを登録、`query_rad` tool が動く
-- Phase C-1: Ollama (Qwen2.5-VL) で画像入力 + RAD クエリが連携
+- ✓ RAD-A: `py -3.11 scripts/import_rad.py` で 49 分野コピー完了、`_index.json` 生成
+- ✓ RAD-B: `RadCorpusIndex.query("buffer overflow", domain="security_corpus_v2")`
+  で関連 doc 返却、Consolidator が `_learned/<page_type>/` に書き戻し
+- ✓ RAD-C-2: Claude Desktop の MCP 設定で llive サーバを登録、`query_rad` tool が動く
+- □ RAD-C-1: Ollama (Qwen2.5-VL) で画像入力 + RAD クエリが連携
