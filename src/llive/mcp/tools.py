@@ -171,6 +171,159 @@ def tool_append_learning(
     }
 
 
+def _resolve_backend(backend: LLMBackend | None) -> LLMBackend:
+    return backend if backend is not None else get_default_backend()
+
+
+def tool_vlm_describe_image(
+    image_path: str | Path,
+    *,
+    prompt: str = "Describe this image in concrete detail.",
+    domain_hint: str | None = None,
+    model: str | None = None,
+    max_tokens: int = 512,
+    backend: LLMBackend | None = None,
+    index: RadCorpusIndex | None = None,
+) -> dict[str, Any]:
+    """Phase C-2.1: describe an image with a VLM, optionally augmenting the prompt
+    with RAD hints pulled from ``domain_hint``.
+
+    If ``domain_hint`` is provided, the top 3 ``query_rad`` hits for the prompt
+    text are prepended as a ``# RAD hints`` system block, so the VLM grounds its
+    description in domain-specific terminology.
+    """
+    img = Path(image_path)
+    if not img.is_file():
+        raise FileNotFoundError(f"image not found: {img}")
+    be = _resolve_backend(backend)
+    if not be.supports_vlm:
+        raise RuntimeError(
+            f"backend {be.name!r} does not support VLM inputs; "
+            f"set LLIVE_LLM_BACKEND=ollama (with a VLM model) or anthropic / openai with a vision-capable model"
+        )
+    system_parts: list[str] = []
+    hint_used: list[str] = []
+    if domain_hint:
+        idx = index or get_default_index()
+        hits = query(idx, prompt, domain=domain_hint, limit=3)
+        if hits:
+            system_parts.append("# RAD hints")
+            for h in hits:
+                hint_used.append(str(h.doc_path))
+                if h.excerpt:
+                    system_parts.append(f"- {h.excerpt}")
+    req = GenerateRequest(
+        prompt=prompt,
+        system="\n".join(system_parts) if system_parts else None,
+        images=[img],
+        model=model,
+        max_tokens=int(max_tokens),
+    )
+    resp = be.generate(req)
+    return {
+        "text": resp.text,
+        "backend": resp.backend,
+        "model": resp.model,
+        "finish_reason": resp.finish_reason,
+        "image_path": str(img),
+        "rad_hints_used": hint_used,
+    }
+
+
+def tool_code_complete(
+    code_context: str,
+    instruction: str,
+    *,
+    model: str | None = None,
+    max_tokens: int = 1024,
+    backend: LLMBackend | None = None,
+) -> dict[str, Any]:
+    """Phase C-2.1: code completion / edit suggestion via the active LLM backend.
+
+    The prompt format is conventional for code-specialised models
+    (Qwen2.5-Coder / DeepSeek-Coder / Code Llama):
+
+        <instruction>
+
+        ```
+        <code_context>
+        ```
+    """
+    be = _resolve_backend(backend)
+    prompt = f"{instruction}\n\n```\n{code_context}\n```\n"
+    req = GenerateRequest(
+        prompt=prompt,
+        system="You are a coding assistant. Reply with only the requested code, no prose.",
+        model=model,
+        max_tokens=int(max_tokens),
+        temperature=0.0,
+    )
+    resp = be.generate(req)
+    return {
+        "text": resp.text,
+        "backend": resp.backend,
+        "model": resp.model,
+        "finish_reason": resp.finish_reason,
+    }
+
+
+def tool_code_review(
+    code: str,
+    *,
+    domain: str = "security_corpus_v2",
+    model: str | None = None,
+    max_tokens: int = 1024,
+    hint_limit: int = 5,
+    backend: LLMBackend | None = None,
+    index: RadCorpusIndex | None = None,
+) -> dict[str, Any]:
+    """Phase C-2.1: security code review with RAD hints from ``security_corpus_v2``.
+
+    Searches RAD for terms in the code (tokenised) and prepends the top
+    ``hint_limit`` excerpts so the LLM grounds its review in known
+    vulnerability patterns from Raptor's hacker / security corpora.
+    """
+    idx = index or get_default_index()
+    # Use the first 200 characters of code as the search query; this catches
+    # function names and identifier tokens better than the full body.
+    hits = query(idx, code[:200], domain=domain, limit=int(hint_limit))
+    hint_text = ""
+    hint_used: list[str] = []
+    if hits:
+        lines = ["# Relevant security knowledge from RAD"]
+        for h in hits:
+            hint_used.append(str(h.doc_path))
+            if h.excerpt:
+                lines.append(f"- {h.excerpt}")
+        hint_text = "\n".join(lines)
+
+    system_prompt = (
+        "You are a security-focused code reviewer. "
+        "Identify potential vulnerabilities, unsafe patterns, and edge cases. "
+        "Cite specific lines. Output a Markdown bullet list."
+    )
+    if hint_text:
+        system_prompt = f"{system_prompt}\n\n{hint_text}"
+
+    be = _resolve_backend(backend)
+    req = GenerateRequest(
+        prompt=f"Review this code:\n\n```\n{code}\n```",
+        system=system_prompt,
+        model=model,
+        max_tokens=int(max_tokens),
+        temperature=0.1,
+    )
+    resp = be.generate(req)
+    return {
+        "text": resp.text,
+        "backend": resp.backend,
+        "model": resp.model,
+        "finish_reason": resp.finish_reason,
+        "rad_hints_used": hint_used,
+        "domain": domain,
+    }
+
+
 def tool_describe() -> list[dict[str, Any]]:
     """Return a JSON schema-style description of all tools for MCP registration."""
     return [
