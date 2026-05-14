@@ -217,6 +217,20 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--lang", choices=["ja", "en"], help="narration language (default: $LLIVE_DEMO_LANG | ja)")
     p.add_argument("--quiet", action="store_true", help="suppress narration (summary only)")
     p.add_argument("--keep-artifacts", action="store_true", help="keep tmp dirs after each scenario")
+    p.add_argument(
+        "--loop",
+        type=int,
+        default=1,
+        metavar="N",
+        help="repeat the run N times (default 1). Use 0 for infinite loop (Ctrl-C to stop).",
+    )
+    p.add_argument(
+        "--interval",
+        type=float,
+        default=0.0,
+        metavar="S",
+        help="sleep S seconds between iterations (only meaningful with --loop > 1).",
+    )
     return p
 
 
