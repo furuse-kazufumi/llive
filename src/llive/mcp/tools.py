@@ -394,6 +394,57 @@ def tool_describe() -> list[dict[str, Any]]:
                 },
             },
         },
+        {
+            "name": "vlm_describe_image",
+            "description": (
+                "Describe an image with a vision-language model. "
+                "Optionally augments the prompt with RAD hints from a domain."
+            ),
+            "input_schema": {
+                "type": "object",
+                "required": ["image_path"],
+                "properties": {
+                    "image_path": {"type": "string"},
+                    "prompt": {"type": "string", "default": "Describe this image in concrete detail."},
+                    "domain_hint": {"type": "string"},
+                    "model": {"type": "string"},
+                    "max_tokens": {"type": "integer", "default": 512, "minimum": 1, "maximum": 8192},
+                },
+            },
+        },
+        {
+            "name": "code_complete",
+            "description": "Code completion / edit suggestion via the active LLM backend.",
+            "input_schema": {
+                "type": "object",
+                "required": ["code_context", "instruction"],
+                "properties": {
+                    "code_context": {"type": "string"},
+                    "instruction": {"type": "string"},
+                    "model": {"type": "string"},
+                    "max_tokens": {"type": "integer", "default": 1024, "minimum": 1, "maximum": 16384},
+                },
+            },
+        },
+        {
+            "name": "code_review",
+            "description": (
+                "Security-focused code review with RAD hints. "
+                "Pulls top-N excerpts from `security_corpus_v2` (or a custom domain) "
+                "and grounds the LLM review in known vulnerability patterns."
+            ),
+            "input_schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                    "code": {"type": "string"},
+                    "domain": {"type": "string", "default": "security_corpus_v2"},
+                    "model": {"type": "string"},
+                    "max_tokens": {"type": "integer", "default": 1024, "minimum": 1, "maximum": 16384},
+                    "hint_limit": {"type": "integer", "default": 5, "minimum": 0, "maximum": 50},
+                },
+            },
+        },
     ]
 
 
@@ -414,6 +465,12 @@ def dispatch(name: str, arguments: dict[str, Any]) -> Any:
         return tool_read_document(**args)
     if name == "append_learning":
         return tool_append_learning(**args)
+    if name == "vlm_describe_image":
+        return tool_vlm_describe_image(**args)
+    if name == "code_complete":
+        return tool_code_complete(**args)
+    if name == "code_review":
+        return tool_code_review(**args)
     raise KeyError(f"unknown tool: {name}")
 
 
