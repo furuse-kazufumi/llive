@@ -88,6 +88,34 @@ def test_run_scenario_1_outputs_hits_in_en(capsys: pytest.CaptureFixture[str]) -
     assert out["ok"] is True
 
 
+def test_run_scenario_1_outputs_in_zh(capsys: pytest.CaptureFixture[str]) -> None:
+    out = run_one(1, lang="zh", quiet=False)
+    captured = capsys.readouterr()
+    assert "RAD 读取 API 速览" in captured.out
+    assert "迷你语料" in captured.out
+    assert out["ok"] is True
+
+
+def test_run_scenario_1_outputs_in_ko(capsys: pytest.CaptureFixture[str]) -> None:
+    out = run_one(1, lang="ko", quiet=False)
+    captured = capsys.readouterr()
+    assert "빠른 둘러보기" in captured.out
+    assert "코퍼스" in captured.out
+    assert out["ok"] is True
+
+
+def test_current_lang_handles_locale_codes(monkeypatch: pytest.MonkeyPatch) -> None:
+    from llive.demo.i18n import current_lang
+
+    monkeypatch.setenv("LLIVE_DEMO_LANG", "zh-CN")
+    assert current_lang() == "zh"
+    monkeypatch.setenv("LLIVE_DEMO_LANG", "ko_KR")
+    assert current_lang() == "ko"
+    monkeypatch.setenv("LLIVE_DEMO_LANG", "fr")
+    # Unsupported language falls back to ja
+    assert current_lang() == "ja"
+
+
 def test_run_scenario_3_injects_rad_hints(capsys: pytest.CaptureFixture[str]) -> None:
     out = run_one(3, quiet=False)
     captured = capsys.readouterr()
