@@ -289,16 +289,5 @@ def main(argv: list[str] | None = None) -> int:
     return last_rc
 
 
-def _legacy_main_disabled() -> int:
-    # kept for reference; the actual main is above. This stub is unused.
-    results: list[dict[str, object]] = []
-    fails = [r for r in results if not r.get("ok")]
-    if False:
-        print(f"\n=== summary: {len(results) - len(fails)}/{len(results)} ok ===", flush=True)
-        for r in results:
-            print(f"  {'OK ' if r.get('ok') else 'ERR'}  {r['id']}", flush=True)
-    return 0 if not fails else 2
-
-
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
