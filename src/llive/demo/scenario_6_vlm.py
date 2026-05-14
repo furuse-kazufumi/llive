@@ -123,6 +123,8 @@ class VlmDescribeScenario(Scenario):
     titles: ClassVar[dict[str, str]] = {
         "ja": "VLM describe + RAD ヒント (画像 + 知識基盤)",
         "en": "VLM describe + RAD hint (image + knowledge grounding)",
+        "zh": "VLM describe + RAD 提示 (图像 + 知识基盘)",
+        "ko": "VLM describe + RAD 힌트 (이미지 + 지식 기반)",
     }
 
     def run(self, ctx: ScenarioContext) -> dict[str, Any]:
