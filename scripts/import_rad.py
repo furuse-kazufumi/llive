@@ -157,13 +157,14 @@ def sync_corpus(
             continue  # symlink / 特殊ファイルはスキップ
         stat.file_count += 1
         stat.bytes += src.stat().st_size
-        if dst.exists() and not force and _same(src, dst):
+        existed_before = dst.exists()
+        if existed_before and not force and _same(src, dst):
             stat.skipped += 1
             continue
         if not dry_run:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
-        if dst.exists():
+        if existed_before:
             stat.updated += 1
         else:
             stat.added += 1
