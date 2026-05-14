@@ -45,6 +45,24 @@ _CATALOG: dict[str, dict[str, str]] = {
         "prov": "  provenance.json (LLW-AC-01 source-anchored):",
         "summary": "{n} learned docs produced. derived_from traces back to the raw event ids.",
     },
+    "zh": {
+        "intro": "用 1 个 cycle 展示 EpisodicEvent → cluster → ConceptPage → _learned/ 的自动镜像路径。",
+        "events": "写入 3 条相似的 episodic event...",
+        "cycle": "执行 Consolidator.run_once() (Mock LLM,无需网络)...",
+        "result": "  pages_created={created} / pages_updated={updated} / clusters={clusters}",
+        "mirrored": "  写入到 _learned/<page_type>/ 的文件:",
+        "prov": "  provenance.json (LLW-AC-01 source-anchored):",
+        "summary": "生成 {n} 条 learned doc。可凭 derived_from 追溯到原始 event id。",
+    },
+    "ko": {
+        "intro": "한 사이클로 EpisodicEvent → cluster → ConceptPage → _learned/ 자동 미러 경로를 보여줍니다.",
+        "events": "유사한 episodic event 3건 쓰는 중...",
+        "cycle": "Consolidator.run_once() 실행 (Mock LLM, 네트워크 불필요)...",
+        "result": "  pages_created={created} / pages_updated={updated} / clusters={clusters}",
+        "mirrored": "  _learned/<page_type>/ 에 작성된 파일:",
+        "prov": "  provenance.json (LLW-AC-01 source-anchored):",
+        "summary": "{n}건의 learned doc 생성. derived_from 으로 원본 event id 까지 추적 가능.",
+    },
 }
 
 
