@@ -47,6 +47,26 @@ _CATALOG: dict[str, dict[str, str]] = {
         "hints": "  Hints injected: {n} via {paths}",
         "summary": "Switching RAD on appended {n} system hints for the same prompt.",
     },
+    "zh": {
+        "intro": "在临时端口启动 HTTP server,对比 RAD on/off 的差异。",
+        "boot": "服务启动: http://127.0.0.1:{port}/v1",
+        "seed": "准备迷你 security_corpus...",
+        "plain": "POST (RAD 关闭):",
+        "with_rad": "POST (RAD 开启: x_rad_domain=security_corpus_v2):",
+        "reply_head": "  响应 text 摘录:",
+        "hints": "  注入提示: {n} 条 / {paths}",
+        "summary": "开启 RAD 后,同一 prompt 多了 {n} 条 system 提示。",
+    },
+    "ko": {
+        "intro": "임시 포트로 HTTP server 를 띄우고 RAD on/off 의 차이를 보여줍니다.",
+        "boot": "서버 기동: http://127.0.0.1:{port}/v1",
+        "seed": "미니 security_corpus 준비 중...",
+        "plain": "POST (RAD off):",
+        "with_rad": "POST (RAD on: x_rad_domain=security_corpus_v2):",
+        "reply_head": "  응답 text 발췌:",
+        "hints": "  주입된 힌트: {n}건 / {paths}",
+        "summary": "RAD 를 켜면 같은 prompt 에 {n}건의 힌트가 system 으로 추가됩니다.",
+    },
 }
 
 
