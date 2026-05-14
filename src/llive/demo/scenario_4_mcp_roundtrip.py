@@ -39,6 +39,28 @@ _CATALOG: dict[str, dict[str, str]] = {
         "no_hit": "  (no hits -- server still responded with valid JSON)",
         "summary": "{n} tools advertised. Same path Claude Desktop uses.",
     },
+    "zh": {
+        "intro": "通过 subprocess 启动 MCP server,并以官方 client 调用。",
+        "missing": "  ! 未安装 mcp 包,跳过 (pip install -e .[mcp])",
+        "spawn": "subprocess 启动 `py -m llive.mcp.server`...",
+        "init": "initialize() 成功",
+        "list": "list_tools() = {names}",
+        "call": "执行 call_tool('query_rad', keywords='buffer')...",
+        "hit": "  - {domain}/{name}",
+        "no_hit": "  (无命中 — 但 server 仍然以合法 JSON 回应)",
+        "summary": "检出 {n} 个 tool,完成一次往返。与 Claude Desktop 同路径。",
+    },
+    "ko": {
+        "intro": "MCP server 를 subprocess 로 띄우고 공식 client 로 호출합니다.",
+        "missing": "  ! mcp 패키지가 없어 건너뜁니다 (pip install -e .[mcp])",
+        "spawn": "subprocess 로 `py -m llive.mcp.server` 기동 중...",
+        "init": "initialize() 성공",
+        "list": "list_tools() = {names}",
+        "call": "call_tool('query_rad', keywords='buffer') 실행 중...",
+        "hit": "  - {domain}/{name}",
+        "no_hit": "  (히트 없음 — 그래도 server 는 유효 JSON 으로 응답)",
+        "summary": "{n}개 tool 감지, 1 라운드 트립 완료. Claude Desktop 과 동일 경로.",
+    },
 }
 
 
