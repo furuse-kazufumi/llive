@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llive v0.2 — RAD 知識庫 × 外部 LLM 連携 技術資料</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+:root {
+  --fg: #1b1f24;
+  --fg-mute: #4a525c;
+  --fg-faint: #6c7682;
+  --bg: #fafbfc;
+  --bg-panel: #ffffff;
+  --bg-code: #f5f7fa;
+  --bg-code-inline: #eef1f5;
+  --accent: #2c6ecf;
+  --accent-soft: #d8e6fb;
+  --accent-fg: #1a4380;
+  --border: #dde2e8;
+  --border-strong: #c4ccd6;
+  --warn: #b85d00;
+  --warn-bg: #fff5e8;
+  --ok: #2c7a3a;
+  --ok-bg: #e5f4e8;
+  --kw: #8a3070;
+  --str: #2c6e3f;
+  --com: #6c7682;
+  --num: #b8521a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e9ef;
+    --fg-mute: #aab2bd;
+    --fg-faint: #828a96;
+    --bg: #181b21;
+    --bg-panel: #1f2229;
+    --bg-code: #15171c;
+    --bg-code-inline: #2a2e36;
+    --accent: #79a8e8;
+    --accent-soft: #2a3d57;
+    --accent-fg: #c9deff;
+    --border: #2c313a;
+    --border-strong: #3a414c;
+    --warn: #f0a85e;
+    --warn-bg: #3a2a14;
+    --ok: #79c98a;
+    --ok-bg: #1e3324;
+    --kw: #d68bc8;
+    --str: #9bd2a6;
+    --com: #828a96;
+    --num: #e8a87a;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif;
+  line-height: 1.7; font-size: 16px; -webkit-font-smoothing: antialiased; }
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 0; min-height: 100vh; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); } }
+nav.toc {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  background: var(--bg-panel); border-right: 1px solid var(--border);
+  padding: 24px 18px; font-size: 14px;
+}
+nav.toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--fg-faint); margin: 0 0 8px; }
+nav.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocsec; }
+nav.toc ol li { counter-increment: tocsec; margin: 2px 0; }
+nav.toc ol li a { display: block; padding: 4px 6px; border-radius: 4px;
+  color: var(--fg-mute); text-decoration: none; }
+nav.toc ol li a::before { content: counter(tocsec) ". "; color: var(--fg-faint); }
+nav.toc ol li a:hover { background: var(--accent-soft); color: var(--accent-fg); }
+nav.toc ol ol { padding-left: 14px; margin-top: 2px; counter-reset: tocsub; }
+nav.toc ol ol li { counter-increment: tocsub; }
+nav.toc ol ol li a::before { content: counters(tocsec, ".") "." counter(tocsub) " "; }
+main { max-width: 880px; padding: 36px 40px 80px; }
+@media (max-width: 700px) { main { padding: 20px 16px 60px; } }
+h1 { font-size: 30px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 22px; margin: 48px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 18px; margin: 28px 0 8px; }
+h4 { font-size: 15px; margin: 16px 0 6px; color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.03em; }
+p { margin: 8px 0 12px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { background: var(--bg-code-inline); padding: 1px 6px; border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em; }
+pre { background: var(--bg-code); border: 1px solid var(--border);
+  padding: 14px 16px; border-radius: 6px; overflow-x: auto;
+  font-size: 13.5px; line-height: 1.55; margin: 12px 0; }
+pre code { background: transparent; padding: 0; font-size: inherit; }
+.kw { color: var(--kw); font-weight: 500; }
+.str { color: var(--str); }
+.com { color: var(--com); font-style: italic; }
+.num { color: var(--num); }
+ul, ol { padding-left: 22px; }
+li { margin: 4px 0; }
+.lead { font-size: 17px; color: var(--fg-mute); margin: 12px 0 24px; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px;
+  font-size: 12px; font-weight: 500; background: var(--accent-soft); color: var(--accent-fg);
+  margin-right: 6px; }
+.tag-ok { background: var(--ok-bg); color: var(--ok); }
+.tag-warn { background: var(--warn-bg); color: var(--warn); }
+.note, .why, .pitfall {
+  border-left: 3px solid var(--accent); background: var(--bg-panel);
+  border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 16px 0;
+}
+.why { border-left-color: var(--ok); }
+.pitfall { border-left-color: var(--warn); }
+.note .label, .why .label, .pitfall .label {
+  display: block; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--fg-faint); margin-bottom: 4px;
+}
+.why .label { color: var(--ok); }
+.pitfall .label { color: var(--warn); }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: var(--bg-panel); font-weight: 600; }
+.mermaid { background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px; margin: 16px 0; overflow-x: auto; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+.toc-pill { display: inline-block; padding: 1px 8px; border: 1px solid var(--border);
+  border-radius: 10px; font-size: 11px; color: var(--fg-faint); margin-left: 6px; }
+footer { color: var(--fg-faint); font-size: 13px; margin-top: 60px;
+  border-top: 1px solid var(--border); padding-top: 16px; }
+.kbd { display: inline-block; border: 1px solid var(--border-strong); border-bottom-width: 2px;
+  border-radius: 4px; padding: 1px 6px; font-family: ui-monospace, monospace;
+  font-size: 12px; background: var(--bg-panel); }
+.toc-active { background: var(--accent-soft); color: var(--accent-fg) !important; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#intro">はじめに</a></li>
+    <li><a href="#architecture">全体アーキテクチャ</a></li>
+    <li><a href="#phase-a">Phase A — RAD 取り込み層</a>
+      <ol>
+        <li><a href="#a-design">設計判断</a></li>
+        <li><a href="#a-script">スクリプト構造</a></li>
+        <li><a href="#a-layout">ディレクトリレイアウト</a></li>
+      </ol>
+    </li>
+    <li><a href="#phase-b">Phase B — RadCorpusIndex</a>
+      <ol>
+        <li><a href="#b-design">読み+書き統合の理由</a></li>
+        <li><a href="#b-api">API 表面</a></li>
+        <li><a href="#b-security">パストラバーサル防御</a></li>
+        <li><a href="#b-consolidator">Consolidator 統合</a></li>
+      </ol>
+    </li>
+    <li><a href="#phase-c1">Phase C-1 — LLM Backend</a>
+      <ol>
+        <li><a href="#c1-abstraction">抽象化の形</a></li>
+        <li><a href="#c1-resolve">backend 解決の優先順位</a></li>
+        <li><a href="#c1-vlm">VLM 拡張</a></li>
+      </ol>
+    </li>
+    <li><a href="#phase-c2">Phase C-2 — MCP Server</a>
+      <ol>
+        <li><a href="#c2-split">transport 分離設計</a></li>
+        <li><a href="#c2-tools">8 つの tool</a></li>
+        <li><a href="#c2-smoke">smoke E2E</a></li>
+      </ol>
+    </li>
+    <li><a href="#phase-c3">Phase C-3 — OpenAI HTTP</a>
+      <ol>
+        <li><a href="#c3-why">なぜ HTTP も必要か</a></li>
+        <li><a href="#c3-endpoints">エンドポイント</a></li>
+        <li><a href="#c3-rag-flag">RAG-on-by-flag 拡張</a></li>
+      </ol>
+    </li>
+    <li><a href="#testing">テスト戦略</a></li>
+    <li><a href="#scenarios">利用シナリオ別ガイド</a></li>
+    <li><a href="#extensions">拡張ポイント</a></li>
+    <li><a href="#takeaways">学習要点まとめ</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<h1>llive v0.2 — RAD 知識庫 × 外部 LLM 連携</h1>
+<p class="lead">
+Raptor の Research Aggregation Directory (49 分野 / 44,864 docs / 112 MB) を
+llive 配下に取り込み、生物学的記憶モデルから書き戻し可能にし、
+Claude Desktop / LM Studio / Cursor / Ollama / OpenWebUI から呼べる
+<strong>ローカルファースト記憶 LLM</strong> として実用化するまでの設計・実装記録。
+</p>
+<p>
+<span class="tag">2026-05-15</span>
+<span class="tag tag-ok">441 → 527 tests / 全 PASS</span>
+<span class="tag tag-ok">ruff clean</span>
+<span class="tag">commits: a75ccd4 → f361d06</span>
+</p>
+
+<!-- ============================================================ -->
+<h2 id="intro">1. はじめに</h2>
+
+<h3>本資料の目的</h3>
+<p>
+本資料は <strong>llive v0.2 系の RAD 横断エピック</strong>を、後から自分で読み返したときに
+「なぜこの形にしたか」が再構成できる粒度で記録するためのものです。API リファレンスというより
+<em>設計思想と判断ポイントのスナップショット</em>として書いています。
+</p>
+
+<h3>対象読者</h3>
+<ul>
+  <li>llive 本体の今後の保守・拡張をする自分自身</li>
+  <li>RAD/RAG・MCP・LLM backend 抽象化を別プロジェクトで再利用したい自分自身</li>
+  <li>Phase 1-7 のメインロードマップと、横断エピックの関係を見失ったときの自分自身</li>
+</ul>
+
+<h3>前提</h3>
+<ul>
+  <li>Python 3.11 系 (<code>pyproject.toml</code> で <code>&gt;=3.11,&lt;3.12</code> に固定)</li>
+  <li>Raptor 側に RAD コーパス (<code>D:/docs/&lt;分野&gt;_v2/</code>) が存在</li>
+  <li>本体は stdlib のみで動作。<code>[mcp]</code> / <code>[llm]</code> / <code>[vlm]</code> は extras</li>
+</ul>
+
+<div class="note">
+<span class="label">用語</span>
+<strong>RAD</strong> = Research Aggregation Directory (Raptor の 21+ 分野コーパス階層)。
+本資料では <strong>RAG</strong> (Retrieval-Augmented Generation) と混同しないよう、
+RAD はデータ層、RAG は技法、と一貫して使い分けます。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="architecture">2. 全体アーキテクチャ</h2>
+
+<p>
+取り込み (A) → 知識庫 API (B) → 外部 LLM 連携 (C) の 3 層構造で、C 層は
+さらに <strong>backend 抽象化 (C-1)</strong>・<strong>MCP server (C-2)</strong>・<strong>OpenAI HTTP server (C-3)</strong> の 3 経路に分岐します。
+</p>
+
+<div class="mermaid">
+flowchart LR
+  raptor["Raptor RAD<br/>D:/docs/&lt;domain&gt;_v2/"]
+  importer["scripts/import_rad.py<br/>(stdlib)"]
+  data["data/rad/<br/>+ _learned/<br/>+ _index.json"]
+  loader["RadCorpusIndex<br/>(loader/query/skills/types)"]
+  append["append_learning"]
+  consol["Consolidator<br/>(biological memory)"]
+  llm["LLMBackend<br/>Mock / Anthropic / OpenAI / Ollama"]
+  mcp["MCP server (stdio)<br/>8 tools"]
+  http["OpenAI HTTP server<br/>/v1/chat/completions"]
+  cd["Claude Desktop<br/>LM Studio<br/>Cursor / Continue.dev"]
+  ow["Ollama<br/>OpenWebUI"]
+
+  raptor --> importer --> data
+  data --> loader
+  loader --> append
+  consol --> append
+  loader --> mcp
+  loader --> http
+  llm --> mcp
+  llm --> http
+  mcp --> cd
+  http --> ow
+</div>
+
+<div class="why">
+<span class="label">なぜ 3 経路に分けたか</span>
+MCP (stdio) は最汎用ですが、Ollama や多くの OpenAI 互換ツールは MCP client ではなく
+HTTP の <code>/v1/chat/completions</code> しか喋りません。逆に Cursor / Claude Desktop は
+MCP に最適化されています。両方をカバーするには <strong>tool 実装は共通化し、transport だけ分ける</strong>
+のが最小コストの解になります。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="phase-a">3. Phase A — RAD 取り込み層</h2>
+
+<h3 id="a-design">3.1 設計判断</h3>
+<ul>
+  <li><strong>物理コピー</strong>: ハードリンクや symlink ではなく、ファイルを複製。理由は
+    llive 単独で完結する独立した知識庫として配布可能にするため。再現は
+    <code>scripts/import_rad.py</code> が担保。</li>
+  <li><strong>stdlib のみ</strong>: <code>argparse</code> / <code>pathlib</code> / <code>shutil</code> / <code>hashlib</code> / <code>json</code> だけで成立。
+    取り込みは PyPI 配布 wheels には含まれない一時操作なので、依存追加すべきでない。</li>
+  <li><strong>差分判定 = size + mtime</strong>: SHA-256 ハッシュは 44,864 ファイルで遅すぎる。
+    <code>--force</code> で完全再コピー可能。</li>
+  <li><strong>スマート判定既定</strong>: <code>&lt;domain&gt;_v2</code> を優先、無い分野 (<code>tui_corpus</code>,
+    <code>security_papers_2025_2026</code>) は v1 を採用。<code>--include-legacy</code> で両方含める。</li>
+  <li><strong>書き層を予約</strong>: <code>_learned/</code> ディレクトリを取り込み完了時に作っておく。
+    Phase B が後から消費。README を一緒に置いて「ここは何か」を残す。</li>
+</ul>
+
+<div class="why">
+<span class="label">なぜ stdlib にこだわるか</span>
+取り込みは <strong>初回 1 度だけ</strong>走る冷却パスです。ここで requests や pandas を
+要求すると、まだ環境構築途中のユーザに依存解決の負債を押し付けることになります。
+本体機能 (C 層) と切り離すことで、「llive を試したいだけ」のユーザの負担を抑えます。
+</div>
+
+<h3 id="a-script">3.2 スクリプト構造</h3>
+<pre><code><span class="com"># 主要関数 (~250 行)</span>
+<span class="kw">def</span> resolve_source(arg) -&gt; Path: <span class="com"># --source &gt; $LLIVE_RAD_SOURCE &gt; $RAPTOR_CORPUS_DIR &gt; D:/docs</span>
+<span class="kw">def</span> resolve_dest(arg) -&gt; Path:   <span class="com"># --dest &gt; $LLIVE_RAD_DIR &gt; &lt;repo&gt;/data/rad</span>
+<span class="kw">def</span> list_corpora(source, include_legacy, only) -&gt; list[Path]:  <span class="com"># スマート判定</span>
+<span class="kw">def</span> sync_corpus(src, dst, *, mirror, dry_run, force) -&gt; CorpusStat:
+<span class="kw">def</span> write_index(dest, report, *, dry_run) -&gt; Path:  <span class="com"># _index.json 生成</span>
+<span class="kw">def</span> ensure_learned_dir(dest, *, dry_run):           <span class="com"># 書き層予約</span></code></pre>
+
+<h3 id="a-layout">3.3 ディレクトリレイアウト</h3>
+<pre><code>data/rad/
+  &lt;domain&gt;_v2/         <span class="com"># Raptor からの読み専用ミラー</span>
+  _learned/&lt;domain&gt;/   <span class="com"># llive 学習堆積 (Phase B で書く)</span>
+    &lt;doc_id&gt;.md
+    &lt;doc_id&gt;.provenance.json
+  _index.json          <span class="com"># 分野/ファイル数/バイト/取り込み日時</span>
+  README.md            <span class="com"># 構造説明 (gitignore 除外)</span></code></pre>
+
+<div class="pitfall">
+<span class="label">注意</span>
+<code>.gitignore</code> は <code>data/rad/</code> を全除外し、<code>!data/rad/README.md</code> で
+説明だけ残す。コーパス本体 (112 MB) はリポジトリに含めない —
+再生成可能なので含めるとリポジトリが肥大化するだけ。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="phase-b">4. Phase B — RadCorpusIndex (読み + 書き)</h2>
+
+<h3 id="b-design">4.1 読み+書き統合の理由</h3>
+<p>
+最初の検討では「読み API」と「書き API」を別クラスにする案がありました。が、
+<strong>Consolidator (生物学的記憶モデル) の出口</strong>から見ると、両方を同じ
+ハンドルで扱えた方が呼び出し側がシンプルです。
+</p>
+<pre><code><span class="com"># Bad (2 クラスに分かれている案)</span>
+reader = RadCorpusReader()
+writer = RadCorpusWriter()
+writer.append(...)
+hits = reader.query(...)  <span class="com"># reader と writer が同じ root を見ているか保証されない</span>
+
+<span class="com"># Good (実装)</span>
+idx = RadCorpusIndex()        <span class="com"># 単一エントリポイント</span>
+idx.append_learning(...)
+hits = idx.query(...)         <span class="com"># 同じ root、書いた直後に検索可能 (reload 自動)</span></code></pre>
+
+<h3 id="b-api">4.2 API 表面</h3>
+<table>
+<tr><th>メソッド</th><th>用途</th></tr>
+<tr><td><code>list_domains()</code></td><td>読み + 書き両方のドメイン名一覧</td></tr>
+<tr><td><code>list_read_domains()</code></td><td>Raptor 由来の読み層のみ</td></tr>
+<tr><td><code>list_learned_domains()</code></td><td><code>_learned/</code> 配下のみ</td></tr>
+<tr><td><code>get_domain_info(name)</code></td><td>ファイル数・バイト・取り込み日時</td></tr>
+<tr><td><code>iter_documents(domain)</code></td><td>ドメイン内の全ファイルパス</td></tr>
+<tr><td><code>read_document(domain, rel_path)</code></td><td>本文取得 (path traversal 防御つき)</td></tr>
+<tr><td><code>append_learning(...)</code> (関数)</td><td><code>_learned/&lt;domain&gt;/&lt;doc_id&gt;.md</code> 書き込み</td></tr>
+<tr><td><code>query(...)</code> (関数)</td><td>filename×3 + content score の検索</td></tr>
+<tr><td><code>reload()</code></td><td>キャッシュ無効化 (書き込み後に呼ぶ)</td></tr>
+</table>
+
+<h3 id="b-security">4.3 パストラバーサル防御</h3>
+<pre><code><span class="kw">def</span> read_document(self, domain, rel_path):
+    info = self.get_domain_info(domain)
+    full = (info.path / rel_path).resolve()
+    <span class="com"># resolve() 後にドメインルート配下か検証</span>
+    <span class="kw">try</span>:
+        full.relative_to(info.path.resolve())
+    <span class="kw">except</span> <span class="kw">ValueError</span> <span class="kw">as</span> exc:
+        <span class="kw">raise</span> <span class="kw">PermissionError</span>(<span class="str">f"path traversal blocked: {rel_path}"</span>) <span class="kw">from</span> exc</code></pre>
+
+<div class="why">
+<span class="label">なぜ resolve 後検証なのか</span>
+文字列レベルで <code>".."</code> を弾くのは脆く、シンボリックリンクや
+正規化前の <code>./../</code> パターンで抜けます。<code>Path.resolve()</code> で絶対化したあと
+<code>relative_to()</code> を使うと、Python レベルで安全な「中に居るか」判定ができます。
+</div>
+
+<h3 id="b-consolidator">4.4 Consolidator (生物学的記憶モデル) 統合</h3>
+<p>
+llive の Consolidator は episodic → semantic への「Wiki Compile」フェーズで
+<code>ConceptPage</code> を作ります。この出口に RAD 書き戻しを差し込みます。
+</p>
+
+<div class="mermaid">
+flowchart LR
+  ep[EpisodicEvent]
+  cl[Cluster]
+  llm[CompileLLM]
+  cd[CompileDecision]
+  cp[ConceptPage]
+  rad["_learned/&lt;page_type&gt;/<br/>&lt;concept_id&gt;.md"]
+  prov[provenance.json<br/>derived_from=event_ids]
+  ep --> cl --> llm --> cd --> cp
+  cp -- "mirror (non-fatal)" --> rad
+  cp -- "LLW-AC-01" --> prov
+  prov -.-> rad
+</div>
+
+<pre><code><span class="kw">def</span> _mirror_to_rad(self, page, cluster_events, result):
+    <span class="kw">if</span> self.rad_index <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">return</span>                                   <span class="com"># 互換: rad_index=None なら何もしない</span>
+    <span class="kw">try</span>:
+        <span class="kw">from</span> llive.memory.rad.append <span class="kw">import</span> append_learning
+        domain = self._rad_domain_for(page)        <span class="com"># page_type を [a-z0-9_]+ に</span>
+        prov = Provenance(
+            source_type=<span class="str">"consolidator"</span>,
+            source_id=page.concept_id,
+            derived_from=[e.event_id <span class="kw">for</span> e <span class="kw">in</span> cluster_events],
+            confidence=<span class="num">0.8</span>,
+        )
+        append_learning(self.rad_index, domain,
+                        <span class="str">f"# {page.title}\n\n{page.summary}\n"</span>,
+                        prov, doc_id=page.concept_id)
+    <span class="kw">except</span> <span class="kw">Exception</span> <span class="kw">as</span> exc:
+        result.errors.append(<span class="str">f"rad_mirror: {exc}"</span>)   <span class="com"># non-fatal</span></code></pre>
+
+<div class="why">
+<span class="label">なぜ non-fatal なのか</span>
+RAD は <strong>二次的なミラー</strong>であり、主の真実は ConceptPage 自体です。
+RAD への書き込みが失敗してもサイクル全体を倒すべきではないし、
+Provenance の <code>derived_from=event_ids</code> で <strong>LLW-AC-01 source-anchored
+provenance</strong> は維持されるので、後から再走しても同じ結果が再現できます。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="phase-c1">5. Phase C-1 — LLM Backend Abstraction</h2>
+
+<h3 id="c1-abstraction">5.1 抽象化の形</h3>
+<p>
+4 つの backend (Mock / Anthropic / OpenAI / Ollama) を <strong>単一の
+<code>generate(GenerateRequest) -&gt; GenerateResponse</code></strong> に寄せます。
+これにより consolidation / MCP tool / HTTP server すべてが backend に依存しない
+コードで書けます。
+</p>
+
+<pre><code><span class="kw">@dataclass</span>
+<span class="kw">class</span> GenerateRequest:
+    prompt: str
+    system: str | <span class="kw">None</span> = <span class="kw">None</span>
+    max_tokens: int = <span class="num">1024</span>
+    temperature: float = <span class="num">0.2</span>
+    stop: list[str] = field(default_factory=list)
+    model: str | <span class="kw">None</span> = <span class="kw">None</span>                  <span class="com"># backend-specific id</span>
+    images: list[bytes | Path | str] = field(default_factory=list)  <span class="com"># VLM (C-1.1)</span>
+
+<span class="kw">@dataclass</span>
+<span class="kw">class</span> GenerateResponse:
+    text: str
+    finish_reason: str = <span class="str">"stop"</span>
+    backend: str = <span class="str">""</span>
+    model: str = <span class="str">""</span>
+    raw: dict = field(default_factory=dict)        <span class="com"># backend native payload (debug)</span></code></pre>
+
+<h3 id="c1-resolve">5.2 backend 解決の優先順位</h3>
+<pre><code><span class="kw">def</span> resolve_backend(name=<span class="kw">None</span>) -&gt; LLMBackend:
+    <span class="com"># 1. 引数 name</span>
+    <span class="com"># 2. $LLIVE_LLM_BACKEND</span>
+    <span class="com"># 3. $ANTHROPIC_API_KEY が在れば anthropic</span>
+    <span class="com"># 4. $OPENAI_API_KEY が在れば openai</span>
+    <span class="com"># 5. $OLLAMA_HOST が在れば ollama</span>
+    <span class="com"># 6. mock (no-network fallback)</span></code></pre>
+
+<div class="note">
+<span class="label">設計のコツ</span>
+fallback を <strong>常に mock</strong>にする。これでテストやデモが
+ネットワーク未接続でも動き、CI でも追加設定不要で通る。
+</div>
+
+<h3 id="c1-vlm">5.3 VLM 拡張 (C-1.1)</h3>
+<p>
+<code>request.images</code> に <code>bytes | Path | str</code> を渡せるようにし、
+各 backend がそれぞれの multimodal フォーマットに変換します。
+</p>
+
+<table>
+<tr><th>backend</th><th>送信形式</th></tr>
+<tr><td>Ollama</td><td>top-level <code>"images": [&lt;base64&gt;, ...]</code></td></tr>
+<tr><td>Anthropic</td><td>messages content に <code>[{"type":"image","source":{"type":"base64","media_type":"...","data":"..."}}]</code></td></tr>
+<tr><td>OpenAI</td><td>content に <code>[{"type":"image_url","image_url":{"url":"data:image/...;base64,..."}}]</code></td></tr>
+<tr><td>Mock</td><td>枚数を text に追記、media_type と base64 長を <code>raw</code> に記録</td></tr>
+</table>
+
+<pre><code><span class="kw">def</span> _normalise_image(img) -&gt; tuple[str, str]:
+    <span class="com"># Path → 拡張子から media_type 推定</span>
+    <span class="com"># bytes → magic bytes (PNG/JPEG/GIF/WEBP) 推定、不明は image/png</span>
+    <span class="com"># str → 既に base64、media_type=image/png 仮定</span>
+    <span class="kw">return</span> media_type, base64_str</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="phase-c2">6. Phase C-2 — MCP Server</h2>
+
+<h3 id="c2-split">6.1 transport 分離設計</h3>
+<p>
+MCP の実装で最も価値が高い設計判断は、<strong>tool 関数と MCP transport を分ける</strong>こと。
+</p>
+
+<div class="grid-2">
+<div>
+<h4>tools.py (純 Python)</h4>
+<pre><code><span class="kw">def</span> tool_query_rad(keywords, ...) -&gt; list[dict]:
+    <span class="com"># JSON 直列化可能な値だけ受け取り、</span>
+    <span class="com"># JSON 直列化可能な値だけ返す</span>
+    ...
+
+<span class="kw">def</span> dispatch(name, args) -&gt; Any:
+    <span class="kw">if</span> name == <span class="str">"query_rad"</span>:
+        <span class="kw">return</span> tool_query_rad(**args)
+    ...</code></pre>
+</div>
+<div>
+<h4>server.py (MCP 薄ラッパ)</h4>
+<pre><code><span class="kw">async</span> <span class="kw">def</span> _call_tool(name, arguments):
+    <span class="kw">try</span>:
+        result = dispatch(name, arguments)
+    <span class="kw">except</span> <span class="kw">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> error_text(e)
+    <span class="kw">return</span> [TextContent(
+        type=<span class="str">"text"</span>,
+        text=json.dumps(result))]</code></pre>
+</div>
+</div>
+
+<div class="why">
+<span class="label">この分け方の利点</span>
+<ul style="margin:6px 0">
+  <li>tool ロジックは <strong>MCP runtime なしで unit test できる</strong> (12 cases)</li>
+  <li>同じ tool ロジックを HTTP server からも呼べる (DRY)</li>
+  <li>MCP SDK のバージョン更新で transport が壊れても、ロジックは無傷</li>
+  <li><code>mcp</code> パッケージは lazy import なので、未インストールでも他機能は動く</li>
+</ul>
+</div>
+
+<h3 id="c2-tools">6.2 8 つの tool</h3>
+<table>
+<tr><th>tool</th><th>用途</th></tr>
+<tr><td><code>list_rad_domains</code></td><td>全ドメイン一覧 + メタ</td></tr>
+<tr><td><code>get_domain_info</code></td><td>1 ドメイン詳細 + corpus2skill ヒント</td></tr>
+<tr><td><code>query_rad</code></td><td>キーワード検索 (filename×3 + content score)</td></tr>
+<tr><td><code>read_document</code></td><td>ドキュメント本文取得 (truncate 付き)</td></tr>
+<tr><td><code>append_learning</code></td><td><code>_learned/</code> へ書き戻し</td></tr>
+<tr><td><code>vlm_describe_image</code></td><td>画像 + 任意の <code>domain_hint</code> で RAD grounding</td></tr>
+<tr><td><code>code_complete</code></td><td>コード補完 (temperature=0.0)</td></tr>
+<tr><td><code>code_review</code></td><td><code>security_corpus_v2</code> ヒント注入セキュリティレビュー</td></tr>
+</table>
+
+<h3 id="c2-smoke">6.3 smoke E2E (実 MCP client で round-trip)</h3>
+<pre><code><span class="kw">async</span> <span class="kw">def</span> _call_query_rad(rad_root):
+    <span class="kw">async</span> <span class="kw">with</span> stdio_client(_server_params(rad_root)) <span class="kw">as</span> (read, write):
+        <span class="kw">async</span> <span class="kw">with</span> ClientSession(read, write) <span class="kw">as</span> session:
+            <span class="kw">await</span> session.initialize()
+            response = <span class="kw">await</span> session.call_tool(
+                <span class="str">"query_rad"</span>,
+                {<span class="str">"keywords"</span>: <span class="str">"buffer"</span>, <span class="str">"limit"</span>: <span class="num">5</span>})
+            <span class="kw">return</span> json.loads(response.content[<span class="num">0</span>].text)</code></pre>
+
+<p>
+公式 <code>mcp</code> client から <strong>subprocess 起動 → initialize → list_tools / call_tool</strong> までを
+本物の stdio プロトコルで実行。モックでなく、Claude Desktop と同じ経路で
+動作確認できています。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="phase-c3">7. Phase C-3 — OpenAI 互換 HTTP server</h2>
+
+<h3 id="c3-why">7.1 なぜ HTTP も必要か</h3>
+<p>
+Ollama / OpenWebUI / その他多くのローカル LLM フロントエンドは
+<strong>MCP client ではなく、OpenAI HTTP 互換クライアント</strong>です。
+これらから llive を呼ぶには、<code>/v1/chat/completions</code> を喋るサーバが必要です。
+</p>
+
+<div class="pitfall">
+<span class="label">よくある誤解</span>
+「llive は Ollama を <em>使える</em>」と「llive を Ollama から <em>使える</em>」は別の話。
+前者は <code>OllamaBackend</code> (C-1) で済むが、後者は <strong>逆方向</strong>の
+HTTP server (C-3) が必要。両方を成立させて初めて「Ollama スタックに溶け込む」。
+</div>
+
+<h3 id="c3-endpoints">7.2 エンドポイント</h3>
+<table>
+<tr><th>メソッド</th><th>パス</th><th>役割</th></tr>
+<tr><td>GET</td><td><code>/health</code></td><td>liveness probe</td></tr>
+<tr><td>GET</td><td><code>/v1/models</code></td><td><code>llive-rad</code> + <code>llive-rad/&lt;backend-model&gt;</code> を advertise</td></tr>
+<tr><td>GET</td><td><code>/v1/tools</code></td><td>(非標準) MCP tool 一覧の JSON Schema</td></tr>
+<tr><td>POST</td><td><code>/v1/chat/completions</code></td><td>標準 OpenAI 互換 + llive 拡張</td></tr>
+</table>
+
+<p>
+実装は stdlib <code>http.server.ThreadingHTTPServer</code> + <code>BaseHTTPRequestHandler</code>。
+依存ゼロ、起動は <code>py -3.11 -m llive.server.openai_api</code> だけ。
+</p>
+
+<h3 id="c3-rag-flag">7.3 RAG-on-by-flag 拡張</h3>
+<pre><code>POST /v1/chat/completions
+{
+  <span class="str">"model"</span>: <span class="str">"llive-rad/llama3.1"</span>,
+  <span class="str">"messages"</span>: [{<span class="str">"role"</span>:<span class="str">"user"</span>,<span class="str">"content"</span>:<span class="str">"Explain buffer overflow"</span>}],
+  <span class="str">"x_rad_domain"</span>: <span class="str">"security_corpus_v2"</span>,   <span class="com"># llive 拡張</span>
+  <span class="str">"x_rad_hint_limit"</span>: <span class="num">5</span>                      <span class="com"># llive 拡張</span>
+}</code></pre>
+
+<p>
+<code>x_rad_domain</code> が与えられると、サーバ側で最新の user メッセージで
+<code>query_rad</code> を実行し、上位 N excerpt を system block に prepend してから
+LLM backend に流します。レスポンスには <code>x_llive_backend</code> /
+<code>x_llive_model</code> / <code>x_llive_rad_hints</code> を含めてどの doc が使われたか開示します。
+</p>
+
+<div class="why">
+<span class="label">なぜ専用フィールドにしたか</span>
+<code>system</code> ロールに自前で詰めて送る案もありますが、<strong>クライアント側で何も
+変えずに RAG を on/off できる</strong>ことが重要。<code>messages</code> 構築ロジックを
+クライアントに押し付けると、Ollama 既製品 UI からは使えなくなります。
+非標準フィールドだが、<strong>知らないクライアントは無視するだけで壊れない</strong>のが利点。
+</div>
+
+<!-- ============================================================ -->
+<h2 id="testing">8. テスト戦略</h2>
+
+<table>
+<tr><th>ファイル</th><th>cases</th><th>役割</th></tr>
+<tr><td><code>test_rad.py</code></td><td>25</td><td>loader / query / append / skills 単体</td></tr>
+<tr><td><code>test_consolidation_rad_mirror.py</code></td><td>4</td><td>biology integration (実 DB)</td></tr>
+<tr><td><code>test_mcp_tools.py</code></td><td>12</td><td>tool 関数 (transport なし)</td></tr>
+<tr><td><code>test_mcp_server_smoke.py</code></td><td>2</td><td>実 mcp client subprocess E2E</td></tr>
+<tr><td><code>test_mcp_vlm_coding_tools.py</code></td><td>12</td><td>VLM / coding tool + RAD grounding</td></tr>
+<tr><td><code>test_llm_backend.py</code></td><td>13</td><td>backend abstraction + Ollama HTTP mock</td></tr>
+<tr><td><code>test_llm_backend_vlm.py</code></td><td>9</td><td>multimodal (画像入力) 経路</td></tr>
+<tr><td><code>test_openai_api_server.py</code></td><td>9</td><td>HTTP server ephemeral port で in-thread 起動</td></tr>
+<tr><th>合計</th><th>86 新規</th><th>441 → 527 / 全 PASS / 21 秒</th></tr>
+</table>
+
+<div class="why">
+<span class="label">テスト戦略の指針</span>
+<ul style="margin:6px 0">
+  <li><strong>tmp_path フィクスチャで synthetic corpus を作る</strong> — 実 RAD への依存ゼロ、CI で再現性 100%</li>
+  <li><strong>MockBackend を default fallback に</strong> — ネットワークなしでも全テスト通る</li>
+  <li><strong>Ollama HTTP は urlopen を monkey-patch</strong> — 実サーバ無しで body を検証</li>
+  <li><strong>MCP server だけは実 client で smoke</strong> — transport の仕様変更を捕まえるため</li>
+  <li><strong>HTTP server は ephemeral port + ThreadingHTTPServer</strong> — 並列実行可能</li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="scenarios">9. 利用シナリオ別ガイド</h2>
+
+<h3>シナリオ A: Claude Desktop / Cursor から RAD を使う</h3>
+<pre><code><span class="com"># 1. 取り込み (1 回だけ)</span>
+py -3.11 -m pip install -e .[mcp]
+py -3.11 scripts/import_rad.py
+
+<span class="com"># 2. MCP host の config に登録 (Claude Desktop の例)</span>
+{
+  <span class="str">"mcpServers"</span>: {
+    <span class="str">"llive"</span>: {
+      <span class="str">"command"</span>: <span class="str">"py"</span>,
+      <span class="str">"args"</span>: [<span class="str">"-3.11"</span>, <span class="str">"-m"</span>, <span class="str">"llive.mcp.server"</span>],
+      <span class="str">"env"</span>: {<span class="str">"LLIVE_RAD_DIR"</span>: <span class="str">"D:/projects/llive/data/rad"</span>}
+    }
+  }
+}</code></pre>
+
+<h3>シナリオ B: Ollama / OpenWebUI から llive を呼ぶ</h3>
+<pre><code><span class="com"># 1. HTTP server を起動</span>
+py -3.11 -m llive.server.openai_api --host 127.0.0.1 --port 8765
+
+<span class="com"># 2. クライアント側</span>
+base_url = <span class="str">"http://127.0.0.1:8765/v1"</span>
+api_key  = <span class="str">"any"</span>                    <span class="com"># llive 側は認証なし</span>
+model    = <span class="str">"llive-rad/llama3.1"</span>      <span class="com"># Ollama の llama3.1 を経由</span></code></pre>
+
+<h3>シナリオ C: 内部コードから直接 query する</h3>
+<pre><code><span class="kw">from</span> llive.memory.rad <span class="kw">import</span> RadCorpusIndex
+<span class="kw">from</span> llive.memory.rad.query <span class="kw">import</span> query
+<span class="kw">from</span> llive.memory.provenance <span class="kw">import</span> Provenance
+<span class="kw">from</span> llive.memory.rad.append <span class="kw">import</span> append_learning
+
+idx = RadCorpusIndex()
+hits = query(idx, <span class="str">"buffer overflow"</span>, domain=<span class="str">"security_corpus_v2"</span>, limit=<span class="num">5</span>)
+
+<span class="kw">for</span> h <span class="kw">in</span> hits:
+    print(h.domain, h.doc_path.name, h.score, h.excerpt[:<span class="num">80</span>])
+
+<span class="com"># 学習物を書き戻す</span>
+append_learning(
+    idx,
+    domain=<span class="str">"security_concept"</span>,
+    content=<span class="str">"# Heap spray\n\nSummary..."</span>,
+    provenance=Provenance(source_type=<span class="str">"manual"</span>, source_id=<span class="str">"note-001"</span>),
+)</code></pre>
+
+<h3>シナリオ D: Consolidator に RAD を繋ぐ</h3>
+<pre><code>cons = Consolidator(
+    episodic=ep,
+    structural=sm,
+    rad_index=RadCorpusIndex(),         <span class="com"># これだけで biology → RAD パスが完成</span>
+)
+result = cons.run_once(limit=<span class="num">200</span>)
+<span class="com"># ConceptPage が _learned/&lt;page_type&gt;/&lt;concept_id&gt;.md に自動ミラー</span></code></pre>
+
+<!-- ============================================================ -->
+<h2 id="extensions">10. 拡張ポイント</h2>
+
+<table>
+<tr><th>項目</th><th>状態</th><th>方針</th></tr>
+<tr><td>recall_memory tool</td><td>未実装</td><td>semantic memory (faiss) + MemoryEncoder を MCP tool として公開</td></tr>
+<tr><td>code モデル prompt template</td><td>未実装</td><td>Qwen2.5-Coder / DeepSeek-Coder / Code Llama 用に特化テンプレ</td></tr>
+<tr><td>tool_calls (OpenAI function calling)</td><td>未実装</td><td>HTTP server で <code>tools</code> 引数を受けて MCP dispatch に橋渡し</td></tr>
+<tr><td>SemanticMemory + RAD のハイブリッド検索</td><td>未実装</td><td>filename/content 検索 + 埋め込みベクトル類似度のリランカ</td></tr>
+<tr><td>VLM 出力の RAD 自動学習</td><td>未実装</td><td><code>vlm_describe_image</code> の結果を <code>_learned/vision/</code> に堆積</td></tr>
+<tr><td>Rust 移植 (Phase 5+)</td><td>未着手</td><td>query.py のキーワード検索ホットパスを <code>llive_rust_ext</code> に</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="takeaways">11. 学習要点まとめ</h2>
+
+<ol>
+  <li>
+    <strong>一時操作は stdlib のみで書く</strong>。取り込みのようなセットアップ系コードに
+    依存を入れると、ユーザの最初の体験を悪くする。本体機能 (C 層) と切り離す。
+  </li>
+  <li>
+    <strong>読み API と書き API は単一のインデックスに統合する</strong>。
+    呼び出し側 (Consolidator) のシンプルさが、長期的に最大の価値を持つ。
+  </li>
+  <li>
+    <strong>tool 実装と transport は分ける</strong>。MCP / HTTP / 直接呼び出しの 3 経路で
+    同じロジックを再利用可能になり、テストも transport-free にできる。
+  </li>
+  <li>
+    <strong>fallback は常に「動く mock」を用意する</strong>。<code>resolve_backend()</code> が
+    最終的に MockBackend に落ちるおかげで、ネットワーク無し・API キー無しでも
+    全テストが通り、CI が単純になる。
+  </li>
+  <li>
+    <strong>provenance を必ず derived_from で生イベントに繋ぐ</strong>。Consolidator が
+    Page を作るとき、その情報源 (event_ids) を持たせる。LLW-AC-01 source-anchored
+    provenance は AI 由来コンテンツのループ汚染防御として効く。
+  </li>
+  <li>
+    <strong>非破壊な拡張フィールドは未知のクライアントが無視するだけで壊れない</strong>。
+    OpenAI HTTP server に <code>x_rad_domain</code> を足したが、知らない既製品 UI
+    (Ollama 純正 chat 等) は単に渡さないだけで正しく動く。
+  </li>
+  <li>
+    <strong>ミラー先への書き込み失敗は non-fatal にする</strong>。RAD への
+    <code>append_learning</code> が失敗しても consolidation サイクル全体は完了させる。
+    <code>result.errors</code> に蓄積して可視化、再走で復旧可能にする。
+  </li>
+  <li>
+    <strong>MCP の smoke test は実 SDK client で回す</strong>。stdio プロトコルや
+    JSON-RPC のシリアライズはモックでは検証しきれない。バージョン更新で
+    壊れたら即気付ける防御線になる。
+  </li>
+  <li>
+    <strong>SemVer はメインフェーズ用に占有しておく</strong>。横断エピックは
+    名前付きマイルストーン (RAD-A / RAD-B / ...) + build メタで識別。
+    リリース番号の衝突を防ぐ。
+  </li>
+  <li>
+    <strong>Path traversal は <code>resolve()</code> + <code>relative_to()</code> で検証する</strong>。
+    文字列レベルでの防御は脆い。Python のパス API を信用する。
+  </li>
+</ol>
+
+<hr>
+
+<footer>
+<p>
+本資料は 2026-05-15 セッションのスナップショット。最新の状態は <code>docs/ROADMAP.md</code>
+<code>docs/PROGRESS.md</code> <code>CHANGELOG.md</code> を参照。
+</p>
+<p>
+関連: <code>docs/mcp_integration.md</code> (Claude Desktop / LM Studio / Ollama 設定例) /
+<code>data/rad/README.md</code> (取り込み手順)。
+</p>
+</footer>
+
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+    flowchart: { curve: 'basis' }
+  });
+
+  // active section highlighting
+  const sections = Array.from(document.querySelectorAll('main h2[id], main h3[id]'));
+  const tocLinks = Array.from(document.querySelectorAll('nav.toc a'));
+  const linkMap = new Map(tocLinks.map(a => [a.getAttribute('href').slice(1), a]));
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      const link = linkMap.get(e.target.id);
+      if (!link) return;
+      if (e.isIntersecting) {
+        tocLinks.forEach(a => a.classList.remove('toc-active'));
+        link.classList.add('toc-active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -55% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

@@ -3,35 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-15 07:08:19
+- **最終更新**: 2026-05-15 08:08:26
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-7e73043 docs(rust): add Phase 5+ design draft for RUST-02/05/06/07/08/09/10/11
-98d3985 ci: add GitHub Actions for tests + Rust build + parity (3 OS × Python 3.11/3.12)
-da8548c docs(progress): add session log for 2026-05-14 (続き) — pyo3 0.24.2 + 441 tests
-d1d00e0 docs(readme): refresh status with v0.4.0 + v0.5.0 + [Unreleased]
-e38c027 auto: README.md 編集前 (2026-05-14 22:36)
-b9042b4 auto: Cargo.toml 編集前 (2026-05-14 22:31)
-1ecae68 auto: Cargo.toml 編集前 (2026-05-14 22:26)
-b7afc38 auto: post_2026-05-14_overview.zh.md 編集前 (2026-05-14 21:48)
-0498842 auto: post_2026-05-14_overview.en.md 編集前 (2026-05-14 21:48)
-695400f auto: post_2026-05-14_overview.ja.md 編集前 (2026-05-14 21:48)
+f361d06 docs(mcp): Phase C-3 OpenAI 互換 HTTP server セクションを mcp_integration.md に追加
+eccecbb auto: mcp_integration.md 編集前 (2026-05-15 08:05)
+80c53ce feat(server): Phase C-3 — OpenAI 互換 HTTP server で Ollama 直結対応
+704a371 docs(progress): RAD 横断エピックの 2026-05-15 セッション完了状態を反映
+1b2022f feat(llm,mcp): Phase C-1.1 VLM + Phase C-2.1 vlm/coding MCP tools
+a500e35 auto: test_llm_backend.py 編集前 (2026-05-15 07:59)
+6c093fe auto: test_mcp_vlm_coding_tools.py 編集前 (2026-05-15 07:58)
+a700451 auto: __init__.py 編集前 (2026-05-15 07:57)
+1a379d3 auto: tools.py 編集前 (2026-05-15 07:57)
+f9ae7c2 auto: tools.py 編集前 (2026-05-15 07:57)
 ```
 
 ## 現在の git status
 
 ```
-(clean)
+M docs/SESSION_SUMMARY.md
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-06:47 docs/rust_phase5_design_draft.md
+08:07 docs/SESSION_SUMMARY.md
+08:05 docs/mcp_integration.md
+08:05 docs/roadmap.md
+08:04 .pytest_cache/v/cache/nodeids
+08:03 .ruff_cache/0.15.12/12334922619133000292
+08:03 tests/unit/test_openai_api_server.py
+08:03 src/llive/server/openai_api.py
+08:03 .ruff_cache/0.15.12/10638194744700293557
+08:02 src/llive/server/__init__.py
+08:00 docs/PROGRESS.md
+07:59 .pytest_cache/v/cache/lastfailed
+07:59 tests/unit/test_llm_backend.py
+07:58 tests/unit/test_mcp_vlm_coding_tools.py
+07:57 src/llive/mcp/tools.py
+07:57 src/llive/mcp/__init__.py
 ```
 
 ---
