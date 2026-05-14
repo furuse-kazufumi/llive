@@ -38,12 +38,31 @@ TRIZ 発明原理に重ねて設計。
   - MCP server の INFO ログ抑制
   - i18n env が _scoped_lang で前後復元される
 
+### What (続き、demo phase 拡張)
+
+- **Scenario 6 — vlm-describe**: 1x1 合成 PNG + `domain_hint` で VLM grounding
+  効果を可視化 (RecordingBackend、画像枚数表示)
+- **Scenario 7 — consolidation-mirror**: episodic→cluster→ConceptPage→
+  `_learned/<page_type>/<concept_id>.md` への自動ミラー、provenance に
+  derived_from=[event_ids] (LLW-AC-01) を実演
+- **--loop N / --interval S**: 繰り返し再生 (memory:f25_demo_polish 教訓)、
+  N=0 で無限ループ、iteration バナー表示
+- **--json モード**: AI agent / CI 用に機械可読 JSON を stdout に出力
+  (schema: schema_version, iterations, total_runs, ok_count, rc)
+- **多言語拡張**: ja/en/zh/ko の 4 言語 (memory:f25_demo_polish 多言語必須)、
+  locale 形式 (zh-CN / ko_KR / en-US) 受け付け、unsupported は ja フォールバック
+- **README に「デモを 30 秒で試す」**: clone→install→`py -m llive.demo` を
+  「インストール」セクションの直前に配置
+
 ### State (現在地)
 
-- ✓ デモは `py -3.11 -m llive.demo` で 1 コマンド再生、ja/en 両対応
+- ✓ デモは `py -3.11 -m llive.demo` で 1 コマンド再生、ja/en/zh/ko 4 言語対応
 - ✓ 各 scenario は mock backend で完結、ネットワーク不要
-- 540 tests / 全 PASS / ruff clean (527 → +13 demo tests)
-- コミット: ad011dc (demo + techdoc HTML + showcase)
+- ✓ --loop / --interval で繰り返し再生、--json で AI agent 渡し可能
+- ✓ docs/demos.html (showcase) + docs/v0.2_rad_techdoc.html (学習用 HTML)
+- **547 tests / 全 PASS / ruff clean** (441 → +106)
+- demo phase コミット: ad011dc (initial), ec23860 (S6/S7), 6690b40 (loop),
+  cef3e19 (--json + zh/ko)
 
 ### 次
 
