@@ -1,9 +1,9 @@
 <!--
-title: LLM の「忘却」に正面から向き合う ― 4 層メモリ × 形式検証 × TRIZ 自演化を Python で実装した話 (llive v0.3.0)
-tags: Python,LLM,継続学習,形式検証,MLOps
+title: LLM の「忘却」に正面から向き合う ― 4 層メモリ × 形式検証 × TRIZ 自演化 × Rust ホットパスを Python で実装した話 (llive v0.5.0)
+tags: Python,LLM,継続学習,形式検証,Rust
 -->
 
-# LLM の「忘却」に正面から向き合う ― 4 層メモリ × 形式検証 × TRIZ 自演化を Python で実装した話 (llive v0.3.0)
+# LLM の「忘却」に正面から向き合う ― 4 層メモリ × 形式検証 × TRIZ 自演化 × Rust ホットパスを Python で実装した話 (llive v0.5.0)
 
 > Self-evolving modular memory LLM framework — `pip install llmesh-llive`
 
