@@ -93,6 +93,8 @@ class QuickTourScenario(Scenario):
     titles: ClassVar[dict[str, str]] = {
         "ja": "RAD 読み API のクイックツアー",
         "en": "RAD read-API quick tour",
+        "zh": "RAD 读取 API 速览",
+        "ko": "RAD 읽기 API 빠른 둘러보기",
     }
 
     def run(self, ctx: ScenarioContext) -> dict[str, object]:
