@@ -100,10 +100,18 @@ async def _amain() -> None:
 
 
 def main() -> int:
+    import os
+
+    level_name = (os.environ.get("LLIVE_MCP_LOG_LEVEL") or "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
     logging.basicConfig(
-        level=logging.INFO,
+        level=level,
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
+    # MCP SDK's lowlevel server logs every request at INFO; silence those too
+    # when the user explicitly asked for a quieter run.
+    if level > logging.INFO:
+        logging.getLogger("mcp").setLevel(level)
     import asyncio
 
     try:
