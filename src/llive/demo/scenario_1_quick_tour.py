@@ -83,9 +83,10 @@ class QuickTourScenario(Scenario):
         idx = RadCorpusIndex(root=rad_root)
         ctx.say(_t("ready", n=3, domain="security_corpus_v2"))
 
+        queries = ("buffer overflow", "TOCTOU race", "elephant")
         total_hits = 0
-        for q in ("buffer overflow", "TOCTOU race", "elephant"):
-            ctx.step(1, 3, _t("query", q=q))
+        for i, q in enumerate(queries, start=1):
+            ctx.step(i, len(queries), _t("query", q=q))
             hits = query(idx, q, limit=3)
             total_hits += len(hits)
             if not hits:
