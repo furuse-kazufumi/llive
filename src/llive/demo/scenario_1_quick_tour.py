@@ -12,6 +12,7 @@ TRIZ #15 動的化: synthetic 文書を context.tmp_path に乱数なしで生�
 from __future__ import annotations
 
 from pathlib import Path
+from typing import ClassVar
 
 from llive.demo.i18n import translate
 from llive.demo.runner import Scenario, ScenarioContext
