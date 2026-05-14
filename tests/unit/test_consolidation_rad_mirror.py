@@ -58,14 +58,10 @@ def _write_event(ep: EpisodicMemory, content: str) -> None:
 def test_rad_domain_default_mapping() -> None:
     # Default mapping uses page_type, sanitised to [a-z0-9_]
     page = ConceptPage.from_title("Test", page_type="Security Concept")
-    # We can't instantiate a full Consolidator without DBs, so test the helper via subclass
+    # We can't instantiate a full Consolidator without DBs, so use __new__ to skip __init__
     from llive.memory.consolidation import Consolidator as _Cons
 
-    class _Stub(_Cons):
-        def __init__(self) -> None:  # noqa: PLE0249 — intentional no-op constructor for unit test
-            pass
-
-    stub = _Stub.__new__(_Stub)
+    stub = _Cons.__new__(_Cons)
     assert stub._rad_domain_for(page) == "security_concept"
     page2 = ConceptPage.from_title("Test", page_type="domain_concept")
     assert stub._rad_domain_for(page2) == "domain_concept"
