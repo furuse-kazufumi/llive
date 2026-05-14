@@ -40,6 +40,26 @@ _CATALOG: dict[str, dict[str, str]] = {
         "hints": "  Hints injected: {n} via {paths}",
         "summary": "{n} hints injected with RAD on. Same image, different prompt grounding.",
     },
+    "zh": {
+        "intro": "向 VLM describe 传入 1x1 合成 PNG,分别在 RAD 关闭 / 开启下各调用一次。",
+        "build_img": "在内存中生成 1x1 PNG...",
+        "seed_rad": "准备 vision_corpus (synthetic)...",
+        "plain": "VLM describe (RAD 关闭):",
+        "with_rad": "VLM describe (RAD 开启: domain_hint=vision_corpus):",
+        "reply": "  回复:",
+        "hints": "  注入提示: {n} 条 / {paths}",
+        "summary": "开启 RAD 注入 {n} 条提示。同一图像但 prompt 走向不同。",
+    },
+    "ko": {
+        "intro": "1x1 합성 PNG 를 VLM describe 에 두 번 (RAD 없이 / 있음) 보냅니다.",
+        "build_img": "1x1 PNG 를 메모리에서 생성 중...",
+        "seed_rad": "vision_corpus 준비 (synthetic)...",
+        "plain": "RAD 없는 VLM describe:",
+        "with_rad": "RAD 있는 VLM describe (domain_hint=vision_corpus):",
+        "reply": "  응답:",
+        "hints": "  주입된 힌트: {n}건 / {paths}",
+        "summary": "RAD 켜면 {n}건 힌트 주입. 같은 이미지라도 prompt 의 방향이 달라집니다.",
+    },
 }
 
 
