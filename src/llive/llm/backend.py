@@ -22,13 +22,54 @@ Example:
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 # Sentinel for unset optional fields
 _UNSET = object()
+
+# Phase C-1.1: VLM image input types
+ImageInput = bytes | Path | str  # bytes payload, file path, or base64-encoded string
+
+_EXT_TO_MEDIA = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".bmp": "image/bmp",
+}
+
+
+def _normalise_image(img: ImageInput) -> tuple[str, str]:
+    """Return (media_type, base64_str) for an image input.
+
+    Accepts:
+        * ``bytes`` — raw image bytes (media type guessed from magic bytes,
+          defaults to ``image/png``).
+        * ``Path`` — read from filesystem; media type from extension.
+        * ``str`` — assumed to already be base64-encoded; default media type
+          ``image/png``.
+    """
+    if isinstance(img, Path):
+        data = img.read_bytes()
+        media = _EXT_TO_MEDIA.get(img.suffix.lower(), "image/png")
+        return media, base64.b64encode(data).decode("ascii")
+    if isinstance(img, bytes):
+        media = "image/png"
+        if img.startswith(b"\xff\xd8\xff"):
+            media = "image/jpeg"
+        elif img.startswith(b"GIF8"):
+            media = "image/gif"
+        elif img.startswith(b"RIFF") and b"WEBP" in img[:32]:
+            media = "image/webp"
+        return media, base64.b64encode(img).decode("ascii")
+    # str — assume already base64
+    return "image/png", img
 
 
 @dataclass
@@ -44,6 +85,10 @@ class GenerateRequest:
     # default. e.g. ``claude-haiku-4-5-20251001`` for Anthropic,
     # ``gpt-4o-mini`` for OpenAI, ``llama3.1`` for Ollama.
     model: str | None = None
+    # Phase C-1.1 (VLM): list of image inputs sent alongside the prompt.
+    # Each item can be ``bytes`` (raw image), ``Path`` (file to read), or
+    # ``str`` (already base64-encoded payload).
+    images: list[ImageInput] = field(default_factory=list)
 
 
 @dataclass
