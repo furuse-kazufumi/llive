@@ -11,7 +11,6 @@ cheaply and tests can inject their own index via the ``index`` parameter.
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Any
 
 from llive.memory.provenance import Provenance
