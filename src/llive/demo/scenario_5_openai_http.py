@@ -75,7 +75,7 @@ def _post(url: str, body: dict[str, Any]) -> dict[str, Any]:
 
 class OpenAIHTTPScenario(Scenario):
     id = "openai-http"
-    titles = {
+    titles: ClassVar[dict[str, str]] = {
         "ja": "OpenAI 互換 HTTP server で RAG-on-by-flag",
         "en": "OpenAI-compat HTTP server with RAG-on-by-flag",
     }
