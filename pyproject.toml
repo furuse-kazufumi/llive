@@ -66,6 +66,14 @@ verify = [
 rust = [
   "maturin>=1.5",
 ]
+mcp = [
+  "mcp>=1.0",
+]
+vlm = [
+  "pillow>=10.0",
+]
+coding = [
+]
 dev = [
   "pytest>=8",
   "pytest-cov>=4.1",
