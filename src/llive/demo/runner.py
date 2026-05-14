@@ -244,23 +244,56 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {i}. {s.id:30s} {s.title(args.lang or current_lang())}")
         return 0
 
-    if args.only is not None:
-        target: int | str
-        try:
-            target = int(args.only)
-        except ValueError:
-            target = args.only
-        out = run_one(
-            target,
-            lang=args.lang,
-            quiet=args.quiet,
-            keep_artifacts=args.keep_artifacts,
-        )
-        return 0 if out.get("ok") else 1
+    def _one_iteration() -> int:
+        if args.only is not None:
+            target: int | str
+            try:
+                target = int(args.only)
+            except ValueError:
+                target = args.only
+            out = run_one(
+                target,
+                lang=args.lang,
+                quiet=args.quiet,
+                keep_artifacts=args.keep_artifacts,
+            )
+            return 0 if out.get("ok") else 1
 
-    results = run_all(lang=args.lang, quiet=args.quiet, keep_artifacts=args.keep_artifacts)
+        results = run_all(lang=args.lang, quiet=args.quiet, keep_artifacts=args.keep_artifacts)
+        fails = [r for r in results if not r.get("ok")]
+        if not args.quiet:
+            print(f"\n=== summary: {len(results) - len(fails)}/{len(results)} ok ===", flush=True)
+            for r in results:
+                print(f"  {'OK ' if r.get('ok') else 'ERR'}  {r['id']}", flush=True)
+        return 0 if not fails else 2
+
+    loop = args.loop
+    interval = max(0.0, float(args.interval))
+    iteration = 0
+    last_rc = 0
+    try:
+        while True:
+            iteration += 1
+            if loop > 1 or loop == 0:
+                if not args.quiet:
+                    suffix = f"/{loop}" if loop > 0 else " (infinite)"
+                    print(f"\n###### iteration {iteration}{suffix} ######", flush=True)
+            last_rc = _one_iteration()
+            if loop != 0 and iteration >= loop:
+                break
+            if interval > 0:
+                time.sleep(interval)
+    except KeyboardInterrupt:
+        if not args.quiet:
+            print(f"\n[interrupted after {iteration} iteration(s)]", flush=True)
+    return last_rc
+
+
+def _legacy_main_disabled() -> int:
+    # kept for reference; the actual main is above. This stub is unused.
+    results: list[dict[str, object]] = []
     fails = [r for r in results if not r.get("ok")]
-    if not args.quiet:
+    if False:
         print(f"\n=== summary: {len(results) - len(fails)}/{len(results)} ok ===", flush=True)
         for r in results:
             print(f"  {'OK ' if r.get('ok') else 'ERR'}  {r['id']}", flush=True)
