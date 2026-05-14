@@ -127,21 +127,37 @@ class LLMBackend:
 
 
 class MockBackend(LLMBackend):
-    """Echoes the prompt with a deterministic prefix. No network."""
+    """Echoes the prompt with a deterministic prefix. No network.
+
+    Multimodal: when ``request.images`` is non-empty, the count is appended to
+    the echoed text and the normalised payloads are recorded in ``raw``.
+    """
 
     name = "mock"
 
     def __init__(self, prefix: str = "[mock]") -> None:
         self.prefix = prefix
 
+    @property
+    def supports_vlm(self) -> bool:
+        return True
+
     def generate(self, request: GenerateRequest) -> GenerateResponse:
         text = f"{self.prefix} {request.prompt[: max(0, request.max_tokens)]}".strip()
+        normed = [_normalise_image(im) for im in request.images]
+        if normed:
+            text = f"{text} (with {len(normed)} image{'s' if len(normed) != 1 else ''})"
+        raw: dict[str, Any] = {"echo": True}
+        if normed:
+            raw["images"] = [
+                {"media_type": m, "base64_len": len(b64)} for m, b64 in normed
+            ]
         return GenerateResponse(
             text=text,
             finish_reason="stop",
             backend=self.name,
             model=request.model or "mock-1",
-            raw={"echo": True},
+            raw=raw,
         )
 
 
