@@ -95,7 +95,7 @@ async def _run(ctx: ScenarioContext) -> dict[str, Any]:
 
 class MCPRoundTripScenario(Scenario):
     id = "mcp-roundtrip"
-    titles = {
+    titles: ClassVar[dict[str, str]] = {
         "ja": "MCP server を実 client で呼ぶ",
         "en": "Call the MCP server with the real client",
     }
