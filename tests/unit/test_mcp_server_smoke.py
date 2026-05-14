@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-mcp = pytest.importorskip("mcp")  # noqa: F841 — guard import
+pytest.importorskip("mcp")
 
 
 @pytest.mark.asyncio
