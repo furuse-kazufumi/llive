@@ -159,14 +159,16 @@ def run_one(
             f"unknown scenario: {index_or_id!r} (available: "
             f"{[(i + 1, s.id) for i, s in enumerate(scenarios)]})"
         )
-    ctx, tmp = _make_context(lang=lang or current_lang(), quiet=quiet)
-    try:
-        if not quiet:
-            print(f"\n==[ {chosen.id} :: {chosen.title(ctx.lang)} ]==", flush=True)
-        summary = chosen.run(ctx)
-        return {"id": chosen.id, "ok": True, "summary": summary}
-    finally:
-        _cleanup(tmp, keep_artifacts)
+    effective_lang = lang or current_lang()
+    with _scoped_lang(effective_lang):
+        ctx, tmp = _make_context(lang=effective_lang, quiet=quiet)
+        try:
+            if not quiet:
+                print(f"\n==[ {chosen.id} :: {chosen.title(ctx.lang)} ]==", flush=True)
+            summary = chosen.run(ctx)
+            return {"id": chosen.id, "ok": True, "summary": summary}
+        finally:
+            _cleanup(tmp, keep_artifacts)
 
 
 def run_all(
