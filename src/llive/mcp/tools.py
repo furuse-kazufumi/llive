@@ -11,8 +11,10 @@ cheaply and tests can inject their own index via the ``index`` parameter.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
+from llive.llm import GenerateRequest, LLMBackend, get_default_backend
 from llive.memory.provenance import Provenance
 from llive.memory.rad import RadCorpusIndex
 from llive.memory.rad.append import append_learning
