@@ -71,6 +71,8 @@ class AppendRoundTripScenario(Scenario):
     titles: ClassVar[dict[str, str]] = {
         "ja": "学習物の書き込み → 即時検索",
         "en": "Write learning -> retrieve immediately",
+        "zh": "写入学习记录 → 立即检索",
+        "ko": "학습 결과 쓰기 → 즉시 검색",
     }
 
     def run(self, ctx: ScenarioContext) -> dict[str, object]:
