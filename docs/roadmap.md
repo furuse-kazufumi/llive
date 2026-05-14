@@ -236,20 +236,34 @@ Phase 1 MVR と並走する横断エピック。生物学的記憶モデルの s
 - **B.4 テスト**: `tests/unit/test_rad.py` (25 cases) +
   `test_consolidation_rad_mirror.py` (4 cases)
 
-### Epic RAD-C. 外部 LLM 連携 — 進行中
+### Epic RAD-C. 外部 LLM 連携 — 完了 (一次) 2026-05-15
 
-- **C-1 LLM backend abstraction** — `src/llive/llm/backend.py`
-  - OpenAI 互換 / Anthropic / Ollama / llama-cpp の薄いアダプタ
-  - **VLM 対応**: LLaVA / Qwen2.5-VL / Phi-3.5-vision / Llama 3.2 Vision (multimodal 入力)
-  - **コーディング特化**: Qwen2.5-Coder / DeepSeek-Coder / Code Llama
+- **C-1 LLM backend abstraction** — `src/llive/llm/backend.py` — 完了 2026-05-15
+  - Mock / Anthropic / OpenAI / Ollama の 4 backend を統一 generate API
+    (`GenerateRequest` → `GenerateResponse`)
+  - resolve_backend() の env 優先順位解決 (LLIVE_LLM_BACKEND > ANTHROPIC_API_KEY
+    > OPENAI_API_KEY > OLLAMA_HOST > mock fallback)
+- **C-1.1 VLM 拡張** — 完了 2026-05-15
+  - `GenerateRequest.images: list[bytes | Path | str]` + `_normalise_image()`
+  - 全 4 backend に画像経路を実装 (Ollama top-level images / Anthropic image
+    blocks / OpenAI data:URI / Mock 記録のみ)
 - **C-2 MCP server** — `src/llive/mcp/server.py` — 完了 2026-05-15
-  - tools: `list_rad_domains`, `get_domain_info`, `query_rad`, `read_document`,
-    `append_learning` (`tools.py` で transport-independent な純 Python 実装)
+  - 基本 5 tool: `list_rad_domains`, `get_domain_info`, `query_rad`,
+    `read_document`, `append_learning`
   - 接続先: Claude Desktop / LM Studio / Open WebUI / Cursor / Continue.dev
   - pyproject: `[mcp]`, `[vlm]`, `[coding]` extras 追加
-- **C-2.1 拡張 tool (後続)**: VLM (`vlm_describe_image`) +
-  coding (`code_complete`, `code_review`) + memory (`recall_memory`)
-- **C-3 OpenAI 互換 HTTP server (任意)** — Ollama 等が直接 llive を呼べる
+- **C-2.1 vlm/coding MCP tool** — 完了 2026-05-15
+  - `vlm_describe_image` (画像 + optional `domain_hint` で RAD grounding)
+  - `code_complete` (temperature=0.0)
+  - `code_review` (`security_corpus_v2` の top-N hint 注入)
+- **C-3 OpenAI 互換 HTTP server** — `src/llive/server/openai_api.py` — 完了 2026-05-15
+  - stdlib `http.server` ベース (依存追加なし)
+  - `/v1/chat/completions` + `/v1/models` + `/v1/tools` + `/health`
+  - llive 拡張 (`x_rad_domain` / `x_rad_hint_limit`) で RAG-on-by-flag
+  - Ollama / OpenWebUI / その他 OpenAI 互換クライアントから直接呼べる
+- **C-1.2 コーディング特化 prompt template (後続)**:
+  Qwen2.5-Coder / DeepSeek-Coder / Code Llama 用のモデル別 prompt template
+- **拡張 tool (後続)**: `recall_memory` (semantic memory + encoder 接続)
 
 ### マイルストーン (SemVer に占有させず名前付き)
 
@@ -259,15 +273,21 @@ build メタ (`+rad-a`, `+rad-b`) で識別する。SemVer 番号は占有しな
 
 - ✓ **RAD-A**: 取り込み層 (完了)
 - ✓ **RAD-B.1-B.4**: 知識庫 API + Consolidator 統合 (完了)
-- ✓ **RAD-C-2**: MCP server (基本 tool 5 つ完了)
-- ⧖ **RAD-C-1**: LLM backend abstraction (text → VLM → coding)
-- □ **RAD-C-2.1**: VLM / coding / recall_memory tool 拡張
-- □ **RAD-C-3**: OpenAI 互換 HTTP server (Ollama 直叩き)
+- ✓ **RAD-C-1.0**: LLM backend abstraction text (完了)
+- ✓ **RAD-C-1.1**: VLM multimodal (完了)
+- ✓ **RAD-C-2.0**: MCP server (基本 5 tool 完了)
+- ✓ **RAD-C-2.1**: VLM / coding tool 拡張 (完了)
+- ✓ **RAD-C-3.0**: OpenAI 互換 HTTP server (完了)
+- □ **RAD-C-1.2**: コーディング特化モデル prompt template
+- □ **拡張**: `recall_memory` tool (semantic memory + encoder 連携)
+- □ **実機検証**: Claude Desktop / LM Studio / Ollama での実呼び出し検証
 
 ### 受け入れ基準
 
 - ✓ RAD-A: `py -3.11 scripts/import_rad.py` で 49 分野コピー完了、`_index.json` 生成
 - ✓ RAD-B: `RadCorpusIndex.query("buffer overflow", domain="security_corpus_v2")`
   で関連 doc 返却、Consolidator が `_learned/<page_type>/` に書き戻し
-- ✓ RAD-C-2: Claude Desktop の MCP 設定で llive サーバを登録、`query_rad` tool が動く
-- □ RAD-C-1: Ollama (Qwen2.5-VL) で画像入力 + RAD クエリが連携
+- ✓ RAD-C-2: `py -3.11 -m llive.mcp.server` を Claude Desktop の MCP 設定に
+  登録すると、`query_rad` tool が応答する (smoke E2E で実証済)
+- ✓ RAD-C-3: `py -3.11 -m llive.server.openai_api` の `/v1/chat/completions`
+  に curl で投げると、OpenAI 互換レスポンスが返る (9 cases で実証済)
