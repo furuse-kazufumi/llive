@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import hashlib
 from datetime import UTC, datetime
-from pathlib import Path
 
 from llive.memory.provenance import Provenance
 from llive.memory.rad.loader import RadCorpusIndex
