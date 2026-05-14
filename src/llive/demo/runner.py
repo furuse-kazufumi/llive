@@ -107,6 +107,7 @@ def list_scenarios() -> list[Scenario]:
     from llive.demo.scenario_3_code_review import CodeReviewScenario
     from llive.demo.scenario_4_mcp_roundtrip import MCPRoundTripScenario
     from llive.demo.scenario_5_openai_http import OpenAIHTTPScenario
+    from llive.demo.scenario_6_vlm import VlmDescribeScenario
 
     return [
         QuickTourScenario(),
@@ -114,6 +115,7 @@ def list_scenarios() -> list[Scenario]:
         CodeReviewScenario(),
         MCPRoundTripScenario(),
         OpenAIHTTPScenario(),
+        VlmDescribeScenario(),
     ]
 
 
