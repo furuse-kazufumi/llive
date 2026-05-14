@@ -38,10 +38,11 @@ These are the kinds of skills that are asked for in AI startups, regulated-indus
 
 ## Where it stands today (2026-05-14)
 
-- **v0.3.0** — Phase 3 (Controlled Self-Evolution MVR) + Phase 4 (Production Security MVR) shipped together.
-- **429 tests / 98% coverage / 0 lint warnings**.
-- Z3 static verifier, Failed Reservoir, Reverse-Evolution Monitor, TRIZ Self-Reflection, Ed25519 signed adapters, SHA-256 audit chain.
-- Next: Phase 5+ Rust acceleration (requirements v0.7 defined; staged after Phase 4 + EVO stability).
+- **v0.5.0** — Phase 5 first wire-in: a Rust kernel is now wired into the production hot path.
+- **444 tests / 0 lint** (v0.4.0 baseline 439 + RUST-03 parity 5).
+- Z3 static verifier, Failed Reservoir, Reverse-Evolution Monitor, TRIZ Self-Reflection, Ed25519 signed adapters, SHA-256 audit chain — all in place from v0.3.0.
+- v0.4.0 established the Rust acceleration **skeleton** (PyO3 0.22 + Cargo workspace + RUST-13 parity harness). v0.5.0 routes `compute_surprise` (MEM-07) through Rust automatically and falls back to numpy when the extension is absent — with **1e-6 parity** guaranteed.
+- [Unreleased]: F25 (g) `LoveBridge` writer — a shim that connects llive ↔ llmesh ↔ llove over MCP.
 - PyPI: `pip install llmesh-llive`.
 
 ## Where it's going
