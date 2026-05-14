@@ -121,6 +121,8 @@ class MCPRoundTripScenario(Scenario):
     titles: ClassVar[dict[str, str]] = {
         "ja": "MCP server を実 client で呼ぶ",
         "en": "Call the MCP server with the real client",
+        "zh": "用真实 client 调用 MCP server",
+        "ko": "실 client 로 MCP server 호출",
     }
 
     def run(self, ctx: ScenarioContext) -> dict[str, object]:
