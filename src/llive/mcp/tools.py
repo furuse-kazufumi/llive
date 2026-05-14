@@ -274,7 +274,3 @@ __all__ = [
     "tool_query_rad",
     "tool_read_document",
 ]
-
-# Keep import linter happy by referencing imported `asdict` even when unused;
-# Phase C-2.1 will use it when adding tool_recall_memory.
-_ = asdict
