@@ -66,7 +66,7 @@ class Scenario:
     """
 
     id: str = "base"
-    titles: dict[str, str] = {"ja": "scenario", "en": "scenario"}
+    titles: ClassVar[dict[str, str]] = {"ja": "scenario", "en": "scenario"}
 
     def title(self, lang: str | None = None) -> str:
         lang = lang or current_lang()
