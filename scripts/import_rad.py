@@ -78,7 +78,7 @@ class ImportReport:
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def resolve_source(arg: str | None) -> Path:
