@@ -387,13 +387,115 @@ API キー / 実コーパス不要で <strong>30 秒 〜 2 分</strong>で再生
 </div>
 </details>
 
+<!-- Scenario 6 ============================================== -->
+<details class="scenario" id="s6">
+<summary>
+  <span class="num">6</span>
+  <span>
+    <div class="title">VLM describe + RAD ヒント (画像 + 知識基盤)</div>
+    <div class="subtitle">1x1 PNG + domain_hint で vision-language model の grounding 効果を可視化</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#24 仲介 — RAD が VLM の知識仲介、汎用 VLM がドメイン用語にチューニングされる経路</div>
+
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m llive.demo --only 6 --lang ja</span><span data-lang="en" hidden>py -3.11 -m llive.demo --only 6 --lang en</span><button class="copy" type="button">copy</button></div>
+
+<h3>期待出力</h3>
+<pre class="output" data-lang="ja">==[ vlm-describe :: VLM describe + RAD ヒント (画像 + 知識基盤) ]==
+  1x1 の合成 PNG を渡し、VLM describe を 2 通り (RAD 無し / 有り) で実行。
+  1x1 PNG をメモリ上で生成中...
+  vision_corpus を予約準備 (synthetic)...
+
+  [1/2] RAD 無しの VLM describe:
+  応答:
+    [vlm-mock] saw 1 image; prompt = What is in this image? ...
+  注入されたヒント: 0 件 / -
+
+  [2/2] RAD 有り (domain_hint=vision_corpus) の VLM describe:
+  応答:
+    [vlm-mock] saw 1 image; prompt = What is in this image? ...
+  注入されたヒント: 2 件 / small_image_pitfalls.md, color_terminology.md
+  system prompt (head):
+    | # RAD hints
+    | - Single-pixel and very small images mostly carry hue information; ...
+    | - When asked to 'describe an image', VLMs benefit from explicit colour ...
+  ----------------------------------------------------------------
+  RAD 有りで 2 件のヒントが system に注入。</pre>
+<pre class="output" data-lang="en" hidden>==[ vlm-describe :: VLM describe + RAD hint (image + knowledge grounding) ]==
+  Send a 1x1 synthetic PNG to VLM describe twice (without / with RAD).
+  ...
+  [1/2] VLM describe without RAD:  Hints injected: 0
+  [2/2] VLM describe with RAD (domain_hint=vision_corpus):  Hints injected: 2
+  2 hints injected with RAD on. Same image, different prompt grounding.</pre>
+
+<dl class="kv">
+<dt>所要</dt><dd>~20 秒</dd>
+<dt>依存</dt><dd>stdlib のみ (合成 PNG をメモリ上で生成)</dd>
+<dt>学べる</dt><dd>VLM multimodal request / <code>domain_hint</code> grounding / 1x1 PNG の制約</dd>
+<dt>本番では</dt><dd><code>LLIVE_LLM_BACKEND=ollama LLIVE_LLM_MODEL=qwen2.5-vl</code> 等で実 VLM に差し替え</dd>
+</dl>
+</div>
+</details>
+
+<!-- Scenario 7 ============================================== -->
+<details class="scenario" id="s7">
+<summary>
+  <span class="num">7</span>
+  <span>
+    <div class="title">生物学的記憶モデルから RAD への書き戻し</div>
+    <div class="subtitle">Episodic events → Consolidator → ConceptPage → _learned/ ミラー (LLW-AC-01)</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#5 結合 — episodic / semantic / RAD を単一サイクルで結合、source-anchored provenance で因果を維持</div>
+
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m llive.demo --only 7 --lang ja</span><span data-lang="en" hidden>py -3.11 -m llive.demo --only 7 --lang en</span><button class="copy" type="button">copy</button></div>
+
+<h3>期待出力</h3>
+<pre class="output" data-lang="ja">==[ consolidation-mirror :: 生物学的記憶モデルから RAD への書き戻し ]==
+  EpisodicEvent → cluster → ConceptPage → _learned/ への自動ミラー経路を 1 サイクルで示します。
+
+  [1/2] 3 件の類似 episodic event を書き込み...
+    event_ids = ['15db4...', '3658d...', '24676...']
+
+  [2/2] Consolidator.run_once() を実行 (Mock LLM、ネットワーク不要)...
+  pages_created=1 / pages_updated=0 / clusters=1
+  _learned/&lt;page_type&gt;/ に書かれたファイル:
+    - domain_concept/heap-spray-is-a-classic-technique.md
+  provenance.json (LLW-AC-01 source-anchored):
+    source_type: 'consolidator'
+    source_id: 'heap-spray-is-a-classic-technique'
+    confidence: 0.8
+    derived_from: ['24676...', '3658d...', '15db4...']
+  ----------------------------------------------------------------
+  1 件の learned doc が生成。derived_from で生 event id まで追跡可能です。</pre>
+<pre class="output" data-lang="en" hidden>==[ consolidation-mirror :: Biological memory consolidation -> RAD mirror ]==
+  Watch one consolidator cycle turn episodic events into a ConceptPage mirrored to _learned/.
+  ...
+  pages_created=1 / pages_updated=0 / clusters=1
+  _learned/&lt;page_type&gt;/ files: domain_concept/heap-spray-is-a-classic-technique.md
+  derived_from: ['24676...', '3658d...', '15db4...']
+  1 learned docs produced. derived_from traces back to the raw event ids.</pre>
+
+<dl class="kv">
+<dt>所要</dt><dd>~30 秒 (DuckDB + Kuzu の初期化込み)</dd>
+<dt>依存</dt><dd>stdlib + duckdb + kuzu (既に core 依存)、Mock CompileLLM で完結</dd>
+<dt>学べる</dt><dd>episodic → cluster → consolidator → RAD のフルパス / LLW-AC-01 source-anchored</dd>
+<dt>差別化</dt><dd>llive 独自の生物学的記憶モデル × RAD の交点で、他のメモリ LLM フレームワークと一線を画す機能</dd>
+</dl>
+</div>
+</details>
+
 <!-- Full run ============================================== -->
 <details class="scenario" id="all">
 <summary>
   <span class="num">▶</span>
   <span>
     <div class="title">全シナリオ連続再生</div>
-    <div class="subtitle">Run all 5 in sequence — overall ~3 min</div>
+    <div class="subtitle">Run all 7 in sequence — overall ~3 min</div>
   </span>
 </summary>
 <div class="body">
