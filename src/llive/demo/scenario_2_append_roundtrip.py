@@ -39,6 +39,26 @@ _CATALOG: dict[str, dict[str, str]] = {
         "excerpt": "    excerpt: {excerpt}",
         "summary": "{n} hits. Same path the consolidator uses on its semantic out.",
     },
+    "zh": {
+        "intro": "向 _learned/ 写入学习记录,并立刻通过查询检索出来。",
+        "append": "向 {domain} 写入学习记录...",
+        "written": "  ok 写入 {doc} 与 {prov} (共 {bytes} bytes)",
+        "prov_head": "  provenance.json 内容:",
+        "search": "写入后立即查询 {q!r}...",
+        "hit": "  - {domain}/{name}  score={score:.1f}",
+        "excerpt": "    片段: {excerpt}",
+        "summary": "{n} 条命中。这与 consolidator 语义出口的写回路径一致。",
+    },
+    "ko": {
+        "intro": "_learned/ 에 학습 결과를 쓰고, 바로 검색으로 다시 꺼냅니다.",
+        "append": "{domain} 에 학습 문서 쓰는 중...",
+        "written": "  ok {doc} 와 {prov} 작성 완료 (총 {bytes} bytes)",
+        "prov_head": "  provenance.json 내용:",
+        "search": "쓰기 직후 키워드 {q!r} 로 검색...",
+        "hit": "  - {domain}/{name}  score={score:.1f}",
+        "excerpt": "    발췌: {excerpt}",
+        "summary": "{n}건 일치. consolidator 의미 출구의 회수 경로와 동일.",
+    },
 }
 
 
