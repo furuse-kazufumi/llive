@@ -11,7 +11,7 @@ same model gets to read curated security knowledge before it answers.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from llive.demo.i18n import translate
 from llive.demo.runner import Scenario, ScenarioContext
