@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from typing import Any
+from typing import Any, ClassVar
 
 from llive.demo.i18n import translate
 from llive.demo.runner import Scenario, ScenarioContext
