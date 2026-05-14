@@ -112,8 +112,18 @@ def list_corpora(source: Path, *, include_legacy: bool, only: list[str] | None) 
         return dirs
     if include_legacy:
         return dirs
-    # 既定: _v2 サフィックスのみ (新版に統一)
-    return [p for p in dirs if p.name.endswith("_v2")]
+    # 既定: _v2 があれば優先、無い分野は v1 を採用 (tui_corpus, security_papers_2025_2026 等)
+    by_base: dict[str, dict[str, Path]] = {}
+    for p in dirs:
+        if p.name.endswith("_v2"):
+            base = p.name[:-3]
+            by_base.setdefault(base, {})["v2"] = p
+        else:
+            by_base.setdefault(p.name, {}).setdefault("v1", p)
+    chosen: list[Path] = []
+    for versions in by_base.values():
+        chosen.append(versions.get("v2") or versions["v1"])
+    return sorted(chosen, key=lambda p: p.name)
 
 
 def _same(src: Path, dst: Path) -> bool:
