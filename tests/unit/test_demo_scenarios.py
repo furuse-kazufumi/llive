@@ -147,7 +147,7 @@ def test_run_one_unknown_raises() -> None:
 def test_run_all_completes(capsys: pytest.CaptureFixture[str]) -> None:
     # MCP scenario will skip if mcp not installed; we don't require it here
     results = run_all(quiet=True)
-    assert len(results) == 5
+    assert len(results) == 7
     for r in results:
         assert "ok" in r
         # Either succeeded, or recorded an error string — never raised
