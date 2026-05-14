@@ -18,7 +18,7 @@ import threading
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
-from typing import Any
+from typing import Any, ClassVar
 
 from llive.demo.i18n import translate
 from llive.demo.runner import Scenario, ScenarioContext
