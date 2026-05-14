@@ -109,6 +109,30 @@ def test_run_scenario_5_distinguishes_rag_on_off(capsys: pytest.CaptureFixture[s
     assert summary.get("hints_on", -1) >= 1
 
 
+def test_run_scenario_6_vlm_with_synthetic_png(capsys: pytest.CaptureFixture[str]) -> None:
+    out = run_one(6, quiet=False)
+    captured = capsys.readouterr()
+    assert "vlm-mock" in captured.out
+    assert "saw 1 image" in captured.out
+    summary = out["summary"]
+    assert isinstance(summary, dict)
+    assert summary.get("hints_off") == 0
+    assert summary.get("hints_on", 0) >= 1
+
+
+def test_run_scenario_7_consolidation_creates_learned_files(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one(7, quiet=False)
+    captured = capsys.readouterr()
+    assert "derived_from" in captured.out
+    assert "heap-spray" in captured.out
+    summary = out["summary"]
+    assert isinstance(summary, dict)
+    assert summary.get("pages_created", 0) >= 1
+    assert summary.get("learned_files", 0) >= 1
+
+
 def test_run_one_by_id() -> None:
     out = run_one("rad-quick-tour", quiet=True)
     assert out["ok"] is True
