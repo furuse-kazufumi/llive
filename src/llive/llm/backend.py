@@ -185,11 +185,29 @@ class AnthropicBackend(LLMBackend):
         self._client = anthropic.Anthropic()
         self.model = model or self.DEFAULT_MODEL
 
+    @property
+    def supports_vlm(self) -> bool:
+        return True
+
     def generate(self, request: GenerateRequest) -> GenerateResponse:  # pragma: no cover - requires API key
+        if request.images:
+            content: list[dict[str, Any]] = []
+            for im in request.images:
+                media, b64 = _normalise_image(im)
+                content.append(
+                    {
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": media, "data": b64},
+                    }
+                )
+            content.append({"type": "text", "text": request.prompt})
+            messages: list[dict[str, Any]] = [{"role": "user", "content": content}]
+        else:
+            messages = [{"role": "user", "content": request.prompt}]
         kwargs: dict[str, Any] = {
             "model": request.model or self.model,
             "max_tokens": int(request.max_tokens),
-            "messages": [{"role": "user", "content": request.prompt}],
+            "messages": messages,
             "temperature": float(request.temperature),
         }
         if request.system:
