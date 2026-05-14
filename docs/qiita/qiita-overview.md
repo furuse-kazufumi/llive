@@ -139,10 +139,14 @@ RAD コーパス (本フレームワーク内蔵) と接続することで「TRI
 
 ## 数字で見る現在地 (2026-05-14)
 
-- **v0.3.0** Phase 3 + Phase 4 同時リリース
-- **429 tests / 98% coverage / 0 lint warnings**
-- Z3 静的検証 / Failed Reservoir / Reverse-Evo Monitor / TRIZ Self-Reflection / Ed25519 Signed Adapter / SHA-256 Audit Chain
-- 次期: Phase 5+ Rust 高速化 (要件 v0.7 定義済)
+- **v0.5.0** Phase 5 first wire-in (Rust kernel ホットパス接続)
+- **444 tests / 0 lint** (v0.4.0 baseline 439 + RUST-03 parity 5)
+- v0.4.0 で Rust skeleton (PyO3 0.22 + Cargo workspace + RUST-13 parity harness) を確立
+- v0.5.0 で `BayesianSurpriseGate (MEM-07)` の `compute_surprise` を **Rust 経路へ自動委譲** (不在時 numpy fallback、1e-6 parity)
+- v0.3.0 までで Phase 3 (Controlled Self-Evolution) + Phase 4 (Production Security) 完了 (429 tests / 98% coverage)
+- 機能: Z3 静的検証 / Failed Reservoir / Reverse-Evo Monitor / TRIZ Self-Reflection / Ed25519 Signed Adapter / SHA-256 Audit Chain / Rust kernel
+- [Unreleased]: F25 (g) `LoveBridge` writer ― llive ↔ llmesh ↔ llove を MCP 経由で接続する shim 追加
+- 次期: Phase 5 残り (RUST-02 rayon 並列、RUST-05〜11) を意味論固定後に段階着手
 
 ---
 
