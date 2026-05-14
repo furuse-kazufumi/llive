@@ -362,6 +362,9 @@ class Consolidator:
                 result.pages_created += 1
             else:
                 result.pages_updated += 1
+            # Phase B integration: mirror the page summary to RAD's write layer.
+            # Non-fatal — consolidation succeeds even if RAD is unavailable.
+            self._mirror_to_rad(page, cluster_events, result)
 
         # Wire concept→concept edges co-occurring in this cycle.
         # LLW-AC-09 edge weight semantics: linked_concept weight = Jaccard(linked_entries_a, linked_entries_b)
