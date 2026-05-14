@@ -3,49 +3,35 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-14 06:37:14
+- **最終更新**: 2026-05-15 07:08:19
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-6dd6994 release(v0.5.0): Phase 5 first wire-in — RUST-03 + BayesianSurprise + EdgeWeight
-41ace8f auto: CHANGELOG.md 編集前 (2026-05-14 06:31)
-3dafdf8 auto: CHANGELOG.md 編集前 (2026-05-14 06:31)
-2ac9c56 auto: __init__.py 編集前 (2026-05-14 06:30)
-4dd5ee5 auto: lib.rs 編集前 (2026-05-14 06:30)
-94f6e83 auto: Cargo.toml 編集前 (2026-05-14 06:30)
-dd65ac2 auto: pyproject.toml 編集前 (2026-05-14 06:30)
-bf57174 auto: edge_weight.py 編集前 (2026-05-14 06:29)
-64e803b auto: edge_weight.py 編集前 (2026-05-14 06:29)
-3f41033 auto: test_rust_python_parity.py 編集前 (2026-05-14 06:28)
+7e73043 docs(rust): add Phase 5+ design draft for RUST-02/05/06/07/08/09/10/11
+98d3985 ci: add GitHub Actions for tests + Rust build + parity (3 OS × Python 3.11/3.12)
+da8548c docs(progress): add session log for 2026-05-14 (続き) — pyo3 0.24.2 + 441 tests
+d1d00e0 docs(readme): refresh status with v0.4.0 + v0.5.0 + [Unreleased]
+e38c027 auto: README.md 編集前 (2026-05-14 22:36)
+b9042b4 auto: Cargo.toml 編集前 (2026-05-14 22:31)
+1ecae68 auto: Cargo.toml 編集前 (2026-05-14 22:26)
+b7afc38 auto: post_2026-05-14_overview.zh.md 編集前 (2026-05-14 21:48)
+0498842 auto: post_2026-05-14_overview.en.md 編集前 (2026-05-14 21:48)
+695400f auto: post_2026-05-14_overview.ja.md 編集前 (2026-05-14 21:48)
 ```
 
 ## 現在の git status
 
 ```
-M docs/SESSION_SUMMARY.md
+(clean)
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-06:33 docs/SESSION_SUMMARY.md
-06:31 CHANGELOG.md
-06:30 src/llive/rust_ext/__init__.py
-06:30 crates/llive_rust_ext/src/lib.rs
-06:30 crates/llive_rust_ext/Cargo.toml
-06:30 pyproject.toml
-06:30 .ruff_cache/0.15.12/10638194744700293557
-06:30 .pytest_cache/v/cache/nodeids
-06:30 .hypothesis/constants/e3658feab3fec12b
-06:30 src/llive/memory/edge_weight.py
-06:29 .ruff_cache/0.15.12/7457577932985440971
-06:29 .hypothesis/constants/3503c0ec05a293df
-06:28 .hypothesis/constants/0f2a651ed925525b
-06:28 tests/property/test_rust_python_parity.py
-06:27 src/llive/memory/bayesian_surprise.py
+06:47 docs/rust_phase5_design_draft.md
 ```
 
 ---
