@@ -482,7 +482,10 @@ __all__ = [
     "tool_append_learning",
     "tool_describe",
     "tool_get_domain_info",
+    "tool_code_complete",
+    "tool_code_review",
     "tool_list_rad_domains",
     "tool_query_rad",
     "tool_read_document",
+    "tool_vlm_describe_image",
 ]
