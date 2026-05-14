@@ -80,15 +80,71 @@ Settings → Models → Tools → Add MCP server。`stdio` 経由で同じコマ
 `.cursor/mcp.json` または `~/.continue/config.json` の `mcpServers` セクションに
 同じ JSON を追加。Cursor の場合は Cursor Settings → Features → MCP からも追加可。
 
-### Ollama (直叩き、Phase C-3 後)
+### Ollama / OpenWebUI / 任意の OpenAI クライアント (Phase C-3、HTTP 経由)
 
-現状の Ollama 本体は MCP client ではないため、直接 MCP サーバとして接続することは
-できません。Phase C-3 で実装する **OpenAI 互換 HTTP server** (`/v1/chat/completions`)
-が完成すると、Ollama の OpenAI 互換クライアント経由で利用可能になります。
+Ollama 本体は MCP client ではないので、stdio MCP server を直接呼び出すことはできません。
+代わりに llive の **OpenAI 互換 HTTP server** (`src/llive/server/openai_api.py`) を起動し、
+クライアントの `base_url` をそちらに向ければ、Ollama や OpenWebUI などの OpenAI HTTP 互換
+クライアントから llive を利用できます。
 
-それまでは、Ollama を **モデルプロバイダ**として使い、llive 側で
-``LLIVE_LLM_BACKEND=ollama`` を設定して `llive.llm.OllamaBackend` 経由で呼ぶ形が
-利用可能です。
+#### サーバ起動
+
+```powershell
+py -3.11 -m llive.server.openai_api --host 127.0.0.1 --port 8765
+```
+
+#### 公開エンドポイント
+
+| Method | Path | 用途 |
+|---|---|---|
+| GET  | `/health` | liveness probe |
+| GET  | `/v1/models` | `llive-rad` + `llive-rad/<backend-model>` の advertise |
+| GET  | `/v1/tools` | (非標準) MCP tool 一覧の JSON Schema |
+| POST | `/v1/chat/completions` | 標準 OpenAI 互換 + llive 拡張 |
+
+#### llive 拡張 (RAG-on-by-flag)
+
+リクエスト body に以下を追加すると、最後の user メッセージに対して RAD ヒントを
+自動注入します:
+
+```jsonc
+{
+  "model": "llive-rad",
+  "messages": [{"role": "user", "content": "Explain buffer overflow"}],
+  "x_rad_domain": "security_corpus_v2",
+  "x_rad_hint_limit": 5
+}
+```
+
+レスポンスには `x_llive_backend` / `x_llive_model` / `x_llive_rad_hints` が含まれ、
+どの backend / model / RAD doc が使われたか確認できます。
+
+#### Ollama / OpenWebUI 設定例
+
+```jsonc
+// Ollama (OPENAI_BASE_URL 経由のクライアント、または ollama-compat ラッパー)
+{
+  "base_url": "http://127.0.0.1:8765/v1",
+  "api_key": "any",          // llive 側は認証なし
+  "model": "llive-rad"       // または "llive-rad/llama3.1"
+}
+
+// OpenWebUI: Settings → Connections → OpenAI API
+//   API Base URL: http://127.0.0.1:8765/v1
+//   API Key: any-string
+//   Model: llive-rad/llama3.1
+```
+
+#### Backend の選択
+
+`LLIVE_LLM_BACKEND=ollama` を環境変数で設定すれば、llive は Ollama の `/api/generate`
+にプロキシして生成を行います (OllamaBackend)。Anthropic API / OpenAI API も同様。
+
+#### セキュリティ
+
+- 既定で `127.0.0.1` バインド (`--host 0.0.0.0` で外部公開可、要 reverse-proxy + auth)
+- Content-Length 上限 8 MiB
+- 認証なし — 信頼境界内でのみ運用
 
 ## 環境変数
 
