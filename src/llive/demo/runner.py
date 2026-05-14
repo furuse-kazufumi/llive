@@ -231,6 +231,11 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="S",
         help="sleep S seconds between iterations (only meaningful with --loop > 1).",
     )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="emit machine-readable JSON summary on stdout (implies --quiet for narration).",
+    )
     return p
 
 
