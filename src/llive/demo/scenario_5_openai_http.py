@@ -98,6 +98,8 @@ class OpenAIHTTPScenario(Scenario):
     titles: ClassVar[dict[str, str]] = {
         "ja": "OpenAI 互換 HTTP server で RAG-on-by-flag",
         "en": "OpenAI-compat HTTP server with RAG-on-by-flag",
+        "zh": "OpenAI 兼容 HTTP server 实现 RAG-on-by-flag",
+        "ko": "OpenAI 호환 HTTP server 의 RAG-on-by-flag",
     }
 
     def run(self, ctx: ScenarioContext) -> dict[str, object]:
