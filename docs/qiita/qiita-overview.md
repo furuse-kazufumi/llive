@@ -12,7 +12,8 @@ tags: Python,LLM,継続学習,形式検証,Rust
 - **llive** は、固定 LLM コアの周りに **4 層外部記憶** (semantic / episodic / structural / parameter) と **可変長 BlockContainer** を配置し、コア重みを再学習せずに能力を継続的に取り込む Python フレームワーク。
 - promotion (構造変更) は **Lean / Z3 / TLA+ による形式検証** を LLM 評価より先に通す。これだけで promote 失敗の早期検出と評価コスト削減ができる。
 - **TRIZ 40 原理 + 39×39 矛盾マトリクス + ARIZ + 9 画法** を mutation policy として実装。メトリクスの矛盾を自動検出 → 原理マッピング → CandidateDiff 生成まで自走する。
-- **v0.3.0** で Phase 3 (Controlled Self-Evolution MVR) + Phase 4 (Production Security MVR) を同時リリース。**429 tests / 98% coverage / 0 lint warnings**、Ed25519 署名 adapter + SHA-256 audit chain 完備。
+- **v0.5.0** (2026-05-14) で Phase 5 first wire-in を達成。Rust kernel をホットパス (`compute_surprise` / 時間減衰) に接続し、Python fallback と **1e-6 parity** を保証。**444 tests / 0 lint**。
+- v0.3.0 で Phase 3 (Controlled Self-Evolution MVR) + Phase 4 (Production Security MVR) を同時リリース、Ed25519 署名 adapter + SHA-256 audit chain 完備。
 - リポジトリ: <https://github.com/furuse-kazufumi/llive> / PyPI: `pip install llmesh-llive`
 
 ```bash
