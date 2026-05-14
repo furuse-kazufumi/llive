@@ -128,12 +128,13 @@ class CodeReviewScenario(Scenario):
         hints = result.get("rad_hints_used") or []
         ctx.say(_t("hints", n=len(hints)))
         for h in hints:
-            ctx.say(f"    - {h}")
+            short = h.rsplit("\\", 1)[-1].rsplit("/", 1)[-1]
+            ctx.say(f"    - {short}")
         ctx.say(_t("system_head"))
         if backend.last and backend.last.system:
             for line in backend.last.system.splitlines()[:6]:
                 ctx.say(f"    | {line}")
-        ctx.step(3, 3, _t("reply"))
+        ctx.step(3, 3, _t("reply").strip())
         for line in str(result.get("text", "")).splitlines():
             ctx.say(f"    {line}")
 
