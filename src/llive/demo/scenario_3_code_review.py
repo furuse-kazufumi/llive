@@ -40,6 +40,26 @@ _CATALOG: dict[str, dict[str, str]] = {
         "reply": "  LLM reply:",
         "summary": "{n} hints injected into the system prompt before generation.",
     },
+    "zh": {
+        "intro": "从 security_corpus 抽取提示,交由 LLM 审查代码。",
+        "seed": "生成迷你 security_corpus...",
+        "code": "存在漏洞的代码:",
+        "review": "运行 tool_code_review (mock backend,无需网络)...",
+        "hints": "  注入的 RAD 提示 ({n} 条):",
+        "system_head": "  生成的 system prompt 开头:",
+        "reply": "  LLM 回复:",
+        "summary": "{n} 条提示注入 system,LLM 据此作答。",
+    },
+    "ko": {
+        "intro": "security_corpus 에서 힌트를 뽑아 LLM 에게 코드 리뷰를 시킵니다.",
+        "seed": "미니 security_corpus 생성 중...",
+        "code": "취약 코드:",
+        "review": "tool_code_review 실행 (mock backend, 네트워크 불필요)...",
+        "hints": "  주입된 RAD 힌트 ({n}건):",
+        "system_head": "  생성된 system prompt 머리말:",
+        "reply": "  LLM 응답:",
+        "summary": "힌트 {n}건이 system 에 주입되어 LLM 이 그것을 기반으로 응답합니다.",
+    },
 }
 
 
