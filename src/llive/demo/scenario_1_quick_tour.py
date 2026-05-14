@@ -40,6 +40,26 @@ _CATALOG: dict[str, dict[str, str]] = {
         "excerpt": "    excerpt: {excerpt}",
         "summary": "Total {hits} hits. Filename matches dominate as designed.",
     },
+    "zh": {
+        "intro": "生成迷你语料并以 3 种方式调用 RAD 读取 API。",
+        "build": "在 {root} 下创建样本语料...",
+        "ready": "  已放置 {n} 篇文档到 {domain}。",
+        "query": "查询: {q!r}",
+        "no_hit": "  (无匹配)",
+        "hit": "  - {domain}/{name}  score={score:.1f}  matched={terms}",
+        "excerpt": "    片段: {excerpt}",
+        "summary": "共 {hits} 条命中。按设计,文件名匹配权重更高。",
+    },
+    "ko": {
+        "intro": "미니 코퍼스를 만들고 RAD 읽기 API를 세 가지 방식으로 호출합니다.",
+        "build": "샘플 코퍼스를 {root} 아래에 생성 중...",
+        "ready": "  {n}개의 문서를 {domain}에 배치했습니다.",
+        "query": "쿼리: {q!r}",
+        "no_hit": "  (일치 없음)",
+        "hit": "  - {domain}/{name}  score={score:.1f}  matched={terms}",
+        "excerpt": "    발췌: {excerpt}",
+        "summary": "총 {hits}건. 설계대로 파일명 일치가 더 강하게 작용합니다.",
+    },
 }
 
 
