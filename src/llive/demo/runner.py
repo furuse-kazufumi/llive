@@ -240,16 +240,28 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    import json as _json
+
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = _build_parser().parse_args(argv)
 
     if args.list:
-        for i, s in enumerate(list_scenarios(), start=1):
-            print(f"  {i}. {s.id:30s} {s.title(args.lang or current_lang())}")
+        if args.json:
+            payload = [
+                {"index": i, "id": s.id, "title": s.title(args.lang or current_lang())}
+                for i, s in enumerate(list_scenarios(), start=1)
+            ]
+            print(_json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            for i, s in enumerate(list_scenarios(), start=1):
+                print(f"  {i}. {s.id:30s} {s.title(args.lang or current_lang())}")
         return 0
 
-    def _one_iteration() -> int:
+    # --json implies suppressed narration so stdout is clean JSON only
+    narration_quiet = args.quiet or args.json
+
+    def _one_iteration() -> tuple[int, list[dict[str, object]]]:
         if args.only is not None:
             target: int | str
             try:
@@ -259,38 +271,56 @@ def main(argv: list[str] | None = None) -> int:
             out = run_one(
                 target,
                 lang=args.lang,
-                quiet=args.quiet,
+                quiet=narration_quiet,
                 keep_artifacts=args.keep_artifacts,
             )
-            return 0 if out.get("ok") else 1
+            return (0 if out.get("ok") else 1), [out]
 
-        results = run_all(lang=args.lang, quiet=args.quiet, keep_artifacts=args.keep_artifacts)
+        results = run_all(
+            lang=args.lang, quiet=narration_quiet, keep_artifacts=args.keep_artifacts
+        )
         fails = [r for r in results if not r.get("ok")]
-        if not args.quiet:
+        if not narration_quiet:
             print(f"\n=== summary: {len(results) - len(fails)}/{len(results)} ok ===", flush=True)
             for r in results:
                 print(f"  {'OK ' if r.get('ok') else 'ERR'}  {r['id']}", flush=True)
-        return 0 if not fails else 2
+        return (0 if not fails else 2), results
 
     loop = args.loop
     interval = max(0.0, float(args.interval))
     iteration = 0
     last_rc = 0
+    all_iterations: list[dict[str, object]] = []
     try:
         while True:
             iteration += 1
-            if loop > 1 or loop == 0:
-                if not args.quiet:
-                    suffix = f"/{loop}" if loop > 0 else " (infinite)"
-                    print(f"\n###### iteration {iteration}{suffix} ######", flush=True)
-            last_rc = _one_iteration()
+            if (loop > 1 or loop == 0) and not narration_quiet:
+                suffix = f"/{loop}" if loop > 0 else " (infinite)"
+                print(f"\n###### iteration {iteration}{suffix} ######", flush=True)
+            rc, results = _one_iteration()
+            last_rc = rc
+            all_iterations.append({"iteration": iteration, "rc": rc, "results": results})
             if loop != 0 and iteration >= loop:
                 break
             if interval > 0:
                 time.sleep(interval)
     except KeyboardInterrupt:
-        if not args.quiet:
+        if not narration_quiet:
             print(f"\n[interrupted after {iteration} iteration(s)]", flush=True)
+
+    if args.json:
+        ok_count = sum(
+            1 for it in all_iterations for r in it["results"] if r.get("ok")  # type: ignore[union-attr]
+        )
+        total = sum(len(it["results"]) for it in all_iterations)  # type: ignore[arg-type]
+        payload = {
+            "schema_version": 1,
+            "iterations": all_iterations,
+            "total_runs": total,
+            "ok_count": ok_count,
+            "rc": last_rc,
+        }
+        print(_json.dumps(payload, ensure_ascii=False, indent=2, default=str))
     return last_rc
 
 
