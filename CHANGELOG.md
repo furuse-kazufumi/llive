@@ -4,6 +4,81 @@
 
 ## [Unreleased]
 
+### Added — RAD 横断エピック (RAD-A / RAD-B / RAD-C-2) — 2026-05-15
+
+Raptor 由来の RAD コーパス (49 分野・44,864 docs・~112 MB) を llive 配下に
+取り込み、生物学的記憶モデル (Consolidator) から書き戻し可能にし、Ollama /
+LM Studio / Claude Desktop / Open WebUI から MCP 経由で呼べる外部 LLM 連携を
+実現する横断エピック。SemVer は Phase 1-7 に予約されているため build メタ
+(`+rad-a` / `+rad-b` / `+rad-c2`) で識別する。
+
+#### RAD-A. 取り込み層
+
+- `scripts/import_rad.py` (stdlib のみ、~250 行)
+  - 引数: `--source` / `--dest` / `--corpora` / `--all` / `--include-legacy` /
+    `--mirror` / `--dry-run` / `--force`
+  - スマート判定既定: `<分野>_v2/` を優先、無い分野は v1 を採用
+    (`tui_corpus`, `security_papers_2025_2026` 等)
+  - サイズ + mtime ベースの差分判定、`--force` で全再コピー
+  - `_index.json` 生成 (分野・ファイル数・バイト数・取り込み日時)
+  - `_learned/` 書き層を予約 (README 付き、Phase B で利用)
+- `data/rad/` レイアウト: `<分野>_v2/` (読み層) + `_learned/<分野>/` (書き層) +
+  `_index.json` (メタ)
+- `.gitignore` に `data/rad/` 追加 (`!data/rad/README.md` で説明のみ追跡)
+- 環境変数解決優先順位: `--source`/`--dest` > `$LLIVE_RAD_SOURCE` /
+  `$LLIVE_RAD_DIR` > `$RAPTOR_CORPUS_DIR` > `D:/docs` / `<repo>/data/rad`
+
+#### RAD-B. 知識庫 API + Consolidator 統合
+
+- `src/llive/memory/rad/loader.py`: `RadCorpusIndex`
+  - `list_domains` / `list_read_domains` / `list_learned_domains` /
+    `get_domain_info` / `iter_documents` / `read_document`
+    (path traversal 防御つき)
+  - `_index.json` を起動時にキャッシュ、`reload()` で再スキャン
+- `src/llive/memory/rad/query.py`: stdlib のみキーワード検索
+  (filename score × 3 + content score、excerpt 抽出)
+- `src/llive/memory/rad/append.py`: 書き層 `append_learning`
+  - `_learned/<domain>/<doc-id>.md` + `<doc-id>.provenance.json` sidecar
+  - doc_id 既定: `YYYYMMDDTHHMMSSZ-<shorthash>`
+  - ドメイン名のサニタイズ (path separator / 先頭ドット禁止)
+- `src/llive/memory/rad/skills.py`: corpus2skill 階層スキル検出
+  (`INDEX.md` + `metadata.json`)
+- `src/llive/memory/rad/types.py`: `DomainInfo` / `RadHit` / `LearnedEntry`
+- `Consolidator(rad_index=...)`: 生物学的記憶モデルの semantic 出口で
+  ConceptPage を `_learned/<page_type>/<concept_id>.md` にミラー、
+  Provenance は `source_type="consolidator"`, `confidence=0.8`,
+  `derived_from=[event_ids]` (LLW-AC-01 source-anchored 維持)
+- 失敗は non-fatal (CycleResult.errors に "rad_mirror: ..." として記録)
+
+#### RAD-C-2. MCP server (Phase C-2)
+
+- `src/llive/mcp/tools.py`: transport-independent な純 Python tool
+  (`list_rad_domains`, `get_domain_info`, `query_rad`, `read_document`,
+   `append_learning`) + `dispatch` + `tool_describe` (JSON Schema)
+- `src/llive/mcp/server.py`: stdio MCP server エントリポイント
+  (`mcp` パッケージ lazy import、未インストール時は actionable hint)
+- `pyproject.toml`: `[mcp]` / `[vlm]` / `[coding]` extras 追加
+- 接続先: Claude Desktop / LM Studio / Open WebUI / Cursor / Continue.dev
+
+#### テスト
+
+- `tests/unit/test_rad.py`: 25 cases (loader / query / append / skills)
+- `tests/unit/test_mcp_tools.py`: 12 cases (全 tool + dispatch + describe)
+- `tests/unit/test_consolidation_rad_mirror.py`: 4 cases
+  (domain mapping / cycle write / no-rad backward-compat / non-fatal failure)
+- 既存 441 → 482 tests / 全 PASS / ruff clean
+
+#### ドキュメント
+
+- `docs/PROGRESS.md`: 2026-05-15 セクション
+- `docs/ROADMAP.md`: 「v0.2.x 横断エピック」を「RAD 横断エピック」に改題、
+  SemVer 番号占有を解消し、build メタで識別
+- `data/rad/README.md`: レイアウト・取り込み手順・環境変数解決順
+
+#### 関連 memory
+
+- `project_llive_v02_rad_integration`: 全体計画・残作業 (RAD-C-1, C-3)
+
 ### Added — INT-03 (F25 g): LoveBridge writer (llove ↔ llmesh ↔ llive)
 
 llove リポジトリの `docs/llove_jsonl_v1.md` v1 仕様 (Phase 2 OBS-03 凍結)
