@@ -400,6 +400,49 @@ class Consolidator:
             result.errors.append(f"prune: {exc}")
         return result
 
+    def _rad_domain_for(self, page: ConceptPage) -> str:
+        """Map a ``ConceptPage`` to a RAD ``_learned/<domain>/`` bucket.
+
+        Default: ``page_type`` lowercased and sanitised to ``[a-z0-9_]+``.
+        Subclasses can override for finer mapping (e.g. routing security-related
+        concepts into ``_learned/security_corpus_v2``).
+        """
+        ptype = (page.page_type or "concept").lower()
+        return re.sub(r"[^a-z0-9_]+", "_", ptype).strip("_") or "concept"
+
+    def _mirror_to_rad(
+        self,
+        page: ConceptPage,
+        cluster_events: list[EpisodicEvent],
+        result: CycleResult,
+    ) -> None:
+        """Write the page summary into the RAD write layer (``_learned/<domain>/``).
+
+        Non-fatal. Failures are logged into ``result.errors`` but never raised.
+        """
+        if self.rad_index is None:
+            return
+        try:
+            from llive.memory.rad.append import append_learning  # local import
+
+            domain = self._rad_domain_for(page)
+            prov = Provenance(
+                source_type="consolidator",
+                source_id=page.concept_id,
+                derived_from=[e.event_id for e in cluster_events],
+                confidence=0.8,
+            )
+            content = f"# {page.title}\n\n{page.summary}\n"
+            append_learning(
+                self.rad_index,
+                domain,
+                content,
+                prov,
+                doc_id=page.concept_id,
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            result.errors.append(f"rad_mirror: {exc}")
+
     def _enforce_diversity(
         self,
         decision: CompileDecision,
