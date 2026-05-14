@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llive demos — RAD 知識庫の 5 つの動くデモ</title>
+<style>
+:root {
+  --fg: #1b1f24; --fg-mute: #4a525c; --fg-faint: #6c7682;
+  --bg: #fafbfc; --bg-panel: #ffffff; --bg-code: #f5f7fa; --bg-code-inline: #eef1f5;
+  --accent: #2c6ecf; --accent-soft: #d8e6fb; --accent-fg: #1a4380;
+  --border: #dde2e8; --border-strong: #c4ccd6;
+  --warn: #b85d00; --warn-bg: #fff5e8;
+  --ok: #2c7a3a; --ok-bg: #e5f4e8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e9ef; --fg-mute: #aab2bd; --fg-faint: #828a96;
+    --bg: #181b21; --bg-panel: #1f2229; --bg-code: #15171c; --bg-code-inline: #2a2e36;
+    --accent: #79a8e8; --accent-soft: #2a3d57; --accent-fg: #c9deff;
+    --border: #2c313a; --border-strong: #3a414c;
+    --warn: #f0a85e; --warn-bg: #3a2a14;
+    --ok: #79c98a; --ok-bg: #1e3324;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif;
+  line-height: 1.7; font-size: 16px; -webkit-font-smoothing: antialiased; }
+header { padding: 36px 24px 12px; max-width: 1100px; margin: 0 auto; }
+header h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; }
+header p.lead { color: var(--fg-mute); font-size: 17px; margin: 8px 0 0; }
+main { max-width: 1100px; margin: 0 auto; padding: 12px 24px 60px; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px;
+  font-size: 12px; font-weight: 500; background: var(--accent-soft); color: var(--accent-fg);
+  margin-right: 6px; }
+.tag-ok { background: var(--ok-bg); color: var(--ok); }
+.toolbar { display: flex; gap: 8px; align-items: center; margin: 20px 0; flex-wrap: wrap; }
+.toolbar select, .toolbar button {
+  background: var(--bg-panel); color: var(--fg); border: 1px solid var(--border-strong);
+  border-radius: 6px; padding: 6px 12px; font-size: 14px; font-family: inherit;
+}
+.toolbar button { cursor: pointer; }
+.toolbar button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.scenario {
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 18px; overflow: hidden;
+}
+.scenario summary {
+  list-style: none; cursor: pointer; padding: 14px 18px;
+  display: flex; gap: 12px; align-items: baseline; user-select: none;
+}
+.scenario summary::-webkit-details-marker { display: none; }
+.scenario summary::before {
+  content: "▸"; color: var(--fg-faint); display: inline-block; width: 16px;
+  transition: transform 0.15s; flex-shrink: 0;
+}
+.scenario[open] summary::before { transform: rotate(90deg); }
+.scenario .num { color: var(--fg-faint); font-variant-numeric: tabular-nums;
+  font-size: 14px; min-width: 24px; }
+.scenario .title { font-weight: 600; flex: 1; }
+.scenario .subtitle { color: var(--fg-mute); font-size: 14px; }
+.scenario .body { padding: 0 18px 16px 46px; border-top: 1px solid var(--border); padding-top: 14px; }
+.scenario h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--fg-faint); margin: 14px 0 6px; }
+.cmd {
+  position: relative; background: var(--bg-code); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 44px 10px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13.5px; overflow-x: auto;
+}
+.cmd .copy {
+  position: absolute; top: 6px; right: 6px; padding: 3px 8px; font-size: 12px;
+  background: var(--bg-panel); border: 1px solid var(--border-strong);
+  border-radius: 4px; cursor: pointer; color: var(--fg-mute);
+}
+.cmd .copy:hover { background: var(--accent-soft); color: var(--accent-fg); }
+.cmd .copy.done { color: var(--ok); border-color: var(--ok); }
+pre.output {
+  background: var(--bg-code); border: 1px solid var(--border); border-radius: 6px;
+  padding: 12px 14px; font-size: 13px; line-height: 1.55; overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin: 6px 0 14px;
+}
+.triz { background: var(--ok-bg); border-left: 3px solid var(--ok);
+  border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 10px 0; font-size: 14px; }
+.triz .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--ok); font-weight: 600; margin-right: 6px; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px;
+  margin: 10px 0; font-size: 14px; }
+.kv dt { color: var(--fg-faint); }
+.kv dd { margin: 0; }
+footer { text-align: center; color: var(--fg-faint); font-size: 13px; padding: 32px 16px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { background: var(--bg-code-inline); padding: 1px 6px; border-radius: 4px;
+  font-family: ui-monospace, monospace; font-size: 0.9em; }
+.expand-all { font-size: 13px; color: var(--fg-faint); }
+</style>
+</head>
+<body>
+
+<header>
+<h1>llive デモポータル</h1>
+<p class="lead">
+Raptor RAD コーパス × llive 記憶モデル × MCP / OpenAI 互換 HTTP — 動く 5 つのミニデモ。
+各シナリオはコピー可能なコマンドと期待出力つき。<code>mock backend</code> で完結し、
+API キー / 実コーパス不要で <strong>30 秒 〜 2 分</strong>で再生できます。
+</p>
+<p>
+<span class="tag tag-ok">5/5 scenarios passing</span>
+<span class="tag">ja / en narration</span>
+<span class="tag">stdlib + mcp + (optional) openai/anthropic/ollama</span>
+</p>
+</header>
+
+<main>
+
+<div class="toolbar">
+  <label for="lang">narration:</label>
+  <select id="lang">
+    <option value="ja" selected>日本語</option>
+    <option value="en">English</option>
+  </select>
+  <button id="expand-all" type="button">▾ 全て展開</button>
+  <button id="collapse-all" type="button">▴ 全て畳む</button>
+  <span class="expand-all">クリックで展開／<kbd>Esc</kbd> で畳む</span>
+</div>
+
+<!-- Scenario 1 ============================================== -->
+<details class="scenario" id="s1">
+<summary>
+  <span class="num">1</span>
+  <span>
+    <div class="title">RAD 読み API のクイックツアー</div>
+    <div class="subtitle">RAD read-API quick tour — synthetic 3-doc corpus → 3 queries → score 比較</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#35 パラメータ変更 — 入力クエリを変えると filename 一致 / content 一致 / no-hit の差が一目で分かる</div>
+
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m llive.demo --only 1 --lang ja</span><span data-lang="en" hidden>py -3.11 -m llive.demo --only 1 --lang en</span><button class="copy" type="button">copy</button></div>
+
+<h3>期待出力</h3>
+<pre class="output" data-lang="ja">==[ rad-quick-tour :: RAD 読み API のクイックツアー ]==
+  ミニコーパスを生成して RAD 読み API を 3 通りに当てます。
+  サンプルコーパスを /tmp/llive-demo-XXXX に作成中...
+  3 件のドキュメントを security_corpus_v2 に配置しました。
+
+  [1/3] クエリ: 'buffer overflow'
+  - security_corpus_v2/buffer_overflow.md  score=9.0  matched=buffer,overflow
+    抜粋: # Buffer Overflow  Classic memory-safety bug: writes that exceed the allocated b
+
+  [2/3] クエリ: 'TOCTOU race'
+  - security_corpus_v2/race_conditions.md  score=5.0  matched=race,toctou
+    抜粋: # Race conditions  TOCTOU and threading hazards. Use atomics or locks.
+
+  [3/3] クエリ: 'elephant'
+  (該当なし)
+  ----------------------------------------------------------------
+  合計 2 件のヒット。クエリの強さは filename 一致が一段強い。</pre>
+<pre class="output" data-lang="en" hidden>==[ rad-quick-tour :: RAD read-API quick tour ]==
+  Build a tiny synthetic corpus and hit the read API three ways.
+  ...
+  [1/3] Query: 'buffer overflow'
+  - security_corpus_v2/buffer_overflow.md  score=9.0  matched=buffer,overflow
+  [2/3] Query: 'TOCTOU race'
+  - security_corpus_v2/race_conditions.md  score=5.0  matched=race,toctou
+  [3/3] Query: 'elephant'
+  (no matches)
+  Total 2 hits. Filename matches dominate as designed.</pre>
+
+<dl class="kv">
+<dt>所要</dt><dd>~30 秒</dd>
+<dt>依存</dt><dd>stdlib のみ (実 RAD コーパス不要)</dd>
+<dt>学べる</dt><dd><code>RadCorpusIndex</code> / <code>query()</code> / filename×3 + content score</dd>
+</dl>
+</div>
+</details>
+
+<!-- Scenario 2 ============================================== -->
+<details class="scenario" id="s2">
+<summary>
+  <span class="num">2</span>
+  <span>
+    <div class="title">学習物の書き込み → 即時検索</div>
+    <div class="subtitle">Write learning → retrieve immediately — append_learning + provenance.json sidecar</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#5 結合 — 書き層と読み層を同じ <code>RadCorpusIndex</code> に統合、書いた直後に検索可能</div>
+
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m llive.demo --only 2 --lang ja</span><span data-lang="en" hidden>py -3.11 -m llive.demo --only 2 --lang en</span><button class="copy" type="button">copy</button></div>
+
+<h3>期待出力</h3>
+<pre class="output" data-lang="ja">==[ append-roundtrip :: 学習物の書き込み → 即時検索 ]==
+  _learned/ に学習物を書き、すぐ検索で見える経路を示します。
+
+  [1/2] vlm_findings に学習物を書き込み...
+  ok wrote 20260515T...md と 20260515T....provenance.json を作成
+  provenance.json の中身:
+    source_type: 'demo'
+    source_id: 'scenario-2'
+    confidence: 0.85
+    derived_from: ['event-001', 'event-002']
+
+  [2/2] 書いた直後にキーワード 'adversarial patch' で検索...
+  - _learned/vlm_findings/20260515T...md  score=2.0
+    抜粋: # Adversarial patch on stop signs ...
+  ----------------------------------------------------------------
+  1 件ヒット。consolidation 出口の書き戻し経路と同じ仕組みです。</pre>
+<pre class="output" data-lang="en" hidden>==[ append-roundtrip :: Write learning -> retrieve immediately ]==
+  Write into _learned/ and immediately retrieve it through query.
+  [1/2] Writing learned doc into vlm_findings...
+  [2/2] Querying for 'adversarial patch' right after the write...
+  - _learned/vlm_findings/20260515T...md  score=2.0
+  1 hits. Same path the consolidator uses on its semantic out.</pre>
+
+<dl class="kv">
+<dt>所要</dt><dd>~20 秒</dd>
+<dt>依存</dt><dd>stdlib のみ + Pydantic (Provenance モデル)</dd>
+<dt>学べる</dt><dd><code>append_learning()</code> / <code>provenance.json</code> / LLW-AC-01 source-anchored</dd>
+</dl>
+</div>
+</details>
+
+<!-- Scenario 3 ============================================== -->
+<details class="scenario" id="s3">
+<summary>
+  <span class="num">3</span>
+  <span>
+    <div class="title">RAD ヒント注入つきコードレビュー</div>
+    <div class="subtitle">Code review with RAD hint injection — security_corpus_v2 → LLM grounding</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#24 仲介 — RAD が LLM の知識仲介、汎用 LLM が <strong>specialised security reviewer</strong>に化ける</div>
+
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m llive.demo --only 3 --lang ja</span><span data-lang="en" hidden>py -3.11 -m llive.demo --only 3 --lang en</span><button class="copy" type="button">copy</button></div>
+
+<h3>期待出力</h3>
+<pre class="output" data-lang="ja">==[ code-review :: RAD ヒント注入つきコードレビュー ]==
+  security_corpus からヒントを抜き、LLM にレビューさせる流れを示します。
+  ミニ security_corpus を生成中...
+
+  [1/3] 脆弱コード:
+    void greet(const char* user) {
+        char buf[16];
+        strcpy(buf, user);          /* unchecked length */
+        printf(buf);                /* untrusted format string */
+    }
+
+  [2/3] tool_code_review を実行 (mock backend、ネットワーク不要)...
+  注入された RAD ヒント (2件):
+    - format_string.md
+    - strcpy_overflow.md
+  生成された system prompt の冒頭:
+    | You are a security-focused code reviewer. ...
+    | # Relevant security knowledge from RAD
+    | - Calling printf with attacker-controlled format specifiers ...
+    | - strcpy() copies until NUL; ...
+
+  [3/3] LLM 応答:
+    - L3: strcpy() lacks bounds check (CWE-120); use strncpy or snprintf.
+    - L4: printf(buf) is a CWE-134 format-string sink; use printf("%s", buf).
+  ----------------------------------------------------------------
+  ヒント 2 件が system に注入され、LLM がそれを下敷きに回答。</pre>
+<pre class="output" data-lang="en" hidden>==[ code-review :: Code review with RAD hint injection ]==
+  Pull hints from security_corpus and let an LLM review the code.
+  ...
+  Injected RAD hints (2):
+    - format_string.md
+    - strcpy_overflow.md
+  LLM reply:
+    - L3: strcpy() lacks bounds check (CWE-120); use strncpy or snprintf.
+    - L4: printf(buf) is a CWE-134 format-string sink; use printf("%s", buf).</pre>
+
+<dl class="kv">
+<dt>所要</dt><dd>~30 秒</dd>
+<dt>依存</dt><dd>RecordingBackend (mock) で完結、実 LLM 不要</dd>
+<dt>学べる</dt><dd><code>tool_code_review</code> / system prompt 構築 / RAD grounding 効果</dd>
+<dt>本番では</dt><dd><code>LLIVE_LLM_BACKEND=ollama</code> で qwen2.5-coder 等に差し替え可能</dd>
+</dl>
+</div>
+</details>
+
+<!-- Scenario 4 ============================================== -->
+<details class="scenario" id="s4">
+<summary>
+  <span class="num">4</span>
+  <span>
+    <div class="title">MCP server を実 client で呼ぶ</div>
+    <div class="subtitle">Real MCP stdio round-trip — initialize / list_tools / call_tool</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#28 機構の交換 — モックではなく <strong>本物の MCP SDK</strong>で呼ぶことで、Claude Desktop と同等の経路を実機検証</div>
+
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m pip install -e .[mcp] && py -3.11 -m llive.demo --only 4 --lang ja</span><span data-lang="en" hidden>py -3.11 -m pip install -e .[mcp] && py -3.11 -m llive.demo --only 4 --lang en</span><button class="copy" type="button">copy</button></div>
+
+<h3>期待出力</h3>
+<pre class="output" data-lang="ja">==[ mcp-roundtrip :: MCP server を実 client で呼ぶ ]==
+  MCP server を subprocess で起動し、公式 client から呼びます。
+
+  [1/3] subprocess で `py -m llive.mcp.server` を起動中...
+  ok initialize() 成功
+
+  [2/3] list_tools() = append_learning,code_complete,code_review,
+        get_domain_info,list_rad_domains,query_rad,read_document,
+        vlm_describe_image
+
+  [3/3] call_tool('query_rad', keywords='buffer') 実行中...
+  (該当なし — synthetic corpus が空でも server 自体は応答)
+  ----------------------------------------------------------------
+  8 tool 検出、1 ラウンドトリップ完了。Claude Desktop と同じ経路です。</pre>
+<pre class="output" data-lang="en" hidden>==[ mcp-roundtrip :: Call the MCP server with the real client ]==
+  ...
+  ok initialize()
+  list_tools() = ... (8 tools)
+  Calling call_tool('query_rad', keywords='buffer')...
+  (no hits -- server still responded with valid JSON)
+  8 tools advertised. Same path Claude Desktop uses.</pre>
+
+<dl class="kv">
+<dt>所要</dt><dd>~1 分 (subprocess 起動含む)</dd>
+<dt>依存</dt><dd><code>pip install -e .[mcp]</code> (mcp&gt;=1.0)</dd>
+<dt>学べる</dt><dd>stdio transport / list_tools / call_tool / TextContent → JSON</dd>
+<dt>同じ経路</dt><dd>Claude Desktop / LM Studio / Cursor / Continue.dev</dd>
+</dl>
+</div>
+</details>
+
+<!-- Scenario 5 ============================================== -->
+<details class="scenario" id="s5">
+<summary>
+  <span class="num">5</span>
+  <span>
+    <div class="title">OpenAI 互換 HTTP server で RAG-on-by-flag</div>
+    <div class="subtitle">RAG on/off contrast via x_rad_domain header — Ollama / OpenWebUI 直結経路</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#15 動的化 — 同じプロンプトでも <code>x_rad_domain</code> を入れると system prompt にヒントが動的注入される</div>
+
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m llive.demo --only 5 --lang ja</span><span data-lang="en" hidden>py -3.11 -m llive.demo --only 5 --lang en</span><button class="copy" type="button">copy</button></div>
+
+<h3>期待出力</h3>
+<pre class="output" data-lang="ja">==[ openai-http :: OpenAI 互換 HTTP server で RAG-on-by-flag ]==
+  HTTP server を ephemeral port で起動し、RAD on/off の差分を出します。
+  サーバ起動: http://127.0.0.1:&lt;ephemeral&gt;/v1
+  ミニ security_corpus を準備...
+
+  [1/2] POST (RAD オフ):
+  応答 text 抜粋:
+    [mock] Explain buffer overflow in C in two sentences.
+  注入されたヒント: 0 件 / -
+
+  [2/2] POST (RAD オン: x_rad_domain=security_corpus_v2):
+  応答 text 抜粋:
+    [mock] Explain buffer overflow in C in two sentences.
+  注入されたヒント: 1 件 / buffer_overflow.md
+  ----------------------------------------------------------------
+  RAD オンにすると同じプロンプトに 1 件のヒントが system に追加されました。</pre>
+<pre class="output" data-lang="en" hidden>==[ openai-http :: OpenAI-compat HTTP server with RAG-on-by-flag ]==
+  Boot the HTTP server on an ephemeral port and contrast RAD on/off.
+  Server listening at http://127.0.0.1:&lt;ephemeral&gt;/v1
+  ...
+  [1/2] POST (RAD off):  Hints injected: 0
+  [2/2] POST (RAD on: x_rad_domain=security_corpus_v2):  Hints injected: 1 via buffer_overflow.md
+  Switching RAD on appended 1 system hints for the same prompt.</pre>
+
+<h3>本番接続例 (Ollama / OpenWebUI)</h3>
+<div class="cmd">py -3.11 -m llive.server.openai_api --host 127.0.0.1 --port 8765
+# Then point your OpenAI client at base_url=http://127.0.0.1:8765/v1<button class="copy" type="button">copy</button></div>
+
+<dl class="kv">
+<dt>所要</dt><dd>~40 秒</dd>
+<dt>依存</dt><dd>stdlib のみ (Ollama 不要、Mock backend で完結)</dd>
+<dt>学べる</dt><dd>OpenAI 互換 endpoint / <code>x_rad_domain</code> 拡張 / RAG-on-by-flag</dd>
+<dt>同じ経路</dt><dd>Ollama / OpenWebUI / 任意の OpenAI compat クライアント</dd>
+</dl>
+</div>
+</details>
+
+<!-- Full run ============================================== -->
+<details class="scenario" id="all">
+<summary>
+  <span class="num">▶</span>
+  <span>
+    <div class="title">全シナリオ連続再生</div>
+    <div class="subtitle">Run all 5 in sequence — overall ~3 min</div>
+  </span>
+</summary>
+<div class="body">
+<h3>実行</h3>
+<div class="cmd"><span data-lang="ja">py -3.11 -m llive.demo --lang ja</span><span data-lang="en" hidden>py -3.11 -m llive.demo --lang en</span><button class="copy" type="button">copy</button></div>
+<h3>サマリ末尾</h3>
+<pre class="output">=== summary: 5/5 ok ===
+  OK   rad-quick-tour
+  OK   append-roundtrip
+  OK   code-review
+  OK   mcp-roundtrip
+  OK   openai-http</pre>
+</div>
+</details>
+
+</main>
+
+<footer>
+TRIZ #1 分割 × #15 動的化 × #25 セルフサービス × #19 周期 × #35 パラメータ変更<br>
+関連: <a href="v0.2_rad_techdoc.html">v0.2 技術資料</a> · <a href="mcp_integration.md">MCP 連携ガイド</a> · <a href="ROADMAP.md">ROADMAP</a>
+</footer>
+
+<script>
+// Language toggle
+const langSel = document.getElementById('lang');
+function applyLang(lang) {
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    el.hidden = el.dataset.lang !== lang;
+  });
+}
+langSel.addEventListener('change', () => applyLang(langSel.value));
+
+// Copy buttons
+document.querySelectorAll('.copy').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const block = btn.parentElement;
+    const text = Array.from(block.querySelectorAll('[data-lang]')).find(el => !el.hidden)?.textContent
+              || block.firstChild.textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      btn.classList.add('done');
+      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('done'); }, 1500);
+    });
+  });
+});
+
+// Expand / collapse all
+document.getElementById('expand-all').addEventListener('click', () => {
+  document.querySelectorAll('details.scenario').forEach(d => d.open = true);
+});
+document.getElementById('collapse-all').addEventListener('click', () => {
+  document.querySelectorAll('details.scenario').forEach(d => d.open = false);
+});
+
+// Esc → collapse all
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('details.scenario').forEach(d => d.open = false);
+  }
+});
+
+// Open first scenario by default
+const first = document.querySelector('details.scenario');
+if (first) first.open = true;
+</script>
+
+</body>
+</html>

@@ -69,6 +69,7 @@ async def _run(ctx: ScenarioContext) -> dict[str, Any]:
             "LLIVE_RAD_DIR": str(rad_root),
             "PYTHONUNBUFFERED": "1",
             "PYTHONIOENCODING": "utf-8",
+            "LLIVE_MCP_LOG_LEVEL": "WARNING",  # silence server-side INFO logs
         },
     )
 
