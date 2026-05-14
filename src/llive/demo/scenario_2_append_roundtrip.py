@@ -87,7 +87,7 @@ class AppendRoundTripScenario(Scenario):
         for k in ("source_type", "source_id", "confidence", "derived_from"):
             ctx.say(f"    {k}: {prov_data.get(k)!r}")
 
-        ctx.step(2, 3, _t("search", q="adversarial patch"))
+        ctx.step(2, 2, _t("search", q="adversarial patch"))
         hits = query(idx, "adversarial patch", limit=5)
         for h in hits:
             ctx.say(_t("hit", domain=h.domain, name=h.doc_path.name, score=h.score))
