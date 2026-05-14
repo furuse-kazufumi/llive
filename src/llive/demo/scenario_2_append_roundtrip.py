@@ -59,7 +59,7 @@ class AppendRoundTripScenario(Scenario):
         rad_root.mkdir()
         idx = RadCorpusIndex(root=rad_root)
 
-        ctx.step(1, 3, _t("append", domain="vlm_findings"))
+        ctx.step(1, 2, _t("append", domain="vlm_findings"))
         prov = Provenance(
             source_type="demo",
             source_id="scenario-2",
