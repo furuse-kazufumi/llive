@@ -37,6 +37,23 @@ llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashb
 - **[Unreleased]** — F25 (g) `LoveBridge` writer (llive ↔ llmesh ↔ llove を MCP 経由で繋ぐ shim)、+16 tests。
 - **次** — Phase 5 残 (RUST-02 rayon 並列、RUST-05 jsonschema-rs、RUST-06 crossbeam audit sink、RUST-07 ChangeOp、RUST-08 hora HNSW、RUST-09 tokio async、RUST-10 phf TRIZ、RUST-11 Z3 bridge) を意味論固定後に段階着手。
 
+## デモを 30 秒で試す
+
+```bash
+git clone https://github.com/furuse-kazufumi/llive.git && cd llive
+py -3.11 -m pip install -e .
+py -3.11 -m llive.demo                  # 5 シナリオを順番に再生 (ja)
+py -3.11 -m llive.demo --lang en        # 英語ナレーション
+py -3.11 -m llive.demo --only 3         # コードレビュー単体だけ
+py -3.11 -m llive.demo --list           # シナリオ一覧
+```
+
+mock backend で完結するので、API キーや実 RAD コーパスは不要。ブラウザで
+[`docs/demos.html`](docs/demos.html) を開くと、各シナリオの説明 + コピー可能な
+コマンド + 期待出力を見渡せます。技術資料は
+[`docs/v0.2_rad_techdoc.html`](docs/v0.2_rad_techdoc.html) (自己完結 HTML、
+Mermaid 図 + 学習要点 10 項目)。
+
 ## インストール
 
 ```bash
