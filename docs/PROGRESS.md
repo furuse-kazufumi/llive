@@ -6,6 +6,54 @@
 
 ---
 
+## 2026-05-15 (続き) — TRIZ ベース demo パッケージ + 技術資料
+
+### Why (背景)
+
+RAD 横断エピックの C 層まで揃ったので、**動くデモ**で「llive はどう使うのか」
+を 30 秒で伝えられるようにする。memory `project_f25_demo_polish` の教訓
+(動きで魅せる / 繰り返し再生 / セルフサービス / 多言語) と
+`feedback_scenario_iterative` (smoke だけで OK にせず 1 個ずつ磨く) を
+TRIZ 発明原理に重ねて設計。
+
+### What (作業)
+
+- `src/llive/demo/` パッケージ新規 (5 scenario + i18n + runner + CLI、~800 行):
+  - Scenario 1: RAD 読み API クイックツアー (filename vs content score 差を提示)
+  - Scenario 2: append_learning round-trip (書いた直後に検索可)
+  - Scenario 3: code_review with RAD hint injection (security_corpus_v2 grounding)
+  - Scenario 4: MCP server 実 client 経由の round-trip (Claude Desktop 同等経路)
+  - Scenario 5: OpenAI HTTP server で RAG on/off 差分 (Ollama 直結経路)
+- `src/llive/demo/runner.py`: Scenario 基底 + ScenarioContext + _scoped_lang
+  + run_one/run_all + CLI (--only / --list / --lang / --quiet / --keep-artifacts)
+- `src/llive/demo/i18n.py`: 軽量 i18n (gettext 不使用、純 dict、ja/en)
+- `src/llive/mcp/server.py`: LLIVE_MCP_LOG_LEVEL env で server-side INFO 抑制
+- `docs/v0.2_rad_techdoc.html`: 単一 HTML 技術資料 (Mermaid 図 / TOC /
+  ダーク対応 / 学習要点 10 項目) — 学習用に self-contained
+- `docs/demos.html`: 5 scenario の showcase ポータル (コピーボタン、言語切替、
+  expand/collapse、Esc で畳む)
+- 各 scenario を 1 個ずつ実機確認しながら磨いた:
+  - step counter の 1/3→2/3→3/3 進行を担保
+  - ヒントパスを file name のみに短縮
+  - MCP server の INFO ログ抑制
+  - i18n env が _scoped_lang で前後復元される
+
+### State (現在地)
+
+- ✓ デモは `py -3.11 -m llive.demo` で 1 コマンド再生、ja/en 両対応
+- ✓ 各 scenario は mock backend で完結、ネットワーク不要
+- 540 tests / 全 PASS / ruff clean (527 → +13 demo tests)
+- コミット: ad011dc (demo + techdoc HTML + showcase)
+
+### 次
+
+- README にデモへのリンクを 1 行追加
+- Scenario 6: VLM (画像入力で動く差別化機能を見せる)
+- Scenario 7: consolidation → RAD mirror の生物学的記憶モデル目玉
+- 多言語拡張 (zh/ko)、`--loop` で繰り返し再生
+
+---
+
 ## 2026-05-15 — v0.2.0 系着手: RAD コーパス取り込み (Phase A)
 
 ### Why (背景)
