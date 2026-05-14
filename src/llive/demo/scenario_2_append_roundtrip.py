@@ -48,7 +48,7 @@ def _t(key: str, **kw: object) -> str:
 
 class AppendRoundTripScenario(Scenario):
     id = "append-roundtrip"
-    titles = {
+    titles: ClassVar[dict[str, str]] = {
         "ja": "学習物の書き込み → 即時検索",
         "en": "Write learning -> retrieve immediately",
     }
