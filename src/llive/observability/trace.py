@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Structured route + memory link traces (OBS-01)."""
 
 from __future__ import annotations

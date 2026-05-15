@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ-02 Contradiction Detector tests."""
 
 from __future__ import annotations

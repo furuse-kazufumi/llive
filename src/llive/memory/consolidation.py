@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Consolidator + Wiki Compiler (MEM-08, LLW-02).
 
 A single consolidation cycle is a *Wiki Compile pass*:

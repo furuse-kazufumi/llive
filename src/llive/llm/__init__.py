@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """LLM backend abstraction (Phase C-1, llive v0.2 RAD epic).
 
 Provides a thin, transport-uniform adapter over multiple LLM backends so that

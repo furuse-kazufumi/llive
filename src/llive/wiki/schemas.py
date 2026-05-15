@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Per-page-type JSON Schemas (LLW-03).
 
 Schemas live in ``specs/wiki_schemas/`` (development tree) and are mirrored

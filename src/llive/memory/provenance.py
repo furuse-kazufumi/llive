@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Provenance dataclass for all memory writes (MEM-03)."""
 
 from __future__ import annotations

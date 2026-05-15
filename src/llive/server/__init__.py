@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """HTTP servers exposing llive to external clients.
 
 Phase C-3 of the RAD epic. The OpenAI-compatible HTTP API lets any OpenAI

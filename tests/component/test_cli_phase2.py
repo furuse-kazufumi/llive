@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Extended CLI tests covering Phase 1 + Phase 2 subcommands.
 
 Complements ``tests/component/test_cli.py`` (Phase 1 baseline) by hitting

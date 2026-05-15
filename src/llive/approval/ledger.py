@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """SqliteLedger — Spec §AB1 (replayable) を再起動越しに永続化.
 
 stdlib のみ (sqlite3 + json). DB スキーマは v1 で固定:

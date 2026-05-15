@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ResidentRunner — FullSense Spec §22 SING Level 2 / §4 Resident cognition.
 
 ``FullSenseLoop`` を asyncio.Task として常駐起動し、外部プロンプトを待たずに

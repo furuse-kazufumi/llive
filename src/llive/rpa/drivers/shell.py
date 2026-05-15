@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ShellDriver — subprocess wrapper. ApprovalBus 越しでなければ実行しない.
 
 Spec §I4: forbidden / requires-approval / permitted の 3 区分.

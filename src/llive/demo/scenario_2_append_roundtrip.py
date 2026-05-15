@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 2: append_learning round-trip.
 
 Demonstrates the write layer: append a learned doc, show its

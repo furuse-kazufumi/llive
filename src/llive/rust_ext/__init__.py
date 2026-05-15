@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Optional Rust acceleration layer (Phase 5 / RUST-01〜04 skeleton).
 
 The Rust extension is built from ``crates/llive_rust_ext`` via maturin and

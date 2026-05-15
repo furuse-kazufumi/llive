@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """FullSense Loop — 6 ステージ自律思考パイプライン (Sandbox-only MVP).
 
 設計は ``src/llive/fullsense/__init__.py`` のフロー図を参照。MVP では各ステージを

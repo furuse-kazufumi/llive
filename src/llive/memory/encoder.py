@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Embedding encoder for semantic memory.
 
 Default backend: `sentence-transformers/all-MiniLM-L6-v2` (384 dim, local).

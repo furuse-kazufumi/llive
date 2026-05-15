@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Routing (Rule-based router + explanation log)."""
 
 from llive.router.engine import RouterEngine

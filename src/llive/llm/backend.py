@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """LLM backend adapter — text-only ``generate`` for now (Phase C-1.0).
 
 All backends share the same ``LLMBackend.generate(request) -> GenerateResponse``

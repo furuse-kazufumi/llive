@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Conformance Manifest (A-4) — §11.V4 の単体テスト."""
 
 from __future__ import annotations

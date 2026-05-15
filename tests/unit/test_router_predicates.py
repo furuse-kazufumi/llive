@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Extra coverage for router/engine.py predicate paths."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Extra coverage for consolidation.py — _apply_decision branches + mock LLM."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Deception taxonomy (Spec §5.D) の単体テスト.
 
 - §5.D 7 分類の verdict が normative table と一致

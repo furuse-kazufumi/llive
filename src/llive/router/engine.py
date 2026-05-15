@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Rule-based router (RTR-01) — YAML-declared routes with feature predicates."""
 
 from __future__ import annotations

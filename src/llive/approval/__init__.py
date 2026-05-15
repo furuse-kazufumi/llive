@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """RPAR Approval Bus — Spec §AB.
 
 Level 3 (Permitted-action) で必要な approval channel の MVP skeleton。

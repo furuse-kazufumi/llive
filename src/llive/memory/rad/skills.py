@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Detect and parse corpus2skill hierarchical skill output.
 
 Raptor's ``corpus2skill`` builds a navigable hierarchy under

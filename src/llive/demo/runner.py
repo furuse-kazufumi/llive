@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario base class + CLI runner.
 
 Each scenario implements ``Scenario.run(ctx)`` and is registered in the

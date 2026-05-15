@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase C-2.1: VLM and coding MCP tools (vlm_describe_image, code_complete, code_review)."""
 
 from __future__ import annotations

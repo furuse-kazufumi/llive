@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Shared pytest fixtures for the llive test suite."""
 
 from __future__ import annotations

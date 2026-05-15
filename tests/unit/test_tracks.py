@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Multi-track Filter Architecture (A-1.5) の単体テスト.
 
 - 各標準 track が ActionPlan を変換し、[track:<name>] tag を rationale に付与

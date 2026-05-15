@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OpenAI-compatible HTTP API for llive (Phase C-3).
 
 Exposes a tiny ``/v1/chat/completions`` endpoint that:

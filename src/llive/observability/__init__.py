@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """L7: Observability (structlog, route traces, metrics)."""
 
 from llive.observability.logging import configure_logging, get_logger

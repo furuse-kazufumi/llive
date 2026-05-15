@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Structural memory (MEM-05) — Kùzu-backed graph store.
 
 Bipartite-ish schema:

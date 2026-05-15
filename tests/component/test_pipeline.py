@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """L2 Orchestration: end-to-end pipeline smoke (mock adapter)."""
 
 from __future__ import annotations

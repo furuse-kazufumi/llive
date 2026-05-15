@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """SubBlock plugin registry (BC-02)."""
 
 from __future__ import annotations

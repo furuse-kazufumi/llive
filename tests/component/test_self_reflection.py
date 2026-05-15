@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ-07 Self-Reflection end-to-end tests."""
 
 from __future__ import annotations

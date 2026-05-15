@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Ego / Altruism scorer — 利己 / 利他のバランス重み付け.
 
 MVP では単純なキーワードベースのスコアラー。Phase 2 で LLM judge / learned

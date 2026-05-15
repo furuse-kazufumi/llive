@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EVO-01 component test: A/B bench runs end-to-end."""
 
 from __future__ import annotations

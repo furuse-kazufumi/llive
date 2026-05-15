@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ Trigger Genesis (A-2) — Spec §3.3 T-Z1..4 自発 trigger 検出器.
 
 ResidentRunner の StimulusSource として登録すると、agent が観測する

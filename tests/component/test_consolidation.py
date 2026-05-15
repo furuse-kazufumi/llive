@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """MEM-08 / LLW-02: Consolidator end-to-end with mock LLM."""
 
 from __future__ import annotations

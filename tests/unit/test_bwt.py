@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OBS-04: BWT meter."""
 
 from __future__ import annotations

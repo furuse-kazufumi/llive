@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """DTKR — Disk-Tier Knowledge Routing.
 
 VRAM (hot) / RAM (warm) / SSD (cold) / HDD (frozen) の 4 tier に knowledge

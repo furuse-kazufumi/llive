@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TLB — Thought Layer Bridging.
 
 思考層が増えたときの指数膨張対策。Bridge (高 confidence 層 short-circuit)

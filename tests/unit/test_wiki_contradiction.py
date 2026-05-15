@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """LLW-04 Wiki Contradiction Detector tests."""
 
 from __future__ import annotations

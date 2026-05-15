@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Deception taxonomy + machine-checkable honesty axiom (Spec §5.D).
 
 FullSense Spec Eternal §5.D Deception taxonomy の実装. §F5 Ethical

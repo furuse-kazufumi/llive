@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Import the Raptor RAD (Research Aggregation Directory) corpus into llive.
 
 Raptor が D:/docs/<分野>_v2/ などに蓄えている RAD コーパスを、

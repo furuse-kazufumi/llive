@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """llive デモパッケージ — TRIZ #1 分割 × #15 動的化 × #25 セルフサービス。
 
 各 ``scenario_*`` モジュールは独立した 30秒〜2分の mini-demo で、共通の

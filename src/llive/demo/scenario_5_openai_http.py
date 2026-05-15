@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 5: OpenAI-compatible HTTP server with x_rad_domain.
 
 Boots the OpenAI HTTP server on an ephemeral port, sends two requests:

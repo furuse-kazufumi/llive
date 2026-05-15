@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Multi-track Filter Architecture (A-1.5) — Spec §F* track 拡張.
 
 Stimulus.epistemic_type に応じて異なる filter chain (= track) を選ぶ

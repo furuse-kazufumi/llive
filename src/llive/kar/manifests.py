@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """KAR ingest manifest catalog (library version).
 
 scripts/import_rad_extended.py の thin wrapper として動く。実装は library に

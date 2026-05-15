@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Episodic memory (MEM-02) — DuckDB append-only time-series store."""
 
 from __future__ import annotations

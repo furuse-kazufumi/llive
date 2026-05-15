@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """SIL (Self-Interrogation Layer) — 9 軸目のロードマップ MVP.
 
 Spec §5 「Implementations MAY add filters between named ones」MAY-clause を

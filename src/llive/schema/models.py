@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Pydantic v2 models for ContainerSpec / SubBlockSpec / CandidateDiff.
 
 source of truth は specs/schemas/*.json (JSON Schema Draft 2020-12).

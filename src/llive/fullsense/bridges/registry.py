@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bridge registry — 短絡ルール (high-confidence で他層 skip).
 
 各 Bridge は ``(LayerName, predicate, skip_layers)`` を持ち、predicate が

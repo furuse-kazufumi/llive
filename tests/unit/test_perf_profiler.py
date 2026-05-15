@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """APO Profiler の単体テスト."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Signed Adapter Marketplace (SEC-02 / FR-18).
 
 Ed25519 signing + verification for adapter weight files. The signing key

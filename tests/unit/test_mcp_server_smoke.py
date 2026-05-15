@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase C-2 smoke test: spawn the MCP server in-process and exercise the protocol.
 
 Skipped automatically when the ``mcp`` package is not installed (since the test

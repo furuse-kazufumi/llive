@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # ruff: noqa: RUF001
 """Scenario 10 — Deception filter 体験デモ (Spec §5.D).
 

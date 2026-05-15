@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """llive MCP server.
 
 Exposes llive's RAD knowledge base and memory operations as MCP (Model Context

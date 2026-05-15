@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Adapter / lora_switch sub-blocks (BC-04).
 
 Phase 2 implementation is a *thin metadata wrapper*: the sub-block records

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Dynamic edge weight updater (LLW-AC-10) + exploration balance (LLW-AC-11).
 
 Weights stored in :class:`StructuralMemory` MemoryEdges are not static —

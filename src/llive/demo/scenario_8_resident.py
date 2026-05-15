@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # ruff: noqa: RUF001
 # (中国語ナレーション内の全角コンマ「，」は意図的、ASCII への置換は不正となる)
 """Scenario 8 — Resident cognition demo (§22 SING Level 2 / §4).

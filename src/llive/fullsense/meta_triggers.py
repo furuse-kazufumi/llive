@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Meta-trigger source (A-3) — Spec §3.4 T-M1..3 自発内省 trigger.
 
 ResidentRunner.slow tier に登録すると、agent 自身の audit log + runner

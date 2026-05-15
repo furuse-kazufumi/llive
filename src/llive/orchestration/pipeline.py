@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Inference pipeline glue (L2): prompt → router → container → trace.
 
 Phase 1 では HFAdapter は optional。`adapter=None` 渡しまたは torch 未インストール

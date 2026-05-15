@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Meta-trigger source (A-3) — §3.4 T-M1..3 の単体テスト.
 
 最小依存で動かすため、ResidentRunner は実起動せず snapshot を直接構築可能な

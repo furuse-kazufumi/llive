@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 7: consolidation → RAD mirror flow.
 
 The biological-memory headline feature of llive. Writes a small cluster of

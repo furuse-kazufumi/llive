@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase C-3: OpenAI-compatible HTTP API server.
 
 Spins up the server in a background thread on an ephemeral port and exercises

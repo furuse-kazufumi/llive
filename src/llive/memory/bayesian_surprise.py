@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Bayesian surprise gate (MEM-07) — Welford online mean+variance.
 
 `BayesianSurpriseGate` extends the Phase 1 `SurpriseGate` by treating

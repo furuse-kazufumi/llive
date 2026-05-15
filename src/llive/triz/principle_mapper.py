@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ Principle Mapper (TRIZ-03 / FR-24).
 
 Wraps :func:`llive.triz.loader.lookup_principles` and the matrix data to

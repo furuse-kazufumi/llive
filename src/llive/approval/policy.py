@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ApprovalPolicy — Spec §AB の事前 gate 抽象.
 
 Policy が `evaluate(req)` で `Verdict | None` を返す:

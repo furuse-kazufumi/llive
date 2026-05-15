@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase B: RAD knowledge base — loader / query / append / skills."""
 
 from __future__ import annotations

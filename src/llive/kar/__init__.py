@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """KAR — Knowledge Autarky Roadmap.
 
 manifest-driven ingestor + corpus catalog. Spec §A*3 Knowledge autarky の

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Extra coverage for schema/validator.py edge cases."""
 
 from __future__ import annotations

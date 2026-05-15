@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """llive CLI — typer-based entry point (D-27).
 
 Subcommand layout::

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EVO-02 property tests: apply ∘ invert is identity for the 4 Phase 1 ChangeOps."""
 
 from __future__ import annotations

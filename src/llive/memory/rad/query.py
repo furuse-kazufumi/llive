@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Keyword + filename search over RAD corpora.
 
 Phase B initial implementation uses stdlib-only token matching:

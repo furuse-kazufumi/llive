@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Memory Phase Manager (MEM-09).
 
 Five phases: ``hot → warm → cold → archived → erased``.

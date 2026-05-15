@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """SEC-01 Quarantined Memory Zone tests."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Cover the remaining condition + nested branches of BlockContainerExecutor."""
 
 from __future__ import annotations

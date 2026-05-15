@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ApprovalBus × Policy 結合の単体テスト (in-memory)."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase C-1.1: VLM (multimodal) extensions to the LLM backend abstraction."""
 
 from __future__ import annotations

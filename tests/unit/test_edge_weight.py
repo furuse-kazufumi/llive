@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """LLW-AC-10: dynamic edge weight updater."""
 
 from __future__ import annotations

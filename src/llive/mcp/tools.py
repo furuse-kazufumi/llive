@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Pure-Python tool implementations exposed via MCP.
 
 Each ``tool_*`` function takes JSON-serialisable arguments and returns a

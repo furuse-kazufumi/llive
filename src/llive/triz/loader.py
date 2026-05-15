@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ resource loader (TRIZ-01) — lazy YAML readers.
 
 Phase 0 で specs/resources/ に置かれた以下を読み込む：

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 12 — 画像処理アルゴリズム提案デモ.
 
 ユーザ意志 (2026-05-15):

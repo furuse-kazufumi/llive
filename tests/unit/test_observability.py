@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """OBS-01/02: trace + metrics."""
 
 from __future__ import annotations

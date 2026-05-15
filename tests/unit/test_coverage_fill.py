@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Coverage-filling tests for the long tail of low-coverage modules.
 
 Each function targets one or two specific missing lines from `pytest --cov-report=term-missing`.

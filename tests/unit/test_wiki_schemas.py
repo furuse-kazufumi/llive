@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """LLW-03: per-page-type JSON Schema validators."""
 
 from __future__ import annotations

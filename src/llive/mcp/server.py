@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """MCP (Model Context Protocol) server entry point for llive.
 
 This module wires the synchronous tool functions in :mod:`tools` into the

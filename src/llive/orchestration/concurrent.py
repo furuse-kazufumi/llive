@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Concurrent pipeline + branch exploration (CONC-02, CONC-03).
 
 Memory backends are already protected by per-instance locks (CONC-01), so the

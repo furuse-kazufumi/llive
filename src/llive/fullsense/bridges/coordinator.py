@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Global Coordinator — aggregate score で早期 termination.
 
 各 layer の出力スコアを 1 つの aggregate に集約し、threshold を超えた

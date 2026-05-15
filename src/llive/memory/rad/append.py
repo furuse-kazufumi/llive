@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Write layer: persist llive-learned entries into ``data/rad/_learned/<domain>/``.
 
 Each learned entry consists of two files:

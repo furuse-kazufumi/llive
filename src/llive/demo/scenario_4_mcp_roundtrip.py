@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 4: MCP server local round-trip.
 
 Spawns ``llive.mcp.server`` in a subprocess via the official ``mcp``

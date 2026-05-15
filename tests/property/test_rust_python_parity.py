@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """RUST-13 — parity tests for the optional Rust acceleration layer.
 
 The pure-Python fallback in :mod:`llive.rust_ext` and the compiled Rust

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ResidentRunner (§4 Resident cognition / §22 SING Level 2) の単体テスト.
 
 R1 always-on with budget / R2 multi-timescale / R3 phase manager /

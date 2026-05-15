@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Wiki Contradiction Detector (LLW-04).
 
 Scans :class:`ConceptPage` content for *internal* contradictions:

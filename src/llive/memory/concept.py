@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ConceptPage (LLW-01) — first-class concept representation.
 
 ConceptPages are persisted as ``memory_type=concept`` nodes inside the

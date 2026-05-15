@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Minimal i18n for demo narration.
 
 ``LLIVE_DEMO_LANG`` で言語を選択 (``ja`` 既定):

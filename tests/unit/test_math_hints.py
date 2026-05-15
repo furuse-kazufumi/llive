@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Mathematical Toolkit (math_hints) の単体テスト."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ Trigger Genesis (A-2) の単体テスト.
 
 T-Z1..4 4 種すべての検出経路 + StimulusSource protocol 適合 + 既存

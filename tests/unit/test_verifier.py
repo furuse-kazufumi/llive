@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """EVO-04 Static Verifier tests."""
 
 from __future__ import annotations

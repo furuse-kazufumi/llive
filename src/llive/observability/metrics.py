@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase 1 basic metrics (OBS-02) — stored in DuckDB for cross-run analysis."""
 
 from __future__ import annotations

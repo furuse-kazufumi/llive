@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Stimulus sources — 外乱 / 内乱 / 退屈タイマー."""
 
 from __future__ import annotations

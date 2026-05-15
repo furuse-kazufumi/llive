@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """SEC-03 Audit Trail (SHA-256 chain) tests."""
 
 from __future__ import annotations

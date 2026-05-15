@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # ruff: noqa: RUF001
 """Scenario 9 — Multi-track epistemic 体験デモ (A-1.5).
 

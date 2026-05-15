@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """RAD-Backed Idea Generator (TRIZ-04 / FR-25).
 
 Given a :class:`Contradiction` and a :class:`PrincipleRecommendation`, produce

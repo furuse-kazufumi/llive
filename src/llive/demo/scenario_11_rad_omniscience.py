@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # ruff: noqa: RUF001
 """Scenario 11 — 全人類知識吸収 (RAD 横断検索) デモ.
 

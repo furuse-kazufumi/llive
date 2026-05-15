@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase B integration: Consolidator mirrors ConceptPages into RAD write layer."""
 
 from __future__ import annotations

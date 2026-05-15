@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """FullSense Loop — Sandbox-only MVP の smoke / unit tests."""
 
 from __future__ import annotations

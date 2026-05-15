@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """F25 (g): LoveBridge writer (route_trace / memory_link / bwt + MCP push).
 
 JSONL writer の動作と、optional な MCP ingest push 経路を fake URL +

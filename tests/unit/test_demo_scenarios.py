@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase D (demo) — smoke tests for each demo scenario.
 
 Each scenario must:

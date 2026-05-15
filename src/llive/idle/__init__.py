@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ICP — Idle-Collaboration Protocol.
 
 User PC が idle なときに別 Local LLM 等と協働できるよう、idle 検出を

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """SEC-02 Signed Adapter tests."""
 
 from __future__ import annotations

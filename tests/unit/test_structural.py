@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """MEM-05: structural memory (Kùzu)."""
 
 from __future__ import annotations

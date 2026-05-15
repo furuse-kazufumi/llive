@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """L4: Block Container Engine (Executor + SubBlock Registry)."""
 
 from llive.container.executor import BlockContainerExecutor, BlockState

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Extra coverage for evolution/change_op.py error paths."""
 
 from __future__ import annotations

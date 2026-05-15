@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """JSON Schema (Draft 2020-12) validator for llive YAML specs (BC-03)."""
 
 from __future__ import annotations

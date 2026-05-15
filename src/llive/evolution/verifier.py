@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Static Verifier (EVO-04 / FR-13).
 
 Checks structural invariants over a sequence of :class:`ChangeOp` before any

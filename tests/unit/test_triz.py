@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ-01: lazy loader for principles / attributes / matrix."""
 
 from __future__ import annotations

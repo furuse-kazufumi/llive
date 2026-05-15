@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """observability/logging.py - structlog setup helpers."""
 
 from __future__ import annotations

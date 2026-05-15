@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Conformance Manifest CLI (A-4) — Spec §11.V4.
 
 `py -m llive.fullsense.manifest` で起動すると、agent が現在準拠している

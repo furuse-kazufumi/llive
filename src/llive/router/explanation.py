@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Router decision + explanation log (RTR-02)."""
 
 from __future__ import annotations

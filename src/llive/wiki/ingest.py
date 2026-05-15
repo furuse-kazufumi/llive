@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """External source ingest (LLW-06).
 
 Supported source types: ``text`` / ``markdown`` / ``pdf`` / ``arxiv`` / ``url``.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Verify llive Model Templates against HuggingFace config.json.
 
 llive のひな形 Model データ (`specs/templates/*.yaml`) が、実際の HF モデルの

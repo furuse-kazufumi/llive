@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Schema validation (jsonschema Draft 2020-12) + pydantic v2 models."""
 
 from llive.schema.models import (

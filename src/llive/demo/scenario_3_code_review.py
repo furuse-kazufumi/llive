@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 3: code_review with RAD hint injection.
 
 Shows how llive's ``tool_code_review`` grounds an LLM-driven review in

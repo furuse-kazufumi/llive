@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """FullSense — 自発トリガから始まる自律思考ループ (Sandbox-only MVP).
 
 ユーザ Furuse の名から取った概念名。現状の AI が「user の質問」を待たないと

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Manifold Cache — semantic hash で過去組合せ memo.
 
 同じ stimulus pattern が再来したら filter chain 計算をスキップして

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Failed-Candidate Reservoir (EVO-06).
 
 Stores rejected / failed CandidateDiff results so future mutation policies can

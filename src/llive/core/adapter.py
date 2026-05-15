@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Core Model Adapter (CORE-01, CORE-02).
 
 Phase 1 では `HFAdapter` (HuggingFace transformers) のみ実装する。

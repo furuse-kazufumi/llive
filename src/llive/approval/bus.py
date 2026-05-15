@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ApprovalBus — Spec §AB (Approval Bus).
 
 §AB1 replayable — 過去 approval/denial を ledger に残し再現可能

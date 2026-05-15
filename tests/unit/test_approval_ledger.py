@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """SqliteLedger と ApprovalBus 永続化 (§AB1) の単体テスト."""
 
 from __future__ import annotations

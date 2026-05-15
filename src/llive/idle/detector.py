@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """IdleDetector — OS の最終入力時刻を読み取り (read-only).
 
 Windows: GetLastInputInfo (pywin32 経由が望ましいが、ない場合は

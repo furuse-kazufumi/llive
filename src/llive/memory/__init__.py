@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """L5: Memory Fabric (Semantic + Episodic + Surprise + Provenance)."""
 
 from llive.memory.encoder import MemoryEncoder

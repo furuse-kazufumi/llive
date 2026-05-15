@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """APO (Autonomous Performance Optimization) — § A°3 self-correction の基盤.
 
 副作用ゼロの metric 収集層。``Profiler`` で latency / counter / gauge を観測し、

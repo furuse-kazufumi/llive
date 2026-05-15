@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Contradiction Detector (TRIZ-02 / FR-23).
 
 Identifies improvement-vs-degradation pairs in a stream of metric snapshots

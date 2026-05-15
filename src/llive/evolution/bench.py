@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """BenchHarness (EVO-01) — baseline vs candidate A/B evaluator.
 
 Phase 1: lightweight, dependency-free evaluation using internal containers

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Semantic memory (MEM-01) — Faiss IP index + JSONL row store.
 
 Default backend: faiss-cpu IndexFlatIP (L2-normalized embeddings → cosine).

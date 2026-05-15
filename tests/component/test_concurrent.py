@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """CONC-02 / CONC-03: ConcurrentPipeline + BranchExplorer."""
 
 from __future__ import annotations

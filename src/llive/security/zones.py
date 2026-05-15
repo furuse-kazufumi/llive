@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Quarantined Memory Zone (SEC-01 / FR-17).
 
 Each :class:`MemoryNode` already carries a ``zone`` field. SEC-01 makes that

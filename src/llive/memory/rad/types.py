@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Type definitions for the RAD knowledge base."""
 
 from __future__ import annotations

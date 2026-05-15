@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """§F6 Time-Horizon Filter — short / medium / long projection.
 
 Spec §5 F6:

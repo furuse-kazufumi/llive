@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """RAD (Research Aggregation Directory) — Raptor 由来の知識庫。
 
 llive の長期記憶層として、Raptor が育てた RAD コーパス (49 分野) を読み、

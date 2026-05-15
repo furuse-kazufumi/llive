@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase 4 security primitives (SEC-01〜03)."""
 
 from llive.security.adapter_sign import (

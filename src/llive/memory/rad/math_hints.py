@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """KAR Mathematical Toolkit — 数学コーパス向け query wrapper.
 
 PROGRESS.md の Mathematical Toolkit テーブルを参照しながら、RAD の数学系

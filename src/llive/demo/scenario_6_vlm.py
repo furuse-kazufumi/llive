@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 6: VLM describe-image with optional RAD grounding.
 
 Generates a minimal 1x1 PNG on-the-fly, runs ``tool_vlm_describe_image``

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """F25 (g) — llove bridge writer (route_trace / memory_link / bwt).
 
 `docs/llove_jsonl_v1.md` v1 仕様 (Phase 2 OBS-03 凍結) に従い、llive が

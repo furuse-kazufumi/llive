@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Backward Transfer (BWT) meter (OBS-04).
 
 Continual learning metric. For ``K`` tasks learned in sequence:

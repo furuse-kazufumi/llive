@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Scenario 1: RAD quick-tour.
 
 A 30-second flyover of the read API. Builds a tiny synthetic corpus,

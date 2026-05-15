@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """MEM-06: AdapterStore."""
 
 from __future__ import annotations

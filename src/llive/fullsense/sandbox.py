@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Sandbox Output Bus — log のみ、外向け副作用一切なし.
 
 MVP の安全装置。Sandbox モードで loop を回している間は、いかなる action plan

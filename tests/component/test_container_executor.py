@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """BC-01/02 component tests: ContainerSpec → executor with built-in sub-blocks."""
 
 from __future__ import annotations

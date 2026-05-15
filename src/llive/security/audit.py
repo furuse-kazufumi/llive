@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Append-only audit trail with SHA-256 hash chain (SEC-03).
 
 Every recorded action is hashed together with the previous entry's hash,

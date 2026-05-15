@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """TRIZ resource loader (TRIZ-01)."""
 
 from llive.triz.loader import (

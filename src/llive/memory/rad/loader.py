@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """``RadCorpusIndex`` — unified read + write entry point for the RAD knowledge base."""
 
 from __future__ import annotations

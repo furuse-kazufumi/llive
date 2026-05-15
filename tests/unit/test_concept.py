@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """LLW-01: ConceptPage + repository."""
 
 from __future__ import annotations

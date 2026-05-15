@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Surprise gate (MEM-04) — embedding nearest-neighbor cosine distance."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Phase C-2: MCP tool functions (transport-independent unit tests)."""
 
 from __future__ import annotations

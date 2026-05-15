@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """BC-05: nested_container execution + safety guards."""
 
 from __future__ import annotations

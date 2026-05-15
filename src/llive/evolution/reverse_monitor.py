@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Reverse-Evolution Monitor (EVO-07 / FR-22).
 
 Watches BWT and other regression metrics after each candidate is promoted.

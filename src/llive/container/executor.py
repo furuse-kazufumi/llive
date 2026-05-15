@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Block Container Executor (BC-01) — Pipes & Filters + Chain of Responsibility.
 
 Phase 1 のセマンティクス:

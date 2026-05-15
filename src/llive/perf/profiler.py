@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """APO Profiler — metric 収集 (副作用ゼロ).
 
 ResidentRunner / FullSenseLoop の latency / count / gauge を rolling

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """ChangeOp apply / invert (EVO-02).
 
 Phase 1 で実装する 4 種：

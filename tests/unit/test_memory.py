@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """MEM-01..04: semantic + episodic + provenance + surprise gate."""
 
 from __future__ import annotations

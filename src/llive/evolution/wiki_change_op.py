@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Wiki diff as ChangeOp (LLW-05).
 
 Extends EVO-02 with three concept-level operations on the Wiki layer:
