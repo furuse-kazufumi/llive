@@ -33,7 +33,7 @@
 | date | 2026-05-15 |
 | status | normative draft |
 | supersedes | v1.0.0 (added §22 SING; non-breaking MINOR per §C5) |
-| principal author | **Furuse Kazufumi** (古瀬 一史) — conceptual originator, naming originator, initial steward |
+| principal author | **Furuse Kazufumi** (古瀬 和文) — conceptual originator, naming originator, initial steward |
 | co-author (drafting) | Claude Opus 4.7 (1M context) — formal articulation under §I1 |
 | stewardship | Furuse Kazufumi (initial steward); open for amendments under §13 |
 
