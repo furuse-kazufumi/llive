@@ -298,7 +298,10 @@ class ResidentCognitionScenario(Scenario):
         duration_s = max(2.0, float(os.environ.get("LLIVE_RESIDENT_DURATION", "6")))
         # 3 つの phase を等分割で巡回する schedule.
         per_phase = duration_s / 3.0
-        rng = random.Random(os.environ.get("LLIVE_DEMO_SEED") or 42)
+        # 既定は時刻 seed で毎回違う展開。再現したいときだけ
+        # LLIVE_DEMO_SEED=<int> を指定する (テスト等で固定)。
+        seed_env = os.environ.get("LLIVE_DEMO_SEED")
+        rng = random.Random(int(seed_env) if seed_env else None)
 
         loop_engine = FullSenseLoop(
             salience_threshold=0.0,
