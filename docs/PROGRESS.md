@@ -376,6 +376,56 @@ hints = idx.query("manifold learning local neighborhood approximation",
 # hints.top_docs を Implementation Notes として PR 説明に含める
 ```
 
+### 新規設計拡張: Publication Media (PM) — 動画/画像/asciinema による説明力強化
+
+> ユーザ意志 (2026-05-15 セッション中):
+> 「公開サービスに関して、画像や動画も公開できるなら、分かりやすく説明文の
+> 途中で動作している画像や動画も公開したいですね。」
+
+B 章 (GitHub 公開準備) の拡張軸。README / Mintlify / GitHub Pages で説明文の
+途中に **動作画像・GIF・asciinema・mp4** を埋め込んで、読み手が「これが
+動いているのか」を視覚で即理解できる体裁にする。
+
+#### 採用メディア (軽量 → 重量の順)
+1. **asciinema** (`.cast` ファイル) — terminal session を SVG / interactive
+   player で再生。テキストとして diff 可能、リポジトリにそのまま commit 可能。
+   - `asciinema rec` → `.cast` 録画 → GitHub README に `<a>` リンク or
+     embed (mintlify は `<asciinema-player>` 直接対応)
+2. **animated SVG** — 軽量、GitHub README で直接 inline rendering
+3. **animated GIF** — 普及度高いが容量重 (1 シナリオ ~1-3 MB)
+4. **mp4 / webm** — 高品質、容量重 (CDN / GitHub LFS 検討)
+5. **静止画 PNG** — scenario の各 stage を 1 枚ずつ (説明テキスト中の inline)
+
+#### 推奨運用 (Scenario ごと)
+- Scenario 8 (ResidentRunner): asciinema 30 秒 cast + animated SVG ループ
+- Scenario 9 (Multi-track): 静止画 5 枚 (各 track の出力枠を 1 枚)
+- Scenario 10 (Deception): asciinema cast (judge() の判定結果を見せる)
+- Scenario 11 (RAD): GIF ループ (検索クエリ → 結果が浮かび上がる)
+
+#### 公開先テンプレ
+| 公開先 | 推奨フォーマット | 配置 |
+|---|---|---|
+| GitHub README | asciinema embed + GIF / static PNG | `docs/media/<scenario>/` |
+| Mintlify | asciinema-player + img | `docs/snapshots/` |
+| GitHub Pages | HTML5 video + SVG | `docs/site/` |
+| dev.to / Qiita / note | 静止画 PNG + リンク (現状記事 pause 中) | embed |
+
+#### 制約
+- 1 リポジトリ内のメディア合計 < 50 MB (GitHub soft-limit) を維持
+- 機械生成可能性: asciinema は CI で再録画して常に最新動作と同期
+- 多言語版: 各メディアに lang suffix (`scenario_8_ja.cast` / `..._en.cast`)
+- License: 自作のみ、フォントは noto / GitHub system font に限定
+
+#### 実装単位 (将来)
+- `scripts/record_demos.sh` — 全 scenario を asciinema で自動録画
+- `scripts/cast_to_svg.py` — asciinema cast → 軽量 SVG 変換
+- `docs/media/` ディレクトリ構成 + .gitattributes (LFS 対応)
+- README に「30 秒動画で見る」セクション追加 (普及戦略の入口)
+
+#### 実装優先順位
+PM は **GitHub 公開 B-1..B-5 と同時** に進める。Scenario 11 完了後、
+B 章着手と同タイミングで `scripts/record_demos.sh` を整備。
+
 ---
 
 ## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
