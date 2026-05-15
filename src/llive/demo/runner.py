@@ -110,6 +110,7 @@ def list_scenarios() -> list[Scenario]:
     from llive.demo.scenario_6_vlm import VlmDescribeScenario
     from llive.demo.scenario_7_consolidation import ConsolidationMirrorScenario
     from llive.demo.scenario_8_resident import ResidentCognitionScenario
+    from llive.demo.scenario_9_multitrack import MultiTrackScenario
 
     return [
         QuickTourScenario(),
@@ -120,6 +121,7 @@ def list_scenarios() -> list[Scenario]:
         VlmDescribeScenario(),
         ConsolidationMirrorScenario(),
         ResidentCognitionScenario(),
+        MultiTrackScenario(),
     ]
 
 
