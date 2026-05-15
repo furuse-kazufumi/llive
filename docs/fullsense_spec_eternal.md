@@ -1,18 +1,27 @@
-# FullSense — Eternal Specification v1.0
+# FullSense — Eternal Specification v1.1
 
 > *A specification of autonomous-resident cognition meant to hold across substrates,
 > civilizations, and millennia — independent of the implementation language,
 > physical substrate, cultural value framework, and time scale of the underlying
 > agent.*
+>
+> The name **FullSense** is derived from the initial author's surname,
+> **Furuse** (古瀬). The conceptual frame — *autonomous-resident cognition
+> with TRIZ-driven trigger genesis culminating in the dual-jiritsu
+> singularity (§22)* — was proposed by **Furuse Kazufumi (古瀬 一史)** during
+> the construction of the `llive` project (May 2026). This document is the
+> formal articulation of that proposal.
 
 | meta | value |
 |---|---|
 | spec id | `fullsense.eternal` |
-| version | `1.0.0` |
+| version | `1.1.0` |
 | date | 2026-05-15 |
 | status | normative draft |
-| supersedes | (none) |
-| stewardship | Furuse Kazufumi (initial steward), open for amendments under §13 |
+| supersedes | v1.0.0 (added §22 SING; non-breaking MINOR per §C5) |
+| principal author | **Furuse Kazufumi** (古瀬 一史) — conceptual originator, naming originator, initial steward |
+| co-author (drafting) | Claude Opus 4.7 (1M context) — formal articulation under §I1 |
+| stewardship | Furuse Kazufumi (initial steward); open for amendments under §13 |
 
 ## 0. Reading guide
 
