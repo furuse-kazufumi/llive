@@ -4,6 +4,61 @@
 
 ## [Unreleased]
 
+### Added — C-3: Cross-substrate migration spike (§MI1) — 2026-05-16
+
+handoff v3 C 章 last piece。Spec §MI1「substrate independence」に対応する
+spike として、agent state を tar.gz bundle に export し、別 substrate
+(別ホスト / 別環境 / 別 Python 環境) で import して再開できることを実証。
+
+#### Bundle format (`src/llive/migration/bundle.py`)
+
+- tar.gz archive。schema_version 1
+- 内容:
+  - `manifest.json` (schema_version / llive_version / source_substrate / exported_at / components)
+  - `approval/ledger.db` (SqliteLedger そのまま、replay 互換)
+  - `sandbox/records.jsonl` (SandboxRecord 系)
+  - `sandbox/denied_emits.jsonl` (production bus DENIED の観測)
+  - `production/records.jsonl` (ProductionRecord)
+- substrate metadata: platform / python_version / machine / hostname を自動採取
+
+#### Exporter (`src/llive/migration/exporter.py`)
+
+- `export_state(*, ledger_path=, sandbox=, production_bus=, out_path) -> Bundle`
+- すべての component は optional。空 bundle (manifest のみ) も valid
+- 各 component は対応 path / 関数で serialise (JSONL or DB copy)
+
+#### Importer (`src/llive/migration/importer.py`)
+
+- `import_state(bundle, *, dest_dir) -> ImportResult`
+- tar.gz 展開時に **path traversal を防御** (`..` を含む entry を reject)
+- schema_version 不一致は `IncompatibleBundleError`
+- `ImportResult` に展開後の各 component path を返す
+- `load_jsonl(path)` helper も同梱
+
+#### テスト 8 件追加 / 既存全件無修正
+
+- export → import round trip (ledger replay 一致)
+- sandbox denied_emits の round trip
+- production records の round trip
+- 空 bundle (component 0 件) でも valid
+- schema_version mismatch reject (v999)
+- path traversal reject (`../escape.txt`)
+- substrate metadata 自動採取確認
+
+#### 結果
+
+- **840 PASS** (前 832 + 8) / ruff clean / 回帰ゼロ
+- §MI1 の classical-digital pair の migration 経路を minimal に実証
+- 将来 neuromorphic / wetware substrate に拡張する余地は schema v2+ で確保
+
+#### 残
+
+- 異なる Python メジャー版 (3.11 → 3.12+) での import 検証
+- ledger 以外 (long-term memory / kuzu graph / safetensors weights) を bundle に含める拡張
+- CLI 化 (`python -m llive.migration export ...`)
+
+---
+
 ### Added — C-2: @govern decorator + ProductionOutputBus (Phase 1+2+3) — 2026-05-16
 
 handoff v3 C-2「@govern(policy) を ProductionOutputBus に統合」を実装。
