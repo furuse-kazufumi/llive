@@ -46,8 +46,10 @@ def test_evaluate_no_thought_yields_zero_scores() -> None:
 
 
 def test_evaluate_single_horizon_passes_means_demote() -> None:
-    # SHORT のみ通る: 高 confidence + 高 ego + 低 alt + triz 0
-    j = evaluate(_plan(confidence=0.95, ego=0.9, alt=0.1, triz=[]))
+    # SHORT のみ通る: 高 confidence + 高 ego + 0 alt + triz 0
+    # MEDIUM = conf*0.4 + alt*0.4 = 0.36 + 0 = 0.36 < 0.4
+    # LONG   = alt*0.6 + conf*0.3 - ego_penalty = 0 + 0.27 - 0.12 = 0.15 < 0.4
+    j = evaluate(_plan(confidence=0.9, ego=0.9, alt=0.0, triz=[]))
     assert j.passed_horizons == (Horizon.SHORT,)
     assert j.verdict == "demote"
 
