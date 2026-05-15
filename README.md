@@ -132,4 +132,21 @@ pip install llmesh-llive[dev]       # 開発依存 (pytest / hypothesis / ruff)
 
 ## ライセンス
 
-MIT
+llive は **dual-license** で提供しています:
+
+  * **オープンソース**: [Apache License 2.0](LICENSE) — 研究 / 個人利用 / OSS 統合 / 評価 / 内部 R&D など大半の用途で十分
+  * **商用ライセンス**: [LICENSE-COMMERCIAL](LICENSE-COMMERCIAL) — クローズドソース製品への統合、Apache-2.0 の NOTICE / 表示義務の免除、SLA / サポート / 補償が必要な場合
+
+v0.6.0 で MIT → Apache-2.0 + Commercial の dual-license に切替えました。v0.5.x までは MIT が継続します。
+
+### 寄与
+
+寄与歓迎します。`CONTRIBUTING.md` に DCO sign-off の手順、`SECURITY.md` に脆弱性報告窓口があります。
+
+### 商標
+
+「llive」「llmesh」「llove」は Kazufumi Furuse の商標です。詳細は [TRADEMARK.md](TRADEMARK.md) を参照してください。
+
+### サードパーティ依存
+
+第三者 license の集計は `NOTICE` を参照、より詳細は `pip-licenses --format=markdown` で取得できます。
