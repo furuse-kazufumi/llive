@@ -109,6 +109,7 @@ def list_scenarios() -> list[Scenario]:
     from llive.demo.scenario_5_openai_http import OpenAIHTTPScenario
     from llive.demo.scenario_6_vlm import VlmDescribeScenario
     from llive.demo.scenario_7_consolidation import ConsolidationMirrorScenario
+    from llive.demo.scenario_8_resident import ResidentCognitionScenario
 
     return [
         QuickTourScenario(),
@@ -118,6 +119,7 @@ def list_scenarios() -> list[Scenario]:
         OpenAIHTTPScenario(),
         VlmDescribeScenario(),
         ConsolidationMirrorScenario(),
+        ResidentCognitionScenario(),
     ]
 
 
