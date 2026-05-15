@@ -39,14 +39,50 @@ llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashb
 
 ## デモを 30 秒で試す
 
+**最短コース** (PyPI から install):
+
+```bash
+py -3.11 -m pip install llmesh-llive
+llive-demo                              # 10 シナリオ全部を順番に再生 (ja)
+llive-demo --only resident-cognition    # 自発思考の常駐ループだけ (Scenario 8)
+llive-demo --only multi-track           # 5 epistemic track 体験 (Scenario 9)
+llive-demo --only deception-filter      # §5.D 7 分類 ALLOW/REJECT 実演 (Scenario 10)
+```
+
+**ソースから**:
+
 ```bash
 git clone https://github.com/furuse-kazufumi/llive.git && cd llive
 py -3.11 -m pip install -e .
-py -3.11 -m llive.demo                  # 5 シナリオを順番に再生 (ja)
-py -3.11 -m llive.demo --lang en        # 英語ナレーション
-py -3.11 -m llive.demo --only 3         # コードレビュー単体だけ
-py -3.11 -m llive.demo --list           # シナリオ一覧
+llive-demo                              # 10 シナリオを順番に再生
+llive-demo --lang en                    # 英語ナレーション (ja / en / zh / ko)
+llive-demo --only 1                     # 1-based index でも指定可
+llive-demo --list                       # シナリオ一覧
+llive-demo --loop 3 --interval 1.0      # 繰り返し再生 (TRIZ #19)
+llive-demo --json                       # AI agent / CI 用 JSON 出力
 ```
+
+**spec 準拠の自己申告 (§11.V4 Conformance Manifest)**:
+
+```bash
+llive-manifest --summary-only           # holds / violated / undecidable のカウント
+llive-manifest                          # 全 clause を JSON で出力
+```
+
+### 各シナリオの見どころ (10 件)
+
+| # | id | 説明 |
+|---|---|---|
+| 1 | `rad-quick-tour` | RAD 読み API クイックツアー (filename vs content score 差) |
+| 2 | `append-roundtrip` | `_learned/` への書き込み → 即検索 round-trip |
+| 3 | `code-review` | `security_corpus_v2` から top-N ヒント注入で security review |
+| 4 | `mcp-roundtrip` | 公式 mcp 1.0+ stdio client で 8 tool round-trip |
+| 5 | `openai-http` | Ollama 経路 (RAG on/off 差分) |
+| 6 | `vlm-describe` | VLM grounding (1x1 合成 PNG + domain_hint) |
+| 7 | `consolidation-mirror` | episodic → cluster → ConceptPage → `_learned/` 自動ミラー (LLW-AC-01) |
+| 8 | `resident-cognition` | **A-5**: 自発思考の常駐ループ 30 秒。AWAKE/REST/DREAM phase + TRIZ ひらめき ✨ |
+| 9 | `multi-track` | **A-1.5**: 同一 stimulus を 5 epistemic track で通すと答えが変わる |
+| 10 | `deception-filter` | **§5.D**: 建前 (D1) ALLOW / 捏造 (D4) REJECT / 自己欺瞞 (D7) §A°2 違反 |
 
 mock backend で完結するので、API キーや実 RAD コーパスは不要。ブラウザで
 [`docs/demos.html`](docs/demos.html) を開くと、各シナリオの説明 + コピー可能な
