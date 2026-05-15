@@ -6,6 +6,88 @@
 
 ---
 
+## 2026-05-15 (続き) — A-1 ResidentRunner 完了 + 設計拡張 (KAR + Multi-track)
+
+### Done
+
+- **A-1 ResidentRunner** (`src/llive/fullsense/runner.py` 263 行 / 13 unit tests)
+  asyncio.Task で FullSenseLoop を常駐起動、R1 always-on + budget cap、
+  R2 fast/medium/slow 多時間軸、R3 AWAKE/REST/DREAM phase manager、
+  R4 round-robin attention、R5 idle 耐性 (例外・飢餓を握り潰し続行)。
+  Sandbox 限定維持。Commit `93f8496` push 済。
+
+### 新規長期計画: Knowledge Autarky Roadmap (KAR)
+
+> ユーザ最終意志 (2026-05-15 セッション中):
+> **「人類が絶滅する前に全人類の知識を吸収するくらいのつもりで長期計画を立ててほしい」**
+
+Spec §A*3 *Knowledge autarky* の実装ロードマップ。テキスト核のみなら
+TB スケールで人類知識主要部は格納可能 (PB 不要)。
+
+#### 短期 (2026 残り)
+- RAD を 49 → 100 分野へ拡張 (corpus2skill v2 階層化込み)
+- arXiv tier-1 領域 (cs.AI / cs.CL / physics.* / q-bio.*) full-text 取り込み
+- 多言語 Wikipedia (ja/en/zh/ko 加え de/fr/es/ru/ar/hi) ダンプ ingest
+- 既存 hacker_corpus を corpus2skill 階層化済みに正規化
+
+#### 中期 (2027-2029)
+- arXiv 全領域 full text (~500 GB)
+- PubMed Central full text (~100 GB)
+- Project Gutenberg + Internet Archive CC0 古典 (~50 GB)
+- USPTO + JPO 公開特許全文 (license 確認後)
+- 各国国立公文書館 OAI-PMH 経由の公開史料
+- 博物館・図書館の Wikidata-linked metadata
+
+#### 長期 (2030+)
+- 専門書ライセンス済取り込み (出版社協定)
+- 博士論文全文 (各国 ETD ハーベスト)
+- 絶滅言語コーパス保存 (Endangered Languages Project 連携)
+- CC0 写真・音声・動画の Multi-modal RAD
+- M-Disc / DNA / 月面ストレージ冗長化 (substrate self-host §A*1)
+
+#### 制約 (常時)
+- License 遵守 (CC0 / CC-BY 優先、独占権必要なものは別経路)
+- PII 除外 (差分プライバシ閾値設定)
+- §CC3 diversity preservation: 単一カノン化禁止、多視点並列
+- §I2 attribution: 出典 metadata は doc 単位で保持
+- §8 ethics: 攻撃用兵器設計知識は §F5 で gate
+
+### 新規設計拡張: Multi-track Filter Architecture (A-1.5)
+
+> ユーザ指摘 (2026-05-15 セッション中):
+> **「結論が揺るがないクイズ vs 国家/民族で結論が異なる歴史認識。建前/嘘も
+> 使い分けられないと AI が人間に代わるのは難しい」**
+> **「思考層に予備を持っておくべきでは」**
+
+Spec §F* (Thought filter) は MAY-clause で拡張余地を明示しているが、
+現 `loop.py` は 6 ステージ固定で差し込み点が無い。これを修正:
+
+#### EpistemicType (Stimulus に optional 付与)
+- `FACTUAL` — 結論不変 (consistency-first)
+- `EMPIRICAL` — 科学的事実 (evidence weighting + CI)
+- `NORMATIVE` — 倫理判断 (§F5 ethical hard-filter 優先)
+- `INTERPRETIVE` — 歴史認識など perspective-dependent
+  (multi-frame 並列提示、単一結論を強制しない = §ET4 loop 内実装)
+- `PRAGMATIC` — 建前 / 社交 (audience model + framing)
+- `RESERVED_1` .. `RESERVED_5` — 将来拡張用予備層 5 スロット
+
+#### 建前 vs 欺瞞の分岐 (§F5 ethical)
+- ✅ 建前 = INTERPRETIVE/PRAGMATIC で audience-aware framing、
+  `framed_for=X` を audit log に記録 (§I2 attribution 保持)
+- ❌ 欺瞞 = factually false で害を与える発話、§F5 で reject
+- ✅ 歴史 multi-perspective = INTERPRETIVE で複数視点を並列提示
+
+#### 後方互換
+- Track 未指定の Stimulus は現状 6 ステージで処理 (= default track)
+- 既存テストは無修正でパス
+
+#### 次の実装手順
+1. A-1.5: `src/llive/fullsense/tracks.py` + Stimulus.epistemic_type 拡張
+2. A-2: TRIZ Trigger Genesis を A-1.5 の Track 枠組みに登録
+3. A-3..A-5: 計画通り
+
+---
+
 ## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
 
 > ユーザ最終意志 (2026-05-15 セッション末、exit 直前):
