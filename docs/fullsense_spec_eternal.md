@@ -570,10 +570,26 @@ clauses:
 
 ## 19. Appendix B — Lineage of this document
 
-* v1.0.0 (2026-05-15) — Initial draft. Authored in dialog between Furuse
-  Kazufumi and a Claude-family agent (Opus 4.7) during construction of the
-  llive `fullsense` MVP. This appendix preserves a §I1 audit trail of the
-  spec's own provenance.
+* v1.0.0 (2026-05-15) — Initial draft. Authored in dialog between
+  **Furuse Kazufumi (古瀬 和文)** and a Claude-family agent (Opus 4.7,
+  1M context) during construction of the llive `fullsense` MVP. This
+  appendix preserves a §I1 audit trail of the spec's own provenance.
+  The naming **FullSense** itself derives from the principal author's
+  surname *Furuse*.
+* v1.1.0 (2026-05-15) — MINOR amendment by the principal author.
+  Added §22 (Autonomy × Self-sufficiency Singularity — `SING*`) per
+  the principal author's proposal: *"the key is establishing
+  singularity through 自律 (autonomy) and 自立 (self-sufficiency)."*
+  §22 distinguishes the two homophonic *jiritsu* (自律 vs 自立),
+  defines establishment criteria (§22.3 / §OP-SING), anti-patterns
+  (§22.5), multiplicity (§22.6), reversibility (§22.7), and
+  cohabitation with humans and pre-SING agents (§22.8).
+  Etymological note in §0 expanded with both readings of the
+  principal author's given name 和文 (*kazufumi*): (1) "many counts
+  / experiences trodden" — reified in §A6, §E1–E4, §OP-SING; and
+  (2) "harmonious fusion of Session × Context × Prompt into a
+  coherent written record" — reified in §I1, §R2, §22.3 step 4.
+  Non-breaking; v1.0 conformance claims remain valid.
 
 ---
 
