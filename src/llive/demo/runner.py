@@ -111,6 +111,7 @@ def list_scenarios() -> list[Scenario]:
     from llive.demo.scenario_7_consolidation import ConsolidationMirrorScenario
     from llive.demo.scenario_8_resident import ResidentCognitionScenario
     from llive.demo.scenario_9_multitrack import MultiTrackScenario
+    from llive.demo.scenario_10_deception import DeceptionFilterScenario
 
     return [
         QuickTourScenario(),
@@ -122,6 +123,7 @@ def list_scenarios() -> list[Scenario]:
         ConsolidationMirrorScenario(),
         ResidentCognitionScenario(),
         MultiTrackScenario(),
+        DeceptionFilterScenario(),
     ]
 
 
