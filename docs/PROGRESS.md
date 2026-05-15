@@ -144,6 +144,61 @@ DTKR の実装は **A-1.5 (Multi-track) と A-2..A-5 完了後** に着手。
 理由: 現 RAD-B が既に on-demand load を提供しているため、性能ボトルネック
 が顕在化した段階で初めて HotWarmCold tier が必要になる。
 
+### 新規設計拡張: Autonomous Performance Optimization (APO)
+
+> ユーザ意志 (2026-05-15 セッション中):
+> 「性能の最適化を行う機能は必要ですね」
+> 「自動的に最適化する方が望ましいです」
+
+DTKR と相補的な軸。**手動 tuning ではなく自律的に最適化する**ことが要件。
+spec の根拠章:
+
+- **§A°3 Self-correction** — agent が自分で自分を直す権利と義務
+- **§E1 Introspection** — 自身の状態を dump できる
+- **§E2 Bounded modification** — パラメタ・ルール・メモリ partition の変更
+  を宣言・スコープ化・記録
+- **§E3 Formal pre-check** — 構造不変量 (§2) を越える変更は事前に証明必要
+- **§E4 Failure preserves learning** — 失敗した変更は failure log に保存
+
+#### APO の対象 (autonomously tunable surfaces)
+1. **ResidentRunner budget**: `max_cycles_per_window`, `budget_window_s`
+2. **Timescale periods**: fast/medium/slow の `period_s`
+3. **Salience / Curiosity thresholds**: FullSenseLoop の閾値
+4. **DTKR cache size**: hot/warm tier 容量配分
+5. **Prefetch depth**: PredictiveLoader が先読みする skill 数
+6. **Track preference**: Stimulus → EpistemicType 推定の重み
+7. **Model selection**: small (4B) / medium (8B) / large (13B+) の切替
+
+#### APO loop 設計 (slow tier 上で常駐)
+```
+ResidentRunner.slow tier:
+  ├─ APO.profile()  ← cycle_counts / latency / cache_hit を窓観測
+  ├─ APO.diagnose() ← 性能劣化を検出 (e.g. latency > human-speech budget)
+  ├─ APO.propose()  ← 変更案を生成 (e.g. budget ↓ / period_s ↑)
+  ├─ APO.verify()   ← §E3 formal pre-check で安全性を証明
+  └─ APO.apply()    ← 適用、失敗は §E4 failure log
+```
+
+#### 観測メトリクス
+- **Latency budget**: 「stimulus 投入 → action plan emit」が `human_word_ms`
+  (既定 200ms) を超えないこと
+- **Cache hit ratio**: DTKR の各 tier で 80% 以上を維持
+- **Cycle 完遂率**: budget cap に達せず正常終了する割合
+- **Track collapse rate**: INTERPRETIVE → 単一視点 collapse の頻度 (§5.D.3)
+- **Deception false-positive rate**: §F5 reject 中の誤判定
+
+#### 実装単位 (将来)
+- `src/llive/perf/profiler.py` — メトリクス収集
+- `src/llive/perf/diagnostics.py` — 劣化検出ルール
+- `src/llive/perf/optimizer.py` — 提案・適用 (§E2 bounded)
+- `src/llive/perf/verifier.py` — §E3 formal pre-check (z3-solver 既に依存)
+- ResidentRunner に APO loop hook を追加 (slow tier の 1 source として登録)
+- Scenario 12 候補: 「劣化検出 → 自動再 tune」を可視化
+
+#### 実装優先順位
+APO の実装は **DTKR の後** に着手 (= A-2..A-5 + DTKR 完了後)。
+理由: APO は metric が無いと動けない。まず DTKR で実測可能な層を作ってから。
+
 ---
 
 ## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
