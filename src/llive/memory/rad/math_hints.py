@@ -12,8 +12,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from llive.memory.rad import RadCorpusIndex
-from llive.memory.rad.query import RadHit, query as rad_query
-
+from llive.memory.rad.query import RadHit
+from llive.memory.rad.query import query as rad_query
 
 # PROGRESS.md Mathematical Toolkit の「章 → corpus」マッピング
 _CHAPTER_CORPUS_MAP: dict[str, tuple[str, ...]] = {

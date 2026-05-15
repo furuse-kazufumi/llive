@@ -11,7 +11,6 @@ from llive.fullsense.bridges import (
 )
 from llive.fullsense.bridges.manifold_cache import semantic_hash
 
-
 # ---------------------------------------------------------------------------
 # Bridge registry
 # ---------------------------------------------------------------------------

@@ -13,7 +13,6 @@ from dataclasses import dataclass
 
 from llive.approval.bus import ApprovalBus, Verdict
 
-
 _FORBIDDEN_TOKENS: frozenset[str] = frozenset(
     {
         "rm -rf /",

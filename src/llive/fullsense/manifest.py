@@ -218,6 +218,56 @@ def evaluate_static_clauses() -> list[Clause]:
             )
         )
 
+    # 残り 8 ロードマップ章 skeleton (Level 2 内で実装可能なものは holds、
+    # 残りは undecidable で marker)
+    skeleton_clauses: list[tuple[str, str, str, str]] = [
+        (
+            "APO-profiler",
+            "§A°3 self-correction (APO)",
+            "Profiler + diagnose_latency (metric infrastructure, side-effect-free)",
+            "llive.perf.profiler",
+        ),
+        (
+            "ICP-idle",
+            "§T-E2 + §R5 (ICP)",
+            "IdleDetector with pluggable last_input_provider (read-only)",
+            "llive.idle.detector",
+        ),
+        (
+            "TLB",
+            "§F* MAY (TLB)",
+            "Bridge / GlobalCoordinator / ManifoldCache (3-part bridging skeleton)",
+            "llive.fullsense.bridges",
+        ),
+        (
+            "DTKR",
+            "§A*3 Knowledge autarky (DTKR)",
+            "TieredRouter (HOT/WARM/COLD) + LRU eviction + promotion on hit",
+            "llive.memory.tier",
+        ),
+        (
+            "Math-Toolkit",
+            "§A*3 (KAR Mathematical Toolkit)",
+            "gather_hints(chapter, topic) maps 11 chapters to RAD math corpora",
+            "llive.memory.rad.math_hints",
+        ),
+        (
+            "Approval-Bus",
+            "§AB Approval Bus (Level 3 prereq)",
+            "ApprovalBus with §AB1 replay + §AB2 principal + §AB3 revoke + §AB4 silence=denial",
+            "llive.approval.bus",
+        ),
+        (
+            "RPAR-shell",
+            "§6.1 AC.I INTERVENE (sandbox)",
+            "ShellDriver runs only on Approval (denied by default) + forbidden token rejection",
+            "llive.rpa.drivers.shell",
+        ),
+    ]
+    for cid, chap, ev, module_path in skeleton_clauses:
+        status: ClauseStatus = "holds" if _module_exists(module_path) else "undecidable"
+        out.append(Clause(id=cid, chapter=chap, status=status, evidence=ev))
+
     # §3.3 T-Z* TRIZ trigger genesis
     if _module_exists("llive.fullsense.triz_genesis"):
         out.append(
