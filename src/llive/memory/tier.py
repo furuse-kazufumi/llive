@@ -61,7 +61,7 @@ class TierCache:
         self._entries[ref.key] = ref
         self._used_bytes += ref.size_bytes
         while self._used_bytes > self.capacity_bytes and self._entries:
-            k_old, ref_old = self._entries.popitem(last=False)
+            _k_old, ref_old = self._entries.popitem(last=False)
             self._used_bytes -= ref_old.size_bytes
             evicted.append(ref_old)
         return evicted
