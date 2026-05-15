@@ -167,4 +167,4 @@ class SqliteLedger:
         self.close()
 
 
-__all__ = ["LedgerState", "SqliteLedger", "SCHEMA_VERSION"]
+__all__ = ["SCHEMA_VERSION", "LedgerState", "SqliteLedger"]

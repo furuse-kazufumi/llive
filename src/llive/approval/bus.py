@@ -29,7 +29,7 @@ class Verdict(StrEnum):
 
 
 class _PolicyLike(Protocol):
-    def evaluate(self, request: "ApprovalRequest") -> Verdict | None: ...
+    def evaluate(self, request: ApprovalRequest) -> Verdict | None: ...
 
 
 @dataclass(frozen=True)
@@ -71,7 +71,7 @@ class ApprovalBus:
     def __init__(
         self,
         *,
-        ledger: "SqliteLedger | None" = None,
+        ledger: SqliteLedger | None = None,
         policy: _PolicyLike | None = None,
     ) -> None:
         self._pending: dict[str, ApprovalRequest] = {}
