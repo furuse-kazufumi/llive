@@ -174,3 +174,17 @@ OSS なので、規制業界の AI 落としどころで困っている方は、
 
 > GitHub: <https://github.com/furuse-kazufumi/llive>
 > PyPI: `pip install llmesh-llive`
+
+---
+
+## 追補 — 2026-05-16 update (v0.6.0)
+
+執筆後 2 日で大きな進展があったので、ここに短く付け足します。
+
+- **9 軸 skeleton 完成** — KAR / DTKR / APO / ICP / TLB / Math / PM / RPAR / SIL の 9 軸を最小実装、Conformance Manifest holds=24 / violated=0
+- **Approval Bus production 化** — `policy`（AllowList/DenyList/CompositePolicy）+ stdlib `sqlite3` の永続 ledger、後方互換維持
+- **MIT → Apache-2.0 + Commercial の dual-license に切替** — OSS 利用には明示的特許 grant + 商用展開の余地確保
+- **権利関係ファイル一括整備** — NOTICE / CONTRIBUTING (DCO 1.1) / SECURITY / TRADEMARK + 全 204 .py に SPDX header
+- **815 tests / ruff clean** (v0.5.0 444 + 371 追加)
+
+ライセンス変更は v0.6.0 から。v0.5.x までは MIT のまま継続です。詳細な経緯は `docs/linkedin/post_2026-05-16_update.ja.md` を参照。
