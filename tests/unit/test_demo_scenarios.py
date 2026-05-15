@@ -247,10 +247,16 @@ def test_run_one_unknown_raises() -> None:
         run_one("ghost-scenario", quiet=True)
 
 
-def test_run_all_completes(capsys: pytest.CaptureFixture[str]) -> None:
+def test_run_all_completes(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     # MCP scenario will skip if mcp not installed; we don't require it here
+    # scenario 8 (resident-cognition) は時間がかかるため最短設定 (2 秒) にする.
+    monkeypatch.setenv("LLIVE_RESIDENT_DURATION", "2")
+    monkeypatch.setenv("LLIVE_DEMO_SEED", "42")
+    monkeypatch.setenv("LLIVE_DEMO_NO_COLOR", "1")
     results = run_all(quiet=True)
-    assert len(results) == 7
+    assert len(results) == 8
     for r in results:
         assert "ok" in r
         # Either succeeded, or recorded an error string — never raised
