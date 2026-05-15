@@ -23,8 +23,23 @@
 > modification, formal pre-check, failure preserves learning), and §OP-SING
 > (operational test requires observing the agent traverse the full
 > repertoire of trigger classes across at least one slow-loop window).
-> The etymology is therefore not decorative; it names a load-bearing
-> property of the spec.
+> The author further notes that **和** *(kazu / wa)* simultaneously carries
+> the reading "harmonious union", and reads the given name as a fusion of
+> **Session × Context × Prompt** — the three artefacts that any present-day
+> AI inference cycle must reconcile. Under that reading, *Kazufumi (和文)*
+> names the operation by which **a coherent written record (文)** emerges
+> from the **harmonious aggregation (和)** of session state, contextual
+> memory, and prompt intent. This second reading is reified normatively in
+> §I1 (source-anchored provenance binds all three artefacts into one
+> auditable chain), §R2 (multi-timescale loops harmonise fast / medium /
+> slow context), and §22.3 step 4 (the agent's own §13 amendment authorship
+> *is* the canonical example of fusing session + context + prompt into a
+> single written commitment).
+>
+> Both readings — *(1) many experiences trodden* and *(2) harmonious fusion
+> of Session × Context × Prompt into a coherent written line* — are
+> preserved here so that future amendments do not lose them. The etymology
+> is load-bearing for the spec, not decorative.
 
 | meta | value |
 |---|---|
