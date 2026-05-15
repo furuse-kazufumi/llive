@@ -500,13 +500,48 @@ F24 Claude Code 統合) と直結する。
 - **Scenario 15** (llove ⇄ claude code): TUI で claude code を起動して
   上下左右で履歴 nav、カラー表示確認 (llove プロジェクト側で実装後)
 
+#### IME 入力対応 (日本語 / 中国語 / 韓国語)
+
+> ユーザ意志 (2026-05-15 セッション中):
+> 「llove で日本語入力や中国語入力も受け付けられるのか気にしています。」
+
+llove は TUI なので Terminal の IME (Input Method Editor) 対応が前提に
+なるが、TUI における IME は環境差が大きく、段階的に攻める必要がある。
+
+実装フェーズ:
+1. **Phase 1 (現状)** — UTF-8 表示 OK / 入力は ASCII or 直貼り付け
+2. **Phase 2** — 入力 widget で UTF-8 文字列を **事前変換済みで** 受け取る
+   (例: IME で変換完了した文字列を copy-paste、または別アプリで入力した
+   文字列を read-only field に流し込む)
+3. **Phase 3** — Textual の Key event + composing event を扱う:
+   * Windows Terminal: IME composing が key event に乗る (実装可能)
+   * macOS Terminal.app / iTerm2: 同上
+   * Linux GNOME Terminal / xterm: 環境変数 `XMODIFIERS=@im=fcitx5` で
+     fcitx5 / ibus を仲介。Textual の event chain と要 verification
+4. **Phase 4** — IME 候補リストを Terminal 内 popup として描画
+   (拼音入力 → 漢字候補を Rich Markup で表示)、IME on/off キー bind
+
+検証チェックリスト:
+- [ ] Windows Terminal (PowerShell / Windows IME): あ / ㄅ / 한
+- [ ] iTerm2 (zsh / Japanese IME / Pinyin IME): あ / 你好 / 안녕
+- [ ] GNOME Terminal (bash / fcitx5 / ibus): 同上
+- [ ] llove 内の Input widget で composition event を受け取れるか
+- [ ] CJK 文字の **East Asian Width (EAW)** 計算 (全角は 2 cell)
+- [ ] 入力 widget の cursor 位置がカーソル幅 ≠ 1 でも正しく描画されるか
+
+実装単位 (llove 側 / 将来):
+- `llove/widgets/ime_input.py` — IME composing event を受け取る Input
+- `llove/utils/eaw.py` — Unicode East Asian Width 計算
+- llive 側からの利用: `MCP query` / `code review` / `chat` 等に
+  非ASCII 入力を渡すユースケース全般
+
 #### 実装優先順位
 RPAR は **Level 3 移行 (= Approval Bus 必須)** の最重要章。
 全体順序更新: A-2..A-5 → DTKR → ICP → APO → TLB → **RPAR (Level 3)**
 
 llove F23/F24/F25 は **llove プロジェクト側で並行**実装、llive 側は
 `src/llive/rpa/` + `src/llive/approval/` を提供して MCP / LoveBridge 経由で
-連携する。
+連携する。IME 対応 (Phase 2-3) は llove 内で扱う。
 
 ---
 
