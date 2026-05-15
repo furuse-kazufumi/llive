@@ -1,5 +1,7 @@
 # llive
 
+> **Part of the [FullSense ™](TRADEMARK.md) family** — `llmesh` (secure LLM hub) ・ **llive** (self-evolving memory) ・ `llove` (TUI dashboard) の 3 製品を束ねる FullSense ブランドの中で、自己進化型モジュラー記憶 LLM 基盤を担当するパッケージです。FullSense Spec v1.1 をリファレンス実装します。
+
 > **Self-evolving modular memory LLM framework** — 生物学的記憶モデル × 形式検証 × 産業 IoT メッシュ × TUI HITL の交差点で設計された自己進化型 LLM 基盤。
 
 llive は、固定された Decoder-only LLM コアの周辺に、可変長 BlockContainer・4 層外部記憶（semantic / episodic / structural / parameter）・審査付き構造進化を組み合わせることで、コア重みを再学習せず新能力を継続的に取り込める研究開発フレームワークです。
