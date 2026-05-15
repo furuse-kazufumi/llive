@@ -337,6 +337,45 @@ TLB は **DTKR + APO 完了後** に着手。理由: TLB は metric (cache hit r
 
 => 全体順序更新: A-2..A-5 → DTKR → ICP → APO → TLB
 
+#### Mathematical Toolkit — RAD 数学コーパスとの直接対応
+
+> ユーザ意志 (2026-05-15 セッション中):
+> 「多変数解析などの数学的アプローチが必要になる場面も増えると思うので、
+> コーパスに数学的な部分を含ませていたのです。」
+
+RAD には既に数学的基盤が物理的に揃っており、各ロードマップ章の理論基盤
+として参照すべきマッピング:
+
+| 章 | 必要な数学 | 対応 RAD コーパス |
+|---|---|---|
+| TLB Bridge / Manifold | 多変数解析 / 多様体学習 (UMAP / t-SNE / 主多様体) | `multivariate_analysis_corpus_v2` |
+| TLB Global Coordinator | 情報幾何 (Fisher 計量、自然勾配)、Shannon 情報量 | `information_theory_corpus_v2` |
+| APO Optimizer | 凸最適化 / 制約付き最適化 / gradient descent | `optimization_corpus_v2` |
+| APO Verifier | 形式手法 / SMT / z3 (既存依存) | `formal_methods_corpus_v2` + `automated_theorem_proving_corpus_v2` |
+| APO Metric 推定 | 統計推定 / 信頼区間 / 仮説検定 | `statistics_corpus_v2` |
+| DTKR PredictiveLoader | 強化学習 (バンディット / value iteration) | `reinforcement_learning_corpus_v2` |
+| DTKR Cache eviction | LRU の理論限界 / オンライン学習 (regret bound) | `optimization_corpus_v2` + `statistics_corpus_v2` |
+| ICP ConsensusBuilder | ベイズ統計 / 確率的合議 (DSm / Dempster–Shafer) | `statistics_corpus_v2` + `information_theory_corpus_v2` |
+| FullSenseLoop F1 Salience | 情報理論的 surprise (Bayesian surprise、active inference) | `information_theory_corpus_v2` |
+| Multi-track Filter | 多変量分類 (kernel methods、SVM、PAC bound) | `multivariate_analysis_corpus_v2` |
+| Time-horizon Filter F6 | 数値解析 / ODE / 制御理論 / モデル予測制御 (MPC) | `numerical_methods_corpus_v2` |
+
+**運用方針**: 各章を実装するとき、対応する RAD コーパスに「ヒント」を
+照会する形 (RAD-B `RadCorpusIndex.query` 経由) で根拠を引いてから設計する。
+これにより「直感や経験則」ではなく「先行研究を踏まえた数学的根拠」で実装が
+進む。spec §A*3 Knowledge autarky (RAD-class 知識への autarky) が
+operational に実証される副産物。
+
+実装テンプレ例 (TLB Bridge を作るとき):
+```python
+from llive.memory.rad import RadCorpusIndex
+idx = RadCorpusIndex(root=Path("data/rad"))
+# 多様体学習で「思考の局所近傍」を学ぶ前に文献ヒント
+hints = idx.query("manifold learning local neighborhood approximation",
+                  corpora=["multivariate_analysis_corpus_v2"], top_k=5)
+# hints.top_docs を Implementation Notes として PR 説明に含める
+```
+
 ---
 
 ## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
