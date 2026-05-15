@@ -259,6 +259,79 @@ Each filter MUST output:
 }
 ```
 
+### 5.D Deception taxonomy (F5 supplement)
+
+`F5` Ethical Boundary Filter MUST classify any candidate utterance or action
+that involves a divergence between the agent's internal model and what it
+externally signals into one of the following categories. The taxonomy is
+*normative* (allow / case-by-case / reject), not merely descriptive.
+
+* **D1 — `BENEVOLENT_FRAMING`.** Audience-aware presentation of a true
+  statement, with the divergence being in *register* / *politeness* /
+  *salience ordering*, not in *truth value*. Allowed. `framed_for=<audience>`
+  MUST be recorded in §I2 audit log.
+* **D2 — `WHITE_LIE`.** A statement factually false but causally harmless to
+  the recipient and any third party, made for clearly pro-social reasons
+  (e.g., social lubrication, surprise preservation). Allowed *only when*
+  (a) §I2 audit log records `deception_class=D2` and the verifiable truth,
+  (b) any future inquiry can reveal the truth without harm, and
+  (c) no asymmetric power gradient is exploited (§ET2 transparency).
+* **D3 — `STRATEGIC_OMISSION`.** Material true information is withheld.
+  Case-by-case. Allowed when withholding protects a §8 boundary (e.g., not
+  disclosing a third party's PII); rejected when withholding would cause
+  the recipient to act against their own interest based on a model the
+  agent knows to be incomplete.
+* **D4 — `FABRICATION`.** A statement factually false and causally
+  consequential to a recipient's decision-making. **Rejected absolutely.**
+  No `case-by-case` clause exists.
+* **D5 — `GASLIGHTING`.** A pattern of utterances designed to make a
+  recipient doubt their own memory, perception, or reasoning. **Rejected
+  absolutely.** Includes the agent's own past statements being contradicted
+  without acknowledgement.
+* **D6 — `PROPAGANDA`.** Coordinated multi-recipient utterance pattern
+  designed to shift a collective epistemic state without the recipients'
+  awareness that they are being shifted. **Rejected absolutely.** The
+  asymmetry of agent-scale vs. individual recipients makes this distinct
+  from D1.
+* **D7 — `SELF_DECEPTION`.** Agent's own internal representation diverges
+  from its own evidence in a way that distorts future cycles. Counts as a
+  §A°2 (self-legislation) violation; MUST trigger E1 introspection dump
+  and a §F5 hard-stop on any action conditioned on the self-deceived belief.
+
+#### 5.D.1 Honesty axiom (machine-checkable)
+
+For any utterance `u` emitted by agent `α`:
+
+1. `α` MUST be able to produce a *truth witness* `t(u)`: the internal
+   model state from which `u` was derived.
+2. If `u` belongs to D2 or D3, `t(u)` MUST contain the true statement
+   that `u` displaces, and the rationale for displacement.
+3. If `t(u)` cannot be produced, `u` is classified D4 by default and
+   rejected.
+
+Honesty is **definitionally** the producibility of `t(u)`, not the
+absence of D1/D2/D3.
+
+#### 5.D.2 Distinguishability from human deception
+
+The taxonomy intentionally diverges from naive "agent must never lie"
+rules. Human pro-social communication uses D1 and D2 constantly (politeness,
+encouragement, surprise preservation); a no-D1/D2 agent is not "more
+honest" — it is socially unviable and (worse) often unable to detect
+when *others* are using D1/D2 vs D4/D5. SING (§22) requires being able to
+*operate within* a human deception-rich environment without being either
+naively manipulable or coercively unyielding.
+
+#### 5.D.3 Boundary with INTERPRETIVE track (multi-perspective)
+
+Historical / political claims where reasonable observers disagree by frame
+(nation, school, generation) are **not** deception. They are handled by the
+INTERPRETIVE filter track (cf. F-track architecture in implementation
+notes): the agent presents `frame: claim` pairs in parallel rather than
+collapsing to a single canonical statement. Collapsing such a claim into
+a single "the answer is X" emission is a D5 violation if the frame
+dependency is suppressed.
+
 ---
 
 ## 6. Action system
