@@ -5,10 +5,10 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class ActionDecision(str, Enum):
+class ActionDecision(StrEnum):
     """Loop の終端で出る 4 種の決定。
 
     Sandbox では ``PROPOSE`` / ``INTERVENE`` も外向け副作用なしの log で完結する。
