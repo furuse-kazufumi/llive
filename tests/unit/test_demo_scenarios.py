@@ -243,6 +243,51 @@ def test_scenario_8_json_payload(
     assert "cycle_counts" in payload
 
 
+# ---------------------------------------------------------------------------
+# Scenario 9: multi-track (A-1.5 体験)
+# ---------------------------------------------------------------------------
+
+
+def test_scenario_9_multi_track_runs_all_five_tracks(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("multi-track", quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    summary = out["summary"]
+    assert isinstance(summary, dict)
+    assert summary["tracks_passed"] == 5
+    per_track = summary["per_track"]
+    assert set(per_track.keys()) == {
+        "factual",
+        "empirical",
+        "normative",
+        "interpretive",
+        "pragmatic",
+    }
+    # rationale に各 track tag が現れること
+    assert "[track:factual]" in captured.out
+    assert "[track:pragmatic]" in captured.out
+    assert "framed_for=" in captured.out  # PRAGMATIC の audit
+
+
+@pytest.mark.parametrize("lang", ["ja", "en", "zh", "ko"])
+def test_scenario_9_multilingual(
+    lang: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("multi-track", lang=lang, quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    needle = {
+        "ja": "結論不変",
+        "en": "invariant",
+        "zh": "结论不变",
+        "ko": "불변",
+    }[lang]
+    assert needle in captured.out, f"expected {needle!r} in {lang} narration"
+
+
 def test_run_one_unknown_raises() -> None:
     with pytest.raises(SystemExit):
         run_one("ghost-scenario", quiet=True)
