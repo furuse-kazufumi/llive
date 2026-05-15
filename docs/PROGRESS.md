@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-05-16 — Approval Bus production 化 (Policy + SQLite Ledger)
+
+handoff v3 の次セッション宣言「C-1 Approval Bus に policy + persistent ledger
+を結合」を実装。9 軸 skeleton の production 化フェーズの最初のピース。
+
+### Done
+
+- **Policy 抽象** (`src/llive/approval/policy.py`)
+  - `ApprovalPolicy` Protocol + `AllowList` / `DenyList` / `CompositePolicy`
+  - `deny_overrides(allow, deny)` helper
+- **SqliteLedger** (`src/llive/approval/ledger.py`)
+  - stdlib sqlite3 のみ、外部依存ゼロ。スキーマ v1 (3 テーブル + index)
+  - `append_request` / `append_response` / `load()` / context manager
+- **ApprovalBus 拡張** (`src/llive/approval/bus.py`)
+  - optional `ledger=` で再起動越し replay 復元 (pending 含む)
+  - optional `policy=` で auto-approval/deny を `by="policy:auto"` で記録
+  - 引数なし `ApprovalBus()` は既存挙動と完全一致 → 後方互換
+- **テスト** 18 件追加 / 既存 8 件無修正
+  - `test_approval_policy.py` (7) / `test_approval_ledger.py` (6) / `test_approval_bus_policy.py` (5)
+  - **815 PASS / ruff clean / 回帰ゼロ**
+
+### 次セッション 着手宣言文 (v4)
+
+「Level 3 (Permitted-action) C-1 が production 化完了 (policy + SQLite ledger)。
+続いて C-2 `@govern(policy)` の ProductionOutputBus 統合に着手。bus を
+RPA driver と output bus の両方で共有する形に拡張します。」
+
+### 残 (handoff v3 の C 章)
+
+- C-2: `@govern(policy)` を ProductionOutputBus に統合
+- C-3: Cross-substrate migration spike (§MI1)
+- 署名 (Ed25519 等) は v0.2.x 後段で extras 隔離検討
+
+---
+
 ## 2026-05-15 (続き) — A-1 ResidentRunner 完了 + 設計拡張 (KAR + Multi-track)
 
 ### Done
