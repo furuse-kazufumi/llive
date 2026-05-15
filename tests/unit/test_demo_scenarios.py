@@ -338,6 +338,84 @@ def test_run_one_unknown_raises() -> None:
         run_one("ghost-scenario", quiet=True)
 
 
+# ---------------------------------------------------------------------------
+# Scenario 11: rad-omniscience (KAR snapshot)
+# ---------------------------------------------------------------------------
+
+
+def test_scenario_11_rad_omniscience_returns_hits(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("rad-omniscience", quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    summary = out["summary"]
+    assert isinstance(summary, dict)
+    assert isinstance(summary["ingested_domains"], list)
+    assert len(summary["ingested_domains"]) >= 5
+    # 3 query 全てで何らかの hit があるか、no_hits メッセージで明示
+    assert summary["total_hits"] >= 3
+    # mathematical toolkit 4 分野が math_families に含まれる
+    assert "information_theory_corpus_v2" in summary["math_families"]
+    assert "Bayesian" in captured.out or "active inference" in captured.out
+
+
+@pytest.mark.parametrize("lang", ["ja", "en", "zh", "ko"])
+def test_scenario_11_multilingual(
+    lang: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("rad-omniscience", lang=lang, quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    needle = {
+        "ja": "人類知識",
+        "en": "human knowledge",
+        "zh": "人类知识",
+        "ko": "인류 지식",
+    }[lang]
+    assert needle in captured.out, f"expected {needle!r} in {lang}"
+
+
+# ---------------------------------------------------------------------------
+# Scenario 12: image-algorithm-advisor (会社デモ向け)
+# ---------------------------------------------------------------------------
+
+
+def test_scenario_12_recommends_one_algorithm(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("image-algorithm-advisor", quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    summary = out["summary"]
+    assert summary["image_bytes"] > 0
+    assert summary["recommended"] in {"Gaussian blur", "Bilateral filter", "Median filter"}
+    assert summary["recommended"] == "Bilateral filter"  # default heuristic (edge needed)
+    assert summary["risk_summary"]
+    # 3 候補が出力に並ぶ
+    assert "Gaussian blur" in captured.out
+    assert "Bilateral filter" in captured.out
+    assert "Median filter" in captured.out
+
+
+@pytest.mark.parametrize("lang", ["ja", "en", "zh", "ko"])
+def test_scenario_12_multilingual(
+    lang: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("image-algorithm-advisor", lang=lang, quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    needle = {
+        "ja": "画像処理",
+        "en": "image-processing",
+        "zh": "图像处理",
+        "ko": "이미지 처리",
+    }[lang]
+    assert needle in captured.out, f"expected {needle!r} in {lang}"
+
+
 def test_run_all_completes(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
