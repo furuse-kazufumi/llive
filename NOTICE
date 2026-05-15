@@ -22,8 +22,16 @@ Commercial licenses are also available; see LICENSE-COMMERCIAL.
 Trademarks
 ================================================================
 
-"llive", "llmesh", and "llove" are trademarks of Kazufumi Furuse.
-See TRADEMARK.md for trademark usage guidelines.
+"FullSense" (umbrella brand and spec name), "llmesh", "llive", and "llove"
+are trademarks of Kazufumi Furuse. See TRADEMARK.md for the brand hierarchy
+and trademark usage guidelines.
+
+llive is part of the FullSense family of products:
+
+    FullSense (umbrella) — brand + technical specification
+      ├─ llmesh — secure LLM hub / on-prem MCP server
+      ├─ llive  — self-evolving modular memory LLM framework (this project)
+      └─ llove  — TUI dashboard / HITL workbench
 
 ================================================================
 Third-party software
