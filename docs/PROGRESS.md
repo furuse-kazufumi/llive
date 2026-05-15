@@ -276,6 +276,67 @@ ICP は **A-2..A-5 (Level 2 完了) と DTKR 完了後** に着手。
 
 => 全体順序: A-2..A-5 → DTKR → ICP → APO
 
+### 新規設計拡張: Thought Layer Bridging (TLB) — 指数膨張への対策
+
+> ユーザ意志 (2026-05-15 セッション中):
+> 「思考が増えれば、思考の層を繋ぐブランチも必要になっていくでしょうね。
+> 思考の層が増えると、思考の次元が 2 次元から 3 次元、3 次元から 4 次元へと
+> 指数的もしくは指数以上の規模に増えていくので、それをショートカットする
+> 仕組みと全体を調整する仕組みも必要になる」
+
+KAR / DTKR / ICP / APO に並ぶ第 5 のロードマップ。**思考層の組合せ爆発**
+への構造的対策。
+
+#### 問題定式化
+思考層を `k` 個、各層に `N` 状態があるとナイーブな全通過は `O(N^k)`:
+- 現時点で llive が持つ層:
+  - EpistemicType (5 + 5 予備) ≈ 10
+  - DeceptionClass (7)
+  - TrackTransform (5 標準 + 5 予備) ≈ 10
+  - TRIZ T-Z* (4)
+  - メタトリガ T-M* (3)
+  - Phase (3)
+- ナイーブ組合せ: 10 × 7 × 10 × 4 × 3 × 3 ≈ **25,200 状態**
+- 「思考の連鎖履歴」を加えれば文字通り指数
+
+#### TLB の対策 (3 段)
+1. **Bridge (ショートカット)** — 高 confidence な層は早期 fix で次元落ち
+   - `confidence >= 0.9` で FACTUAL track が確定すれば DeceptionClass の
+     探索を skip
+   - bridge ルールは静的テーブル + 学習可能な重み
+2. **Global Coordinator** — 全体スコアで早期 termination
+   - 各層の出力を 1 つの aggregate score に集約
+   - threshold 超え or 不適合確定で残り層を skip
+3. **Manifold Cache** — 過去組合せの memo
+   - 入力 stimulus の semantic hash + layer 状態セット → 結果 cache
+   - 同じパターンが再来すれば計算なしで即答 (TLB miss / hit 率を APO で監視)
+
+#### 数学的根拠
+- 高 confidence で確定する次元が 1 つあれば全体は `O(N^k)` → `O(N^{k-1})`
+  に落ちる
+- Bridge を `b` 個適用すると `O(N^{k-b})` まで指数降下可能
+- Manifold Cache hit rate を `h` とすると amortized `O((1-h) * N^k)`
+
+#### Spec 上の根拠
+- **§F* MAY-clause** — フィルタ間に bridge 挿入は spec が許容
+- **§I3 inspectable** — bridge / shortcut / cache hit を audit log に残す
+  ことで監査性を保つ (TLB は性能のためでなく audit を曇らせてはいけない)
+- **§E2 bounded modification** — bridge ルールの学習も §E2 範囲
+
+#### 実装単位 (将来)
+- `src/llive/fullsense/bridges/` パッケージ
+  - `registry.py` — Bridge 定義の登録
+  - `coordinator.py` — Global Coordinator (aggregate score + early termination)
+  - `manifold_cache.py` — semantic-hash ベース cache
+- `FullSenseLoop` に bridge hook を追加 (各 stage 後にcoordinator 問い合わせ)
+- Scenario 15: 「同じ stimulus を 100 回繰り返して cache hit を見せる」
+
+#### 実装優先順位
+TLB は **DTKR + APO 完了後** に着手。理由: TLB は metric (cache hit rate)
+が無いと改善できないため、APO の measurement infrastructure に依存。
+
+=> 全体順序更新: A-2..A-5 → DTKR → ICP → APO → TLB
+
 ---
 
 ## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
