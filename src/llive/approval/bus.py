@@ -81,8 +81,18 @@ class ApprovalBus:
         return self._respond(request_id, Verdict.REVOKED, by, rationale)
 
     def _respond(self, request_id: str, verdict: Verdict, by: str, rationale: str) -> ApprovalResponse:
-        if request_id not in self._pending:
-            raise KeyError(f"unknown approval request: {request_id!r}")
+        # REVOKED は既に決着 (approved/denied) した request にも適用できる必要があるため、
+        # pending check は APPROVE/DENY 時のみ。REVOKE は ledger に過去 request_id が
+        # 存在することだけ確認する。
+        if verdict in (Verdict.APPROVED, Verdict.DENIED):
+            if request_id not in self._pending:
+                raise KeyError(f"unknown approval request: {request_id!r}")
+        else:  # REVOKED
+            known = (request_id in self._pending) or any(
+                r.request_id == request_id for r in self._ledger
+            )
+            if not known:
+                raise KeyError(f"unknown approval request: {request_id!r}")
         resp = ApprovalResponse(
             request_id=request_id, verdict=verdict, by=by, rationale=rationale
         )
