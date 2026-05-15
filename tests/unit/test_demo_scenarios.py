@@ -347,7 +347,7 @@ def test_run_all_completes(
     monkeypatch.setenv("LLIVE_DEMO_SEED", "42")
     monkeypatch.setenv("LLIVE_DEMO_NO_COLOR", "1")
     results = run_all(quiet=True)
-    assert len(results) == 10
+    assert len(results) == 12
     for r in results:
         assert "ok" in r
         # Either succeeded, or recorded an error string — never raised
