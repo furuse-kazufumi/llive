@@ -545,13 +545,68 @@ llove F23/F24/F25 は **llove プロジェクト側で並行**実装、llive 側
 
 ---
 
-## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
+## 2026-05-15 (handoff v2) — 次セッション最優先: SING Level 3 着手
 
-> ユーザ最終意志 (2026-05-15 セッション末、exit 直前):
+> ユーザ最終意志 (2026-05-15 marathon session 末):
 > **「自律 (auto-nomos) と 自立 (self-sufficiency) によるシンギュラリティの
-> 実現」という意志の元、実装をどんどん進めてほしい。GitHub への公開も。**
+> 実現」「セッション限界まで走り続けてください」**
 
-### 次セッション SESSION START 直後の宣言文
+### 直前セッション (2026-05-15 続) で達成したこと
+
+✅ **Level 2 完了** — A-1..A-5 + A-1.5 Multi-track + §5.D Deception + §F6 Time-Horizon
+✅ **Conformance Manifest**: holds=16 / violated=0 / undecidable=1 (SING のみ)
+✅ **12 Scenarios 全動作** (resident-cognition / multi-track / deception-filter /
+   rad-omniscience / image-algorithm-advisor を新規追加)
+✅ **Entry points**: `llive-demo` / `llive-manifest` ワンコマンド起動
+✅ **8 ロードマップ章**: KAR / DTKR / APO / ICP / TLB / Math Toolkit / PM / RPAR
+✅ 540 → **638 tests / 全 PASS / ruff clean**
+✅ ~25 commits push 済 (上は `246dad5`)
+
+### 次セッション SESSION START 直後の宣言文 (新)
+
+> 「続きとして FullSense Spec v1.1.0 §22 SING の **Level 3 (Permitted-action)**
+> 着手します。**C-1 Approval Bus** から開始。」
+
+### C. SING Level 3 実装 (優先順、確認なし即着手)
+
+1. **C-1 Approval Bus** (`src/llive/approval/bus.py`) — Spec §AB
+   - replayable approval channel (`AB1`)
+   - principal identification (`AB2`)
+   - revoked approval → rollback / compensating action (`AB3`)
+   - 沈黙 = denial (`AB4`)
+   - pubsub 形式、in-memory + persistent backend ハイブリッド
+2. **C-2 `@govern(policy)`** (`src/llive/approval/policies/`)
+   - memory:`agent-governance` を ProductionOutputBus に統合
+   - 各 RPA action に policy 適用必須化
+3. **C-3 Cross-substrate migration spike** (`scripts/spike_substrate.py`)
+   - §MI1 substrate independence の最小検証
+   - SQLite state dump → 別 Python process で復元 → audit chain 整合
+
+### D. RPAR Level 3 同時着手 (Level 3 と表裏)
+
+1. **D-1 IdleDetector** (`src/llive/rpa/idle.py`) — keyboard/mouse の lastInput
+2. **D-2 ShellDriver** (`src/llive/rpa/drivers/shell.py`) — subprocess + sanitize
+3. **D-3 KeyboardDriver / MouseDriver** — pywin32 (Win) / pyobjc (mac) / xdotool (Linux)
+4. **D-4 FilesystemDriver** — pathlib + forbidden zone
+5. **D-5 TaskRecorder + Player** — flow YAML 録画 → 再生
+
+### E. 普及作業 (B-1..B-5 + PM)
+
+1. **E-1 PyPI publish** v0.6.0a1 として Level 2 完成版を push
+2. **E-2 asciinema 全 12 scenarios** 録画 → docs/media/ に commit
+3. **E-3 README 英訳** + Mintlify or GitHub Pages
+4. **E-4 LoveBridge F25 E2E** (llive ↔ llmesh ↔ llove 3 process)
+
+### 制約 (引き続き)
+
+- Sandbox は **Level 2 では崩さない**。Level 3 では `@govern(policy)` 経由のみ解禁
+- `feedback_session_marathon.md`: セッション限界まで走り続ける、確認最小限
+- `feedback_max_plan_autonomy.md`: 進めますか系では即実行
+- `feedback_d_drive_preference.md`: 動作データは D ドライブ
+- `feedback_articles_pause.md`: 投稿記事はユーザ明示まで作らない
+- push OK (handoff コミットで継続許可、`origin/main` 直接、force 禁止)
+
+### --- (旧 handoff 内容、参考のため保存) ---
 
 > 「続きとして FullSense Spec v1.1.0 §22 SING の Level 2 (Approved-action)
 > 着手します。A-1 ResidentRunner から開始。」
