@@ -39,7 +39,7 @@ def _safe_extract(tar: tarfile.TarFile, dest: Path) -> None:
         target = (dest / member.name).resolve()
         if not str(target).startswith(str(dest_resolved)):
             raise RuntimeError(f"unsafe tar entry: {member.name!r}")
-    tar.extractall(dest)  # noqa: S202 — entries validated above
+    tar.extractall(dest)
 
 
 def import_state(bundle_path: Path | str, *, dest_dir: Path | str) -> ImportResult:
@@ -95,8 +95,8 @@ def load_jsonl(path: Path | str) -> list[dict[str, object]]:
 
 
 __all__ = [
-    "IncompatibleBundleError",
     "ImportResult",
+    "IncompatibleBundleError",
     "import_state",
     "load_jsonl",
 ]

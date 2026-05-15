@@ -70,8 +70,8 @@ class Bundle:
 
 
 __all__ = [
-    "Bundle",
-    "BundleManifest",
     "MANIFEST_FILENAME",
     "SCHEMA_VERSION",
+    "Bundle",
+    "BundleManifest",
 ]

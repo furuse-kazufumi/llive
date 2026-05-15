@@ -11,15 +11,20 @@ SQLite + JSONL bundle で実証する。
     - Bundle: bundle メタデータ (manifest.json と一致)
 """
 
-from llive.migration.bundle import Bundle, BundleManifest, SCHEMA_VERSION
+from llive.migration.bundle import SCHEMA_VERSION, Bundle, BundleManifest
 from llive.migration.exporter import export_state
-from llive.migration.importer import ImportResult, import_state
+from llive.migration.importer import (
+    ImportResult,
+    IncompatibleBundleError,
+    import_state,
+)
 
 __all__ = [
+    "SCHEMA_VERSION",
     "Bundle",
     "BundleManifest",
     "ImportResult",
-    "SCHEMA_VERSION",
+    "IncompatibleBundleError",
     "export_state",
     "import_state",
 ]

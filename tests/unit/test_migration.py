@@ -10,8 +10,8 @@ import pytest
 from llive.approval import AllowList, ApprovalBus, SqliteLedger, Verdict
 from llive.fullsense.sandbox import SandboxOutputBus
 from llive.migration import (
-    IncompatibleBundleError,
     SCHEMA_VERSION,
+    IncompatibleBundleError,
     export_state,
     import_state,
 )
