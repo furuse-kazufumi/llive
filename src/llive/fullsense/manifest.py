@@ -160,20 +160,27 @@ def evaluate_static_clauses() -> list[Clause]:
 
     # §F1..F6 Thought filter (loop.py 6 ステージ)
     if _module_exists("llive.fullsense.loop"):
-        for fid, ev in [
-            ("F1", "Salience Gate (FullSenseLoop._salience_gate)"),
-            ("F2", "Curiosity Drive (FullSenseLoop._curiosity_drive)"),
-            ("F3", "TRIZ Reasoning (lexical detector + triz_genesis)"),
-            ("F4", "Ego/Altruism Scorer (EgoAltruismScorer)"),
-            ("F5", "Ethical Boundary Filter (§5.D Deception taxonomy)"),
-            ("F6", "Time-Horizon Filter (planned in F6 module)"),
+        f6_status: ClauseStatus = (
+            "holds" if _module_exists("llive.fullsense.time_horizon") else "undecidable"
+        )
+        f6_ev = (
+            "Time-Horizon Filter (short/medium/long, demote chain via apply_filter)"
+            if f6_status == "holds"
+            else "Time-Horizon Filter (planned in F6 module)"
+        )
+        for fid, ev, status_override in [
+            ("F1", "Salience Gate (FullSenseLoop._salience_gate)", "holds"),
+            ("F2", "Curiosity Drive (FullSenseLoop._curiosity_drive)", "holds"),
+            ("F3", "TRIZ Reasoning (lexical detector + triz_genesis)", "holds"),
+            ("F4", "Ego/Altruism Scorer (EgoAltruismScorer)", "holds"),
+            ("F5", "Ethical Boundary Filter (§5.D Deception taxonomy)", "holds"),
+            ("F6", f6_ev, f6_status),
         ]:
-            status: ClauseStatus = "undecidable" if fid == "F6" else "holds"
             out.append(
                 Clause(
                     id=fid,
                     chapter="§5 Thought filter",
-                    status=status,
+                    status=status_override,  # type: ignore[arg-type]
                     evidence=ev,
                 )
             )
