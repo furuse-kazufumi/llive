@@ -59,14 +59,37 @@ class ApprovalResponse:
 
 
 class ApprovalBus:
-    """in-memory pubsub + ledger (MVP).
+    """in-memory pubsub + ledger.
 
-    実運用では durable backend (sqlite / disk JSONL) と組合せる。
+    Args:
+        ledger: optional `SqliteLedger` で response/request を永続化. 起動時に
+            既存 ledger から pending と response 列を復元する (§AB1).
+        policy: optional `ApprovalPolicy` で request を事前評価. Verdict を
+            返した場合は人手を待たず即 ledger に書き込む.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        ledger: "SqliteLedger | None" = None,
+        policy: _PolicyLike | None = None,
+    ) -> None:
         self._pending: dict[str, ApprovalRequest] = {}
         self._ledger: list[ApprovalResponse] = []
+        self._sink: SqliteLedger | None = ledger
+        self._policy = policy
+        if ledger is not None:
+            state = ledger.load()
+            self._ledger = list(state.responses)
+            # pending = まだ APPROVED/DENIED で決着していない request
+            decided: set[str] = {
+                r.request_id
+                for r in state.responses
+                if r.verdict in (Verdict.APPROVED, Verdict.DENIED)
+            }
+            self._pending = {
+                rid: req for rid, req in state.requests.items() if rid not in decided
+            }
 
     # -- producer side ----------------------------------------------------
 
@@ -79,6 +102,13 @@ class ApprovalBus:
             timeout_s=timeout_s,
         )
         self._pending[req.request_id] = req
+        if self._sink is not None:
+            self._sink.append_request(req)
+        # policy 事前評価. Verdict 確定なら即応答.
+        if self._policy is not None:
+            verdict = self._policy.evaluate(req)
+            if verdict is not None:
+                self._respond(req.request_id, verdict, by="policy:auto", rationale="policy")
         return req
 
     # -- consumer side ----------------------------------------------------
