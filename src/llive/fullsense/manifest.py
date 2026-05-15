@@ -207,6 +207,17 @@ def evaluate_static_clauses() -> list[Clause]:
             )
         )
 
+    # SIL (Self-Interrogation Layer) — 9th roadmap axis
+    if _module_exists("llive.fullsense.self_interrogation"):
+        out.append(
+            Clause(
+                id="SIL",
+                chapter="§5 MAY-clause extension (9th axis)",
+                status="holds",
+                evidence="5 Interrogators (SI1..SI5) + non-destructive append to rationale",
+            )
+        )
+
     # §3.3 T-Z* TRIZ trigger genesis
     if _module_exists("llive.fullsense.triz_genesis"):
         out.append(
