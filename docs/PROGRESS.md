@@ -6,6 +6,66 @@
 
 ---
 
+## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
+
+> ユーザ最終意志 (2026-05-15 セッション末、exit 直前):
+> **「自律 (auto-nomos) と 自立 (self-sufficiency) によるシンギュラリティの
+> 実現」という意志の元、実装をどんどん進めてほしい。GitHub への公開も。**
+
+### 次セッション SESSION START 直後の宣言文
+
+> 「続きとして FullSense Spec v1.1.0 §22 SING の Level 2 (Approved-action)
+> 着手します。A-1 ResidentRunner から開始。」
+
+### A. SING Level 2 実装 (優先順、確認なし即着手)
+
+1. **A-1 ResidentRunner** (`src/llive/fullsense/runner.py`)
+   - `FullSenseLoop` を asyncio.Task として常駐起動
+   - R1/R2/R3 (always-on / multi-timescale / phase manager) 統合
+   - 既存 `apscheduler` を活用
+   - Sandbox 限定維持
+2. **A-2 TRIZ Trigger Genesis** (`src/llive/fullsense/triz_genesis.py`)
+   - `T-Z1..4` (admin/technical/physical/resource contradictions) 検出器
+   - 既存 `llive.triz` modules (FR-23..27) と統合
+   - 検出した矛盾を自発 Stimulus として inject
+3. **A-3 メタトリガ T-M1..3** — audit log 自己反省 / spec-drift / 後継検討
+4. **A-4 Conformance Manifest** (`py -m llive.fullsense.manifest`、§V4 準拠)
+5. **A-5 Scenario 8 ResidentRunner** (`src/llive/demo/scenario_8_resident.py`)
+   30 秒 sandbox 内で自発 stimulus が生まれる様子を可視化
+
+### B. GitHub 公開準備 (並行可)
+
+1. **B-1** PyPI `llmesh-fullsense` 名予約 (空 wheel で先取り)
+2. **B-2** `furuse-kazufumi/fullsense-llive` repo 確保
+3. **B-3** PR-ready ブランチ (`auto:` commits を filter out した cleanup)
+4. **B-4** README 英語版 + Spec 英語の Mintlify or GitHub Pages 公開設定
+5. **B-5** spec を repo root にもコピー or symlink
+
+### C. Level 3 への布石
+
+1. **C-1** Approval Bus (§AB) 実装
+2. **C-2** `@govern(policy)` (memory:agent-governance) を ProductionOutputBus に統合
+3. **C-3** Cross-substrate migration spike (§MI1)
+
+### 制約
+
+- Sandbox 限定維持 (Level 2 までは @govern policy なしでは外向け副作用ゼロ)
+- `feedback_max_plan_autonomy.md`: 確認最小限で即実行
+- `feedback_small_units.md`: 作業は 1 ファイル単位、トークン超過防止
+- `feedback_d_drive_preference.md`: 動作データは D ドライブ
+- `feedback_articles_pause.md`: 投稿記事はユーザ明示まで作らない
+- push OK (本セッション明示許可済、`origin/main` 直接 push、force 禁止)
+
+### 直近セッション末状態
+
+- 569 tests / 全 PASS / ruff clean
+- spec v1.1.0 完成 (`docs/fullsense_spec_eternal.md`、22 章 + 2 appendix)
+- 原著者 古瀬 和文 (Furuse Kazufumi) の二重語源を normative に記録済:
+  (1) 多くの数 (経験) を踏む / (2) Session × Context × Prompt の和合
+- 全 origin/main 同期済 (decc4bc → 06aa870)
+
+---
+
 ## 2026-05-15 (続き) — TRIZ ベース demo パッケージ + 技術資料
 
 ### Why (背景)
