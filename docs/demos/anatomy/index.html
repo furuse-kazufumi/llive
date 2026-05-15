@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llive Anatomy — 部位カウンセリング (Educational Fiction)</title>
+<style>
+:root {
+  --fg: #1b1f24; --fg-mute: #4a525c; --fg-faint: #6c7682;
+  --bg: #f6f8fb; --bg-panel: #ffffff; --bg-soft: #eef2f7;
+  --accent: #2c6ecf; --accent-soft: #d8e6fb; --accent-fg: #1a4380;
+  --border: #dde2e8; --border-strong: #c4ccd6;
+  --warn: #b85d00; --warn-bg: #fff5e8; --warn-strong: #f7c98b;
+  --ok: #2c7a3a; --ok-bg: #e5f4e8;
+  --body: #c9d3df; --body-stroke: #5b6776;
+  --highlight: #f5b76a; --highlight-stroke: #b06b1c;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e9ef; --fg-mute: #aab2bd; --fg-faint: #828a96;
+    --bg: #181b21; --bg-panel: #1f2229; --bg-soft: #262a32;
+    --accent: #79a8e8; --accent-soft: #2a3d57; --accent-fg: #c9deff;
+    --border: #2c313a; --border-strong: #3a414c;
+    --warn: #f0a85e; --warn-bg: #3a2a14; --warn-strong: #6b4014;
+    --ok: #79c98a; --ok-bg: #1e3324;
+    --body: #3a414c; --body-stroke: #aab2bd;
+    --highlight: #d68d3e; --highlight-stroke: #f0a85e;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI",
+  "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif;
+  line-height: 1.6; font-size: 15px; -webkit-font-smoothing: antialiased; }
+header { padding: 20px 24px 8px; max-width: 1300px; margin: 0 auto; }
+header h1 { margin: 0; font-size: 22px; letter-spacing: -0.01em; }
+header .sub { color: var(--fg-mute); font-size: 14px; margin: 4px 0 0; }
+.banner {
+  margin: 12px 24px 0; padding: 10px 14px; border-radius: 6px;
+  background: var(--warn-bg); border: 1px solid var(--warn-strong); color: var(--warn);
+  font-size: 13.5px; max-width: 1300px; margin-left: auto; margin-right: auto;
+}
+.banner strong { font-weight: 700; }
+main { max-width: 1300px; margin: 16px auto 40px; padding: 0 24px;
+  display: grid; grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.4fr); gap: 24px; }
+@media (max-width: 880px) { main { grid-template-columns: 1fr; } }
+.col {
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px;
+}
+.col h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--fg-faint); margin: 0 0 10px; font-weight: 600; }
+svg.body { display: block; width: 100%; max-width: 320px; margin: 0 auto;
+  background: var(--bg-soft); border-radius: 8px; }
+svg.body .region {
+  fill: var(--body); stroke: var(--body-stroke); stroke-width: 1.5;
+  cursor: pointer; transition: fill 0.15s, stroke 0.15s;
+}
+svg.body .region:hover { fill: var(--highlight); stroke: var(--highlight-stroke); }
+svg.body .region.active { fill: var(--highlight); stroke: var(--highlight-stroke); }
+svg.body text { font-size: 9px; fill: var(--fg-mute); pointer-events: none;
+  font-family: ui-monospace, monospace; user-select: none; }
+.controls { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+  font-size: 13px; }
+.controls label { color: var(--fg-mute); }
+.controls select, .controls input {
+  background: var(--bg-soft); color: var(--fg); border: 1px solid var(--border-strong);
+  border-radius: 4px; padding: 3px 8px; font-size: 13px; font-family: inherit;
+}
+.controls .status { margin-left: auto; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+.status.ok { background: var(--ok-bg); color: var(--ok); }
+.status.err { background: var(--warn-bg); color: var(--warn); }
+.status.mock { background: var(--accent-soft); color: var(--accent-fg); }
+.chat { display: flex; flex-direction: column; gap: 10px; min-height: 280px; }
+.bubble {
+  padding: 10px 14px; border-radius: 8px; max-width: 90%; line-height: 1.55;
+  white-space: pre-wrap; word-wrap: break-word;
+}
+.bubble.user { background: var(--accent-soft); color: var(--accent-fg);
+  align-self: flex-end; }
+.bubble.doc { background: var(--bg-soft); border: 1px solid var(--border); }
+.bubble .meta { font-size: 11px; color: var(--fg-faint); margin-top: 6px;
+  border-top: 1px dashed var(--border); padding-top: 6px; }
+.hints { font-size: 12px; color: var(--fg-faint); font-family: ui-monospace, monospace; }
+.empty { color: var(--fg-faint); font-style: italic; padding: 24px 8px;
+  text-align: center; }
+.spinner { display: inline-block; width: 12px; height: 12px;
+  border: 2px solid var(--accent); border-top-color: transparent;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+  vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.howto {
+  margin-top: 18px; padding: 12px 14px; background: var(--bg-soft);
+  border-radius: 6px; font-size: 13px; color: var(--fg-mute);
+}
+.howto code { background: var(--bg-panel); border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 12.5px; }
+footer { text-align: center; color: var(--fg-faint); font-size: 12px; padding: 12px 16px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>llive Anatomy — 部位カウンセリング</h1>
+<p class="sub">SVG 人体図 × llive OpenAI 互換 HTTP server (RAG-on-by-flag) × 医師ペルソナ</p>
+</header>
+
+<div class="banner">
+<strong>Educational fiction only.</strong> このデモは <em>Dr. Aria</em> と
+いう <strong>架空キャラクター</strong>による教育・調査用デモであり、
+<strong>医療助言ではありません</strong>。実際の症状や健康問題については
+必ず医療従事者にご相談ください。
+<span data-lang="en" hidden>This is an educational fiction demo featuring
+<em>Dr. Aria</em>, a fictional character. <strong>It is NOT medical advice.</strong>
+Always consult a qualified healthcare professional for real symptoms.</span>
+</div>
+
+<main>
+
+<section class="col">
+  <h2>身体図 (クリックで部位選択)</h2>
+
+  <svg class="body" viewBox="0 0 200 360" xmlns="http://www.w3.org/2000/svg" aria-label="body parts">
+    <!-- head -->
+    <circle class="region" cx="100" cy="40"  r="26" data-part="head"     tabindex="0"></circle>
+    <text   x="100" y="42"  text-anchor="middle">head</text>
+    <!-- neck (decoration, not clickable) -->
+    <rect   x="92"  y="62"  width="16" height="14" fill="var(--body)" stroke="var(--body-stroke)" stroke-width="1.5" rx="3"></rect>
+    <!-- chest -->
+    <ellipse class="region" cx="100" cy="110" rx="38" ry="32" data-part="chest"   tabindex="0"></ellipse>
+    <text    x="100" y="112" text-anchor="middle">chest</text>
+    <!-- heart (overlay inside chest) -->
+    <ellipse class="region" cx="86"  cy="106" rx="9" ry="11" data-part="heart"    tabindex="0"></ellipse>
+    <!-- abdomen -->
+    <ellipse class="region" cx="100" cy="170" rx="34" ry="28" data-part="abdomen" tabindex="0"></ellipse>
+    <text    x="100" y="172" text-anchor="middle">abdomen</text>
+    <!-- left arm (viewer's left = body's right) -->
+    <rect    class="region" x="42"  y="92"  width="20" height="78" rx="9" data-part="left-arm"  tabindex="0"></rect>
+    <text    x="52"  y="135" text-anchor="middle">L-arm</text>
+    <!-- right arm -->
+    <rect    class="region" x="138" y="92"  width="20" height="78" rx="9" data-part="right-arm" tabindex="0"></rect>
+    <text    x="148" y="135" text-anchor="middle">R-arm</text>
+    <!-- left leg -->
+    <rect    class="region" x="78"  y="200" width="20" height="130" rx="9" data-part="left-leg"  tabindex="0"></rect>
+    <text    x="88"  y="265" text-anchor="middle">L-leg</text>
+    <!-- right leg -->
+    <rect    class="region" x="102" y="200" width="20" height="130" rx="9" data-part="right-leg" tabindex="0"></rect>
+    <text    x="112" y="265" text-anchor="middle">R-leg</text>
+  </svg>
+
+  <div class="controls">
+    <label>lang
+      <select id="lang">
+        <option value="ja" selected>ja</option>
+        <option value="en">en</option>
+      </select>
+    </label>
+    <label>backend
+      <input id="base-url" type="text" value="http://127.0.0.1:8765/v1" size="22">
+    </label>
+    <span id="status" class="status mock">mock</span>
+  </div>
+
+  <div class="howto">
+    <strong>実バックエンドで動かす:</strong><br>
+    <code>py -3.11 -m llive.server.openai_api --host 127.0.0.1 --port 8765</code><br>
+    起動後にこのページをリロード — status が <strong>live</strong> になります。
+    起動していないときは pre-canned mock テキストで動作します。
+  </div>
+</section>
+
+<section class="col">
+  <h2>Dr. Aria のカウンセリング</h2>
+  <div id="chat" class="chat">
+    <div class="empty" id="empty-hint">左の SVG 図から部位をクリックすると、Dr. Aria が説明します。</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+<a href="../../demos.html">← demo portal</a> ·
+<a href="../../v0.2_rad_techdoc.html">技術資料</a> ·
+TRIZ #1 分割 + #24 仲介 (RAD 知識仲介)
+</footer>
+
+<script>
+// -----------------------------------------------------------------------------
+// Configuration
+// -----------------------------------------------------------------------------
+const PART_NAMES = {
+  ja: {
+    "head": "頭部", "chest": "胸部", "heart": "心臓", "abdomen": "腹部",
+    "left-arm": "左腕", "right-arm": "右腕", "left-leg": "左脚", "right-leg": "右脚",
+  },
+  en: {
+    "head": "Head", "chest": "Chest", "heart": "Heart", "abdomen": "Abdomen",
+    "left-arm": "Left arm", "right-arm": "Right arm", "left-leg": "Left leg", "right-leg": "Right leg",
+  },
+};
+
+const SYSTEM_PROMPT = {
+  ja: `あなたは "Dr. Aria" という架空の医療教育キャラクターです。実在の医師ではありません。
+
+回答時の規則:
+- 必ず冒頭で「これは教育目的の架空キャラクターによる説明であり、医療助言ではありません」と添える
+- 親しみやすく、専門用語は易しく言い換える
+- 構造 → 主な機能 → よくある病気・症状 → 受診の目安、の順で 4 行程度
+- 全体で 180 字以内、誇張や断定的な診断は避ける
+- 末尾に「実際の症状は医療従事者にご相談ください」と添える`,
+  en: `You are "Dr. Aria", a fictional medical educator character (NOT a real physician).
+
+Rules:
+- Always start with "This is an educational fiction; not medical advice."
+- Be warm, plain-language, no jargon.
+- Structure -> main function -> common conditions -> when to see a doctor; 4 short lines.
+- Keep under 180 chars total. No definitive diagnosis.
+- End with "Please consult a real healthcare professional for actual symptoms."`,
+};
+
+const USER_TEMPLATE = {
+  ja: (part) => `「${part}」について、上記ルールに従って解説してください。`,
+  en: (part) => `Please describe "${part}" following the rules above.`,
+};
+
+// Pre-canned mock responses so the demo runs without a live backend
+const MOCK = {
+  ja: {
+    "head": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n頭部には脳・目・耳・鼻・口が集まり、思考や感覚を司ります。\nよくある症状は頭痛・めまい・耳鳴り。\n突然の激しい頭痛や麻痺があれば速やかに受診を。\n実際の症状は医療従事者にご相談ください。",
+    "chest": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n胸部には心臓と肺があり、血液循環と呼吸を担います。\n胸痛・息切れ・動悸が代表的なサインです。\n圧迫感や冷や汗を伴う痛みは緊急受診を。\n実際の症状は医療従事者にご相談ください。",
+    "heart": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n心臓は約 1 日 10 万回拍動し、全身に血液を送るポンプです。\n動悸・胸痛・息切れ・むくみが主な警告サイン。\n5 分以上続く胸痛は迷わず救急を。\n実際の症状は医療従事者にご相談ください。",
+    "abdomen": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n腹部には胃・腸・肝臓・腎臓があり、消化と代謝を担当。\n腹痛・吐き気・便通の変化に注意。\n強い痛みや血便があれば早めに受診を。\n実際の症状は医療従事者にご相談ください。",
+    "left-arm": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n腕は肩から手まで、把持と微細動作を担います。\nしびれ・脱力・腫れに注意。\n左腕の痛みは心臓由来のこともあり、胸の違和感と同時なら救急受診を。\n実際の症状は医療従事者にご相談ください。",
+    "right-arm": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n腕は神経・血管・筋・骨が密に詰まる繊細な構造。\nしびれ・冷感・突然の動かしにくさは要注意。\n外傷や急な麻痺は速やかに受診を。\n実際の症状は医療従事者にご相談ください。",
+    "left-leg": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n脚は歩行・姿勢維持・大きな血流の通り道。\n片側だけの腫れ・赤み・痛みは血栓の可能性。\n息切れを伴うと緊急性が高いです。\n実際の症状は医療従事者にご相談ください。",
+    "right-leg": "これは教育目的の架空キャラクターによる説明であり、医療助言ではありません。\n脚の筋・関節・血管が体重を支える主役です。\nふくらはぎの硬い痛みや熱感は要警戒。\n突然の動かしにくさは脳・神経のサインかも。\n実際の症状は医療従事者にご相談ください。",
+  },
+  en: {
+    "head": "This is an educational fiction; not medical advice.\nThe head houses the brain, eyes, ears, nose, mouth.\nWatch for headache, dizziness, tinnitus.\nSudden severe headache or weakness needs urgent care.\nPlease consult a real healthcare professional for actual symptoms.",
+    "chest": "This is an educational fiction; not medical advice.\nThe chest holds the heart and lungs; circulation + breathing.\nChest pain, shortness of breath, palpitations are key signs.\nCrushing pain with cold sweat -> emergency.\nPlease consult a real healthcare professional for actual symptoms.",
+    "heart": "This is an educational fiction; not medical advice.\nThe heart beats ~100k times a day and pumps blood body-wide.\nPalpitations, chest pain, breathlessness, swelling are warnings.\nChest pain over 5 minutes -> call emergency.\nPlease consult a real healthcare professional for actual symptoms.",
+    "abdomen": "This is an educational fiction; not medical advice.\nThe abdomen contains stomach, intestines, liver, kidneys.\nWatch pain, nausea, bowel changes.\nSevere pain or bloody stool -> see a doctor promptly.\nPlease consult a real healthcare professional for actual symptoms.",
+    "left-arm": "This is an educational fiction; not medical advice.\nArms enable grasping and fine motor control.\nNumbness, weakness, swelling are warning signs.\nLeft-arm pain with chest discomfort can be cardiac -> emergency.\nPlease consult a real healthcare professional for actual symptoms.",
+    "right-arm": "This is an educational fiction; not medical advice.\nDense nerves, vessels, muscles, bones in a compact form.\nNumbness, coldness, sudden weakness need attention.\nTrauma or sudden paralysis -> see a doctor.\nPlease consult a real healthcare professional for actual symptoms.",
+    "left-leg": "This is an educational fiction; not medical advice.\nLegs carry weight and major blood vessels.\nOne-sided swelling, redness, pain may signal clots (DVT).\nWith shortness of breath -> emergency (PE risk).\nPlease consult a real healthcare professional for actual symptoms.",
+    "right-leg": "This is an educational fiction; not medical advice.\nMuscles, joints, and vessels in the leg bear your weight.\nFirm calf pain or warmth is a red flag.\nSudden inability to move -> may be neurological.\nPlease consult a real healthcare professional for actual symptoms.",
+  },
+};
+
+// -----------------------------------------------------------------------------
+// State
+// -----------------------------------------------------------------------------
+let backendLive = false;
+const statusEl = document.getElementById("status");
+const chatEl = document.getElementById("chat");
+const emptyHint = document.getElementById("empty-hint");
+const langSel = document.getElementById("lang");
+const baseUrlInp = document.getElementById("base-url");
+
+function lang() { return langSel.value; }
+function partLabel(id) { return PART_NAMES[lang()][id] || id; }
+
+// -----------------------------------------------------------------------------
+// Health check (decides live vs mock)
+// -----------------------------------------------------------------------------
+async function checkBackend() {
+  const url = baseUrlInp.value.replace(/\/v1\/?$/, "") + "/health";
+  try {
+    const r = await fetch(url, { method: "GET" });
+    if (r.ok) {
+      backendLive = true;
+      statusEl.textContent = "live";
+      statusEl.className = "status ok";
+      return;
+    }
+  } catch (_) { /* fallthrough */ }
+  backendLive = false;
+  statusEl.textContent = "mock";
+  statusEl.className = "status mock";
+}
+
+baseUrlInp.addEventListener("change", checkBackend);
+langSel.addEventListener("change", () => {
+  // Also flip the en/ja text in the banner
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    el.hidden = el.dataset.lang !== lang();
+  });
+});
+
+// -----------------------------------------------------------------------------
+// LLM call (live -> mock fallback)
+// -----------------------------------------------------------------------------
+async function callDoctor(partId) {
+  const partName = partLabel(partId);
+  const userMsg = USER_TEMPLATE[lang()](partName);
+  if (!backendLive) {
+    return { text: MOCK[lang()][partId] || "(no mock available)", backend: "mock", hints: [] };
+  }
+  const url = baseUrlInp.value.replace(/\/$/, "") + "/chat/completions";
+  const body = {
+    model: "llive-rad",
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT[lang()] },
+      { role: "user",   content: userMsg },
+    ],
+    max_tokens: 400,
+    temperature: 0.4,
+    x_rad_domain: "medical_corpus_v2",
+    x_rad_hint_limit: 3,
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const data = await r.json();
+  const text = (data.choices && data.choices[0] && data.choices[0].message &&
+                data.choices[0].message.content) || "(empty)";
+  const hints = (data.x_llive_rad_hints || []).map(p => p.split(/[\\/]/).pop());
+  return {
+    text,
+    backend: data.x_llive_backend || "llive",
+    model: data.x_llive_model || "",
+    hints,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Click handler
+// -----------------------------------------------------------------------------
+function appendBubble(role, text, meta) {
+  if (emptyHint) emptyHint.remove();
+  const b = document.createElement("div");
+  b.className = `bubble ${role}`;
+  b.textContent = text;
+  if (meta) {
+    const m = document.createElement("div");
+    m.className = "meta";
+    m.innerHTML = meta;
+    b.appendChild(m);
+  }
+  chatEl.appendChild(b);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function setActive(partId) {
+  document.querySelectorAll("svg.body .region").forEach(r => r.classList.remove("active"));
+  if (partId) {
+    document.querySelectorAll(`svg.body .region[data-part="${partId}"]`).forEach(r => r.classList.add("active"));
+  }
+}
+
+async function onPartClick(partId) {
+  const partName = partLabel(partId);
+  setActive(partId);
+  appendBubble("user", partName);
+  // Loading bubble
+  const loading = document.createElement("div");
+  loading.className = "bubble doc";
+  loading.innerHTML = '<span class="spinner"></span>thinking...';
+  chatEl.appendChild(loading);
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  try {
+    const reply = await callDoctor(partId);
+    loading.remove();
+    const meta = [
+      `backend = <code>${reply.backend}</code>`,
+      reply.model ? `model = <code>${reply.model}</code>` : "",
+      reply.hints && reply.hints.length
+        ? `RAD hints: <span class="hints">${reply.hints.join(", ")}</span>`
+        : (backendLive ? "RAD hints: (no match in medical_corpus_v2)" : ""),
+    ].filter(Boolean).join(" · ");
+    appendBubble("doc", reply.text, meta);
+  } catch (err) {
+    loading.remove();
+    // Fall back to mock on error
+    const fallback = MOCK[lang()][partId] || "(no mock available)";
+    appendBubble("doc", fallback,
+      `<span class="hints">fetch failed (${err.message}) — fell back to mock</span>`);
+  }
+}
+
+document.querySelectorAll("svg.body .region").forEach(el => {
+  el.addEventListener("click", () => onPartClick(el.dataset.part));
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPartClick(el.dataset.part); }
+  });
+});
+
+// kick off health check
+checkBackend();
+</script>
+
+</body>
+</html>
