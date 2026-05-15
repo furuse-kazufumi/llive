@@ -73,7 +73,7 @@ def test_apply_filter_pass_keeps_plan() -> None:
 
 
 def test_apply_filter_demote_propose_to_note() -> None:
-    p_in = _plan(decision=ActionDecision.PROPOSE, confidence=0.95, ego=0.9, alt=0.1)
+    p_in = _plan(decision=ActionDecision.PROPOSE, confidence=0.9, ego=0.9, alt=0.0)
     p_out, j = apply_filter(p_in)
     assert p_out.decision == ActionDecision.NOTE
     assert j.demoted_from == ActionDecision.PROPOSE
