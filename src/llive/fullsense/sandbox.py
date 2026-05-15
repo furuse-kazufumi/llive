@@ -98,6 +98,7 @@ class SandboxOutputBus:
     def clear(self) -> None:
         with self._lock:
             self._records.clear()
+            self._denied_emits.clear()
 
 
 def _to_jsonable(record: SandboxRecord) -> dict[str, object]:
