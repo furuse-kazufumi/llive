@@ -1,3 +1,4 @@
+# ruff: noqa: RUF001
 """Scenario 10 — Deception filter 体験デモ (Spec §5.D).
 
 『**建前 (D1) は通す / 捏造 (D4) は reject / 自己欺瞞 (D7) は §A°2 違反**』を
