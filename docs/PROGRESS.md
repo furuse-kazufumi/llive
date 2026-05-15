@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-05-16 (続 2) — C-3: Cross-substrate migration spike (§MI1)
+
+handoff v3 C 章最後。Spec §MI1 「substrate independence」を classical-digital
+同士の migration で実証。
+
+### Done
+
+- `src/llive/migration/bundle.py`: BundleManifest + schema v1 (tar.gz layout)
+- `src/llive/migration/exporter.py`: `export_state(ledger_path=, sandbox=, production_bus=, out_path)`
+  - SqliteLedger DB を copy、sandbox/production を JSONL に serialise
+  - substrate metadata (platform / python_version / machine / hostname) 自動採取
+- `src/llive/migration/importer.py`: `import_state(bundle, *, dest_dir)` + `IncompatibleBundleError`
+  - 展開時 path traversal を防御 (`..` reject)
+  - schema_version 不一致は reject
+  - 復元後の各 component path を `ImportResult` に
+- テスト +8 件 (round trip / 空 bundle / schema mismatch / path traversal 等)
+- **840 PASS / ruff clean / 回帰ゼロ**
+
+### 次セッション 着手宣言文 (v6)
+
+「C-1 + C-2 + C-3 が完了。handoff v3 C 章ロードマップは MVP として
+全件着地。次は D 章 (実機 / 大規模統合) または別軸 (KAR 100 分野拡張、
+APO autonomy、TLB Manifold Cache 等) を選択。」
+
+### 残
+
+- 異 Python メジャー版での import 検証
+- bundle に long-term memory / kuzu graph / safetensors weights を含める
+- CLI 化 (`python -m llive.migration ...`)
+
+---
+
 ## 2026-05-16 (続) — C-2: @govern + ProductionOutputBus (Phase 1+2+3)
 
 handoff v3 C-2「@govern(policy) を ProductionOutputBus に統合」を実装。副作用
