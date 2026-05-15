@@ -32,9 +32,9 @@ def _force_mock_backend(monkeypatch: pytest.MonkeyPatch) -> None:
     reset_default_index()
 
 
-def test_list_scenarios_has_ten() -> None:
+def test_list_scenarios_has_twelve() -> None:
     scenarios = list_scenarios()
-    assert len(scenarios) == 10
+    assert len(scenarios) == 12
     ids = [s.id for s in scenarios]
     assert ids == [
         "rad-quick-tour",
@@ -47,6 +47,8 @@ def test_list_scenarios_has_ten() -> None:
         "resident-cognition",
         "multi-track",
         "deception-filter",
+        "rad-omniscience",
+        "image-algorithm-advisor",
     ]
 
 
