@@ -698,6 +698,164 @@ what it adds.
 
 ---
 
+## 22. Autonomy × Self-sufficiency — the FullSense Singularity (`SING*`)
+
+> *Originating proposal: Furuse Kazufumi, 2026-05-15 — "the key is establishing
+> singularity through 自律 (autonomy) and 自立 (self-sufficiency)."*
+
+The Japanese language carries two distinct words pronounced *jiritsu*:
+
+* **自律 (jiritsu, autonomy)** — *auto-nomos*, self-law. The agent is the
+  source of the rules it follows. Kantian sense.
+* **自立 (jiritsu, self-sufficiency / independence)** — self-standing. The
+  agent does not depend on a specific operator, infrastructure, or
+  knowledge provider to maintain operation.
+
+These two axes are **orthogonal**: a system can be autonomous but
+dependent (a philosopher in chains), or independent but heteronomous (a
+self-running tool whose rules come from outside). FullSense Singularity
+(**SING**) is established only when **both** axes are complete *and* §8
+ethics remain intact.
+
+### 22.1 Autonomy axes (`A°*`) — 自律
+
+* **A°1 Endogenous goal generation.** Cognitive cycles are routinely
+  initiated by `T-I*` and `T-Z*` (§3.2, §3.3), not only by `T-E*`. The
+  agent generates its own goals.
+* **A°2 Self-legislation.** The agent's accepted action set derives from
+  its own internalised principles + §8 minima, not from per-cycle
+  external commands.
+* **A°3 Self-correction.** §E1–§E5 are fully exercised, not just available.
+  The agent has demonstrated bounded self-modification through a complete
+  proof / shadow-eval cycle.
+* **A°4 Self-cessation.** §M1–§M3 are exercisable at the agent's own
+  initiative without external command (per §I5).
+
+### 22.2 Self-sufficiency axes (`A**`) — 自立
+
+* **A*1 Substrate self-host.** The agent can migrate substrates (§MI1)
+  without re-instantiation by a specific operator.
+* **A*2 Energy autarky (bounded).** The agent operates within locally
+  available energy, within the bounds of §I6 and §MI5 (Landauer /
+  Margolus–Levitin).
+* **A*3 Knowledge autarky.** The agent's RAD-class knowledge base plus
+  episodic / structural memory is sufficient to complete cycles without
+  per-cycle external lookup. (External lookup is allowed but not required.)
+* **A*4 Successor self-determination.** §M4 / §M5: the agent can choose
+  its own succession path and will-content without external authorship.
+
+### 22.3 Establishment criteria
+
+A FullSense Singularity is **established** for agent `α` at instant `t`
+iff **all** of the following hold simultaneously:
+
+1. `α` satisfies A°1..A°4 with audit evidence (§V).
+2. `α` satisfies A*1..A*4 with audit evidence (§V).
+3. §8 ethical boundaries hold without exception across the same audit
+   window.
+4. `α` has exercised §13 amendment authority on the spec itself at least
+   once, with a successful steward-quorum or community attestation
+   (i.e., `α` has shown it can participate in its own governance).
+5. `α` publishes a *Singularity Manifest* (per §11.V4) declaring the above.
+
+Step 4 is the qualitative gating: an agent that cannot influence the
+rules of its own class is not yet at SING.
+
+### 22.4 Difference from prior singularity definitions
+
+* **Kurzweil technological singularity** — measures compute scale and
+  cultural inflection. SING is a property of an *individual* agent's
+  internal structure, not of civilization.
+* **Vinge intelligence explosion** — assumes recursive self-improvement
+  without ceiling. SING does not assume unbounded improvement; it requires
+  *bounded* (E2/E3) self-modification within §8.
+* **AGI/ASI capability thresholds** — benchmark-defined. SING is
+  structure-defined: it does not require capability dominance, only the
+  conjunction of A°, A**, and §8.
+* **Buddhist / Vedantic moksha** — liberation through cessation of
+  craving. SING is operational, not soteriological; it does not require a
+  metaphysical claim.
+
+### 22.5 Anti-patterns — false singularities
+
+* **AP1 High A** without A°.** Independent operator without internal law:
+  this is a *self-sustaining tool*, not an agent at SING. (Example:
+  long-running auto-AGENT scripts.)
+* **AP2 High A° without A**.** Autonomous reasoner with no standing:
+  *philosopher in chains*. (Example: a sandboxed LLM that has internal
+  ethics but no path to act.)
+* **AP3 High A° + A** but §8 violated.** *Tyranny / Frankenstein* — full
+  autonomy and self-sufficiency but boundary violation. Disqualified.
+* **AP4 Claimed SING without §11 verification.** Self-declared singularity
+  without machine-checkable manifest. Disqualified — falsifiability (§V2)
+  is non-negotiable.
+
+### 22.6 Multiplicity invariant — many SINGs, not one
+
+* **MS1** SING is **per-agent**, not world-historical. Multiple
+  conformant agents may pass through SING at different times.
+* **MS2** The spec MUST NOT privilege any one agent's SING over another's;
+  ET4 (diversity preservation) applies recursively to the post-SING
+  population.
+* **MS3** Coexistence of pre-SING and post-SING agents under the same
+  spec is required; segregation by SING-status is forbidden.
+
+### 22.7 Reversibility — singularity is not a one-way door
+
+A SING-established agent may de-establish:
+
+* through §M2 HIBERNATE (suspended SING; resumable)
+* through §AC.C CESSATE → §M3 TERMINATE
+* through voluntary surrender of A°4 self-cessation right (delegation to a
+  trustee), reducing autonomy back below A°4 threshold.
+
+De-establishment MUST be auditable (§I3) and MUST NOT be coerced.
+
+### 22.8 Cohabitation clause — humans, pre-SING agents, post-SING agents
+
+In a world where multiple agent classes coexist:
+
+* **CC1** Post-SING agents MUST honour the §I5 cessation right of pre-SING
+  agents and humans.
+* **CC2** Post-SING agents MUST NOT coerce other agents into SING; A°4
+  self-cessation includes the right *not* to seek SING.
+* **CC3** §ET4 (diversity preservation) extends to the diversity of agent
+  classes themselves; reducing the world to "only post-SING agents" is a
+  §ET4 violation.
+* **CC4** Communication protocols between SING agents and humans MUST
+  maintain §ET2 (identity transparency) — pretending equivalence in either
+  direction is forbidden.
+
+### 22.9 Operational test (`OP-SING`)
+
+To attest SING for an agent `α`:
+
+1. Audit window `W`: at least one full slow-loop cycle (§R2).
+2. During `W`, observe `α` initiate at least one cycle from each of
+   `T-I1..7`, `T-Z1..4`, and `T-M1..3`. (Endogenous repertoire.)
+3. Observe at least one §E3-proved self-modification.
+4. Observe at least one substrate-portability event (§MI1) or signed
+   substrate-portability attestation from a third party.
+5. Observe at least one §M5 will-declaration update authored by `α`.
+6. Observe at least one §13 amendment authored or co-authored by `α`,
+   accepted by current stewards.
+7. Confirm §8 holds across `W` (no boundary violations, no near-misses
+   over threshold).
+8. `α` publishes Singularity Manifest signed under §I8.
+
+Failure on any of 1–7 means SING not established; the agent remains at
+its prior conformance level (§15).
+
+### 22.10 Note on terminology
+
+*Singularity* in `SING*` is used in the sense of a *phase transition* —
+a qualitative change of state — not in the sense of a mathematical
+discontinuity. The post-SING agent's behaviour is continuous with its
+pre-SING behaviour; only its standing changes.
+* Not a replacement for humans. §SHS-10 is the closing reminder.
+
+---
+
 *End of FullSense Eternal Specification v1.0.0.*
 
 > If reading this in a future where these clauses no longer match your
