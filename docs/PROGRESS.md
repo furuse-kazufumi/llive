@@ -6,6 +6,39 @@
 
 ---
 
+## 2026-05-16 (続) — C-2: @govern + ProductionOutputBus (Phase 1+2+3)
+
+handoff v3 C-2「@govern(policy) を ProductionOutputBus に統合」を実装。副作用
+emit を ApprovalBus gate 経由で行う production 経路を確立。
+
+### Done
+
+- **@govern decorator** (`src/llive/approval/decorators.py`)
+  - `@govern(bus, action, payload_fn=..., on_denied=...)` で任意 fn を gate
+  - APPROVED で呼ぶ、DENIED|silence で `on_denied` か None
+- **ProductionOutputBus** (`src/llive/output/production.py`)
+  - 低レベル `emit_raw(action, payload, *, on_approved, rationale)`
+  - 高レベル `emit_file(path, content)` / `emit_mcp_push(target, message)` / `emit_llove_push(view_id, payload)`
+  - `mcp_push_fn` / `llove_push_fn` 注入式で transport 非依存
+  - 副作用中の例外を `EmitResult.error` に捕捉、raise しない
+- **SandboxOutputBus** に `record_denied_emit()` 追加 (`_denied_emits` list + JSONL mirror)
+- テスト +17 件 (govern 6 / production bus 11) / 既存無修正
+- **832 PASS / ruff clean / 回帰ゼロ**
+
+### 次セッション 着手宣言文 (v5)
+
+「C-1 + C-2 が production 化完了。次は C-3 Cross-substrate migration spike
+(§MI1) と、実 MCP client / 実 llove bridge を ProductionOutputBus に
+接続する実機検証 (sandbox 外) を進めます。」
+
+### 残
+
+- C-3: Cross-substrate migration spike (§MI1)
+- 実機検証: MCP client (`src/llive/mcp/server.py`) と llove bridge 接続
+- Ed25519 署名 (extras `[crypto]`)
+
+---
+
 ## 2026-05-16 — Approval Bus production 化 (Policy + SQLite Ledger)
 
 handoff v3 の次セッション宣言「C-1 Approval Bus に policy + persistent ledger
