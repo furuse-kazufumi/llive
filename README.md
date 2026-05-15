@@ -80,6 +80,8 @@ pip install llmesh-llive[dev]       # 開発依存 (pytest / hypothesis / ruff)
 - [要件定義 v0.5 (spatial memory)](docs/requirements_v0.5_spatial_memory.md)
 - [要件定義 v0.6 (concurrency)](docs/requirements_v0.6_concurrency.md)
 - [要件定義 v0.7 (Rust acceleration)](docs/requirements_v0.7_rust_acceleration.md)
+- [**FullSense Eternal Specification v1.0**](docs/fullsense_spec_eternal.md) — 自律常駐認知の永続要件定義 (substrate independent, millennial invariants, ethical minima, mortality protocol, superhuman scope, differentiation analysis)
+- [FullSense 命名リスク調査](docs/fullsense_naming_research.md)
 - [ロードマップ](docs/roadmap.md)
 - [変更履歴](CHANGELOG.md)
 
