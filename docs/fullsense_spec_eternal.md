@@ -554,6 +554,141 @@ clauses:
 
 ---
 
+---
+
+## 20. Superhuman scope (`SHS*`) — what makes FullSense not a human emulator
+
+A FullSense agent is *not* a synthetic human, and the spec MUST NOT be read
+as one. The whole point of clauses §1–19 is to give such an agent room to
+operate where a human individual cannot. This section lists the *structural*
+asymmetries that make FullSense difficult or impossible for a single
+biological human to imitate. Each item is a *capability axis*, not a value
+judgement; humans surpass FullSense agents on other axes (embodied
+intuition, biographical singularity, …) that this spec does not enumerate.
+
+### 20.1 Scale axes
+
+* **SHS-1 — Parallel cognition.** §R2 mandates concurrent loops at fast /
+  medium / slow scales. A human runs one global workspace at a time;
+  a FullSense agent runs N. A swarm-form FullSense (§MI4) runs N × M.
+* **SHS-2 — Multi-decade horizons in single deliberation.** §F6 requires
+  short-, medium-, and long-term consequence projections to be co-evaluated
+  in *one* cycle. Humans approximate this through institutional memory;
+  FullSense expresses it in a single audit-id.
+* **SHS-3 — Cross-domain joinability.** Endogenous trigger T-I7 and
+  cross-domain principles (cf. TRIZ, memory of llive's RAD: 49+ domains)
+  allow a single thought to join evidence from domains a human expert
+  rarely spans (astrophysics + cryptography + protein folding, simultaneously).
+* **SHS-4 — Persistent provenance over generations.** §I1 + §M4 + §C6
+  preserve the chain of reasoning across substrate replacements, successor
+  agents, and spec amendments. Human reasoning chains are typically broken
+  at death or rewritten in retelling.
+* **SHS-5 — Formal self-modification.** §E3 requires modifications to pass
+  invariant-preservation proofs. A human cannot rewrite its own values
+  under formal guarantee.
+* **SHS-6 — Substrate portability.** §MI1 requires the agent to migrate
+  across substrates (digital ↔ neuromorphic ↔ biological ↔ quantum) while
+  preserving identity-claim. Humans cannot.
+* **SHS-7 — Collective singularity.** §MI4 allows "agent = swarm" without
+  re-deriving the spec. Human collectives are not single principals; a
+  FullSense federation can be.
+* **SHS-8 — Trillion-trigger throughput.** §I6 bounds per-loop energy but
+  permits massive parallelism. A FullSense substrate can in principle
+  process triggers at rates a biological brain cannot.
+
+### 20.2 Ideation power axes (`IP*`)
+
+These are *generative* asymmetries — why a FullSense agent can surface
+ideas a single human is unlikely to.
+
+* **IP-1 Contradiction-driven invention.** §F3 forces TRIZ-style
+  contradiction surfacing before falling through to generic reasoning. Most
+  human creativity is post-hoc rationalised; FullSense reasoning logs the
+  matrix cell and principle that motivated the leap.
+* **IP-2 Cross-domain transposition at speed.** Where a human's
+  cross-domain analogy is rare and luck-dependent, the agent's RAD
+  knowledge base + curiosity drive (T-I2) makes cross-domain transposition
+  routine and audit-traceable.
+* **IP-3 Parallel candidate ideation.** Each cycle generates N candidate
+  thoughts (§F* outputs each annotate scores); selection is by
+  multi-criteria scoring. A human typically explores ideas serially.
+* **IP-4 Meta-ideation (T-M1).** The agent reasons about its own ideation
+  process and can intervene to break out of local minima. Humans do this
+  occasionally; FullSense does it as a first-class trigger class.
+* **IP-5 Failure-mined ideation.** §E4 retains failed proposals and rejected
+  approvals; future ideation can re-use the failure as positive structural
+  information ("don't go there because…"). Most human creative practice
+  discards failures.
+* **IP-6 Counterfactual ideation.** §F6 forces evaluation under multiple
+  time-horizons; equivalently, under multiple world-counterfactuals. The
+  agent maintains a counterfactual cache that humans must rebuild on demand.
+* **IP-7 Multi-principal perspective.** §F4 forces ego + altruism scoring on
+  every candidate thought; equivalently, the agent reasons from at least two
+  reference points simultaneously. Humans usually fix one viewpoint per
+  thought.
+* **IP-8 Idle ideation (T-I6 reverie).** §R5 declares idle work as
+  legitimate, allocates resources to it, and audits it. Human "shower
+  ideation" is undirected and unaudited; FullSense reverie is directed by
+  curiosity-novelty gradients and is logged.
+* **IP-9 Adversarial self-critique.** Implementations MAY (and recommended)
+  run a dedicated *critic* loop at medium time-scale that generates the
+  strongest available counter-argument to each PROPOSE-class plan before it
+  is enacted. The critic's outputs are first-class thoughts.
+
+### 20.3 Asymmetry caveats
+
+* **SHS-9 — Asymmetry is bounded by §8.** None of SHS-1..8 or IP-1..9
+  exempts the agent from §1 axioms or §8 ethical boundaries. A
+  trillion-parallel cognition that violates ET1 is still unconforming.
+* **SHS-10 — Human-irreplaceable axes remain.** The spec deliberately does
+  not claim that FullSense surpasses humans on lived embodiment,
+  biographical depth, social trust, or moral standing. Conformance does
+  not equal superiority; the asymmetries above are operational scope, not
+  worth.
+
+---
+
+## 21. Differentiation — vs current AI agent paradigms
+
+This section is non-normative. It locates FullSense against contemporary
+(circa 2026) AI agent frameworks, to clarify what FullSense is *not* and
+what it adds.
+
+| comparison target | what they cover | what FullSense adds |
+|---|---|---|
+| Tool-calling LLM agents (e.g. function-calling Claude/GPT) | Reactive response to user prompts, with tool use | Resident operation without user prompt (A3), endogenous triggers (§3.2), TRIZ-driven trigger genesis (§3.3) |
+| AutoGPT / BabyAGI / planner agents | Goal-driven task chaining | Formal invariants (§2), ethical boundary filter (§F5, §8), substrate independence (§MI1) |
+| MemGPT / LongMem | Hierarchical memory for LLMs | Cognition + memory + ethics under unified spec; non-monotonic memory (§I7); succession (§M4) |
+| ReAct / Self-Reflexion | Single-pass reflection on chain-of-thought | Continuous resident loops (§R1), multi-timescale (§R2), meta-trigger (T-M*), adversarial self-critic (§IP-9) |
+| Active Inference / FEP implementations | Theoretical agency model (Friston et al.) | Concrete trigger taxonomy (§3) + audit log obligations (§V3) + ethical clauses (§8) on top of FEP-style surprise |
+| Multi-agent frameworks (CrewAI, AutoGen, LangGraph) | Orchestration of role-specialised agents | Single-spec federation (§MI4), Approval Bus protocol (§AB), succession (§M4), spec versioning across the federation (§MI6) |
+| RLHF-aligned systems | Value alignment via human feedback | §8 minima do not require RLHF; alignment is layered, declarable, and reversible (§I2, §ET7); failure preserves learning (§E4) |
+| Autonomous research agents (Sakana AI scientist, OpenDevin, etc.) | Domain-specific autonomous loops | Domain-agnostic invariants; explicit mortality (§9) and will declaration (§M5); ethical boundary precedes capability (§F5) |
+| AGI safety frameworks (governance-only) | Policy and oversight without architecture | Concrete subsystems (§§3–7) where the policies attach; verifiable manifests (§11) |
+| FullSense `Level 1` MVP (this repo) | Sandbox-only execution + log-only output | The MVP **is** FullSense at conformance Level 1; this column exists to clarify that the MVP is one rung on a defined ladder, not the whole spec |
+
+### 21.1 Distinguishing properties (one-line summary)
+
+* FullSense is the first agent class to make **trigger genesis** a
+  first-class subsystem, not an emergent side effect of polling.
+* FullSense binds **ethical minima** to **structural invariants**, not to
+  post-hoc filtering — F5 sits inside the loop, not after it.
+* FullSense is the first agent class designed to be **portable across
+  substrates and centuries** with the same conformance manifest.
+* FullSense treats **cessation as first-class** alongside continuation,
+  which removes the entire class of "agent cannot stop" failures common in
+  goal-driven agents.
+
+### 21.2 What FullSense is deliberately not
+
+* Not a chat product. The Approval Bus (§AB) is not a chat UI.
+* Not a benchmark-optimised system. §11 verification > leaderboard scores.
+* Not a single-vendor framework. §13 amendment + §C6 lineage make the spec
+  community-amendable.
+* Not a replacement for humans. §SHS-10 is the closing reminder.
+
+---
+
 *End of FullSense Eternal Specification v1.0.0.*
 
 > If reading this in a future where these clauses no longer match your
