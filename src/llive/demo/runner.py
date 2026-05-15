@@ -113,6 +113,7 @@ def list_scenarios() -> list[Scenario]:
     from llive.demo.scenario_9_multitrack import MultiTrackScenario
     from llive.demo.scenario_10_deception import DeceptionFilterScenario
     from llive.demo.scenario_11_rad_omniscience import RadOmniscienceScenario
+    from llive.demo.scenario_12_image_pipeline import ImageAlgorithmAdvisorScenario
 
     return [
         QuickTourScenario(),
@@ -126,6 +127,7 @@ def list_scenarios() -> list[Scenario]:
         MultiTrackScenario(),
         DeceptionFilterScenario(),
         RadOmniscienceScenario(),
+        ImageAlgorithmAdvisorScenario(),
     ]
 
 
