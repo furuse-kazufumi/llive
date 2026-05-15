@@ -12,7 +12,6 @@ import sys
 from dataclasses import asdict, dataclass
 from typing import Literal
 
-
 Phase = Literal["short", "mid", "long"]
 
 
