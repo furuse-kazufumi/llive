@@ -1,9 +1,13 @@
-"""ApprovalBus — Spec §AB (Approval Bus) の MVP.
+"""ApprovalBus — Spec §AB (Approval Bus).
 
 §AB1 replayable — 過去 approval/denial を ledger に残し再現可能
 §AB2 principal identification — 誰が approve したかが追跡可能
 §AB3 revoke → rollback — 後から取消し可能
 §AB4 silence == denial — 沈黙は不承認 (active deny を要求しない)
+
+Production 化 (2026-05-16):
+- optional `policy=` で事前 gate (AllowList/DenyList/Composite)
+- optional `ledger=` で SQLite 永続化 (再起動越し replay)
 """
 
 from __future__ import annotations
@@ -12,12 +16,20 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from llive.approval.ledger import SqliteLedger
 
 
 class Verdict(StrEnum):
     APPROVED = "approved"
     DENIED = "denied"
     REVOKED = "revoked"
+
+
+class _PolicyLike(Protocol):
+    def evaluate(self, request: "ApprovalRequest") -> Verdict | None: ...
 
 
 @dataclass(frozen=True)
