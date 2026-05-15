@@ -642,14 +642,40 @@ SIL は **Level 2 範囲内で実装可能** (sandbox 限定維持)、Multi-trac
 > 「続きとして FullSense Spec v1.1.0 §22 SING の **Level 3 (Permitted-action)**
 > 着手します。**C-1 Approval Bus** から開始。」
 
+### handoff v3 追記 (2026-05-15 marathon session 2 巡目末 / 2026-05-16 セッション越境)
+
+**追加で完了したこと:**
+
+- **SIL** (`src/llive/fullsense/self_interrogation.py`, 17 tests) — 5 Interrogator
+  (SI1..SI5) を non-destructive append で agent が自分に問いかける meta-prompt
+  sub-stage を実装
+- **APO Profiler** (`src/llive/perf/profiler.py`, 8 tests)
+- **ICP IdleDetector** (`src/llive/idle/detector.py`, 3 tests)
+- **TLB skeleton** (`src/llive/fullsense/bridges/`, 12 tests) — Bridge /
+  GlobalCoordinator / ManifoldCache
+- **DTKR TieredRouter** (`src/llive/memory/tier.py`, 5 tests)
+- **Math Toolkit** (`src/llive/memory/rad/math_hints.py`, 5 tests)
+- **Approval Bus skeleton** (`src/llive/approval/bus.py`, 8 tests) — §AB1..4 全実装
+- **RPAR ShellDriver** (`src/llive/rpa/drivers/shell.py`, 5 tests) —
+  Approval 越し + 禁止トークン無条件 reject
+- **KAR ingestor** (`src/llive/kar/manifests.py`, 6 tests) — 11 corpus manifest
+- **PM record script** (`scripts/record_demos.sh`) — asciinema 48 cast 録画 skeleton
+
+✅ **Conformance Manifest: holds=24 / violated=0 / undecidable=1 (SING のみ)**
+✅ **638 → 708 tests / 全 PASS / ruff clean** (+70)
+
+### 次セッション SESSION START 直後の宣言文 (v3)
+
+> 「続きとして FullSense Spec v1.1.0 §22 SING の **Level 3 (Permitted-action)** で
+> 9 軸 skeleton の **production 化** に着手します。最初は C-1 Approval Bus に
+> policy + persistent ledger を結合させ、その上に RPAR drivers を順次乗せます。」
+
 ### C. SING Level 3 実装 (優先順、確認なし即着手)
 
-1. **C-1 Approval Bus** (`src/llive/approval/bus.py`) — Spec §AB
-   - replayable approval channel (`AB1`)
-   - principal identification (`AB2`)
-   - revoked approval → rollback / compensating action (`AB3`)
-   - 沈黙 = denial (`AB4`)
-   - pubsub 形式、in-memory + persistent backend ハイブリッド
+1. **C-1 Approval Bus production 化** (skeleton 完了済 → policy + persistent ledger)
+   - 既存 `src/llive/approval/bus.py` に sqlite ledger を追加
+   - replayable approval channel (`AB1`) を多 process 跨ぎに対応
+   - principal identification (`AB2`) を pubkey 署名で強化
 2. **C-2 `@govern(policy)`** (`src/llive/approval/policies/`)
    - memory:`agent-governance` を ProductionOutputBus に統合
    - 各 RPA action に policy 適用必須化
@@ -659,8 +685,8 @@ SIL は **Level 2 範囲内で実装可能** (sandbox 限定維持)、Multi-trac
 
 ### D. RPAR Level 3 同時着手 (Level 3 と表裏)
 
-1. **D-1 IdleDetector** (`src/llive/rpa/idle.py`) — keyboard/mouse の lastInput
-2. **D-2 ShellDriver** (`src/llive/rpa/drivers/shell.py`) — subprocess + sanitize
+1. **D-1 IdleDetector OS bindings** (skeleton 完了 → Win/Mac/Linux 本実装)
+2. **D-2 ShellDriver hardening** (skeleton 完了 → forbidden zone 拡張 + 監査強化)
 3. **D-3 KeyboardDriver / MouseDriver** — pywin32 (Win) / pyobjc (mac) / xdotool (Linux)
 4. **D-4 FilesystemDriver** — pathlib + forbidden zone
 5. **D-5 TaskRecorder + Player** — flow YAML 録画 → 再生
