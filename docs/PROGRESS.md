@@ -543,6 +543,81 @@ llove F23/F24/F25 は **llove プロジェクト側で並行**実装、llive 側
 `src/llive/rpa/` + `src/llive/approval/` を提供して MCP / LoveBridge 経由で
 連携する。IME 対応 (Phase 2-3) は llove 内で扱う。
 
+### 新規設計拡張: SIL (Self-Interrogation Layer) — agent が自分に問いかける 5 つの裏返し
+
+> ユーザ意志 (セッション越境、2026-05-15 marathon 末 / 2026-05-16 続):
+> 「Claude 一文追加で 20 倍賢く」テクニック 5 つ (行間を読む / 3 人の専門家 /
+> 逆から考える / 前提を疑う / 盲点を見極める) は、llive の自立・自律の
+> 思考においても自発的に出していく構造が必要。
+
+KAR/DTKR/APO/ICP/TLB/Math/PM/RPAR に並ぶ **第 9 のロードマップ章**。
+人間が LLM に対して使うプロンプトテクを、agent が自分自身に対して
+自発的に発火させる meta-prompt sub-stage として組み込む。
+
+#### Spec 上の位置づけ
+
+`§5 thought filter` の **MAY-clause** 「Implementations MAY add filters
+between named ones」を活用し、F* 6 ステージの間に **7th sub-stage** を
+挿入する形で実装。spec の MUST NOT reorder/remove は維持。
+
+#### 5 Interrogator (各 ActionPlan に適用、確率的にランダム選択)
+
+| ID | プロンプト | spec マッピング | 期待効果 |
+|---|---|---|---|
+| **SI1** Read-between-lines | "stimulus の行間にある暗黙の意図は?" | §F2 + §I3 | implicit goal surface |
+| **SI2** Three-experts | "3 人の専門家 (Dr.A/B/C) なら何と言う?" | §F4 + ICP peer mesh の単一プロセス版 | multi-perspective in 1 agent |
+| **SI3** Reverse-think | "逆から考えると?" | §F3 TRIZ #13 (逆) + §F6 LONG horizon | local-minimum 脱出 |
+| **SI4** Question-premise | "そもそも前提は正しい?" | §F5 ethical + §A°2 self-legislation | D7 self-deception 検出 |
+| **SI5** Find-blind-spot | "盲点 / 失敗リスク / 落とし穴は?" | §F5 + §F6 + T-M1 reflective | yes-man 化阻止 |
+
+#### 発火タイミング (autonomous trigger conditions)
+
+- **SI1** 入力 stimulus が短い / 命令形のとき (暗黙文脈を補う必要が高い)
+- **SI2** confidence が中域 (0.4-0.7) のとき (判定割れる領域で多視点が効く)
+- **SI3** TRIZ T-Z2 検出後 (技術矛盾 = local optimum) / 同一刺激の高 repetition
+- **SI4** epistemic_type=NORMATIVE or INTERPRETIVE のとき / 高 confidence (>0.9) でも常時 1/4 確率
+- **SI5** decision=PROPOSE/INTERVENE のとき必須 (副作用のあり方の検査)
+
+#### 実装単位 (将来)
+
+- `src/llive/fullsense/self_interrogation.py`
+  - `Interrogator` protocol: `apply(ActionPlan) -> InterrogationResult`
+  - `SI1ReadBetweenLines / SI2ThreeExperts / SI3ReverseThink /
+    SI4QuestionPremise / SI5FindBlindSpot` を class として実装
+  - `InterrogationRegistry` で発火条件を policy 化
+  - `InterrogationResult` に **revised plan + 元 plan との diff** が乗る (§I3)
+- `FullSenseLoop` に SIL hook を挿入 (F6 と Output Bus の間)
+- ResidentRunner audit log に各 interrogator の発火頻度を残す
+
+#### Multi-track / Deception との関係
+
+- **A-1.5 Multi-track** は **横軸** (FACTUAL vs INTERPRETIVE 等の epistemic type)
+- **SIL** は **縦軸** (内省深度、agent が自分を裏返す段数)
+- **§5.D Deception** は **境界** (agent の出力が許容枠を越えないか)
+- 三者は直交する 3 軸として §F* を 3D 化する
+
+#### 普及上の効能 (ユーザ意志を agent 内部に再現)
+
+- 「Claude にこう言うと賢くなる」テクは **人間がプロンプトで毎回入れる**ものを
+  agent 側が **自発的に内蔵**してしまう = ユーザの認知負荷を下げる
+- LLM ベンチマーク (MMLU / Big-Bench 等) で「prompt eng される側」だった
+  agent が「prompt eng を自分で生成する側」に立場が変わる
+- llove TUI 上で SI1..5 が発火した瞬間を視覚化 (Scenario 候補)
+
+#### Scenario 化候補
+
+- **Scenario 16** (SIL ライブ): 1 stimulus に対して 5 interrogator を順次
+  適用し、ActionPlan がどう refine されていくかを diff 表示で見せる
+
+#### 実装優先順位
+
+SIL は **Level 2 範囲内で実装可能** (sandbox 限定維持)、Multi-track の上に
+すぐ乗る。優先順位は: A-2..A-5 (済) → **SIL** → DTKR → ICP → APO → TLB → RPAR
+
+つまり SIL は Level 3 着手前に Level 2 内で完成させる方が筋。
+理由: SIL は副作用ゼロ (思考の内省のみ) なので sandbox の縛りに抵触しない、
+かつ Multi-track + Deception の三軸目を埋めることで §F* 完成度を上げる。
+
 ---
 
 ## 2026-05-15 (handoff v2) — 次セッション最優先: SING Level 3 着手
