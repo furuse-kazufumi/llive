@@ -11,6 +11,20 @@
 > singularity (§22)* — was proposed by **Furuse Kazufumi (古瀬 和文)** during
 > the construction of the `llive` project (May 2026). This document is the
 > formal articulation of that proposal.
+>
+> **Etymological note (preserved per §I1 source-anchored provenance):**
+> The given name *Kazufumi* (和文) carries the reading nuance "to tread
+> many counts / experiences" (和 *kazu*, count/many, harmonised; 文 *fumi*,
+> a step / a stride / a written line). The author specifically connects
+> this meaning to a structural requirement for AI evolution: **a FullSense
+> agent must accumulate and traverse many experiences before its
+> structural identity stabilises** — this is reified normatively in §A6
+> (evolution requires inner + outer signal), §E1–E4 (introspection, bounded
+> modification, formal pre-check, failure preserves learning), and §OP-SING
+> (operational test requires observing the agent traverse the full
+> repertoire of trigger classes across at least one slow-loop window).
+> The etymology is therefore not decorative; it names a load-bearing
+> property of the spec.
 
 | meta | value |
 |---|---|
