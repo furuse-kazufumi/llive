@@ -3,49 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-15 22:03:50
+- **最終更新**: 2026-05-16 07:35:08
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-70b1ea1 docs(progress): handoff v2 — Level 2 完了、次セッションは Level 3 (Approval Bus) 着手
-246dad5 docs(changelog): セッション総括 — SING Level 2 完了 + 5 scenarios + §F6 + 8 ロードマップ章
-6f60bdf feat(fullsense): §F6 Time-Horizon Filter — undecidable → holds
-f344fb0 auto: test_time_horizon.py 編集前 (2026-05-15 21:59)
-430c3b8 auto: test_time_horizon.py 編集前 (2026-05-15 21:58)
-59baca8 auto: test_time_horizon.py 編集前 (2026-05-15 21:58)
-2ba79d2 auto: manifest.py 編集前 (2026-05-15 21:57)
-71c3778 docs: RPAR (RPA Roadmap) + IME 対応 + README 12 シナリオ反映
-b3beac7 auto: PROGRESS.md 編集前 (2026-05-15 21:55)
-e701537 auto: README.md 編集前 (2026-05-15 21:55)
+a5644d9 docs(progress): handoff v3 — 9 軸 skeleton 完了 + manifest holds=24 達成
+3d19923 feat: 9 軸 skeleton 一括実装 — KAR/DTKR/APO/ICP/TLB/Math/PM/RPAR/SIL の MVP
+ffc1f96 auto: bus.py 編集前 (2026-05-16 07:03)
+0e5d441 auto: test_rpa_shell.py 編集前 (2026-05-16 07:01)
+5b26b92 auto: test_kar_ingestor.py 編集前 (2026-05-16 07:01)
+8acc0cf auto: import_rad_extended.py 編集前 (2026-05-16 07:01)
+f68c78f auto: tier.py 編集前 (2026-05-16 06:59)
+b5d45d6 auto: profiler.py 編集前 (2026-05-16 06:59)
+afb0451 auto: manifest.py 編集前 (2026-05-16 06:58)
+07f43dc feat(fullsense): SIL (Self-Interrogation Layer) MVP 実装 — 9 軸目完成
 ```
 
 ## 現在の git status
 
 ```
-(clean)
+M docs/SESSION_SUMMARY.md
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-22:03 docs/PROGRESS.md
-22:02 CHANGELOG.md
-22:00 .pytest_cache/v/cache/nodeids
-21:59 .pytest_cache/v/cache/lastfailed
-21:59 tests/unit/test_time_horizon.py
-21:58 .ruff_cache/0.15.12/12334922619133000292
-21:58 .ruff_cache/0.15.12/10638194744700293557
-21:58 src/llive/fullsense/manifest.py
-21:57 src/llive/fullsense/time_horizon.py
-21:55 README.md
-21:51 src/llive/demo/scenario_12_image_pipeline.py
-21:51 tests/unit/test_demo_scenarios.py
-21:50 src/llive/demo/runner.py
-21:48 src/llive/demo/scenario_11_rad_omniscience.py
-21:45 pyproject.toml
+07:07 docs/SESSION_SUMMARY.md
+07:06 docs/PROGRESS.md
+07:04 .pytest_cache/v/cache/nodeids
+07:04 .pytest_cache/v/cache/lastfailed
+07:03 .ruff_cache/0.15.12/10638194744700293557
+07:03 src/llive/approval/bus.py
+07:02 src/llive/kar/manifests.py
+07:02 .ruff_cache/0.15.12/12334922619133000292
+07:01 tests/unit/test_rpa_shell.py
+07:01 tests/unit/test_kar_ingestor.py
+07:01 scripts/import_rad_extended.py
+07:01 src/llive/kar/__init__.py
+06:59 src/llive/memory/tier.py
+06:59 src/llive/perf/profiler.py
+06:58 tests/unit/test_bridges.py
 ```
 
 ---
