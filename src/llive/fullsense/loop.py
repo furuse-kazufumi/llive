@@ -111,8 +111,11 @@ class FullSenseLoop:
             )
         self.salience_threshold = float(salience_threshold)
         self.curiosity_threshold = float(curiosity_threshold)
-        self.scorer = scorer or EgoAltruismScorer()
-        self.output_bus = output_bus or SandboxOutputBus()
+        self.scorer = scorer if scorer is not None else EgoAltruismScorer()
+        # NB: explicit None check — SandboxOutputBus.__len__ makes empty buses
+        # falsy, so ``output_bus or X`` would silently replace a freshly passed
+        # bus with a brand-new one (and lose ``log_path``).
+        self.output_bus = output_bus if output_bus is not None else SandboxOutputBus()
         self.known_corpus = set(known_corpus or set())
         self.sandbox = True
 

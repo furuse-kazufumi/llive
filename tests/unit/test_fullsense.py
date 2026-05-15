@@ -21,7 +21,6 @@ from llive.fullsense.scorer import score_thought
 from llive.fullsense.triggers import QueuedStimulusSource, drain
 from llive.fullsense.types import Thought
 
-
 # ---------------------------------------------------------------------------
 # Types
 # ---------------------------------------------------------------------------
