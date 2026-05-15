@@ -139,6 +139,8 @@ class ApprovalBus:
             request_id=request_id, verdict=verdict, by=by, rationale=rationale
         )
         self._ledger.append(resp)
+        if self._sink is not None:
+            self._sink.append_response(resp)
         # APPROVED / DENIED は pending から消す、REVOKED は ledger のみに残す
         if verdict in (Verdict.APPROVED, Verdict.DENIED):
             self._pending.pop(request_id, None)
