@@ -67,7 +67,7 @@ class Profiler:
                 continue
             mean = sum(xs) / n
             p50 = xs[n // 2]
-            p95 = xs[min(n - 1, int(math.ceil(n * 0.95)) - 1)]
+            p95 = xs[min(n - 1, math.ceil(n * 0.95) - 1)]
             out[name] = {
                 "count": n,
                 "mean": mean,
