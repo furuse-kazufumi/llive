@@ -132,11 +132,6 @@ def test_si4_fires_for_high_confidence() -> None:
 
 def test_si4_random_quarter_probability() -> None:
     """random.random() < 0.25 のとき発火することを deterministic seed で."""
-    # seed=42 で random.random() の最初の値が 0.25 未満になる構成
-    si_seed_fire = SelfInterrogator(
-        only=(InterrogatorId.SI4_QUESTION_PREMISE,),
-        rng=random.Random(20),
-    )
     # 中 confidence + FACTUAL → 高 conf も NORMATIVE/INTERP も該当しない経路
     plan = _plan(confidence=0.5)
     stim = _stim("any", et=EpistemicType.FACTUAL)
