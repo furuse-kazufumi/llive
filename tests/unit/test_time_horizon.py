@@ -96,7 +96,7 @@ def test_demote_chain_silent_stays_silent() -> None:
 
 def test_intervene_demotes_to_propose() -> None:
     # INTERVENE で 1 horizon のみ pass → PROPOSE に降格
-    p_in = _plan(decision=ActionDecision.INTERVENE, confidence=0.95, ego=0.9, alt=0.1)
+    p_in = _plan(decision=ActionDecision.INTERVENE, confidence=0.9, ego=0.9, alt=0.0)
     p_out, _ = apply_filter(p_in)
     assert p_out.decision == ActionDecision.PROPOSE
 
