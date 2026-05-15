@@ -90,6 +90,8 @@ Family = "https://github.com/furuse-kazufumi/llmesh-suite"
 
 [project.scripts]
 llive = "llive.cli.main:app"
+llive-demo = "llive.demo.runner:main"
+llive-manifest = "llive.fullsense.manifest:main"
 
 [project.entry-points."llive.subblocks"]
 # builtin sub-blocks register themselves via llive.container.subblocks.builtin.register_builtins()
