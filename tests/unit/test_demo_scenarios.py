@@ -168,6 +168,80 @@ def test_run_one_by_id() -> None:
     assert out["id"] == "rad-quick-tour"
 
 
+# ---------------------------------------------------------------------------
+# Scenario 8: resident-cognition (A-5)
+# ---------------------------------------------------------------------------
+
+
+def test_scenario_8_resident_cognition_runs(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A-5: ResidentRunner デモが 2 秒で完了し、summary を返す."""
+    monkeypatch.setenv("LLIVE_RESIDENT_DURATION", "2")
+    monkeypatch.setenv("LLIVE_DEMO_SEED", "42")
+    monkeypatch.setenv("LLIVE_DEMO_NO_COLOR", "1")
+    out = run_one("resident-cognition", quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    assert "ResidentRunner" in captured.out or "常駐" in captured.out
+    summary = out["summary"]
+    assert isinstance(summary, dict)
+    assert summary["duration_s"] == 2.0
+    counts = summary["cycle_counts"]
+    assert isinstance(counts, dict)
+    # 2 秒で fast tier は必ず複数 cycle 回るはず
+    assert counts["fast"] >= 2
+    assert isinstance(summary["phases_seen"], list)
+
+
+def test_scenario_8_phase_transitions_in_2s(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """phase_schedule で 2 秒間に AWAKE/REST/DREAM 全部に触れる."""
+    monkeypatch.setenv("LLIVE_RESIDENT_DURATION", "2")
+    monkeypatch.setenv("LLIVE_DEMO_SEED", "42")
+    monkeypatch.setenv("LLIVE_DEMO_NO_COLOR", "1")
+    out = run_one("resident-cognition", quiet=True)
+    summary = out["summary"]
+    assert set(summary["phases_seen"]) == {"awake", "rest", "dream"}
+
+
+@pytest.mark.parametrize("lang", ["ja", "en", "zh", "ko"])
+def test_scenario_8_multilingual(
+    lang: str,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setenv("LLIVE_RESIDENT_DURATION", "2")
+    monkeypatch.setenv("LLIVE_DEMO_SEED", "42")
+    monkeypatch.setenv("LLIVE_DEMO_NO_COLOR", "1")
+    out = run_one("resident-cognition", lang=lang, quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    # 各言語の intro 特徴文字列を検査
+    needle = {
+        "ja": "湧き上がる",
+        "en": "spontaneous",
+        "zh": "涌现",
+        "ko": "솟아오르",
+    }[lang]
+    assert needle in captured.out, f"expected {needle!r} in {lang} narration"
+
+
+def test_scenario_8_json_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """JSON シリアライズ可能であること (AI agent 渡し用)."""
+    monkeypatch.setenv("LLIVE_RESIDENT_DURATION", "2")
+    monkeypatch.setenv("LLIVE_DEMO_SEED", "42")
+    monkeypatch.setenv("LLIVE_DEMO_NO_COLOR", "1")
+    out = run_one("resident-cognition", quiet=True)
+    payload = json.dumps(out, default=str)
+    assert "resident-cognition" in payload
+    assert "cycle_counts" in payload
+
+
 def test_run_one_unknown_raises() -> None:
     with pytest.raises(SystemExit):
         run_one("ghost-scenario", quiet=True)
