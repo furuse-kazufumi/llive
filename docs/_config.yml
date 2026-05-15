@@ -1,0 +1,36 @@
+# GitHub Pages (Jekyll) configuration
+# Activate via: GitHub repo Settings → Pages → Build & deploy → Source: main branch / docs folder
+
+title: "FullSense ™ — llive"
+description: "Self-evolving modular memory LLM framework — biological memory × formal verification × industrial IoT mesh × TUI HITL"
+theme: jekyll-theme-cayman
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - CONTRIBUTING.md
+  - LICENSE
+  - LICENSE-COMMERCIAL
+  - NOTICE
+  - TRADEMARK.md
+  - SECURITY.md
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+# Footer / author
+author: Kazufumi Furuse
+github:
+  repository_nwo: furuse-kazufumi/llive
+url: https://furuse-kazufumi.github.io/llive
+baseurl: ""
+show_downloads: false
