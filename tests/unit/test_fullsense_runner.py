@@ -3,13 +3,13 @@
 R1 always-on with budget / R2 multi-timescale / R3 phase manager /
 R4 attention policy / R5 idle work + stop 安全性をカバー。
 
-すべて asyncio + Sandbox 限定で完結し、ネットワーク / 外部プロセス不要。
+依存追加を避けるため pytest-asyncio は使わず ``asyncio.run`` で同期化する。
 """
 
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import pytest
 
@@ -19,9 +19,7 @@ from llive.fullsense.runner import (
     ResidentRunner,
     TimescaleConfig,
 )
-from llive.fullsense.triggers import QueuedStimulusSource
 from llive.fullsense.types import Stimulus
-
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -73,6 +71,11 @@ def _make_loop() -> FullSenseLoop:
     return FullSenseLoop(salience_threshold=0.0, curiosity_threshold=0.5, sandbox=True)
 
 
+def _run(coro) -> None:
+    """asyncio コルーチンを同期テストの中で安全に実行."""
+    asyncio.run(coro)
+
+
 # ---------------------------------------------------------------------------
 # tests
 # ---------------------------------------------------------------------------
@@ -85,257 +88,287 @@ def test_runner_rejects_non_sandbox_loop() -> None:
         FullSenseLoop(sandbox=False)
 
 
-@pytest.mark.asyncio
-async def test_runner_runs_fast_timescale_in_awake_phase() -> None:
+def test_runner_runs_fast_timescale_in_awake_phase() -> None:
     """R1 + R2: AWAKE 中に fast tier が cycle を消化する."""
-    loop = _make_loop()
-    fast_src = CountingSource(label="fast")
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=0.0, sources=(fast_src,)),
-        medium=TimescaleConfig("medium", period_s=10.0, sources=()),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.AWAKE,
-    )
-    await runner.start()
-    try:
-        # 十分に yield する: 100 サイクル以上は走るはず
-        for _ in range(200):
-            await asyncio.sleep(0)
-    finally:
-        await runner.stop()
 
-    snap = runner.snapshot()
-    assert snap.phase is Phase.AWAKE
-    assert snap.cycle_counts["fast"] >= 5, snap
-    assert snap.last_result_per_timescale["fast"] is not None
+    async def go() -> None:
+        loop = _make_loop()
+        fast_src = CountingSource(label="fast")
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=0.0, sources=(fast_src,)),
+            medium=TimescaleConfig("medium", period_s=10.0, sources=()),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.AWAKE,
+        )
+        await runner.start()
+        try:
+            for _ in range(200):
+                await asyncio.sleep(0)
+        finally:
+            await runner.stop()
+
+        snap = runner.snapshot()
+        assert snap.phase is Phase.AWAKE
+        assert snap.cycle_counts["fast"] >= 5, snap
+        assert snap.last_result_per_timescale["fast"] is not None
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_rest_phase_suspends_fast_tier_only() -> None:
+def test_rest_phase_suspends_fast_tier_only() -> None:
     """R3: REST phase では fast tier が止まり medium が走る."""
-    loop = _make_loop()
-    fast_src = CountingSource(label="fast")
-    medium_src = CountingSource(label="med")
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=0.0, sources=(fast_src,)),
-        medium=TimescaleConfig("medium", period_s=0.0, sources=(medium_src,)),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.REST,
-    )
-    await runner.start()
-    try:
-        for _ in range(200):
-            await asyncio.sleep(0)
-    finally:
-        await runner.stop()
 
-    snap = runner.snapshot()
-    assert snap.cycle_counts["fast"] == 0, "fast must be suspended in REST"
-    assert snap.cycle_counts["medium"] >= 1, "medium must run in REST"
+    async def go() -> None:
+        loop = _make_loop()
+        fast_src = CountingSource(label="fast")
+        medium_src = CountingSource(label="med")
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=0.0, sources=(fast_src,)),
+            medium=TimescaleConfig("medium", period_s=0.0, sources=(medium_src,)),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.REST,
+        )
+        await runner.start()
+        try:
+            for _ in range(200):
+                await asyncio.sleep(0)
+        finally:
+            await runner.stop()
+
+        snap = runner.snapshot()
+        assert snap.cycle_counts["fast"] == 0, "fast must be suspended in REST"
+        assert snap.cycle_counts["medium"] >= 1, "medium must run in REST"
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_dream_phase_only_runs_slow() -> None:
+def test_dream_phase_only_runs_slow() -> None:
     """R3: DREAM phase では slow のみ active."""
-    loop = _make_loop()
-    fast_src = CountingSource(label="fast")
-    med_src = CountingSource(label="med")
-    slow_src = CountingSource(label="slow")
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=0.0, sources=(fast_src,)),
-        medium=TimescaleConfig("medium", period_s=0.0, sources=(med_src,)),
-        slow=TimescaleConfig("slow", period_s=0.0, sources=(slow_src,)),
-        phase=Phase.DREAM,
-    )
-    await runner.start()
-    try:
-        for _ in range(200):
-            await asyncio.sleep(0)
-    finally:
-        await runner.stop()
 
-    snap = runner.snapshot()
-    assert snap.cycle_counts["fast"] == 0
-    assert snap.cycle_counts["medium"] == 0
-    assert snap.cycle_counts["slow"] >= 1
+    async def go() -> None:
+        loop = _make_loop()
+        fast_src = CountingSource(label="fast")
+        med_src = CountingSource(label="med")
+        slow_src = CountingSource(label="slow")
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=0.0, sources=(fast_src,)),
+            medium=TimescaleConfig("medium", period_s=0.0, sources=(med_src,)),
+            slow=TimescaleConfig("slow", period_s=0.0, sources=(slow_src,)),
+            phase=Phase.DREAM,
+        )
+        await runner.start()
+        try:
+            for _ in range(200):
+                await asyncio.sleep(0)
+        finally:
+            await runner.stop()
+
+        snap = runner.snapshot()
+        assert snap.cycle_counts["fast"] == 0
+        assert snap.cycle_counts["medium"] == 0
+        assert snap.cycle_counts["slow"] >= 1
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_manual_phase_transition() -> None:
+def test_manual_phase_transition() -> None:
     """§R3 manual transition API."""
-    loop = _make_loop()
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=10.0, sources=()),
-        medium=TimescaleConfig("medium", period_s=10.0, sources=()),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.AWAKE,
-    )
-    await runner.start()
-    try:
-        assert runner.phase is Phase.AWAKE
-        await runner.transition(Phase.REST)
-        assert runner.phase is Phase.REST
-        await runner.transition(Phase.DREAM)
-        assert runner.phase is Phase.DREAM
-    finally:
-        await runner.stop()
+
+    async def go() -> None:
+        loop = _make_loop()
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=10.0, sources=()),
+            medium=TimescaleConfig("medium", period_s=10.0, sources=()),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.AWAKE,
+        )
+        await runner.start()
+        try:
+            assert runner.phase is Phase.AWAKE
+            await runner.transition(Phase.REST)
+            assert runner.phase is Phase.REST
+            await runner.transition(Phase.DREAM)
+            assert runner.phase is Phase.DREAM
+        finally:
+            await runner.stop()
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_budget_cap_limits_cycles_per_window() -> None:
+def test_budget_cap_limits_cycles_per_window() -> None:
     """R1: max_cycles_per_window で 1 ウィンドウあたりの cycle を制限."""
-    loop = _make_loop()
-    src = CountingSource(label="fast")
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=0.0, sources=(src,), max_cycles_per_window=3),
-        medium=TimescaleConfig("medium", period_s=10.0, sources=()),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.AWAKE,
-        budget_window_s=3600.0,  # 試験中はリセットさせない
-    )
-    await runner.start()
-    try:
-        for _ in range(500):
-            await asyncio.sleep(0)
-    finally:
-        await runner.stop()
 
-    snap = runner.snapshot()
-    assert snap.cycle_counts["fast"] == 3, snap
-    assert snap.window_cycle_counts["fast"] == 3
+    async def go() -> None:
+        loop = _make_loop()
+        src = CountingSource(label="fast")
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig(
+                "fast", period_s=0.0, sources=(src,), max_cycles_per_window=3
+            ),
+            medium=TimescaleConfig("medium", period_s=10.0, sources=()),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.AWAKE,
+            budget_window_s=3600.0,  # 試験中はリセットさせない
+        )
+        await runner.start()
+        try:
+            for _ in range(500):
+                await asyncio.sleep(0)
+        finally:
+            await runner.stop()
+
+        snap = runner.snapshot()
+        assert snap.cycle_counts["fast"] == 3, snap
+        assert snap.window_cycle_counts["fast"] == 3
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_round_robin_attention_policy() -> None:
+def test_round_robin_attention_policy() -> None:
     """R4: 2 つの source を round-robin で公平に poll する."""
-    loop = _make_loop()
-    a = CountingSource(payload="A", label="a")
-    b = CountingSource(payload="B", label="b")
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=0.0, sources=(a, b)),
-        medium=TimescaleConfig("medium", period_s=10.0, sources=()),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.AWAKE,
-        budget_window_s=3600.0,
-    )
-    await runner.start()
-    try:
-        for _ in range(400):
-            await asyncio.sleep(0)
-    finally:
-        await runner.stop()
 
-    # 両 source とも複数回 poll されているはず + 偏りが少ない
-    assert a.polls >= 2
-    assert b.polls >= 2
-    assert abs(a.polls - b.polls) <= max(a.polls, b.polls) // 2 + 2
+    async def go() -> None:
+        loop = _make_loop()
+        a = CountingSource(payload="A", label="a")
+        b = CountingSource(payload="B", label="b")
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=0.0, sources=(a, b)),
+            medium=TimescaleConfig("medium", period_s=10.0, sources=()),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.AWAKE,
+            budget_window_s=3600.0,
+        )
+        await runner.start()
+        try:
+            for _ in range(400):
+                await asyncio.sleep(0)
+        finally:
+            await runner.stop()
+
+        # 両 source とも複数回 poll されているはず + 偏りが少ない
+        assert a.polls >= 2
+        assert b.polls >= 2
+        assert abs(a.polls - b.polls) <= max(a.polls, b.polls) // 2 + 2
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_starving_source_does_not_increment_cycles() -> None:
+def test_starving_source_does_not_increment_cycles() -> None:
     """R5: source が常に None を返す = idle 中、cycle 数は増えない."""
-    loop = _make_loop()
-    starve = StarvingSource()
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=0.0, sources=(starve,)),
-        medium=TimescaleConfig("medium", period_s=10.0, sources=()),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.AWAKE,
-    )
-    await runner.start()
-    try:
-        for _ in range(200):
-            await asyncio.sleep(0)
-    finally:
-        await runner.stop()
 
-    snap = runner.snapshot()
-    assert snap.cycle_counts["fast"] == 0
-    # ただし poll 自体は走っている (idle の検知に必要)
-    assert starve.polls > 0
+    async def go() -> None:
+        loop = _make_loop()
+        starve = StarvingSource()
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=0.0, sources=(starve,)),
+            medium=TimescaleConfig("medium", period_s=10.0, sources=()),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.AWAKE,
+        )
+        await runner.start()
+        try:
+            for _ in range(200):
+                await asyncio.sleep(0)
+        finally:
+            await runner.stop()
+
+        snap = runner.snapshot()
+        assert snap.cycle_counts["fast"] == 0
+        # ただし poll 自体は走っている (idle の検知に必要)
+        assert starve.polls > 0
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_exception_in_source_does_not_kill_runner() -> None:
+def test_exception_in_source_does_not_kill_runner() -> None:
     """R1: source の例外を握り潰し、always-on を維持."""
-    loop = _make_loop()
-    boom = ExplodingSource()
-    good = CountingSource(label="good")
-    runner = ResidentRunner(
-        loop=loop,
-        # 片方が例外でも round-robin で他方が拾える
-        fast=TimescaleConfig("fast", period_s=0.0, sources=(boom, good)),
-        medium=TimescaleConfig("medium", period_s=10.0, sources=()),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.AWAKE,
-        budget_window_s=3600.0,
-    )
-    await runner.start()
-    try:
-        for _ in range(300):
-            await asyncio.sleep(0)
-    finally:
-        await runner.stop()
 
-    snap = runner.snapshot()
-    assert snap.cycle_counts["fast"] >= 1, "good source should still produce cycles"
-    assert boom.raised >= 1
+    async def go() -> None:
+        loop = _make_loop()
+        boom = ExplodingSource()
+        good = CountingSource(label="good")
+        runner = ResidentRunner(
+            loop=loop,
+            # 片方が例外でも round-robin で他方が拾える
+            fast=TimescaleConfig("fast", period_s=0.0, sources=(boom, good)),
+            medium=TimescaleConfig("medium", period_s=10.0, sources=()),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.AWAKE,
+            budget_window_s=3600.0,
+        )
+        await runner.start()
+        try:
+            for _ in range(300):
+                await asyncio.sleep(0)
+        finally:
+            await runner.stop()
+
+        snap = runner.snapshot()
+        assert snap.cycle_counts["fast"] >= 1, "good source should still produce cycles"
+        assert boom.raised >= 1
+
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_stop_is_idempotent_and_cancels_cleanly() -> None:
+def test_stop_is_idempotent_and_cancels_cleanly() -> None:
     """stop() を二重に呼んでも安全 / await が ALL cancel を待つ."""
-    loop = _make_loop()
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=0.05, sources=()),
-        medium=TimescaleConfig("medium", period_s=0.05, sources=()),
-        slow=TimescaleConfig("slow", period_s=0.05, sources=()),
-        phase=Phase.AWAKE,
-    )
-    await runner.start()
-    assert runner.running
-    await runner.stop()
-    assert not runner.running
-    # 二重 stop は no-op
-    await runner.stop()
 
-
-@pytest.mark.asyncio
-async def test_phase_schedule_auto_transitions() -> None:
-    """R3: phase_schedule を渡すと自動で phase が回る."""
-    loop = _make_loop()
-    runner = ResidentRunner(
-        loop=loop,
-        fast=TimescaleConfig("fast", period_s=10.0, sources=()),
-        medium=TimescaleConfig("medium", period_s=10.0, sources=()),
-        slow=TimescaleConfig("slow", period_s=10.0, sources=()),
-        phase=Phase.AWAKE,
-        phase_schedule=[(Phase.AWAKE, 0.02), (Phase.REST, 0.02), (Phase.DREAM, 0.02)],
-    )
-    await runner.start()
-    try:
-        seen: set[Phase] = set()
-        for _ in range(200):
-            seen.add(runner.phase)
-            await asyncio.sleep(0.005)
-            if len(seen) == 3:
-                break
-    finally:
+    async def go() -> None:
+        loop = _make_loop()
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=0.05, sources=()),
+            medium=TimescaleConfig("medium", period_s=0.05, sources=()),
+            slow=TimescaleConfig("slow", period_s=0.05, sources=()),
+            phase=Phase.AWAKE,
+        )
+        await runner.start()
+        assert runner.running
+        await runner.stop()
+        assert not runner.running
+        # 二重 stop は no-op
         await runner.stop()
 
-    assert seen == {Phase.AWAKE, Phase.REST, Phase.DREAM}
+    _run(go())
 
 
-@pytest.mark.asyncio
-async def test_unknown_policy_is_rejected() -> None:
+def test_phase_schedule_auto_transitions() -> None:
+    """R3: phase_schedule を渡すと自動で phase が回る."""
+
+    async def go() -> None:
+        loop = _make_loop()
+        runner = ResidentRunner(
+            loop=loop,
+            fast=TimescaleConfig("fast", period_s=10.0, sources=()),
+            medium=TimescaleConfig("medium", period_s=10.0, sources=()),
+            slow=TimescaleConfig("slow", period_s=10.0, sources=()),
+            phase=Phase.AWAKE,
+            phase_schedule=[(Phase.AWAKE, 0.02), (Phase.REST, 0.02), (Phase.DREAM, 0.02)],
+        )
+        await runner.start()
+        try:
+            seen: set[Phase] = set()
+            for _ in range(400):
+                seen.add(runner.phase)
+                await asyncio.sleep(0.005)
+                if len(seen) == 3:
+                    break
+        finally:
+            await runner.stop()
+
+        assert seen == {Phase.AWAKE, Phase.REST, Phase.DREAM}
+
+    _run(go())
+
+
+def test_unknown_policy_is_rejected() -> None:
     loop = _make_loop()
     with pytest.raises(ValueError):
         ResidentRunner(
@@ -347,8 +380,7 @@ async def test_unknown_policy_is_rejected() -> None:
         )
 
 
-@pytest.mark.asyncio
-async def test_snapshot_returns_independent_copy() -> None:
+def test_snapshot_returns_independent_copy() -> None:
     """§I3 inspectable: snapshot は内部状態を漏らさない (dict は copy)."""
     loop = _make_loop()
     runner = ResidentRunner(
