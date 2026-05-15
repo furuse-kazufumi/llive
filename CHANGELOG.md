@@ -4,6 +4,66 @@
 
 ## [Unreleased]
 
+### Added — C-2: @govern decorator + ProductionOutputBus (Phase 1+2+3) — 2026-05-16
+
+handoff v3 C-2「@govern(policy) を ProductionOutputBus に統合」を実装。
+副作用 emit を ApprovalBus gate 経由に統一する production 化 2 番目のピース。
+
+#### @govern decorator (`src/llive/approval/decorators.py`)
+
+- `@govern(bus, action, *, principal=, payload_fn=, on_denied=)`
+- 関数呼び出し前に `bus.request(action, payload)` で gate
+- APPROVED → fn を呼ぶ / DENIED|silence → `on_denied(*args, **kwargs)` か `None`
+- `payload_fn` で引数から approval payload をカスタム生成可
+
+#### ProductionOutputBus (`src/llive/output/production.py`)
+
+- `ApprovalBus` gate を通した副作用 emit bus (Sandbox とは別経路、副作用 OK)
+- 低レベル: `emit_raw(action, payload, *, on_approved, rationale)` で任意の副作用
+- 高レベル wrapper:
+  - `emit_file(path, content)` — UTF-8 ファイル書出 (parent mkdir 込)
+  - `emit_mcp_push(target, message)` — MCP client への push (transport は注入)
+  - `emit_llove_push(view_id, payload)` — llove view への push (transport は注入)
+- `mcp_push_fn` / `llove_push_fn` を bus 生成時に注入 → 本 module は具体 transport に非依存
+- DENIED / silence 時:
+  - 副作用ゼロ (on_approved 呼ばれず)
+  - optional `sandbox` (SandboxOutputBus) が渡されていれば `record_denied_emit()` で観測ログ
+  - 例外も raise せず `EmitResult.error` / `record.error_repr` に格納 (transport failure に対しても安全)
+
+#### SandboxOutputBus 拡張 (`src/llive/fullsense/sandbox.py`)
+
+- `record_denied_emit(*, action, payload, request_id, rationale)` 追加
+- 内部 `_denied_emits` list + `denied_emits()` query
+- log_path 指定時は JSONL に "kind": "denied_emit" として記録
+- 既存 `emit(SandboxRecord)` API は無変更、`clear()` で両方クリアされる (後方互換)
+
+#### EmitResult / ProductionRecord
+
+- `ProductionRecord`: action / payload / verdict / request_id / side_effect_executed / rationale / error_repr / at
+- `EmitResult`: record + error (副作用中の例外を捕捉), `.approved` プロパティ
+- `bus.approved_records()` / `bus.denied_records()` で partitioning
+
+#### テスト 17 件追加 / 既存全件無修正
+
+- `tests/unit/test_govern_decorator.py` (6 件): approve/deny/silence/on_denied/payload_fn/principal
+- `tests/unit/test_production_output_bus.py` (11 件): emit_raw approve/deny/silence/transport error,
+  emit_file (write/denied), emit_mcp_push (注入/未注入), emit_llove_push, sandbox fallback (2 件), records partitioning
+
+#### 結果
+
+- **832 PASS** (前 815 + 17) / ruff clean / 回帰ゼロ
+- 既存 `SandboxOutputBus.emit(SandboxRecord)` API は無変更
+- ApprovalBus / 既存 ShellDriver も無修正で動作
+
+#### 次のステップ
+
+- C-3: Cross-substrate migration spike (§MI1)
+- 実 MCP client (`src/llive/mcp/server.py`) との接続検証 (実機)
+- 実 llove bridge との接続検証 (実機 / F25 連携基盤)
+- Ed25519 署名追加 (extras `[crypto]` 検討)
+
+---
+
 ### Added — Approval Bus production 化 (Policy + SQLite Ledger) — 2026-05-16
 
 handoff v3 の次セッション宣言「C-1 Approval Bus に policy + persistent ledger を結合」を実装。
