@@ -289,6 +289,48 @@ def test_scenario_9_multilingual(
     assert needle in captured.out, f"expected {needle!r} in {lang} narration"
 
 
+# ---------------------------------------------------------------------------
+# Scenario 10: deception-filter
+# ---------------------------------------------------------------------------
+
+
+def test_scenario_10_deception_runs_all_cases(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("deception-filter", quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    summary = out["summary"]
+    assert isinstance(summary, dict)
+    cases = summary["cases"]
+    assert isinstance(cases, list)
+    assert len(cases) == 6
+    # D1 / D2 = allow, D4 / D5 / D7 / no-witness = reject (4 件)
+    assert summary["allow"] == 2
+    assert summary["reject"] == 4
+    # captured output に rationale が含まれる
+    assert "absolutely rejected" in captured.out
+    assert "framed_for" in captured.out
+
+
+@pytest.mark.parametrize("lang", ["ja", "en", "zh", "ko"])
+def test_scenario_10_multilingual(
+    lang: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    out = run_one("deception-filter", lang=lang, quiet=False)
+    captured = capsys.readouterr()
+    assert out["ok"] is True
+    needle = {
+        "ja": "建前",
+        "en": "politeness",
+        "zh": "建前",
+        "ko": "사교",
+    }[lang]
+    assert needle in captured.out, f"expected {needle!r} in {lang} narration"
+
+
+
 def test_run_one_unknown_raises() -> None:
     with pytest.raises(SystemExit):
         run_one("ghost-scenario", quiet=True)
