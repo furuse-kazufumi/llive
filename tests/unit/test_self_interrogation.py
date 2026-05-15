@@ -204,7 +204,7 @@ def test_attach_to_plan_no_fire_keeps_plan_unchanged() -> None:
     stim = _stim(long_neutral, et=EpistemicType.FACTUAL)
     plan = _plan(decision=ActionDecision.SILENT, confidence=0.85, triz=[])
     # SI4 の 1/4 random は seed=0 でしばらく上回るはずなので発火しないことを期待
-    new_plan, results = si.attach_to_plan(stim, plan)
+    _new_plan, results = si.attach_to_plan(stim, plan)
     # 0 or 1 件しか発火しないことを許容
     assert len(results) <= 1
 
