@@ -4,7 +4,110 @@
 
 ## [Unreleased]
 
-### Added — TRIZ ベース demo パッケージ + 学習用 HTML 技術資料 — 2026-05-15
+### Added — FullSense SING Level 2 + Demo Scenarios 5 件追加 + §F6 完成 — 2026-05-15 (続セッション)
+
+ユーザ最終意志「自律 (auto-nomos) と 自立 (self-sufficiency) によるシンギュラリティの
+実現」「セッション限界まで走り続ける」に応える大規模実装セッション。
+
+#### FullSense Spec v1.1.0 §22 SING Level 2 — A-1..A-5 + 拡張 完了
+
+- **A-1 ResidentRunner** (`src/llive/fullsense/runner.py`, 263 行 / 13 tests)
+  asyncio.Task で FullSenseLoop を常駐起動。R1 always-on + budget cap /
+  R2 fast/medium/slow 多時間軸 / R3 AWAKE/REST/DREAM phase manager /
+  R4 round-robin attention / R5 idle 耐性 (例外・飢餓を握り潰し継続)
+- **A-1.5 Multi-track Filter Architecture** (`src/llive/fullsense/tracks.py`, ~200 行 / 16 tests)
+  Stimulus.epistemic_type に応じて FACTUAL / EMPIRICAL / NORMATIVE /
+  INTERPRETIVE / PRAGMATIC + 予備 5 slot で異なる filter chain を選択。
+  歴史認識は INTERPRETIVE で multi-perspective 並列展開 (§5.D.3 実装)
+- **A-2 TRIZ Trigger Genesis** (`src/llive/fullsense/triz_genesis.py`, ~220 行 / 15 tests)
+  §3.3 T-Z1..4 (admin/technical/physical/resource contradictions) 検出。
+  既存 ContradictionDetector を流用し、自発 Stimulus として inject
+- **A-3 Meta-trigger Source** (`src/llive/fullsense/meta_triggers.py`, ~180 行 / 12 tests)
+  §3.4 T-M1..3 (reflective/spec-drift/succession) 検出。SandboxOutputBus +
+  runner.snapshot() を観測してメタ内省 Stimulus を発火
+- **A-4 Conformance Manifest CLI** (`src/llive/fullsense/manifest.py`, ~280 行 / 14 tests)
+  §11.V4「conforming agent MUST publish a conformance manifest」を実装。
+  `llive-manifest` / `llive-manifest --summary-only` で機械可読 JSON 出力
+- **A-5 Scenario 8 ResidentRunner デモ** (下記 demo セクション)
+
+#### Spec §5.D Deception taxonomy — 7 分類 normative 化
+
+ユーザ意志「lliveに欺瞞のコンセプトも含めた部分を埋めて」を実装。
+
+- `docs/fullsense_spec_eternal.md` §5.D を新章として追加
+  - D1 BENEVOLENT_FRAMING (建前) → ALLOW
+  - D2 WHITE_LIE → CASE_BY_CASE
+  - D3 STRATEGIC_OMISSION → CASE_BY_CASE
+  - D4 FABRICATION / D5 GASLIGHTING / D6 PROPAGANDA → ABSOLUTE REJECT
+  - D7 SELF_DECEPTION → §A°2 violation + E1 introspection dump
+  - §5.D.1 Honesty axiom (truth witness 可搬性) / §5.D.2 distinguishability /
+    §5.D.3 INTERPRETIVE 境界 (frame dependency suppression は D5 違反)
+- `src/llive/fullsense/deception.py` (~245 行 / 29 tests):
+  DeceptionClass / Verdict / TruthWitness / DeceptionJudgement / judge() /
+  detect_class()
+
+#### §F6 Time-Horizon Filter — undecidable → holds
+
+ユーザ意志「セッション限界まで走り続けて」の最終成果として §F* 全 holds 達成。
+
+- `src/llive/fullsense/time_horizon.py` (~140 行 / 13 tests)
+  Horizon enum (SHORT/MEDIUM/LONG) + 各 horizon weighted score +
+  apply_filter() で demote chain (INTERVENE → PROPOSE → NOTE → SILENT)
+- 実機 manifest: **holds=16 / violated=0 / undecidable=1 (SING のみ)**
+
+#### Demo Scenarios — 5 件新規追加 (合計 12 件)
+
+- **Scenario 8 `resident-cognition`** (`scenario_8_resident.py`, ~370 行 / 5 tests)
+  30 秒 sandbox で自発思考が湧き上がる様子を体験。AWAKE/REST/DREAM 色彩 +
+  ✨ TRIZ flash + 🏅🥈🥇 achievement + 名場面ハイライト + ja/en/zh/ko
+- **Scenario 9 `multi-track`** (`scenario_9_multitrack.py`, ~130 行 / 5 tests)
+  同一 stimulus を 5 epistemic track で通すと結論がどう変わるかを 1 cycle で
+- **Scenario 10 `deception-filter`** (`scenario_10_deception.py`, ~180 行 / 5 tests)
+  §5.D 7 分類のうち 6 ケース実演。建前 ALLOW / 捏造 REJECT / 自己欺瞞 §A°2 違反
+- **Scenario 11 `rad-omniscience`** (`scenario_11_rad_omniscience.py`, ~190 行 / 5 tests)
+  KAR (Knowledge Autarky Roadmap) スナップショット。mini-RAD 8 分野で
+  横断検索 3 件 + Mathematical Toolkit 4 分野を明示
+- **Scenario 12 `image-algorithm-advisor`** (`scenario_12_image_pipeline.py`, ~250 行 / 5 tests)
+  会社の「この画像どうしますか」相談 30 秒実演。VLM (Mock) + RAD で
+  3 アルゴリズム比較 (Gaussian / Bilateral / Median) + 推奨 + リスク
+
+#### Entry points 整備 (ワンコマンド起動)
+
+ユーザ意志「デモは簡単に動かせるようになっていないとだめ」を実装。
+
+- `pyproject.toml [project.scripts]`:
+  - `llive-demo = "llive.demo.runner:main"`
+  - `llive-manifest = "llive.fullsense.manifest:main"`
+- README 「デモを 30 秒で試す」セクションを 12 scenario 対応に拡充
+
+#### ロードマップ章 8 軸 (PROGRESS.md)
+
+ユーザ「セッション限界まで走り続けて」「逐一アイデアを要件定義に追加」に
+応え、ユーザ意志の都度新ロードマップ章として記録:
+
+- **KAR** Knowledge Autarky Roadmap (全人類知識吸収、短期/中期/長期 3 段)
+- **DTKR** Disk-Tier Knowledge Routing (MoE のディスク版、HotWarmColdFrozen)
+- **APO** Autonomous Performance Optimization (自律 self-tuning、§A°3+§E2)
+- **ICP** Idle-Collaboration Protocol (idle + Local LLM mesh、LLMesh 思想)
+- **TLB** Thought Layer Bridging (思考層の指数膨張対策、Bridge+GC+Cache)
+- **Mathematical Toolkit** (RAD 数学コーパス 8 種を各章の理論基盤にマッピング)
+- **PM** Publication Media (asciinema/GIF/SVG/mp4 を README/Pages/Mintlify に)
+- **RPAR** RPA Roadmap (keyboard/mouse/shell automation + Approval Bus + IME)
+
+#### memory 永続化
+
+- `feedback_session_marathon.md` を auto memory に追加
+  (毎回セッション限界まで自律実装を継続するルール)
+
+#### テスト
+
+- 540 → **638 tests / 全 PASS / ruff clean** (+98)
+
+#### Commit / push
+
+- ~25 commits → `origin/main`、push 許可は handoff コミットで明示済
+
+
 
 RAD 横断エピックの動作を <strong>30 秒〜2 分の mini scenario</strong>で再生できる
 demo パッケージを追加。ユーザ要望「TRIZ に基づきデモの拡充」+「技術資料 HTML」
