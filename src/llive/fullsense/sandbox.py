@@ -41,7 +41,40 @@ class SandboxOutputBus:
     def __init__(self, log_path: Path | str | None = None) -> None:
         self.log_path = Path(log_path) if log_path else None
         self._records: list[SandboxRecord] = []
+        self._denied_emits: list[dict[str, object]] = []
         self._lock = threading.Lock()
+
+    def record_denied_emit(
+        self,
+        *,
+        action: str,
+        payload: dict[str, object],
+        request_id: str,
+        rationale: str = "",
+    ) -> None:
+        """ProductionOutputBus が DENIED された emit 試行を観測ログに残す.
+
+        副作用ゼロ (Sandbox の制約を維持). production_bus.denied_records()
+        と二重で記録されるが、こちらは log_path にも mirror される.
+        """
+        entry: dict[str, object] = {
+            "kind": "denied_emit",
+            "action": action,
+            "payload": dict(payload),
+            "request_id": request_id,
+            "rationale": rationale,
+            "recorded_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        }
+        with self._lock:
+            self._denied_emits.append(entry)
+            if self.log_path is not None:
+                self.log_path.parent.mkdir(parents=True, exist_ok=True)
+                with self.log_path.open("a", encoding="utf-8") as fh:
+                    fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    def denied_emits(self) -> list[dict[str, object]]:
+        with self._lock:
+            return [dict(e) for e in self._denied_emits]
 
     def emit(self, record: SandboxRecord) -> None:
         with self._lock:
