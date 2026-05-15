@@ -7,6 +7,7 @@ in-memory pubsub + replayable ledger を提供する。実 RPA driver はこの�
 """
 
 from llive.approval.bus import ApprovalBus, ApprovalRequest, ApprovalResponse, Verdict
+from llive.approval.decorators import govern
 from llive.approval.ledger import LedgerState, SqliteLedger
 from llive.approval.policy import (
     AllowList,
@@ -28,4 +29,5 @@ __all__ = [
     "SqliteLedger",
     "Verdict",
     "deny_overrides",
+    "govern",
 ]

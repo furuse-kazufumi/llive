@@ -118,7 +118,7 @@ class ProductionOutputBus:
             try:
                 on_approved()
                 executed = True
-            except Exception as e:  # noqa: BLE001 — emit が外部 transport に依存するため捕捉
+            except Exception as e:
                 err = e
 
         record = ProductionRecord(
