@@ -489,6 +489,55 @@ API キー / 実コーパス不要で <strong>30 秒 〜 2 分</strong>で再生
 </div>
 </details>
 
+<!-- Browser demo: Anatomy ============================================== -->
+<details class="scenario" id="anatomy" open>
+<summary>
+  <span class="num">B</span>
+  <span>
+    <div class="title">[ブラウザ] 人体図カウンセリング (Dr. Aria, educational fiction)</div>
+    <div class="subtitle">SVG 人体図 × medical_corpus_v2 grounding × 医師ペルソナ — クリックで部位説明、mock fallback 込み</div>
+  </span>
+</summary>
+<div class="body">
+<div class="triz"><span class="label">TRIZ</span>#1 分割 + #24 仲介 — 部位を SVG path に分割、RAD が医師ペルソナの知識仲介となる</div>
+
+<h3>開く</h3>
+<div class="cmd">demos/anatomy/index.html<button class="copy" type="button">copy</button></div>
+<p style="font-size:13px;color:var(--fg-mute);margin:6px 0;">
+ブラウザでこの HTML を開いてください (file:// で動きます)。バックエンド起動なしでも
+mock テキストで動作確認できます。
+</p>
+
+<h3>実バックエンドで動かす</h3>
+<div class="cmd">py -3.11 -m llive.server.openai_api --host 127.0.0.1 --port 8765<button class="copy" type="button">copy</button></div>
+<p style="font-size:13px;color:var(--fg-mute);margin:6px 0;">
+起動後にページをリロードすると status が <strong>live</strong> に変わり、
+<code>x_rad_domain=medical_corpus_v2</code> 経由で RAD ヒントが注入されます。
+医療コーパスを取り込んでいない場合は hints 0 件のまま動作します。
+</p>
+
+<h3>収録部位 (8)</h3>
+<ul style="font-size:13.5px;margin:6px 0;">
+  <li>頭部 / 胸部 / 心臓 / 腹部</li>
+  <li>左腕 / 右腕 / 左脚 / 右脚</li>
+</ul>
+
+<h3>免責 (重要)</h3>
+<p style="font-size:13px;color:var(--warn);background:var(--warn-bg);border-left:3px solid var(--warn);padding:8px 12px;margin:6px 0;border-radius:0 6px 6px 0;">
+これは <strong>"Dr. Aria"</strong> という架空キャラクターによる
+<strong>教育・調査用デモ</strong>であり、<strong>医療助言ではありません</strong>。
+画面上部のバナーと LLM system prompt の両方で educational-fiction を明示しています。
+</p>
+
+<dl class="kv">
+<dt>所要</dt><dd>~10 秒 / 部位</dd>
+<dt>依存</dt><dd>ブラウザのみ (mock) / + llive HTTP server (live RAD grounding)</dd>
+<dt>学べる</dt><dd>OpenAI compat HTTP の <code>x_rad_domain</code> / SVG raycasting / educational fiction の安全な免責設計</dd>
+<dt>UA 動作</dt><dd>Chrome / Firefox / Safari / Edge いずれでも fetch + ES2017 で動作</dd>
+</dl>
+</div>
+</details>
+
 <!-- Full run ============================================== -->
 <details class="scenario" id="all">
 <summary>
