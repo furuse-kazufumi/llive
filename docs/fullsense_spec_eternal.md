@@ -8,7 +8,7 @@
 > The name **FullSense** is derived from the initial author's surname,
 > **Furuse** (古瀬). The conceptual frame — *autonomous-resident cognition
 > with TRIZ-driven trigger genesis culminating in the dual-jiritsu
-> singularity (§22)* — was proposed by **Furuse Kazufumi (古瀬 一史)** during
+> singularity (§22)* — was proposed by **Furuse Kazufumi (古瀬 和文)** during
 > the construction of the `llive` project (May 2026). This document is the
 > formal articulation of that proposal.
 
