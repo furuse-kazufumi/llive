@@ -3,23 +3,23 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-16 07:35:08
+- **最終更新**: 2026-05-16 08:13:36
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-a5644d9 docs(progress): handoff v3 — 9 軸 skeleton 完了 + manifest holds=24 達成
-3d19923 feat: 9 軸 skeleton 一括実装 — KAR/DTKR/APO/ICP/TLB/Math/PM/RPAR/SIL の MVP
-ffc1f96 auto: bus.py 編集前 (2026-05-16 07:03)
-0e5d441 auto: test_rpa_shell.py 編集前 (2026-05-16 07:01)
-5b26b92 auto: test_kar_ingestor.py 編集前 (2026-05-16 07:01)
-8acc0cf auto: import_rad_extended.py 編集前 (2026-05-16 07:01)
-f68c78f auto: tier.py 編集前 (2026-05-16 06:59)
-b5d45d6 auto: profiler.py 編集前 (2026-05-16 06:59)
-afb0451 auto: manifest.py 編集前 (2026-05-16 06:58)
-07f43dc feat(fullsense): SIL (Self-Interrogation Layer) MVP 実装 — 9 軸目完成
+20f3ea9 docs(articles): 2026-05-16 update 記事 (ja/en/zh) + qiita 追補
+ebe02e6 auto: qiita-overview.md 編集前 (2026-05-16 08:07)
+370c883 chore(legal): Apache-2.0 + Commercial dual-license 切替 + 権利関係ファイル整備 (v0.6.0)
+54a7f65 auto: README.md 編集前 (2026-05-16 08:03)
+a3de4bc auto: pyproject.toml 編集前 (2026-05-16 08:01)
+f6c4d65 auto: pyproject.toml 編集前 (2026-05-16 08:01)
+4d34fc7 feat(approval): C-1 Approval Bus production 化 (Policy + SQLite Ledger)
+95cf904 auto: PROGRESS.md 編集前 (2026-05-16 07:47)
+5bd43ad auto: CHANGELOG.md 編集前 (2026-05-16 07:47)
+b4e08d8 auto: __init__.py 編集前 (2026-05-16 07:43)
 ```
 
 ## 現在の git status
@@ -31,21 +31,21 @@ M docs/SESSION_SUMMARY.md
 ## 直近 2 時間に変更されたファイル
 
 ```
-07:07 docs/SESSION_SUMMARY.md
-07:06 docs/PROGRESS.md
-07:04 .pytest_cache/v/cache/nodeids
-07:04 .pytest_cache/v/cache/lastfailed
-07:03 .ruff_cache/0.15.12/10638194744700293557
-07:03 src/llive/approval/bus.py
-07:02 src/llive/kar/manifests.py
-07:02 .ruff_cache/0.15.12/12334922619133000292
-07:01 tests/unit/test_rpa_shell.py
-07:01 tests/unit/test_kar_ingestor.py
-07:01 scripts/import_rad_extended.py
-07:01 src/llive/kar/__init__.py
-06:59 src/llive/memory/tier.py
-06:59 src/llive/perf/profiler.py
-06:58 tests/unit/test_bridges.py
+08:09 docs/SESSION_SUMMARY.md
+08:07 docs/qiita/qiita-overview.md
+08:06 docs/linkedin/post_2026-05-16_update.zh.md
+08:06 docs/linkedin/post_2026-05-16_update.en.md
+08:05 docs/linkedin/post_2026-05-16_update.ja.md
+08:03 README.md
+08:03 .ruff_cache/0.15.12/9972978043277919563
+08:03 .ruff_cache/0.15.12/7457577932985440971
+08:03 .ruff_cache/0.15.12/6402054729621461199
+08:03 .ruff_cache/0.15.12/12334922619133000292
+08:03 .ruff_cache/0.15.12/10638194744700293557
+08:02 .pytest_cache/v/cache/nodeids
+08:02 .hypothesis/constants/f4fcc78cc7a06c36
+08:02 .hypothesis/constants/da2c8080f0fe02b0
+08:02 .hypothesis/constants/cd0cb65c6c7d78b2
 ```
 
 ---
