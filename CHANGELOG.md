@@ -4,6 +4,58 @@
 
 ## [Unreleased]
 
+### Added — Approval Bus production 化 (Policy + SQLite Ledger) — 2026-05-16
+
+handoff v3 の次セッション宣言「C-1 Approval Bus に policy + persistent ledger を結合」を実装。
+9 軸 skeleton の production 化フェーズの最初のピース。
+
+#### Policy 抽象 (`src/llive/approval/policy.py`)
+
+- `ApprovalPolicy` Protocol — `evaluate(req) -> Verdict | None` (None なら人手 review)
+- `AllowList.of({actions...}, prefixes=(...))` — 完全一致 / prefix で自動承認
+- `DenyList.of({actions...}, prefixes=(...))` — 完全一致 / prefix で自動拒否
+- `CompositePolicy.of(*policies)` — 順次評価、最初に Verdict を返した policy が勝つ
+- `deny_overrides(allow, deny)` — deny-overrides の典型構成 helper
+
+#### SQLite ledger (`src/llive/approval/ledger.py`)
+
+- `SqliteLedger(path)` — stdlib `sqlite3` のみで永続化、外部依存なし
+- スキーマ v1: `requests` / `responses` / `meta` 3 テーブル + index
+- `append_request` / `append_response` / `load()` / `iter_responses()`
+- context manager 対応 (`with SqliteLedger(...) as ledger:`)
+- `LedgerState(requests, responses)` で起動時状態を返す
+
+#### ApprovalBus 拡張 (`src/llive/approval/bus.py`)
+
+- `ApprovalBus(ledger=, policy=)` で optional に組合せ可能 (両方 None は既存 in-memory MVP と同一)
+- 起動時に ledger から request/response を読み込み、未決着 request を pending に復元
+- policy が Verdict を返した場合は `by="policy:auto"` で即 response を ledger に記録
+- §AB1 replayable を「再起動越し」に拡張: 同じ DB なら再起動後も replay 列が再現
+
+#### テスト (18 件追加 / 既存 8 件無修正)
+
+- `tests/unit/test_approval_policy.py` (7 件): AllowList exact/prefix、DenyList exact/prefix、
+  Composite first-match、deny_overrides helper、empty composite
+- `tests/unit/test_approval_ledger.py` (6 件): schema 作成、request/response 永続化、
+  pending 復元、replay 一致、revoke 永続化、policy auto-approval 永続化
+- `tests/unit/test_approval_bus_policy.py` (5 件): in-memory での auto-approve/deny、
+  未判定 → pending 残留、deny-overrides via bus、後方互換 (policy/ledger なし)
+- **815 → 815 PASS** (回帰ゼロ、新規 +18 件は別カウント。既存 750 + 9 軸 skeleton 後の 815)
+- ruff clean
+
+#### 後方互換
+
+- `ApprovalBus()` (引数なし) は既存挙動と完全一致。in-memory only。
+- 既存 8 件のテストは無修正でパス。RPA driver 側 (`src/llive/rpa/drivers/shell.py`) は API 変更なし。
+
+#### 次のステップ (handoff v3 の C-2 / C-3)
+
+- C-2: `@govern(policy)` を ProductionOutputBus に統合
+- C-3: Cross-substrate migration spike (§MI1)
+- 署名 (Ed25519 など) は v0.2.x 後段で extras 隔離で追加検討
+
+---
+
 ### Added — FullSense SING Level 2 + Demo Scenarios 5 件追加 + §F6 完成 — 2026-05-15 (続セッション)
 
 ユーザ最終意志「自律 (auto-nomos) と 自立 (self-sufficiency) によるシンギュラリティの
