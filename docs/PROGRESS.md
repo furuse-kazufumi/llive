@@ -199,6 +199,83 @@ ResidentRunner.slow tier:
 APO の実装は **DTKR の後** に着手 (= A-2..A-5 + DTKR 完了後)。
 理由: APO は metric が無いと動けない。まず DTKR で実測可能な層を作ってから。
 
+### 新規設計拡張: Idle-Collaboration Protocol (ICP) — LLMesh 思想直系
+
+> ユーザ意志 (2026-05-15 セッション中):
+> 「PC に関して、人が触っていない時間が無駄に過ぎているのがすごく
+> もったいない。常駐している場合は、常に他の Local LLM と協調や協働
+> できる仕組みが欲しい。これも要件定義に入れておいてください。初期の
+> LLMesh の思想にも通じます。」
+
+KAR / DTKR / APO に並ぶ第 4 のロードマップ。idle 時間を浪費せず、複数
+Local LLM が **協調 (cooperation) / 協働 (collaboration)** で 1 つの
+目的に向かう網状構造 (mesh) を作る。
+
+#### Spec 上の根拠
+- **§R1 Always-on with budget** — 常駐は前提
+- **§R5 Idle work** — idle 中の reverie / meta-reflection は spec が許可
+- **§T-E2 communicative** — 他 agent / human からの trigger
+- **§22.6 MS3 Coexistence** — 多数 SING agent の coexistence は spec が要求
+- **§MI1 Substrate self-host** — 異なる substrate に渡り歩く能力
+
+#### 設計コンセプト
+1. **Idle 検出** (Windows / Linux / macOS)
+   - keyboard / mouse の last input time
+   - CPU / GPU 使用率
+   - foreground process activity
+2. **Idle tier 起動** — idle 確認後に ResidentRunner.slow の hook で発火
+3. **Peer LLM mesh** — 他 Local LLM (Ollama / LM Studio / 別 llive)
+   との P2P 通信
+4. **役割分担** — 各 peer の得意分野 (model size / 専門知識 / 言語) を
+   宣言し、stimulus を適切な peer に dispatch
+5. **コンセンサス** — 複数 peer の出力を統合 (vote / weighted average /
+   §F4 ego-altruism による調停)
+
+#### llive にすでにある下地
+- ✅ MCP server (Phase C-2) — 他 LLM クライアントが llive を呼べる
+- ✅ LLM backend abstraction (Phase C-1) — Mock/Anthropic/OpenAI/Ollama 統合
+- ✅ ResidentRunner (A-1) — slow tier に idle hook を後付け可能
+- 🔶 memory `project_llmesh` で別プロジェクトとして LLMesh 本体は存在
+
+#### 追加実装が必要な層 (ICP)
+1. **IdleDetector** (`src/llive/idle/detector.py`)
+   - OS 別の lastInputTime API (Windows: GetLastInputInfo, Linux: idle xprintidle)
+   - CPU/GPU 閾値 + 設定可能な idle 判定窓 (既定 60 秒)
+2. **PeerRegistry** (`src/llive/mesh/registry.py`)
+   - 同 LAN / 設定ファイルで発見した peer の一覧
+   - 各 peer の `capabilities` 宣言 (model_size / domains / languages)
+3. **PeerDispatcher** (`src/llive/mesh/dispatch.py`)
+   - stimulus → 最適 peer の選択 (capability matching + load balance)
+   - timeout / fallback / 結果統合
+4. **ConsensusBuilder** (`src/llive/mesh/consensus.py`)
+   - 複数 peer 出力の調停 (vote / weighted / §F4 ego-altruism)
+   - 矛盾検出 → §F5 reject に流せる
+5. **MeshRouter integration** — ResidentRunner.slow tier に IdleObserver
+   + MeshSource を 1 つの StimulusSource として登録
+
+#### LLMesh との関係
+- llive ICP は LLMesh の **クライアント / プロバイダ両面** として動作
+- LLMesh は manufacturing mesh / industrial IoT 寄り (memory:
+  `project_llmesh` の v1.5 で MTEngine + XbarRChart + CUSUMChart 等)
+- llive は cognitive mesh — 思考の協働
+- 両者は MCP / OpenAI 互換 HTTP プロトコルで疎結合に繋がる
+
+#### 普及シナリオ
+- 自宅 PC で llive を 24/7 常駐 (低電力 idle tier)
+- 同じ家庭内の旧 PC で別 llive を peer として動かす (sleep 時の余剰計算)
+- LLMesh 経由で他人の余剰 PC とも疎結合 (opt-in、§22.8 cohabitation)
+
+#### Scenario 化候補
+- **Scenario 13** (ICP demo): idle 検出 → 別 peer に thought を投げ → 統合
+- **Scenario 14** (mesh consensus): 2 つの peer の異なる答えを §F4 で調停
+
+#### 実装優先順位
+ICP は **A-2..A-5 (Level 2 完了) と DTKR 完了後** に着手。
+理由: ICP は peer 通信が前提なので、まず単独 agent (Level 2 + DTKR) が
+安定してから mesh 化に進む方が安全。
+
+=> 全体順序: A-2..A-5 → DTKR → ICP → APO
+
 ---
 
 ## 2026-05-15 (handoff) — 次セッション最優先: SING Level 2 着手
