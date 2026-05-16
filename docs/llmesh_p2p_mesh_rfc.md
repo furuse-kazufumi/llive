@@ -169,16 +169,31 @@ state convergence。
 
 ## 実装ロードマップ
 
-| Phase | 内容                                              | 目標 release |
-|-------|---------------------------------------------------|--------------|
-| **0** | RFC 確定 (本書) + 反対意見の集約                  | v0.6.x (now) |
-| **1** | mDNS discovery 実装 + LAN demo (2 peer)           | v0.7.0       |
-| **2** | DHT (Kademlia) + capability clustering            | v0.8.0       |
-| **3** | skill chunk replication (DTKR と統合)             | v0.9.0       |
-| **4** | gossip protocol + eventual consistency            | v0.10.0      |
-| **5** | EDLA learning rule の試験 + federated PoC         | v0.11.0      |
-| **6** | onion routing (optional) + DP-SGD                  | v0.12.0      |
-| **GA**| v2.0 として安定化 + commercial license の対象      | v2.0.0       |
+実装状況反映後の **実質ロードマップ** (上で点検した通り Phase 1 / 4 は llmesh
+v3.1.0 で既に実装済、Phase 2 は部分的)。
+
+| Phase | 内容                                              | 状況 | 目標 release |
+|-------|---------------------------------------------------|------|--------------|
+| **0** | RFC 確定 (本書) + 反対意見の集約                  | ✓ 完了 | v0.6.x (now) |
+| **1** | mDNS discovery 実装 + LAN demo (2 peer)           | **✓ 実装済 (llmesh v3.1.0)** | — |
+| **2a**| Capability clustering 強化 (capability_hash → カテゴリ別 partition) | ◐ 部分実装 | llmesh v3.2.0 |
+| **2b**| DHT (Kademlia) で広域発見                          | ☐ 未実装 | llmesh v3.3.0 |
+| **3** | skill chunk replication (DTKR と統合)             | ☐ 未実装 | llmesh v3.4.0 / llive v0.7 |
+| **4** | gossip protocol + eventual consistency            | **✓ 実装済 (gossip.py)** + capability-aware partitioning は ◐ | llmesh v3.2.0 |
+| **5** | EDLA learning rule の試験 + federated PoC         | ☐ 未実装 | llive v0.11 |
+| **6** | onion routing (optional) + DP-SGD                  | ☐ 未実装 | llmesh v3.5.0 |
+| **GA**| v2.0 として安定化 + commercial license の対象      | — | llmesh v2.0 (rename v1 系再起) |
+
+**Next up (実装優先順)**:
+
+1. **Phase 2a: capability clustering 強化** — `dns_sd.py` の `capability_hash`
+   を活用し、registry にカテゴリ別 partition を追加。capability matching score
+   による routing。
+2. **Phase 3: skill chunk replication** — DTKR (llive 側) + signed chunk
+   exchange。Phase 2a の partition で popular skill を近くの peer に複製。
+3. **Phase 5: EDLA 学習則** — llive 側で `src/llive/learning/edla.py` 新設、
+   BP 並走比較。federated 化は Phase 3 完了後。
+4. **Phase 2b / 6 / DP-SGD**: 必要に応じて段階追加 (要 ユースケース確認)
 
 ## 倫理 / 法的注意
 
