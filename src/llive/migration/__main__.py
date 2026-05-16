@@ -18,6 +18,12 @@ from pathlib import Path
 from llive.migration.bundle import MANIFEST_FILENAME, BundleManifest
 from llive.migration.exporter import export_state
 from llive.migration.importer import IncompatibleBundleError, import_state
+from llive.migration.integrity import (
+    BundleIntegrityError,
+    sign_bundle,
+    verify_bundle_signature,
+    write_bundle_sha256,
+)
 
 
 def _cmd_export(args: argparse.Namespace) -> int:
