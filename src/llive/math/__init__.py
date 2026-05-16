@@ -15,6 +15,12 @@ Public surface (v0 minimal):
 
 from __future__ import annotations
 
+from llive.math.calculator import (
+    CalculationError,
+    CalculationResult,
+    SafeCalculator,
+    extract_expressions,
+)
 from llive.math.units import (
     Dimensions,
     Quantity,
@@ -23,8 +29,12 @@ from llive.math.units import (
 )
 
 __all__ = [
+    "CalculationError",
+    "CalculationResult",
     "Dimensions",
     "Quantity",
+    "SafeCalculator",
     "UnitMismatchError",
+    "extract_expressions",
     "parse_unit",
 ]
