@@ -60,6 +60,8 @@ def _cmd_import(args: argparse.Namespace) -> int:
         print(f"  sandbox denied_emits: {result.sandbox_denied_emits_path}")
     if result.production_records_path is not None:
         print(f"  production records: {result.production_records_path}")
+    for tier, path in sorted(result.memory_paths.items()):
+        print(f"  memory[{tier}]: {path}")
     return 0
 
 
