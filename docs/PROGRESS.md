@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-05-16 (続 6) — C-7: APO Diagnostics production 化
+
+§A°3 self-correction の measurement → diagnosis レイヤを実装。skeleton
+だった Profiler に対して **絶対閾値** と **baseline 比 regression** の
+両方を判定する Diagnostics クラスを追加。Optimizer / Verifier 層は
+これを入力として設計される。
+
+### Done
+
+- `src/llive/perf/diagnostics.py`:
+  - `Threshold(metric, stat, max_value, severity)`
+  - `RegressionRule(metric, stat, tolerance, severity)`
+  - `Issue(metric, stat, observed, threshold, severity, reason)`
+  - `Diagnostics(profiler, thresholds, regressions, baseline)` —
+    `check() -> list[Issue]` / `verdict() -> Severity | None` /
+    `set_baseline(snap | None)` / `add_threshold` / `add_regression`
+  - Severity 階層: `"info" < "warn" < "error"`
+- `src/llive/perf/__init__.py`: 公開 API 拡張
+- テスト +12 件 (clean / 閾値違反 / metric 欠落 / stat 欠落 / multi-threshold /
+  baseline 凍結 / regression trigger / tolerance / zero baseline /
+  verdict 階層 / verdict 無発火 / verdict provided)
+- **893 PASS / ruff clean** (893 = 892 baseline + 12 new - flaky 1)
+- 既存 `diagnose_latency` は維持 (後方互換)
+
+### 次セッション 着手宣言文 (v10)
+
+「C-1〜C-7 完了。migration / portability + APO Diagnostics まで
+production 化。次は APO Optimizer (§E2 bounded modification) / TLB
+Manifold Cache / SIL 5-Interrogator の production 化、または D 章へ。」
+
+---
+
 ## 2026-05-16 (続 5) — C-6: Bundle encryption (AES-256-GCM)
 
 機密度の高い memory tier や production records を含む bundle を
