@@ -51,6 +51,70 @@ python -m llive.demo
 
 詳細は [README.md](https://github.com/furuse-kazufumi/llive#readme) を参照。
 
+## Architecture — Approval Bus 経路 (C-1 + C-2)
+
+副作用を伴う action は **ApprovalBus** を gate に置き、Policy で auto-approve/deny → 残りは人手 review。すべての判定は SQLite ledger に永続化されて再起動越しに replay 可能。
+
+```mermaid
+flowchart LR
+    A["Agent action<br/>(file write / MCP push / llove push / shell)"]
+    B["ApprovalBus.request()"]
+    P["Policy<br/>(AllowList / DenyList / Composite)"]
+    L["SqliteLedger<br/>(persistent)"]
+    H["Human review<br/>(silence == denial)"]
+    PROD["ProductionOutputBus<br/>(side-effect)"]
+    SBX["SandboxOutputBus<br/>(observation only)"]
+
+    A --> B
+    B --> P
+    P -->|"APPROVED / DENIED"| L
+    P -.->|"None (no decision)"| H
+    H --> L
+    L -->|APPROVED| PROD
+    L -.->|"DENIED / silence"| SBX
+
+    style P fill:#fef3c7,stroke:#f59e0b
+    style L fill:#e0e7ff,stroke:#6366f1
+    style PROD fill:#d1fae5,stroke:#10b981
+    style SBX fill:#fee2e2,stroke:#ef4444
+```
+
+## Architecture — Cross-substrate Migration (C-3, §MI1)
+
+Agent state を別 substrate に携行して再開できることを実証する spike。tar.gz bundle 形式 (`manifest.json` + ledger DB + JSONL records) で portable。
+
+```mermaid
+flowchart LR
+    subgraph SA["Substrate A<br/>(source host)"]
+        LA["SqliteLedger"]
+        SAS["SandboxOutputBus"]
+        PA["ProductionOutputBus"]
+    end
+
+    EX["export_state()"]
+    BUN["bundle.tar.gz<br/>manifest.json<br/>+ ledger.db<br/>+ *.jsonl"]
+    IM["import_state()"]
+
+    subgraph SB["Substrate B<br/>(target host)"]
+        LB["SqliteLedger<br/>(restored)"]
+        SBS["records.jsonl"]
+        PB["records.jsonl"]
+    end
+
+    LA --> EX
+    SAS --> EX
+    PA --> EX
+    EX --> BUN
+    BUN --> IM
+    IM --> LB
+    IM --> SBS
+    IM --> PB
+
+    style BUN fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+```
+
+CLI: `python -m llive.migration export --ledger=approval.db --out=state.tar.gz`
+
 ## What's New (v0.6.0, 2026-05-16)
 
 - **9 axes skeleton** 完成 — KAR / DTKR / APO / ICP / TLB / Math / PM / RPAR / SIL
