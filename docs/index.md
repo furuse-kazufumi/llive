@@ -12,11 +12,22 @@ description: "Self-evolving modular memory LLM framework"
 
 ## FullSense Family
 
-```
-                  FullSense ™   (umbrella brand & spec)
-                  /     |     \
-              llmesh   llive   llove
-              (hub)   (memory) (TUI)
+```mermaid
+flowchart TD
+    F["<b>FullSense ™</b><br/>umbrella brand &amp; spec v1.1<br/><i>9 axes: KAR / DTKR / APO / ICP / TLB<br/>Math / PM / RPAR / SIL</i>"]
+    LM["<b>llmesh</b><br/>secure LLM hub<br/>(on-prem MCP)"]
+    LI["<b>llive</b><br/>self-evolving memory<br/>(4-layer + biological model)"]
+    LO["<b>llove</b><br/>TUI dashboard<br/>(HITL workbench)"]
+    F --> LM
+    F --> LI
+    F --> LO
+    LM <-.->|MCP| LI
+    LI <-.->|bridge| LO
+    LM <-.->|hub| LO
+    style F fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style LI fill:#d1fae5,stroke:#10b981
+    style LM fill:#dbeafe,stroke:#3b82f6
+    style LO fill:#fce7f3,stroke:#ec4899
 ```
 
 | Product   | Role                                       | GitHub                                                |
