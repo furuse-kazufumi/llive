@@ -122,6 +122,39 @@
 
 ---
 
+## Phase 8: Cognitive-aware Transformer Block (CABT) — 2026-05-17 追加
+
+**Goal**: LLMBackend の OSS LLM 依存を緩和し、FullSense 6 stage loop と
+親和性の高い「思考層対応 Transformer ブロック」を内製化。スパイラル開発
+S1〜S6 で進める。
+
+**Requirements (7)**: CABT-01〜CABT-07 (詳細 REQUIREMENTS.md v0.8 セクション)
+
+**Success Criteria**:
+1. **S1**: BriefGrounder (L1) — Brief API ledger に TRIZ + RAD citation が完全に記録される (✅ 2026-05-17)
+2. **S2**: CABT-01 prototype — HF transformers forward hook で attention に metadata column が注入される、Brief × {grounded, ungrounded} の精度差を測定
+3. **S3**: CABT-03 + CABT-04 — EpistemicType embedding + Salience gate を hook で追加、token-level surprise log で A/B
+4. **S4**: CABT-02 — Stage-aware routing 試作、per-stage benchmark で安定性確認
+5. **S5**: CABT-05 + CABT-06 — TRIZ-conditioned head + Approval-gated decoding、safety bench (RPAR) 通過
+6. **S6**: CABT-07 統合 — 4 層メモリ residual fusion、full progressive matrix (xs〜xl × 3 models × {plain, CABT}) で品質測定
+
+**スパイラル進行原則** (Boehm 1988 適用):
+- 各 S は (a) リスク分析 → (b) 試作 → (c) Brief API 経由ベンチ評価 → (d) 次イテレーション計画 の 4 段サイクル
+- リスク順: S5/S6 (アーキ変更) > S4 (routing) > S2/S3 (hook) > S1 (外側)
+- Brief API ベンチは全 S 共通の評価ハーネス — overhead < 1% は維持必須
+
+**UI hint**: 評価結果は llove TUI の per-stage timeline に統合
+
+**Plans (予想)**:
+- P8.1 (S1) — BriefGrounder ✅ (2026-05-17 実装済)
+- P8.2 (S2) — CABT-01 HFAdapter forward hook + metadata column
+- P8.3 (S3) — CABT-03 EpistemicType embedding + CABT-04 Salience gate
+- P8.4 (S4) — CABT-02 Soft-MoE 風 stage router
+- P8.5 (S5) — CABT-05 TRIZ head mask + CABT-06 Approval-gated decoding
+- P8.6 (S6) — CABT-07 Memory-augmented residual + full matrix bench
+
+---
+
 ## Phase Dependencies
 
 ```mermaid
@@ -129,11 +162,14 @@ flowchart LR
     P1[Phase 1<br/>MVR] --> P2[Phase 2<br/>Adaptive]
     P2 --> P3[Phase 3<br/>Evolve]
     P3 --> P4[Phase 4<br/>Production]
+    P4 -.-> P8[Phase 8<br/>CABT]
+    P2 -.-> P8
 ```
 
 Phase は基本 sequential。但し:
 - Phase 3 の TRIZ-XX 系は Phase 2 完了を待たずに先行 PoC 可能
 - Phase 4 の SEC-XX は Phase 3 と並行で着手可能（独立性高）
+- **Phase 8 (CABT)** は Phase 2 (4 層メモリ) と Phase 4 (Approval Bus / SIL ledger) に依存。Phase 5-7 (Rust) とは独立並走可
 
 ## Out of Roadmap (Future Milestone)
 
