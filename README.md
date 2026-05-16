@@ -29,6 +29,33 @@ llmesh（マルチプロトコル LLM ゲートウェイ）と llove（TUI dashb
 | MERA / ModularLLM | モジュラー化 | 可変長 BlockContainer YAML + plugin registry |
 | AutoGPT 系 | エージェント | llmesh 産業 IoT 直結 + llove TUI |
 
+### 素の OSS LLM (Qwen / Llama / Mistral / ...) に対する位置づけ
+
+llive にとって OSS LLM weights は **競合ではなく内側で呼ぶ素材**。Brief API
+(LLIVE-002, 2026-05-16) でどの OSS LLM も `LLMBackend` として透過的に差し替え
+可能 — 差別化はモデル単体ではなく、その上に乗る **フレームワーク層** にある。
+
+| 層 | 素の OSS LLM (Qwen / Llama / Mistral / ...) | llive (それを内包する) | 実装状況 |
+|---|---|---|---|
+| **推論コア** | Decoder-only LLM 重み | OSS LLM を `LLMBackend` として呼び出す | 実装済 (Ollama / OpenAI / Anthropic / Mock) |
+| **記憶** | 単一 context window | 4 層 (semantic / episodic / structural / parameter) + 海馬-皮質 consolidation (FR-12) | semantic/episodic 実装済 |
+| **意思決定** | 1 ターン生成 | FullSense 6 stage loop (salience → curiosity → thought → ego/altruism → plan → output) | 実装済 |
+| **入力契約** | プロンプト 1 本 | **Brief API** ― 構造化 work unit + constraints + success_criteria + tool whitelist | 実装済 (2026-05-16) |
+| **安全** | プロンプトレベル | Approval Bus + Policy + Quarantined Memory (SEC-01) + Ed25519 Signed Adapter (SEC-02) | 実装済 |
+| **監査** | なし | append-only SIL ledger (Brief / Approval) + SHA-256 hash chain (SEC-03) | 実装済 |
+| **自己進化** | 事前学習 + ファインチューニングのみ | オンライン提案 → Z3 形式検証 (EVO-04) → 審査 → 昇格 (EVO-06/07) | Phase 3 完了 |
+| **アイデア源** | なし | TRIZ 40 原理 + 39×39 矛盾マトリクス内蔵 (FR-23〜27) | 実装済 |
+| **HITL** | なし | llove TUI Candidate Arena (FR-20) | 設計済、未統合 |
+| **産業 IoT** | なし | llmesh MQTT / OPC-UA sensor bridge (FR-19) | 設計済、未統合 |
+
+実測 (2026-05-16 progressive validation matrix, xs/s/m × {llama3.2:3b,
+qwen2.5:7b, qwen2.5:14b}, on-prem only): **Brief API + loop overhead < 1 %**
+(LLM-only wall time / Total wall time > 99.8 %)。詳細は
+[`docs/benchmarks/2026-05-16-progressive-merged/summary.md`](docs/benchmarks/2026-05-16-progressive-merged/summary.md)。
+
+同点と認める領域: **生成品質そのもの** (内蔵 OSS LLM に依存) / **on-prem 実行**
+(OSS LLM 直叩きでも成立) / **多言語** (素のモデルでも対応)。
+
 ## ステータス
 
 - **v0.5.0** (2026-05-14) — Phase 5 first wire-in。`BayesianSurpriseGate.compute_surprise` (MEM-07) と `EdgeWeightUpdater.apply_time_decay` (RUST-03) を Rust kernel 経路へ自動委譲、不在時 numpy fallback、1e-6 parity 保証。**444 tests / 0 lint** (v0.4.0 baseline 439 + RUST-03 parity 5)。pyo3 0.24.2 (CVE-clean)。
