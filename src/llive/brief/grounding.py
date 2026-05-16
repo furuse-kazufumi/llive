@@ -99,18 +99,35 @@ class RadCitation:
 
 
 @dataclass(frozen=True)
+class CalcCitation:
+    """One inlined calculation injected by SafeCalculator (MATH-08).
+
+    Recorded in the ledger so an auditor can verify that the value the LLM
+    consumed in the prompt is the value llive's deterministic engine
+    produced — not a number the LLM imagined.
+    """
+
+    expression: str
+    value: float
+    operation_count: int = 0
+    used_functions: tuple[str, ...] = ()
+    error: str | None = None
+
+
+@dataclass(frozen=True)
 class GroundedBrief:
     """Result of running a Brief through :class:`BriefGrounder`.
 
     ``augmented_goal`` is what should replace ``brief.goal`` when building
-    the Stimulus. The ``triz`` and ``rad`` fields are kept separate so the
-    ledger can record them as structured citations rather than re-parsing
-    text.
+    the Stimulus. The ``triz`` and ``rad`` and ``calc`` fields are kept
+    separate so the ledger can record them as structured citations rather
+    than re-parsing text.
     """
 
     augmented_goal: str
     triz: tuple[TrizCitation, ...] = ()
     rad: tuple[RadCitation, ...] = ()
+    calc: tuple[CalcCitation, ...] = ()
 
 
 @dataclass
