@@ -420,6 +420,7 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 | **MATH-05** | **物理定数・単位辞書** | CODATA 2022 (現行) + NIST 単位定義の grounded 辞書。RAD math/metrology の sub-corpus として配置 | metrology (既存 math_hints.py 拡張) | **HIGH (3rd)** |
 | **MATH-06** | **単位変換・無次元化** | 単位変換 (km/h ↔ m/s 等) と Buckingham π 定理による無次元化 | metrology / physics | MED |
 | **MATH-07** | **MATHEMATICAL EpistemicType** | 既存 `EpistemicType` 列挙 (FACTUAL/EMPIRICAL/...) に **MATHEMATICAL** を加え (現状 RESERVED_1 を割り当て可)、数学 Brief 専用の filter chain を選択可能化 | DTKR / Multi-track Filter | MED |
+| **MATH-08** | **内蔵計算エンジン (差別化軸)** | LLM に「数値計算をさせない」設計。算術 / 三角関数 / 行列演算 / FFT / 微積分 / 線形ソルバ / 統計を **決定論的に llive 側で実行**、LLM はクエリ生成と結果解釈のみ。Brief Runner の前段で式抽出 → 計算 → 結果を Stimulus に grounded 注入。Wolfram Alpha 風だが完全 on-prem | numerical_analysis / scipy / sympy / mpmath | **HIGH (4th, 差別化最大)** |
 
 ### llive 既存資産との接続
 
