@@ -29,6 +29,7 @@ from llive.perf.optimizer import (
     reduce_load_strategy,
 )
 from llive.perf.profiler import Profiler, Sample
+from llive.perf.registry import ThresholdRegistry
 from llive.perf.verifier import (
     InvariantCheck,
     RejectedModification,
