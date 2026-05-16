@@ -219,16 +219,18 @@ class SkillReplica:
 
 ## 実装 Phase
 
-| Sub-phase | 内容 | Target |
+| Sub-phase | 内容 | Status |
 |-----------|------|--------|
-| 3.0 | RFC sub doc (本書) | v0.6.x (done) |
-| 3.1 | `SkillChunk` dataclass + signature / merkle helpers | llmesh v3.3.0 |
-| 3.2 | `SkillReplica` LRU + popularity store | llmesh v3.3.0 |
-| 3.3 | HTTP API endpoints (`/skills/*`) | llmesh v3.4.0 |
-| 3.4 | Pull / Push / Gossip protocol | llmesh v3.4.0 |
-| 3.5 | Approval gate (`@govern` 経由 DL) | llmesh v3.4.0 |
-| 3.6 | Reputation system + license filter | llmesh v3.5.0 |
-| 3.7 | 10-peer demo + KPI 測定 | llmesh v3.5.0 |
+| 3.0 | RFC sub doc (本書) | **done** (v0.6.x) |
+| 3.1 | `SkillChunk` dataclass + signature / merkle helpers | **done** (llmesh v3.3.0) |
+| 3.2 | `SkillReplica` LRU + popularity store | **done** (llmesh v3.3.0) |
+| 3.3 | HTTP API endpoints (`/skills/*`) | **done** (llmesh v3.4.0) |
+| 3.4 | Pull / Push / Gossip protocol (`SkillSyncClient` + `GossipScheduler`) | **done** (llmesh v3.4.0, 2026-05-16) |
+| 3.5 | Approval gate (`PullPolicyCheck` callable, llive `@govern` 連携可) | **done** (llmesh v3.4.0, 2026-05-16) |
+| 3.6a | License filter (`LicenseFilter` + `allow_licenses()` + `DEFAULT_ALLOWED_LICENSES`) | **done** (llmesh v3.4.0, 2026-05-16) |
+| 3.6b | Reputation system (`PeerReputation`, 30-day rolling SQLite window) | **done** (llmesh v3.4.0, 2026-05-16) |
+| 3.6c | Router integration glue (`report-corrupt` → `PeerReputation`, rate limit) | **planned** (llmesh v3.5.0) |
+| 3.7 | 10-peer demo + KPI 測定 | **planned** (llmesh v3.5.0) |
 
 ## 倫理 / 法的注意
 
