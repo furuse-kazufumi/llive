@@ -13,6 +13,13 @@ from llive.perf.diagnostics import (
     Severity,
     Threshold,
 )
+from llive.perf.governance import (
+    ApplyOutcome,
+    ApplyResult,
+    ApplyStatus,
+    Applier,
+    apply_with_approval,
+)
 from llive.perf.optimizer import (
     Modification,
     ModificationBound,
