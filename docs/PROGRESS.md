@@ -6,6 +6,33 @@
 
 ---
 
+## 2026-05-16 (続 3) — C-4: Bundle 拡張 (memory tier)
+
+C-3 残作業から「bundle に long-term memory / kuzu graph / safetensors weights を含める」
+を MVP 着地。exporter / importer / CLI に memory tier の opaque on-disk state
+(file or directory) を tar.gz bundle に含める機構を追加。
+
+### Done
+
+- `src/llive/migration/exporter.py`: `export_state(..., memory_paths={"<tier>": <path>}, ...)`
+  - 値は file path または directory path。再帰 copy で `bundle/memory/<tier>/` 配下に格納
+  - tier=`episodic` (DuckDB file), `semantic` (faiss dir), `structural` (Kùzu dir) 等を想定
+  - 存在しない path は silent skip、何も含まれなければ `components` に "memory" が入らない
+- `src/llive/migration/importer.py`: `ImportResult.memory_paths: dict[str, Path]` 追加
+  - tier 配下に 1 file なら file path、それ以外なら dir path を返す
+- `src/llive/migration/__main__.py`: CLI `--memory episodic=path/to/db.duckdb` (repeatable)
+- テスト +5 件 (file tier round trip / dir tier round trip / multi tier / missing skip / empty dict)
+- **858 PASS / ruff clean / 回帰ゼロ**
+- schema_version は v1 維持 (既存 bundle と forward-compatible)
+
+### 次セッション 着手宣言文 (v7)
+
+「C-1 + C-2 + C-3 + C-4 完了。bundle が approval / sandbox / production /
+memory tier (任意数) を保持できるようになった。次は C-5 / D 章 / 9 軸別
+production 化のいずれかに進む。」
+
+---
+
 ## 2026-05-16 (続 2) — C-3: Cross-substrate migration spike (§MI1)
 
 handoff v3 C 章最後。Spec §MI1 「substrate independence」を classical-digital
