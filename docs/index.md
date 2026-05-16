@@ -121,10 +121,38 @@ CLI: `python -m llive.migration export --ledger=approval.db --out=state.tar.gz`
 - **Approval Bus production 化** (Policy + SQLite Ledger, C-1)
 - **`@govern` + ProductionOutputBus** (Policy gate × 副作用 emit, C-2)
 - **Cross-substrate migration spike** (§MI1, C-3)
+- **Brief API end-to-end** (LLIVE-001/002) — CLI / MCP / Ledger / Approval gate / Tool whitelist
 - **Apache-2.0 + Commercial dual-license** に切替
 - **FullSense umbrella ブランド** 導入
 
 詳細: [CHANGELOG](https://github.com/furuse-kazufumi/llive/blob/main/CHANGELOG.md)
+
+## llive vs 素の OSS LLM (Qwen / Llama / Mistral / ...)
+
+llive にとって OSS LLM weights は **競合ではなく内側で呼ぶ素材**。Brief API
+(LLIVE-002, 2026-05-16 実装) でどの OSS LLM も `LLMBackend` として透過的に差し
+替え可能 — 差別化はモデル単体ではなく、その上に乗る **フレームワーク層** にある。
+
+| 層 | 素の OSS LLM (Qwen / Llama / Mistral / ...) | llive (それを内包する) | 実装状況 |
+|---|---|---|---|
+| **推論コア** | Decoder-only LLM 重み | OSS LLM を `LLMBackend` として呼び出す | 実装済 (Ollama / OpenAI / Anthropic / Mock) |
+| **記憶** | 単一 context window | 4 層 (semantic / episodic / structural / parameter) + 海馬-皮質 consolidation (FR-12) | semantic/episodic 実装済 |
+| **意思決定** | 1 ターン生成 | FullSense 6 stage loop (salience → curiosity → thought → ego/altruism → plan → output) | 実装済 |
+| **入力契約** | プロンプト 1 本 | **Brief API** ― 構造化 work unit + constraints + success_criteria + tool whitelist | 実装済 (2026-05-16) |
+| **安全** | プロンプトレベル | Approval Bus + Policy + Quarantined Memory (SEC-01) + Ed25519 Signed Adapter (SEC-02) | 実装済 |
+| **監査** | なし | append-only SIL ledger (Brief / Approval) + SHA-256 hash chain (SEC-03) | 実装済 |
+| **自己進化** | 事前学習 + ファインチューニングのみ | オンライン提案 → Z3 形式検証 (EVO-04) → 審査 → 昇格 (EVO-06/07) | Phase 3 完了 |
+| **アイデア源** | なし | TRIZ 40 原理 + 39×39 矛盾マトリクス内蔵 (FR-23〜27) | 実装済 |
+| **HITL** | なし | llove TUI Candidate Arena (FR-20) | 設計済、未統合 |
+| **産業 IoT** | なし | llmesh MQTT / OPC-UA sensor bridge (FR-19) | 設計済、未統合 |
+
+実測 (2026-05-16 progressive validation matrix, xs/s/m × {llama3.2:3b,
+qwen2.5:7b, qwen2.5:14b}, on-prem only): **Brief API + loop overhead < 1 %**
+(LLM-only wall time / Total wall time > 99.8 %)。詳細は
+[`docs/benchmarks/2026-05-16-progressive-merged/summary.md`](https://github.com/furuse-kazufumi/llive/blob/main/docs/benchmarks/2026-05-16-progressive-merged/summary.md)。
+
+同点と認める領域: **生成品質そのもの** (内蔵 OSS LLM に依存) / **on-prem 実行**
+(OSS LLM 直叩きでも成立) / **多言語** (素のモデルでも対応)。
 
 ## 設計の核
 
