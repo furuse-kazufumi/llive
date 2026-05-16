@@ -199,6 +199,7 @@ def test_augmented_goal_unchanged_when_no_grounding() -> None:
 
 def test_runner_records_grounding_in_ledger(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("LLIVE_BRIEF_LEDGER_DIR", str(tmp_path / "ledgers"))
+    monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "0")
     rad_index = _FakeRadIndex(
         [
             (
