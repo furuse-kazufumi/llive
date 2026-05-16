@@ -182,8 +182,8 @@ def reduce_load_strategy(
 __all__ = [
     "Modification",
     "ModificationBound",
-    "Optimizer",
     "OptimizationStrategy",
+    "Optimizer",
     "raise_threshold_strategy",
     "reduce_load_strategy",
 ]
