@@ -155,6 +155,37 @@ S1〜S6 で進める。
 
 ---
 
+## Phase 9: Creative Thinking Layer (CREAT) — 2026-05-17 追加
+
+**Goal**: 人間の創造プロセス (KJ法 / MindMap / TRIZ / Six Hats / Synectics)
+を llive 思考層に追加し、BriefRunner 前段の「拡散層」として実装。Brief →
+KJ → MindMap → TRIZ → Six Hats → 構造化変換 のフルパスで「Brief から要件
+spec を自動生成」できる状態を目指す。
+
+**Requirements (5)**: CREAT-01〜CREAT-05 (詳細 REQUIREMENTS.md v0.9 セクション)
+
+**Success Criteria**:
+1. **C1**: CREAT-01 KJ法ノード — Brief 1 件で拡散アイデア ≥20 件 + 親和 group ≥3
+2. **C2**: CREAT-02 MindMap ノード — depth=3 の tree 構造を ledger に保存
+3. **C3**: CREAT-04 Six Hats — 6 観点それぞれ独立した sub-Brief を発行
+4. **C4**: CREAT-05 類比エンジン — cross-domain RAD から意味的に遠い類比を取得
+5. **C5**: CREAT-03 構造化変換 — KJ + MindMap + TRIZ + Six Hats の 4 出力を統合した REQUIREMENTS.md フラグメントを生成
+6. **C6**: end-to-end Brief → 自動生成された REQUIREMENTS.md の妥当性確認
+
+**人間の思考フローとの対応** (REQUIREMENTS.md v0.9 の図と同一)
+
+**UI hint**: llove TUI の **Creative workbench** モードに統合 — KJ 付箋、MindMap 樹形図、Six Hats 6 タブを並列表示
+
+**Plans (予想)**:
+- P9.1 (C1) — CREAT-01 KJ法ノード (LLM mixture sampling + clustering)
+- P9.2 (C2) — CREAT-02 MindMap ノード (DFS depth=3)
+- P9.3 (C3) — CREAT-04 Six Hats multi-track
+- P9.4 (C4) — CREAT-05 類比エンジン (cross-domain RAD bridge)
+- P9.5 (C5) — CREAT-03 構造化変換
+- P9.6 (C6) — フルパス統合 + 自動 REQUIREMENTS 生成
+
+---
+
 ## Phase Dependencies
 
 ```mermaid
@@ -164,12 +195,16 @@ flowchart LR
     P3 --> P4[Phase 4<br/>Production]
     P4 -.-> P8[Phase 8<br/>CABT]
     P2 -.-> P8
+    P3 -.-> P9[Phase 9<br/>CREAT]
+    P4 -.-> P9
+    P8 -.-> P9
 ```
 
 Phase は基本 sequential。但し:
 - Phase 3 の TRIZ-XX 系は Phase 2 完了を待たずに先行 PoC 可能
 - Phase 4 の SEC-XX は Phase 3 と並行で着手可能（独立性高）
 - **Phase 8 (CABT)** は Phase 2 (4 層メモリ) と Phase 4 (Approval Bus / SIL ledger) に依存。Phase 5-7 (Rust) とは独立並走可
+- **Phase 9 (CREAT)** は Phase 3 (TRIZ 既存実装) と Phase 4 (ledger) に依存。Phase 8 と相互補完可
 
 ## Out of Roadmap (Future Milestone)
 
