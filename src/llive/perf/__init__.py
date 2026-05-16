@@ -36,6 +36,7 @@ from llive.perf.verifier import (
 
 __all__ = [
     "Diagnostics",
+    "InvariantCheck",
     "Issue",
     "Modification",
     "ModificationBound",
@@ -43,9 +44,17 @@ __all__ = [
     "Optimizer",
     "Profiler",
     "RegressionRule",
+    "RejectedModification",
     "Sample",
     "Severity",
     "Threshold",
+    "VerificationResult",
+    "Verifier",
+    "bounded_step",
+    "default_invariants",
+    "load_reduction_only",
+    "non_negative",
     "raise_threshold_strategy",
     "reduce_load_strategy",
+    "relaxation_only",
 ]
