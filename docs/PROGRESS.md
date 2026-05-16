@@ -6,6 +6,36 @@
 
 ---
 
+## 2026-05-16 (続 7) — C-8: APO Optimizer (§E2 bounded modification)
+
+Diagnostics (C-7) の出力を入力に取り、bounded な Modification を提案
+する Optimizer を追加。§E2 の 3 つの要件 (bounded / transparent / gated)
+のうち bounded + transparent を本層が担保。gate は ApprovalBus (C-1)。
+
+### Done
+
+- `src/llive/perf/optimizer.py`:
+  - `Modification(target, current, proposed, rationale)` — `.delta` 算出
+  - `ModificationBound(target, min_value, max_value)` — 値域 envelope
+  - `OptimizationStrategy = Callable[[Issue], Modification | None]`
+  - `Optimizer(strategies, max_modifications=5, bounds=())`
+    - `propose(issues)` は pure / no I/O / severity 順で cap
+    - 値域外 proposal は drop、複数 strategy は first-non-None
+  - `raise_threshold_strategy(bump=1.1)` — warn 閾値の小幅緩和
+  - `reduce_load_strategy(...)` — latency 系 issue に concurrency↓
+- テスト +14 件 (基本 / strategy chain / bound 受理 / bound 拒否 /
+  cap / severity 順 / zero cap / floor / 不正 cap / delta 等)
+- **907 PASS / ruff clean / 回帰ゼロ** (893 + 14)
+
+### 次セッション 着手宣言文 (v11)
+
+「C-1〜C-8 で migration + APO measurement/diagnosis/optimisation
+までの一貫レイヤが揃った。次は C-9 Verifier (§E3 formal pre-check)
+か C-10 ApprovalBus 接続 (`@govern` で modification gate)、または
+別軸 (TLB / SIL) へ。」
+
+---
+
 ## 2026-05-16 (続 6) — C-7: APO Diagnostics production 化
 
 §A°3 self-correction の measurement → diagnosis レイヤを実装。skeleton
