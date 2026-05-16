@@ -105,11 +105,16 @@ class BriefRunner:
         approval_bus: ApprovalBus | None = None,
         tools: Mapping[str, ToolHandler] | None = None,
         approver: str = "agent",
+        grounder: BriefGrounder | None = None,
     ) -> None:
         self._loop = loop
         self._approval_bus = approval_bus
         self._tools: dict[str, ToolHandler] = dict(tools or {})
         self._approver = approver
+        # L1 grounding (TRIZ × RAD) is opt-in — leaves bench-only Brief flows
+        # deterministic. When attached, every Brief is augmented before the
+        # Stimulus is built and the citations are recorded in the ledger.
+        self._grounder = grounder
 
     # -- public --------------------------------------------------------------
 
@@ -118,7 +123,37 @@ class BriefRunner:
 
         ledger.append("brief_submitted", {"brief": brief_to_dict(brief)})
 
-        stim = _brief_to_stimulus(brief)
+        grounded: GroundedBrief | None = None
+        if self._grounder is not None:
+            grounded = self._grounder.ground(brief)
+            ledger.append(
+                "grounding_applied",
+                {
+                    "triz": [
+                        {
+                            "principle_id": c.principle_id,
+                            "name": c.name,
+                            "trigger": c.trigger,
+                        }
+                        for c in grounded.triz
+                    ],
+                    "rad": [
+                        {
+                            "domain": r.domain,
+                            "doc_path": r.doc_path,
+                            "score": r.score,
+                            "matched_terms": list(r.matched_terms),
+                        }
+                        for r in grounded.rad
+                    ],
+                    "augmented_goal_chars": len(grounded.augmented_goal),
+                },
+            )
+
+        stim = _brief_to_stimulus(
+            brief,
+            goal_override=grounded.augmented_goal if grounded is not None else None,
+        )
         ledger.append(
             "stimulus_built",
             {
@@ -129,6 +164,7 @@ class BriefRunner:
                 if stim.epistemic_type is not None
                 else None,
                 "content_chars": len(stim.content),
+                "grounded": grounded is not None,
             },
         )
 
