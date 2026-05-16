@@ -244,6 +244,40 @@ class BriefRunner:
             if result.plan.decision is ActionDecision.SILENT
             else BriefStatus.COMPLETED
         )
+
+        # COG-01 — derive (confidence, assumptions, missing_evidence) triple
+        thought_conf = 0.5
+        thought = result.plan.thought
+        if thought is not None:
+            try:
+                thought_conf = float(thought.confidence)
+            except (TypeError, ValueError):
+                thought_conf = 0.5
+        tool_call_count = sum(1 for _ in planned_tools) if planned_tools else 0
+        tool_success_count = len(tool_outputs)
+        tool_ratio = (
+            tool_success_count / tool_call_count if tool_call_count > 0 else 1.0
+        )
+        # Combine thought confidence with tool success ratio. If no tools were
+        # planned, confidence rests entirely on the loop's thought score.
+        confidence = max(0.0, min(1.0, 0.5 * thought_conf + 0.5 * tool_ratio))
+
+        assumptions_list: list[str] = []
+        missing_list: list[str] = []
+        if grounded is None:
+            assumptions_list.append("no grounding applied (TRIZ/RAD citations absent)")
+        else:
+            if not grounded.triz:
+                missing_list.append("no TRIZ principles surfaced by Brief text")
+            if not grounded.rad:
+                missing_list.append("no RAD corpus hits for Brief keywords")
+        if tool_call_count > 0 and tool_success_count < tool_call_count:
+            missing_list.append(
+                f"{tool_call_count - tool_success_count} of {tool_call_count} tool calls failed"
+            )
+        if not brief.success_criteria:
+            assumptions_list.append("no explicit success_criteria — judgement deferred to caller")
+
         outcome = BriefResult(
             brief_id=brief.brief_id,
             status=status,
@@ -251,6 +285,9 @@ class BriefRunner:
             artifacts=tuple(artifacts),
             tool_outputs=tuple(tool_outputs),
             ledger_entries=ledger.entries_written + 1,  # +1 for the outcome row
+            confidence=confidence,
+            assumptions=tuple(assumptions_list),
+            missing_evidence=tuple(missing_list),
         )
         ledger.append(
             "outcome",
