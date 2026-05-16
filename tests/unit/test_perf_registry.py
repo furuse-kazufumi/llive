@@ -91,11 +91,12 @@ def test_apo_end_to_end_relaxes_threshold_under_approval() -> None:
     issues = d.check()
     assert len(issues) == 1  # threshold breached
 
-    # 3. Optimizer proposes a small relaxation.
-    opt = Optimizer(strategies=(raise_threshold_strategy(bump=1.10),))
+    # 3. Optimizer proposes a relaxation large enough to clear the p95
+    #    (250) but still inside bounded_step's 50 % envelope.
+    opt = Optimizer(strategies=(raise_threshold_strategy(bump=1.3),))
     proposals = opt.propose(issues)
     assert len(proposals) == 1
-    assert proposals[0].proposed == pytest.approx(220.0)
+    assert proposals[0].proposed == pytest.approx(260.0)
 
     # 4. Verifier vets the proposal under default invariants.
     v = Verifier(invariants=tuple(default_invariants()))
