@@ -60,6 +60,7 @@ __all__ = [
     "Sample",
     "Severity",
     "Threshold",
+    "ThresholdRegistry",
     "VerificationResult",
     "Verifier",
     "apply_with_approval",
