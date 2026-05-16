@@ -85,11 +85,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Emit a single JSON record to stdout instead of human-readable text",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Run FullSenseLoop with debug=True (attach LLM prompt/response/timing trace to stages.thought.debug)",
+    )
     args = parser.parse_args(argv)
 
     brief_text = load_brief(args.brief)
 
-    loop = FullSenseLoop(sandbox=True)
+    loop = FullSenseLoop(sandbox=True, debug=args.debug)
     stim = Stimulus(
         content=brief_text,
         source=args.source,
