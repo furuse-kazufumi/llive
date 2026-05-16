@@ -32,6 +32,11 @@ from llive.brief.types import (
 from llive.brief.loader import load_brief, loads_brief
 from llive.brief.ledger import BriefLedger, LedgerRecord, default_ledger_path
 from llive.brief.runner import BriefRunner, ToolHandler
+from llive.brief.governance import (
+    GovernanceConfig,
+    GovernanceScorer,
+    GovernanceVerdict,
+)
 from llive.brief.grounding import (
     BriefGrounder,
     GroundedBrief,
@@ -48,6 +53,9 @@ __all__ = [
     "BriefRunner",
     "BriefStatus",
     "BriefValidationError",
+    "GovernanceConfig",
+    "GovernanceScorer",
+    "GovernanceVerdict",
     "GroundedBrief",
     "GroundingConfig",
     "LedgerRecord",
