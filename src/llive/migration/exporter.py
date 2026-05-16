@@ -90,11 +90,28 @@ def _serialise_production_records(production_bus: Any) -> list[dict[str, Any]]:
     return rows
 
 
+def _copy_into(stage_subdir: Path, src: Path) -> None:
+    """Copy ``src`` (file or directory) into ``stage_subdir``.
+
+    Files land at ``stage_subdir/<filename>``; directories are recursively
+    mirrored under ``stage_subdir/<dirname>/``. Used for memory tiers
+    where the on-disk representation is opaque (DuckDB file, Kùzu dir,
+    faiss index + JSONL).
+    """
+    stage_subdir.mkdir(parents=True, exist_ok=True)
+    if src.is_file():
+        shutil.copy2(src, stage_subdir / src.name)
+    elif src.is_dir():
+        shutil.copytree(src, stage_subdir / src.name, dirs_exist_ok=False)
+    # else: silently skip — caller passed a missing path
+
+
 def export_state(
     *,
     ledger_path: Path | str | None = None,
     sandbox: Any | None = None,
     production_bus: Any | None = None,
+    memory_paths: dict[str, Path | str] | None = None,
     out_path: Path | str,
 ) -> Bundle:
     """現在の agent state を tar.gz bundle に書き出す.
@@ -103,6 +120,10 @@ def export_state(
         ledger_path: SqliteLedger DB path. None なら approval state はスキップ.
         sandbox: SandboxOutputBus. None なら sandbox state はスキップ.
         production_bus: ProductionOutputBus. None なら production state はスキップ.
+        memory_paths: ``{"<tier>": <path>}`` で memory tier の on-disk state
+            をそのまま bundle に含める. Keys は慣例的に ``episodic`` /
+            ``semantic`` / ``structural`` / ``parameter``。値は file path
+            でも directory path でもよい (C-4)。
         out_path: 出力 .tar.gz path (拡張子不問だが慣例として .tar.gz)
 
     Returns:
@@ -138,6 +159,20 @@ def export_state(
             if rows:
                 _dump_jsonl(stage / "production" / "records.jsonl", rows)
                 components.append("production")
+
+        if memory_paths:
+            memory_root = stage / "memory"
+            included_tiers: list[str] = []
+            for tier, raw in memory_paths.items():
+                if not isinstance(tier, str) or not tier:
+                    continue
+                src = Path(raw)
+                if not src.exists():
+                    continue
+                _copy_into(memory_root / tier, src)
+                included_tiers.append(tier)
+            if included_tiers:
+                components.append("memory")
 
         manifest = BundleManifest(
             schema_version=SCHEMA_VERSION,
