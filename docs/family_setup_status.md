@@ -28,16 +28,27 @@
 - [x] llmesh-suite README に FullSense family バナー (push 済)
 - [x] llmesh-demos README に FullSense family バナー (local commit のみ、push 未)
 
+### GitHub Pages family 化 (2026-05-16 追加)
+- [x] **llive**: GitHub Pages 有効化済 (ユーザが手動で実施完了。`https://furuse-kazufumi.github.io/llive/`)
+- [x] **llive**: theme を `just-the-docs` (左 nav + 検索) に切替済 + custom domain guide 追加
+- [x] **llmesh**: `docs/_config.yml` + `docs/index.md` 整備済 (push 済、有効化はユーザ手間)
+- [x] **llove**: `docs/_config.yml` + `docs/index.md` 整備済 (push 済、有効化はユーザ手間)
+
 ## ⏳ ユーザ手間が必要
 
 ### GitHub UI / 認証
 
-- [ ] **GitHub Pages を有効化** — `Settings → Pages → Source: main / docs`
-  (Claude が API 経由で試みたが PAT 権限不足。手順は [PAGES.md](PAGES.md) 参照)
+- [x] ~~GitHub Pages を有効化~~ — llive 完了 (`https://furuse-kazufumi.github.io/llive/`)
+- [ ] **llmesh / llove で Pages を有効化** — Settings → Pages → Source: main / docs を各リポジトリで実施
 - [ ] **llmesh-demos の GitHub repo を作成**
   - `gh repo create furuse-kazufumi/llmesh-demos --public --source D:/projects/llmesh-demos --remote origin --push`
   - Claude が試みたが PAT に `repo` scope なし。Token 設定変更 or GitHub UI で作成
 - [ ] (任意) PAT に admin / repo scope を追加して、次回以降 Claude が単独で UI 操作できるように
+- [ ] **(任意) カスタムドメイン適用** — `docs/custom_domain_guide.md` 参照
+  - ドメイン取得 (fullsense.dev / .ai / .io 候補)
+  - DNS の CNAME/A レコード設定
+  - 各リポジトリで Add domain
+  - Enforce HTTPS
 
 ### 商標 pre-search (出願前必須)
 
