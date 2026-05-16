@@ -3,41 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-16 12:35:08
+- **最終更新**: 2026-05-16 14:01:19
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `main`
 
 ## 直近の git log
 
 ```
-cf36eb1 docs(qiita): qiita-overview に Mermaid 図 + AUTHORING.md (llive 用ガイド)
-1cb0cfd auto: qiita-overview.md 編集前 (2026-05-16 12:24)
-418717d docs(pages): Mermaid アーキ図埋め込み + just-the-docs mermaid 10.9 有効化
-d5e1ce8 auto: index.md 編集前 (2026-05-16 12:14)
-4631809 auto: index.md 編集前 (2026-05-16 12:13)
-d076174 auto: _config.yml 編集前 (2026-05-16 12:13)
-136dcdf docs(family): setup status を Pages family 化に合わせて更新
-22330b5 docs(pages): theme を just-the-docs へ + custom domain guide 追加
-b91c13d auto: _config.yml 編集前 (2026-05-16 12:00)
-cb072ae feat(migration): CLI 化 (python -m llive.migration export/import/inspect)
+ca37a56 docs(rfc): Phase 3 sub document — skill chunk replication 詳細仕様
+ecee0ff docs(learning): EDLA vs BP XOR loss curve 実験レポート + SVG plot
+d7152a8 docs(articles): zh 言語拡張 — LinkedIn v2 zh + Qiita zh draft
+7726f29 docs(articles): 多言語化 — Qiita en + LinkedIn v2 update (ja+en)
+2395695 docs(family): fullsense umbrella repo 作成手順を追記
+f28aa31 feat(learning): EDLA skeleton + BP 比較 (RFC Phase 5, 金子勇 1999 思想)
+bfc5b23 auto: test_edla.py 編集前 (2026-05-16 13:11)
+1598ce5 auto: __init__.py 編集前 (2026-05-16 13:10)
+7004dc2 docs(rfc): llmesh discovery 実装状況を RFC に反映、未実装 Phase に絞込み
+6c71ba5 auto: llmesh_p2p_mesh_rfc.md 編集前 (2026-05-16 12:47)
 ```
 
 ## 現在の git status
 
 ```
-M docs/SESSION_SUMMARY.md
+(clean)
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-12:30 docs/SESSION_SUMMARY.md
-12:27 docs/qiita/AUTHORING.md
-12:24 docs/qiita/qiita-overview.md
-12:14 docs/index.md
-12:13 docs/_config.yml
-12:03 docs/family_setup_status.md
-12:02 docs/custom_domain_guide.md
+13:44 docs/llmesh_p2p_phase3_skill_chunk_rfc.md
+13:42 docs/scenarios/learning/edla_xor_report.md
+13:41 docs/scenarios/learning/edla_xor_loss.svg
+13:41 examples/edla_xor_demo.py
+13:39 docs/qiita/qiita-overview.zh.md
+13:39 docs/linkedin/post_2026-05-16_update_v2.zh.md
+13:36 docs/linkedin/post_2026-05-16_update_v2.en.md
+13:35 docs/linkedin/post_2026-05-16_update_v2.ja.md
+13:34 docs/qiita/qiita-overview.en.md
+13:32 docs/family_setup_status.md
+13:12 .ruff_cache/0.15.12/12334922619133000292
+13:12 .ruff_cache/0.15.12/10638194744700293557
+13:12 .pytest_cache/v/cache/nodeids
+13:12 .hypothesis/constants/9c9c8fa1d603dce6
+13:12 .hypothesis/constants/183ba5d68f65d41b
 ```
 
 ---
