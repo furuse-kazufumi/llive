@@ -30,6 +30,8 @@ class ImportResult:
     sandbox_records_path: Path | None
     sandbox_denied_emits_path: Path | None
     production_records_path: Path | None
+    memory_paths: dict[str, Path] = field(default_factory=dict)
+    """Tier name → restored path (C-4). 例: ``{"episodic": dest/memory/episodic/file.duckdb}``"""
 
 
 def _safe_extract(tar: tarfile.TarFile, dest: Path) -> None:
