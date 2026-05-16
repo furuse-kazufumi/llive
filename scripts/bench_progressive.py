@@ -142,7 +142,12 @@ def run_cell(*, model: str, size: str, out_dir: pathlib.Path) -> CellRecord:
         ledger_path=out_dir / f"{size}-{model.replace(':', '_')}.jsonl",
     )
 
-    backend = OllamaBackend(model=model)
+    # l / xl need a wider Ollama context window — otherwise the input is
+    # silently truncated to ~2048 tokens and the measurement is meaningless.
+    # Timeout scales with size too: xl can take 10+ min on 14b on cold cache.
+    num_ctx = _SIZE_NUM_CTX[size]
+    timeout = 1200.0 if size in {"l", "xl"} else 600.0
+    backend = OllamaBackend(model=model, num_ctx=num_ctx, timeout=timeout)
     loop = FullSenseLoop(
         sandbox=True,
         salience_threshold=0.0,    # never gate on length here — we want stage data
