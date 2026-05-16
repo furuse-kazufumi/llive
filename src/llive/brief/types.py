@@ -104,6 +104,16 @@ class BriefResult:
     Mutable on purpose: a Brief that pauses for approval may be resumed and
     promoted from :attr:`BriefStatus.AWAITING_APPROVAL` to
     :attr:`BriefStatus.COMPLETED` without constructing a new result.
+
+    **COG-01 Triple Output (2026-05-17)** — the three uncertainty-axis
+    fields are always present so downstream consumers can rely on them:
+
+    * ``confidence`` — derived from the loop's thought confidence and the
+      tool execution success ratio (0.0 = no confidence, 1.0 = full).
+    * ``assumptions`` — explicit assumptions surfaced during grounding
+      (e.g. "Brief assumes ollama backend available"). Defaults to ``()``.
+    * ``missing_evidence`` — gaps the runner couldn't fill itself; the LLM
+      and downstream auditors should treat these as known unknowns.
     """
 
     brief_id: str
@@ -113,6 +123,10 @@ class BriefResult:
     tool_outputs: tuple[Mapping[str, Any], ...] = ()
     ledger_entries: int = 0
     error: str | None = None
+    # COG-01 — uncertainty axis triple
+    confidence: float = 0.5
+    assumptions: tuple[str, ...] = ()
+    missing_evidence: tuple[str, ...] = ()
 
 
 def brief_to_dict(brief: Brief) -> dict[str, Any]:
