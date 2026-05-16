@@ -14,6 +14,10 @@ def _isolated_data_dir(monkeypatch, tmp_path: Path):
     monkeypatch.setenv("LLIVE_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("LLIVE_EMBED_FALLBACK", "1")
     monkeypatch.setenv("LLIVE_LOG_LEVEL", "WARNING")
+    # By default disable RAD grounding bootstrap in unit tests — it bootstraps
+    # the real corpus and adds ~minutes to collection. Tests that genuinely
+    # need RAD citation results inject a fake _FakeRadIndex explicitly.
+    monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "1")
     # reset process-shared memory backends between tests
     from llive.container.subblocks import builtin
 
