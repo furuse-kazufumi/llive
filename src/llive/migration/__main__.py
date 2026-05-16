@@ -21,10 +21,19 @@ from llive.migration.importer import IncompatibleBundleError, import_state
 
 
 def _cmd_export(args: argparse.Namespace) -> int:
+    memory_paths: dict[str, Path | str] = {}
+    for raw in args.memory or []:
+        if "=" not in raw:
+            print(f"error: --memory expects tier=path, got {raw!r}", file=sys.stderr)
+            return 5
+        tier, path = raw.split("=", 1)
+        memory_paths[tier.strip()] = path.strip()
+
     bundle = export_state(
         ledger_path=Path(args.ledger) if args.ledger else None,
         sandbox=None,  # CLI からは in-memory state は扱えない
         production_bus=None,
+        memory_paths=memory_paths or None,
         out_path=Path(args.out),
     )
     print(f"exported: {bundle.path}")
