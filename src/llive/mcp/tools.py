@@ -325,6 +325,57 @@ def tool_code_review(
     }
 
 
+def tool_submit_brief(
+    goal: str,
+    *,
+    brief_id: str | None = None,
+    constraints: list[str] | None = None,
+    source: str = "mcp",
+    priority: float = 0.5,
+    backend: str = "",
+    tools: list[str] | None = None,
+    success_criteria: list[str] | None = None,
+    approval_required: bool = True,
+) -> dict[str, Any]:
+    """Submit a Brief through the FullSense loop and return the BriefResult.
+
+    Brief-id auto-generation is intentional: most MCP callers don't carry an
+    identifier scheme. If ``brief_id`` is omitted a short random id is
+    minted so the ledger filename stays bounded.
+    """
+    import uuid
+
+    from llive.brief import Brief, BriefRunner, brief_to_dict
+    from llive.fullsense.loop import FullSenseLoop
+
+    bid = brief_id or f"mcp-{uuid.uuid4().hex[:12]}"
+    brief = Brief(
+        brief_id=bid,
+        goal=goal,
+        constraints=tuple(constraints or ()),
+        source=source,
+        priority=float(priority),
+        backend=backend,
+        tools=tuple(tools or ()),
+        success_criteria=tuple(success_criteria or ()),
+        approval_required=bool(approval_required),
+    )
+    loop = FullSenseLoop(sandbox=True)
+    runner = BriefRunner(loop=loop)
+    result = runner.submit(brief)
+    return {
+        "brief": brief_to_dict(brief),
+        "result": {
+            "brief_id": result.brief_id,
+            "status": result.status.value,
+            "rationale": result.rationale,
+            "artifacts": list(result.artifacts),
+            "ledger_entries": result.ledger_entries,
+            "error": result.error,
+        },
+    }
+
+
 def tool_describe() -> list[dict[str, Any]]:
     """Return a JSON schema-style description of all tools for MCP registration."""
     return [
