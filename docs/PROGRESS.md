@@ -6,6 +6,62 @@
 
 ---
 
+## 2026-05-17 (続) — COG-FX 4 件実装 (因子で足りない部分の開発)
+
+ユーザー指示「因子で足りない部分の開発も進めてください」を受け、Cognitive
+Factor Framework の不足要件 COG-01〜03 を実装。COG-04 は CREAT-04 Six Hats
+と統合する設計上、次セッション送り。
+
+### Done
+
+- **COG-01 Triple Output** — `BriefResult` に `confidence` /
+  `assumptions` / `missing_evidence` の 3 列を追加。BriefRunner が
+  決定論的に算出: confidence = 0.5·thought_conf + 0.5·tool_success_ratio、
+  assumptions/missing_evidence は grounder 不在・success_criteria 不在・
+  tool 失敗を文字列化して保持。ledger outcome event に固定記録
+- **COG-02 Governance Scoring Layer (HIGH)** —
+  `src/llive/brief/governance.py` に `GovernanceScorer` を実装。4 軸
+  (usefulness / feasibility / safety / traceability) を独立に算出し
+  重み付け平均。dangerous_token 検出・INTERVENE-without-approval ペナル
+  ティ・block_threshold / safety_floor をサポート。BriefRunner では
+  Approval Bus **前段** で呼び出し、payload に governance_total /
+  recommend_block を載せて Bus に伝達。Strategy パターンで heuristic を
+  後段 (LLM-as-judge) に置換可能
+- **COG-03 Trace Graph (3 層)** — `BriefLedger.trace_graph()` メソッドを
+  追加し、`TraceGraph(evidence_chain, tool_chain, decision_chain)` を返す。
+  evidence は TRIZ + RAD + calc の citation、tool は invoked/rejected/failed、
+  decision は decision/approval/outcome/governance を集約。frozen dataclass
+  で hashable
+- テスト 16 件追加 (`tests/unit/test_brief_cog.py`): COG-01 5 / COG-02 6 /
+  COG-03 5 — **998 → 1014 PASS / 回帰ゼロ**
+
+### llive 全体の状態 (2026-05-17 終盤)
+
+| 因子 (10 軸) | 実装状況 |
+|---|---|
+| 構造化 | ✅ 既存 (Brief + Salience/Curiosity) |
+| 再構成 | ✅ TRIZ FR-23〜27 既存、CREAT 計画中 |
+| 閉ループ | ✅ Brief API (LLIVE-002) |
+| 自己拡張 | ✅ 4 層メモリ + RAD + tools + MATH-08 計算エンジン |
+| **不確実性** | ✅ FR-21 SurpriseGate + **COG-01 Triple Output (本日)** |
+| 探索 | ✅ EVO-* 既存 |
+| **整合** | ✅ Approval Bus + EVO-04 Z3 + SEC-03 + **COG-02 Scoring (本日)** |
+| **来歴** | ✅ Provenance + Ledger + SEC-03 + **COG-03 TraceGraph (本日)** |
+| 多視点 | ✅ Multi-track Filter A-1.5、COG-04 + CREAT-04 で強化予定 |
+| 現実接続 | ⚠ INT-01〜04 Phase 4 計画中 |
+
+**10 因子のうち 9 因子が「実装済」、1 因子 (現実接続) のみ Phase 4 待ち。**
+
+### 次セッション 着手宣言文 (v20)
+
+「COG-FX の不足 3 件 (COG-01/02/03) 実装完了。残るは COG-04 Role-based
+Agents (architect/critic/executor/auditor) で、CREAT-04 Six Hats と統合
+する設計。次は (a) BriefGrounder ↔ SafeCalculator 接続 (CalcCitation
+ledger 記録)、(b) MATH-05 CODATA 辞書 RAD 追加、(c) S2 CABT-01 HFAdapter
+forward hook prototype の優先順。」
+
+---
+
 ## 2026-05-17 — v0.7-vertical MATH + v0.8 CABT + v0.9 CREAT 要件追加 + 進捗
 
 ユーザー指示「LLMBackend 内製・最適化 (TRIZ × コーパス)」「数学・単位特化」
