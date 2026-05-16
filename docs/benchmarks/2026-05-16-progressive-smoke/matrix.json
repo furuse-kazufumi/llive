@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-05-16T21:05:41",
+  "ollama_host": "http://localhost:11434",
+  "cells": [
+    {
+      "model": "llama3.2:latest",
+      "size": "xs",
+      "prompt_chars": 491,
+      "elapsed_ms": 19906.89,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 471,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 19893.0,
+      "llm_response_chars": 471,
+      "ledger_entries": 5,
+      "error": null
+    }
+  ]
+}
