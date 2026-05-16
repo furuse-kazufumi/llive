@@ -13,8 +13,8 @@ from llive.fullsense.sil_runner import SILRunner
 from llive.fullsense.types import ActionDecision, ActionPlan, EpistemicType, Stimulus
 
 
-def _stim(content: str = "短い指示！") -> Stimulus:
-    # Triggers SI1 (短い + ！) so we get at least one fired result.
+def _stim(content: str = "短い指示!") -> Stimulus:
+    # Triggers SI1 (短い + ASCII !) so we get at least one fired result.
     return Stimulus(content=content, source="user", epistemic_type=EpistemicType.PRAGMATIC)
 
 
