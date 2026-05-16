@@ -6,6 +6,6 @@ Backpropagation を含む。詳細は `docs/references/historical/edla_kaneko_19
 と `docs/llmesh_p2p_mesh_rfc.md` の Phase 5 を参照。
 """
 
-from llive.learning.edla import EDLALearner, TwoLayerNet, mse_loss
+from llive.learning.edla import BPLearner, EDLALearner, TwoLayerNet, mse_loss
 
-__all__ = ["EDLALearner", "TwoLayerNet", "mse_loss"]
+__all__ = ["BPLearner", "EDLALearner", "TwoLayerNet", "mse_loss"]
