@@ -59,6 +59,16 @@ def _cmd_export(args: argparse.Namespace) -> int:
 
 
 def _cmd_import(args: argparse.Namespace) -> int:
+    if args.verify_with:
+        from cryptography.hazmat.primitives import serialization
+        pub_bytes = Path(args.verify_with).read_bytes()
+        pk = serialization.load_pem_public_key(pub_bytes)
+        try:
+            verify_bundle_signature(args.bundle, pk)
+        except BundleIntegrityError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 6
+        print("signature: verified")
     try:
         result = import_state(args.bundle, dest_dir=Path(args.dest))
     except IncompatibleBundleError as e:
