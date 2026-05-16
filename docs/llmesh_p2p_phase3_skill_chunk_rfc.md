@@ -229,7 +229,7 @@ class SkillReplica:
 | 3.5 | Approval gate (`PullPolicyCheck` callable, llive `@govern` 連携可) | **done** (llmesh v3.4.0, 2026-05-16) |
 | 3.6a | License filter (`LicenseFilter` + `allow_licenses()` + `DEFAULT_ALLOWED_LICENSES`) | **done** (llmesh v3.4.0, 2026-05-16) |
 | 3.6b | Reputation system (`PeerReputation`, 30-day rolling SQLite window) | **done** (llmesh v3.4.0, 2026-05-16) |
-| 3.6c | Router integration glue (`report-corrupt` → `PeerReputation`, rate limit) | **planned** (llmesh v3.5.0) |
+| 3.6c | Router integration glue (`report-corrupt` → `PeerReputation`, `RateLimiter`, sync `record_transfer` hook) | **done** (llmesh v3.4.0, 2026-05-16) |
 | 3.7 | 10-peer demo + KPI 測定 | **planned** (llmesh v3.5.0) |
 
 ## 倫理 / 法的注意
