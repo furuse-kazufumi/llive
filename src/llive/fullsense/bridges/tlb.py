@@ -74,7 +74,9 @@ class TLBCoordinator:
     """
 
     def __init__(self, cache: ManifoldCache | None = None) -> None:
-        self._cache = cache or ManifoldCache()
+        # NB: explicit None check — ManifoldCache exposes __len__, so an
+        # empty cache would be falsy under ``cache or ManifoldCache()``.
+        self._cache = cache if cache is not None else ManifoldCache()
         self._lock = threading.RLock()
         self._stats: dict[str, LayerStats] = {}
 
