@@ -129,11 +129,26 @@ def build_parser() -> argparse.ArgumentParser:
         "(repeatable; recognised tiers: episodic, semantic, structural, parameter)",
     )
     p_export.add_argument("--out", required=True, help="output bundle path (.tar.gz)")
+    p_export.add_argument(
+        "--hash",
+        action="store_true",
+        help="write a SHA-256 digest file alongside the bundle (C-5)",
+    )
+    p_export.add_argument(
+        "--sign-with",
+        help="Ed25519 PEM private key path; signs the bundle digest (C-5)",
+        default=None,
+    )
     p_export.set_defaults(func=_cmd_export)
 
     p_import = subs.add_parser("import", help="import a bundle into dest dir")
     p_import.add_argument("bundle", help="bundle tar.gz path")
     p_import.add_argument("--dest", required=True, help="destination directory")
+    p_import.add_argument(
+        "--verify-with",
+        help="Ed25519 PEM public key path; verifies the signature before import (C-5)",
+        default=None,
+    )
     p_import.set_defaults(func=_cmd_import)
 
     p_inspect = subs.add_parser("inspect", help="print manifest + member list")
