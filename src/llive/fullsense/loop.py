@@ -155,6 +155,10 @@ class FullSenseLoop:
         # rule-based template path active. Explicit injection always wins over
         # env-driven resolution (see _resolve_backend_for_loop).
         self._llm_backend: LLMBackend | None = llm_backend
+        # debug=True attaches per-stage trace info to stages dict (LLM prompt,
+        # raw response, wall time, backend name). Release-mode default (False)
+        # has zero overhead — the trace dict is never built.
+        self._debug = bool(debug)
 
     # -- public ------------------------------------------------------------
 
