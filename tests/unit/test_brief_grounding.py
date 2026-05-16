@@ -114,7 +114,9 @@ def test_grounder_returns_empty_when_no_triggers() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_grounder_fetches_rad_hits(tmp_path: Path) -> None:
+def test_grounder_fetches_rad_hits(tmp_path: Path, monkeypatch) -> None:
+    # Override conftest's RAD opt-out for tests that exercise the real lookup
+    monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "0")
     rad_index = _FakeRadIndex(
         [
             (
@@ -140,7 +142,8 @@ def test_grounder_fetches_rad_hits(tmp_path: Path) -> None:
     assert "transformers" in top.matched_terms
 
 
-def test_grounder_no_rad_when_no_keywords(tmp_path: Path) -> None:
+def test_grounder_no_rad_when_no_keywords(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "0")
     rad_index = _FakeRadIndex(
         [("dom", tmp_path / "x.md", "anything")]
     )
@@ -150,7 +153,8 @@ def test_grounder_no_rad_when_no_keywords(tmp_path: Path) -> None:
     assert grounded.rad == ()
 
 
-def test_grounder_caps_rad_results(tmp_path: Path) -> None:
+def test_grounder_caps_rad_results(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "0")
     docs = [
         ("d", tmp_path / f"doc{i}.md", f"transformers attention example {i}")
         for i in range(10)
