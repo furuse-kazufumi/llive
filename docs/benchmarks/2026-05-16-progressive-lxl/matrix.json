@@ -1,0 +1,162 @@
+{
+  "generated_at": "2026-05-17T07:36:29",
+  "ollama_host": "http://localhost:11434",
+  "cells": [
+    {
+      "model": "llama3.2:latest",
+      "size": "l",
+      "prompt_chars": 19666,
+      "elapsed_ms": 458400.01,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 380,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 458376.75,
+      "llm_response_chars": 380,
+      "ledger_entries": 5,
+      "error": null
+    },
+    {
+      "model": "qwen2.5:7b",
+      "size": "l",
+      "prompt_chars": 19666,
+      "elapsed_ms": 722866.7,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 339,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 722847.75,
+      "llm_response_chars": 339,
+      "ledger_entries": 5,
+      "error": null
+    },
+    {
+      "model": "qwen2.5:14b",
+      "size": "l",
+      "prompt_chars": 19666,
+      "elapsed_ms": 1202262.83,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 222,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 1202069.51,
+      "llm_response_chars": null,
+      "ledger_entries": 5,
+      "error": null
+    },
+    {
+      "model": "llama3.2:latest",
+      "size": "xl",
+      "prompt_chars": 65166,
+      "elapsed_ms": 1202282.24,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 222,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 1202089.98,
+      "llm_response_chars": null,
+      "ledger_entries": 5,
+      "error": null
+    },
+    {
+      "model": "qwen2.5:7b",
+      "size": "xl",
+      "prompt_chars": 65166,
+      "elapsed_ms": 1202103.89,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 222,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 1202053.85,
+      "llm_response_chars": null,
+      "ledger_entries": 5,
+      "error": null
+    },
+    {
+      "model": "qwen2.5:14b",
+      "size": "xl",
+      "prompt_chars": 65166,
+      "elapsed_ms": 1202199.15,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 222,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 1202105.81,
+      "llm_response_chars": null,
+      "ledger_entries": 5,
+      "error": null
+    }
+  ]
+}
