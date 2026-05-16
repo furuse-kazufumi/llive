@@ -6,6 +6,37 @@
 
 ---
 
+## 2026-05-16 (続 4) — C-5: Bundle integrity hash + Ed25519 signature
+
+C-3 / C-4 で確立した bundle 形式に **改ざん検知** と **発行元の attribution**
+を追加。bundle 本体は変更せず外部 sidecar (`<bundle>.sha256` / `<bundle>.sig`)
+方式で backward-compatible。
+
+### Done
+
+- `src/llive/migration/integrity.py`:
+  - `compute_bundle_sha256(path)` — streaming SHA-256
+  - `write_bundle_sha256(path)` / `verify_bundle_sha256(path)` —
+    `<bundle>.sha256` への書き込み・検証
+  - `sign_bundle(path, private_key)` — Ed25519 で SHA-256 を署名し
+    `<bundle>.sig` に書き出し
+  - `verify_bundle_signature(path, public_key)` — 検証 (失敗で `BundleIntegrityError`)
+  - `BundleIntegrityError` exception
+- CLI 拡張: `export --hash --sign-with PRIVATE.pem` / `import --verify-with PUBLIC.pem`
+  - PEM 鍵を `cryptography.hazmat.primitives.serialization` で load
+- テスト +10 件 (sha256 stable / round-trip / tamper detection / 鍵 mismatch /
+  signature 形式 / custom path)
+- **868 PASS / ruff clean / 回帰ゼロ**
+- bundle 形式自体は v1 のまま (sidecar 方式)
+
+### 次セッション 着手宣言文 (v8)
+
+「C-1〜C-5 完了。bundle は memory tier 持ちかつ署名検証可能になった。
+次は 9 軸別軸 production 化 (APO / TLB / ICP / SIL) のいずれか、または
+D 章 (実機 / 大規模統合) に進む。」
+
+---
+
 ## 2026-05-16 (続 3) — C-4: Bundle 拡張 (memory tier)
 
 C-3 残作業から「bundle に long-term memory / kuzu graph / safetensors weights を含める」
