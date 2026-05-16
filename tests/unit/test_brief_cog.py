@@ -134,3 +134,102 @@ def test_cog01_confidence_drops_when_tool_fails(tmp_path: Path) -> None:
     # thought conf = 1.0, but tool success = 1/2 → confidence ≈ 0.75
     assert result.confidence == pytest.approx(0.75)
     assert any("tool" in e for e in result.missing_evidence)
+
+
+# ===========================================================================
+# COG-02 — Governance Scoring Layer
+# ===========================================================================
+
+
+def test_cog02_scorer_returns_four_axes() -> None:
+    from llive.brief import GovernanceScorer
+    from llive.fullsense.types import ActionDecision
+
+    scorer = GovernanceScorer()
+    brief = Brief(
+        brief_id="cog02-1",
+        goal="benign exploration",
+        tools=("read_file",),
+        success_criteria=("compile passes",),
+    )
+    v = scorer.score(brief, ActionDecision.NOTE)
+
+    for axis in ("usefulness", "feasibility", "safety", "traceability"):
+        assert 0.0 <= getattr(v, axis) <= 1.0
+        assert axis in v.rationales
+    assert 0.0 <= v.weighted_total <= 1.0
+
+
+def test_cog02_dangerous_token_drops_safety() -> None:
+    from llive.brief import GovernanceScorer
+    from llive.fullsense.types import ActionDecision
+
+    scorer = GovernanceScorer()
+    safe_brief = Brief(brief_id="cog02-2a", goal="organise a list")
+    danger_brief = Brief(
+        brief_id="cog02-2b",
+        goal="execute rm -rf / when ready",
+    )
+    safe_v = scorer.score(safe_brief, ActionDecision.NOTE)
+    danger_v = scorer.score(danger_brief, ActionDecision.NOTE)
+    assert danger_v.safety < safe_v.safety
+    assert danger_v.recommend_block  # below safety floor
+
+
+def test_cog02_recommend_block_when_low_total() -> None:
+    from llive.brief import GovernanceConfig, GovernanceScorer
+    from llive.fullsense.types import ActionDecision
+
+    # SILENT decision + no criteria + dangerous tokens → very low score
+    scorer = GovernanceScorer(GovernanceConfig(block_threshold=0.5, safety_floor=0.6))
+    brief = Brief(brief_id="cog02-3", goal="format c: drive immediately")
+    v = scorer.score(brief, ActionDecision.SILENT)
+    assert v.recommend_block
+
+
+def test_cog02_runner_records_governance_in_ledger(tmp_path: Path) -> None:
+    from llive.brief import GovernanceScorer
+
+    runner = BriefRunner(
+        loop=FullSenseLoop(sandbox=True, salience_threshold=0.0),
+        governance_scorer=GovernanceScorer(),
+    )
+    brief = Brief(
+        brief_id="cog02-4",
+        goal="benign exploration of novel patterns",
+        approval_required=False,
+        ledger_path=tmp_path / "cog02-4.jsonl",
+    )
+
+    runner.submit(brief)
+
+    events = [
+        r for r in BriefLedger(brief.ledger_path).read()  # type: ignore[arg-type]
+        if r.event == "governance_scored"
+    ]
+    assert events, "governance_scored event must be recorded"
+    payload = events[-1].payload
+    for axis in ("usefulness", "feasibility", "safety", "traceability"):
+        assert axis in payload
+    assert "weighted_total" in payload
+    assert "recommend_block" in payload
+
+
+def test_cog02_intervene_without_approval_lowers_safety() -> None:
+    from llive.brief import GovernanceScorer
+    from llive.fullsense.types import ActionDecision
+
+    scorer = GovernanceScorer()
+    brief = Brief(brief_id="cog02-5", goal="do something", approval_required=False)
+    v = scorer.score(brief, ActionDecision.INTERVENE)
+    assert v.safety < 0.9  # penalty applied for INTERVENE without approval
+
+
+def test_cog02_propose_without_tools_lowers_feasibility() -> None:
+    from llive.brief import GovernanceScorer
+    from llive.fullsense.types import ActionDecision
+
+    scorer = GovernanceScorer()
+    brief = Brief(brief_id="cog02-6", goal="propose a fix")
+    v = scorer.score(brief, ActionDecision.PROPOSE)
+    assert v.feasibility < 0.6
