@@ -96,6 +96,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_export = subs.add_parser("export", help="export state into a tar.gz bundle")
     p_export.add_argument("--ledger", help="path to SqliteLedger DB", default=None)
+    p_export.add_argument(
+        "--memory",
+        action="append",
+        help="memory tier to include, e.g. --memory episodic=path/to/db.duckdb "
+        "(repeatable; recognised tiers: episodic, semantic, structural, parameter)",
+    )
     p_export.add_argument("--out", required=True, help="output bundle path (.tar.gz)")
     p_export.set_defaults(func=_cmd_export)
 
