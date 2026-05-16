@@ -6,6 +6,21 @@
 ``Verifier`` (Level 3 で実装、§E3 formal pre-check) はこの基盤に乗る。
 """
 
+from llive.perf.diagnostics import (
+    Diagnostics,
+    Issue,
+    RegressionRule,
+    Severity,
+    Threshold,
+)
 from llive.perf.profiler import Profiler, Sample
 
-__all__ = ["Profiler", "Sample"]
+__all__ = [
+    "Diagnostics",
+    "Issue",
+    "Profiler",
+    "RegressionRule",
+    "Sample",
+    "Severity",
+    "Threshold",
+]
