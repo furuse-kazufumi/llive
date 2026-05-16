@@ -467,7 +467,99 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 - v0.7-vertical (Phase 10) MATH: 8 total (内 MATH-08 が差別化軸)
 - v0.8 (Phase 8) CABT: 7 total
 - v0.9 (Phase 9) CREAT: 5 total
-- Mapped to phases: 88 / 88 ✓
+- v1.0-frame (cross-cutting) COG-FX: 10 因子マッピング + 不足 4 件
+- Mapped to phases: 92 / 92 ✓
+
+---
+
+## v1.0-frame — Cognitive Factor Framework (COG-FX) 2026-05-17 追加
+
+**動機 (ユーザー提示の 10 因子セット)**: 人間が AI 開発を駆動する深層心理から
+**再利用可能な「思考因子」**を抽出し、LLM の推論・計画・自己改善・エージェント
+設計に組み込める形へ変換する。llive の既存実装と新規要件 (MATH/CABT/CREAT) を
+**統一語彙で説明できる横断フレームワーク**として位置付ける。
+
+**実装方針**: 単一巨大プロンプトに埋め込まず、**役割別 policy に分解**
+(planner / memory / critic / evolution / trace policy)。個別に A/B 比較し
+改善可能にする。
+
+### 10 因子 ↔ llive 既存・新規 FR マッピング
+
+| # | 因子 | LLM 役割 | llive 既存 FR (実装済) | llive 新規 FR (計画) | COG-FX 追加 |
+|---|---|---|---|---|---|
+| 1 | **構造化** | 課題を分解 | Brief constraints, Salience+Curiosity gate (Phase 1) | CREAT-02 MindMap (DFS), MATH-01 dimensional analysis | — |
+| 2 | **再構成** | 代替案生成 | FR-23〜27 TRIZ (40 原理 + 矛盾 + ARIZ + 9 画法), EVO-03 Candidate generator | CREAT-01 KJ法ノード, CREAT-05 類比エンジン | — |
+| 3 | **閉ループ** | 検証計画を伴う | BriefRunner submit→plan→approval→tool→outcome (LLIVE-002 実装済) | CABT-06 Approval-gated decoding | — |
+| 4 | **自己拡張** | 外部資源を使う | 4 層メモリ (MEM-01〜09), RAD 49 分野, BriefTools whitelist, RPA (RPAR 軸) | MATH-08 計算エンジン, CABT-07 memory-augmented residual | — |
+| 5 | **不確実性** | 仮説と事実を分離 | FR-21 BayesianSurpriseGate, EpistemicType A-1.5, SEC-01 Quarantined Zone | CABT-04 Salience-gated attention | **COG-01** Confidence/Assumption/Missing-Evidence 三重出力 |
+| 6 | **探索** | 未踏案を試す | EVO-* (Z3 検証 + Failed Reservoir + Reverse-Evo Monitor) | CREAT-04 Six Hats 並列発行, CABT-02 Stage routing | — |
+| 7 | **整合** | 全体制約で再評価 | C-1 Approval Bus + Policy, EVO-04 Z3 形式検証, SEC-03 hash chain | MATH-02 Sympy 検算, CABT-05 TRIZ-conditioned head | **COG-02** Governance scoring layer (usefulness/feasibility/safety/traceability) |
+| 8 | **来歴** | 判断履歴を残す | Provenance (memory/provenance.py), SqliteLedger, BriefLedger, SEC-03 SHA-256 chain | MATH 全 FR で計算 citation を ledger に固定 | **COG-03** Evidence/Tool/Decision chain の三層 trace graph |
+| 9 | **多視点** | 評価関数を分離 | Multi-track Filter Architecture A-1.5 (5 EpistemicType + 5 RESERVED) | CREAT-04 Six Hats, CABT-03 Epistemic-typed token pool | **COG-04** Role-based agents (architect / critic / executor / auditor) |
+| 10 | **現実接続** | 実環境制約を扱う | INT-01〜04 llmesh sensor bridge (MQTT/OPC-UA, FR-19) | (Phase 4 production で実装) | — |
+
+### 優先順位 (v1.0 安定リリース必須の 5 因子)
+
+ユーザー観察: 「探索 / 再構成を強化する前に、構造化 / 不確実性 / 閉ループ /
+整合 / 来歴 の土台が必要」。これは llive の **v1.0 リリース必須** 5 因子と
+位置付ける:
+
+```
+土台 (v1.0 must-have)         発展 (v1.0+ で順次)
+─────────────────────         ──────────────────
+1. 構造化  ✅ 既存             2. 再構成  (TRIZ 既存 + CREAT 計画)
+3. 閉ループ ✅ Brief API         6. 探索    (EVO 既存)
+5. 不確実性 ✅ Surprise Gate     9. 多視点  (Multi-track 既存 + COG-04)
+7. 整合    ✅ Approval Bus      10. 現実接続 (INT 計画)
+8. 来歴    ✅ Ledger
+```
+
+土台 5 因子は **2026-05-17 時点ですべて実装済**。これは llive が「面白い案を
+出す前に、誤差・暴走・非再現性を防ぐ土台」を備えていることを意味する。
+
+### 新規 COG-FX 要件詳細
+
+| FR | 名前 | 概要 | 関連既存 FR | 優先 |
+|---|---|---|---|---|
+| **COG-01** | Confidence/Assumption/Missing-Evidence Triple Output | 各 BriefResult に (confidence, assumptions, missing_evidence) の 3 列を追加。不確実性を必ず分離して保持 | FR-21 SurpriseGate, A-1.5 EpistemicType | MED |
+| **COG-02** | Governance Scoring Layer | 候補案を usefulness だけでなく feasibility / safety / traceability / governance で再採点。Approval Bus 前段に scoring policy を挟む | C-1 Approval Bus, SEC-03 audit chain | HIGH |
+| **COG-03** | Trace Graph (Evidence / Tool / Decision の 3 層) | BriefLedger を拡張し、(a) evidence_chain (b) tool_chain (c) decision_chain の 3 グラフを構築。デバッグ・自己改善・失敗分析の基盤 | BriefLedger, SqliteLedger | MED |
+| **COG-04** | Role-based Agents | architect / critic / executor / auditor の 4 ロールに評価関数を分離。Brief 1 件に対し 4 ロールが独立評価 | Multi-track Filter A-1.5 | LOW (v0.9 CREAT の後で十分) |
+
+### 因子別 metadata schema (横断仕様)
+
+各メモリ・各 ledger entry に以下の attribute を持たせる:
+
+```python
+# 例: SemanticMemory 1 件、BriefLedger 1 行、Stimulus 1 個 ...
+{
+    "factor": "uncertainty",         # 10 因子のどれか
+    "uncertainty": 0.23,              # 0〜1
+    "dependency": ["evidence:doc#42", "tool:sympy.simplify"],
+    "evidence_source": "doc#42",
+    "applicable_scope": "math:dimensional",
+    "promotion_status": "candidate"   # draft/candidate/promoted/archived
+}
+```
+
+これは LLM の自然言語ルールに依存せず、後段システム (llove TUI, audit
+agent, evolution scheduler) が機械的に消費できる。
+
+### COG-FX 要件のフェーズマッピング
+
+| FR | Phase | Status | Priority |
+|---|---|---|---|
+| COG-01 | Phase 4 (v1.0) | Pending | MED |
+| COG-02 | Phase 4 (v1.0) | Pending | **HIGH** |
+| COG-03 | Phase 4 (v1.0) | Pending | MED |
+| COG-04 | Phase 9 (CREAT 後) | Pending | LOW |
+
+**Coverage (final):**
+- v0.7-vertical (Phase 10) MATH: 8 total
+- v0.8 (Phase 8) CABT: 7 total
+- v0.9 (Phase 9) CREAT: 5 total
+- v1.0-frame COG-FX: 4 新規 + 10 因子マッピング (横断)
+- Mapped to phases: 92 / 92 ✓
 
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-17 — v0.7-vertical MATH 8 件 (内蔵計算エンジン MATH-08 を差別化軸として明示), v0.8 CABT, v0.9 CREAT*
+*Last updated: 2026-05-17 — v1.0-frame COG-FX (Cognitive Factor Framework, 10 因子マッピング + 4 新規 FR)*
