@@ -30,7 +30,7 @@ from llive.brief.types import (
     brief_to_dict,
 )
 from llive.brief.loader import load_brief, loads_brief
-from llive.brief.ledger import BriefLedger, LedgerRecord, default_ledger_path
+from llive.brief.ledger import BriefLedger, LedgerRecord, TraceGraph, default_ledger_path
 from llive.brief.runner import BriefRunner, ToolHandler
 from llive.brief.governance import (
     GovernanceConfig,
