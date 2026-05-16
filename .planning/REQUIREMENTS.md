@@ -436,11 +436,12 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 |---|---|---|---|
 | **M1** | MATH-01 SI dimensional analysis のコア — Pint ライブラリ統合 + 7 基本単位 | unit-mismatch detection 100% on test corpus | 低 (Pint 成熟) |
 | **M2** | MATH-05 CODATA + NIST 辞書を RAD `metrology` に append、grounding 用に整備 | 100 定数 / 単位の正引可 | 低 |
-| **M3** | MATH-02 Sympy 検算層 — LLM 数式出力を AST 化して Sympy で simplify、差分を flag | 数式幻覚検出率 (人手評価 ≥80%) | 中 |
-| **M4** | MATH-07 MATHEMATICAL EpistemicType + Brief filter chain 統合 | 数学 Brief × {plain, MATH track} A/B | 中 |
-| **M5** | MATH-06 単位変換 + 無次元化 | 物理問題 100 件で π 群が正しく抽出 | 中 |
-| **M6** | MATH-04 error propagation tracking | significant digits の自動算出が IEEE 754 規格と一致 | 高 |
-| **M7** | MATH-03 multi-syntax 解析 (LaTeX/MathML/Mathematica/Sympy) | 100 数式の往復変換で意味保存 | 高 |
+| **M3** | **MATH-08 内蔵計算エンジン (差別化軸)** — Brief 前段で式抽出 → sympy/scipy/numpy 計算 → 結果を grounded Stimulus に注入 | 算術 100 件で LLM 直接回答との誤差を測定、llive 計算側は誤差 0 を保証 | 中 (式抽出 LLM 依存) |
+| **M4** | MATH-02 Sympy 検算層 — LLM 数式出力を AST 化して Sympy で simplify、差分を flag | 数式幻覚検出率 (人手評価 ≥80%) | 中 |
+| **M5** | MATH-07 MATHEMATICAL EpistemicType + Brief filter chain 統合 | 数学 Brief × {plain, MATH track} A/B | 中 |
+| **M6** | MATH-06 単位変換 + 無次元化 | 物理問題 100 件で π 群が正しく抽出 | 中 |
+| **M7** | MATH-04 error propagation tracking | significant digits の自動算出が IEEE 754 規格と一致 | 高 |
+| **M8** | MATH-03 multi-syntax 解析 (LaTeX/MathML/Mathematica/Sympy) | 100 数式の往復変換で意味保存 | 高 |
 
 ### 評価ベンチマーク (vertical 専用)
 
