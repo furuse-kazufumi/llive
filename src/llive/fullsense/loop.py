@@ -119,6 +119,7 @@ class FullSenseLoop:
         output_bus: SandboxOutputBus | None = None,
         known_corpus: set[str] | None = None,
         sandbox: bool = True,
+        llm_backend: LLMBackend | None = None,
     ) -> None:
         if not sandbox:
             raise ValueError(
@@ -135,6 +136,10 @@ class FullSenseLoop:
         self.output_bus = output_bus if output_bus is not None else SandboxOutputBus()
         self.known_corpus = set(known_corpus or set())
         self.sandbox = True
+        # Opt-in LLM backend for _inner_monologue. None (default) keeps the
+        # rule-based template path active. Explicit injection always wins over
+        # env-driven resolution (see _resolve_backend_for_loop).
+        self._llm_backend: LLMBackend | None = llm_backend
 
     # -- public ------------------------------------------------------------
 
