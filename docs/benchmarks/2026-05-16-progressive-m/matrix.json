@@ -1,0 +1,84 @@
+{
+  "generated_at": "2026-05-16T21:21:49",
+  "ollama_host": "http://localhost:11434",
+  "cells": [
+    {
+      "model": "llama3.2:latest",
+      "size": "m",
+      "prompt_chars": 5366,
+      "elapsed_ms": 89484.24,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 334,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 89468.4,
+      "llm_response_chars": 334,
+      "ledger_entries": 5,
+      "error": null
+    },
+    {
+      "model": "qwen2.5:7b",
+      "size": "m",
+      "prompt_chars": 5366,
+      "elapsed_ms": 122134.46,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 222,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 122076.27,
+      "llm_response_chars": null,
+      "ledger_entries": 5,
+      "error": null
+    },
+    {
+      "model": "qwen2.5:14b",
+      "size": "m",
+      "prompt_chars": 5366,
+      "elapsed_ms": 122159.72,
+      "status": "completed",
+      "decision": "note",
+      "rationale": "novel + TRIZ principles detected; worth recording",
+      "salience": {
+        "score": 0.7,
+        "threshold": 0.0,
+        "pass": true
+      },
+      "curiosity": {
+        "score": 1.0,
+        "novelty": 1.0,
+        "known_overlap": 0.0,
+        "high_curiosity": true
+      },
+      "thought_chars": 222,
+      "thought_confidence": 0.8,
+      "llm_elapsed_ms": 122111.93,
+      "llm_response_chars": null,
+      "ledger_entries": 5,
+      "error": null
+    }
+  ]
+}

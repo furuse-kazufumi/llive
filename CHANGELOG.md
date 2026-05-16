@@ -4,6 +4,38 @@
 
 ## [Unreleased]
 
+### Added — LLIVE-002: Brief API end-to-end (closes LLIVE-001 / LLIVE-002) — 2026-05-16
+
+`docs/proposals/brief_api_design.md` の 7 ステップを 1 セッションで完走。
+外部クライアント (lldesign / lltrade / MCP) から llive FullSenseLoop へ
+structured work unit を渡せるようになった。Brief API + loop overhead は
+実測 < 1 % (`docs/benchmarks/2026-05-16-progressive-xss/`)。
+
+- `src/llive/brief/types.py` — `Brief` (frozen, validated), `BriefStatus`,
+  `BriefResult`, `BriefValidationError`, `brief_to_dict`
+- `src/llive/brief/loader.py` — YAML `loads_brief` / `load_brief`
+  (unknown-key reject, EpistemicType / Path 強制)
+- `src/llive/brief/ledger.py` — `BriefLedger` (append-only JSONL,
+  thread-safe, replay-friendly) + `default_ledger_path`
+- `src/llive/brief/runner.py` — `BriefRunner.submit(brief) -> BriefResult`
+  全 7 ステップ (Stimulus 変換 / loop.process / 決定記録 /
+  Approval gate / Tool whitelist + 実行 / outcome)
+- `src/llive/cli/main.py` — `llive brief submit|ledger` サブコマンド
+- `src/llive/mcp/tools.py` — `submit_brief` MCP tool + describe + dispatch
+
+### Added — progressive validation matrix runner — 2026-05-16
+
+- `scripts/bench_progressive.py` — xs/s/m/l/xl × multi-model matrix runner
+  (debug=True で `llm_elapsed_ms` まで採取、`matrix.json` + `summary.md`)
+- `scripts/merge_progressive_matrix.py` — 複数 dir の matrix.json 統合
+- `feedback_benchmark_progressive_tokens` + `feedback_llive_measurement_purity`
+  を実装に反映 (on-prem only、5 段 token ladder)
+
+### Tests
+
+- 4 新規ファイル / 46 件: schema 24 / runner 12 / CLI 6 / MCP 4
+- 890 → 936 PASS、回帰ゼロ
+
 ### Added — C-3: Cross-substrate migration spike (§MI1) — 2026-05-16
 
 handoff v3 C 章 last piece。Spec §MI1「substrate independence」に対応する
