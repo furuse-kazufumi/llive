@@ -181,12 +181,15 @@ class FullSenseLoop:
         stages["curiosity"] = curiosity
 
         # ③ Inner Monologue
-        thought = self._inner_monologue(stim, curiosity_score=curiosity["score"])
-        stages["thought"] = {
+        thought, thought_debug = self._inner_monologue(stim, curiosity_score=curiosity["score"])
+        thought_stage: dict[str, Any] = {
             "text": thought.text,
             "triz_principles": thought.triz_principles,
             "confidence": thought.confidence,
         }
+        if thought_debug is not None:
+            thought_stage["debug"] = thought_debug
+        stages["thought"] = thought_stage
 
         # ④ Ego / Altruism Scorer
         ego, alt = self._score_thought(thought)
