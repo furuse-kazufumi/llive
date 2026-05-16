@@ -116,7 +116,7 @@ class TLBCoordinator:
         key = self.composite_key(layer, input_key)
         with self._lock:
             # ManifoldCache has no direct delete API; emulate via OrderedDict.
-            store = self._cache._store  # noqa: SLF001 - internal coordination
+            store = self._cache._store
             store.pop(key, None)
 
     def stats(self) -> dict[str, LayerStats]:
