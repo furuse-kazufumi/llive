@@ -96,8 +96,15 @@ def test_calc_nested_functions(calc: SafeCalculator) -> None:
 
 
 def test_calc_refuses_function_call_to_unknown(calc: SafeCalculator) -> None:
-    with pytest.raises(CalculationError, match="not in whitelist"):
+    # The attack chain bottoms out at .system being an attribute access,
+    # so the visitor rejects it before the function call layer is reached.
+    with pytest.raises(CalculationError):
         calc.evaluate("__import__('os').system('rm')")
+
+
+def test_calc_refuses_non_whitelisted_function(calc: SafeCalculator) -> None:
+    with pytest.raises(CalculationError, match="not in whitelist"):
+        calc.evaluate("eval(1)")
 
 
 def test_calc_refuses_attribute_access(calc: SafeCalculator) -> None:
