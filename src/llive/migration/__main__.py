@@ -45,6 +45,16 @@ def _cmd_export(args: argparse.Namespace) -> int:
     print(f"exported: {bundle.path}")
     print(f"components: {', '.join(bundle.manifest.components) or '(none)'}")
     print(f"schema_version: {bundle.manifest.schema_version}")
+
+    if args.hash:
+        hp = write_bundle_sha256(bundle.path)
+        print(f"sha256: {hp}")
+    if args.sign_with:
+        from cryptography.hazmat.primitives import serialization
+        key_bytes = Path(args.sign_with).read_bytes()
+        sk = serialization.load_pem_private_key(key_bytes, password=None)
+        sp = sign_bundle(bundle.path, sk)
+        print(f"signature: {sp}")
     return 0
 
 
