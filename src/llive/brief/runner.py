@@ -198,12 +198,31 @@ class BriefRunner:
             },
         )
 
+        # COG-02 Governance scoring — runs *before* Approval Bus so the
+        # Bus's policy can consult the scorer's recommend_block when
+        # making its verdict.
+        governance_verdict: GovernanceVerdict | None = None
+        if self._governance_scorer is not None:
+            governance_verdict = self._governance_scorer.score(brief, result.plan.decision)
+            ledger.append(
+                "governance_scored",
+                {
+                    "usefulness": governance_verdict.usefulness,
+                    "feasibility": governance_verdict.feasibility,
+                    "safety": governance_verdict.safety,
+                    "traceability": governance_verdict.traceability,
+                    "weighted_total": governance_verdict.weighted_total,
+                    "recommend_block": governance_verdict.recommend_block,
+                    "rationales": dict(governance_verdict.rationales),
+                },
+            )
+
         # Step 4 — Approval Bus gate
         if (
             brief.approval_required
             and _decision_requires_approval(result.plan.decision)
         ):
-            gated = self._gate_approval(brief, result, ledger)
+            gated = self._gate_approval(brief, result, ledger, governance_verdict)
             if gated is not None:
                 return gated
 
