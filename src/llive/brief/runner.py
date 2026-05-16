@@ -107,6 +107,7 @@ class BriefRunner:
         tools: Mapping[str, ToolHandler] | None = None,
         approver: str = "agent",
         grounder: BriefGrounder | None = None,
+        governance_scorer: GovernanceScorer | None = None,
     ) -> None:
         self._loop = loop
         self._approval_bus = approval_bus
@@ -116,6 +117,11 @@ class BriefRunner:
         # deterministic. When attached, every Brief is augmented before the
         # Stimulus is built and the citations are recorded in the ledger.
         self._grounder = grounder
+        # COG-02 governance — also opt-in. When attached, every (Brief,
+        # decision) pair is scored on 4 axes before the Approval Bus runs.
+        # The scorer never blocks by itself; it surfaces recommend_block
+        # which Approval Bus policy is free to honour or override.
+        self._governance_scorer = governance_scorer
 
     # -- public --------------------------------------------------------------
 
