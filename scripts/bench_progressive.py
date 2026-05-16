@@ -75,6 +75,18 @@ _SIZE_RATIO = {
     "xl": 200,  # ~10000 tokens
 }
 
+# num_ctx override per size. Ollama's default (2048) silently truncates l/xl,
+# so we widen the window. Picked to leave headroom for max_tokens=512 generation
+# on top of the input. xl uses 16384 — only some models (qwen2.5 family) actually
+# honour that; smaller models cap at their build-time limit.
+_SIZE_NUM_CTX = {
+    "xs": None,    # use Ollama default
+    "s": None,
+    "m": 4096,
+    "l": 8192,
+    "xl": 16384,
+}
+
 ALL_SIZES: tuple[str, ...] = ("xs", "s", "m", "l", "xl")
 
 
