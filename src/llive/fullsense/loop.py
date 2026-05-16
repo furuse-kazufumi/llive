@@ -226,19 +226,34 @@ class FullSenseLoop:
             "high_curiosity": novelty >= self.curiosity_threshold,
         }
 
-    def _inner_monologue(self, stim: Stimulus, *, curiosity_score: float) -> Thought:
+    def _inner_monologue(
+        self, stim: Stimulus, *, curiosity_score: float
+    ) -> tuple[Thought, dict[str, Any] | None]:
+        """Produce a Thought; return (thought, debug_trace_or_None).
+
+        When ``self._debug`` is True, the second element is a dict populated
+        with backend / prompt / response / timing details (LLM path) or
+        template inputs (rule-based path). Release builds keep debug = None
+        for zero overhead.
+        """
         triz = _detect_triz_principles(stim.content)
         confidence = min(1.0, 0.4 + 0.4 * curiosity_score)
+        debug: dict[str, Any] | None = {} if self._debug else None
 
         # Phase 2: try opt-in LLM backend first. Falls through to the MVP
         # template when nothing is configured or the backend errors out.
-        backend_text = self._try_llm_backend(stim, curiosity_score, triz)
+        backend_text = self._try_llm_backend(stim, curiosity_score, triz, debug=debug)
         if backend_text is not None:
-            return Thought(
-                text=backend_text,
-                triz_principles=triz,
-                references=[],
-                confidence=confidence,
+            if debug is not None:
+                debug["source"] = "llm"
+            return (
+                Thought(
+                    text=backend_text,
+                    triz_principles=triz,
+                    references=[],
+                    confidence=confidence,
+                ),
+                debug,
             )
 
         # MVP template (default, rule-based, deterministic, no network).
@@ -249,11 +264,24 @@ class FullSenseLoop:
             if curiosity_score >= self.curiosity_threshold
             else " — fits known patterns."
         )
-        return Thought(
-            text=base + triz_note + curiosity_note,
-            triz_principles=triz,
-            references=[],
-            confidence=confidence,
+        if debug is not None:
+            debug["source"] = "template"
+            debug["triz_input_substrings_hit"] = list(triz)
+            debug["template_inputs"] = {
+                "stim_source": stim.source,
+                "stim_content_chars": len(stim.content),
+                "stim_content_prefix_120": stim.content.strip()[:120],
+                "curiosity_score": curiosity_score,
+                "curiosity_threshold": self.curiosity_threshold,
+            }
+        return (
+            Thought(
+                text=base + triz_note + curiosity_note,
+                triz_principles=triz,
+                references=[],
+                confidence=confidence,
+            ),
+            debug,
         )
 
     def _try_llm_backend(
@@ -261,25 +289,47 @@ class FullSenseLoop:
         stim: Stimulus,
         curiosity_score: float,
         triz: list[int],
+        *,
+        debug: dict[str, Any] | None = None,
     ) -> str | None:
-        """Call the configured LLM backend, or return ``None`` to fall back to the template."""
+        """Call the configured LLM backend, or return ``None`` to fall back to the template.
+
+        If ``debug`` is a dict (debug mode), populates it with backend name,
+        prompt, raw response, finish reason, wall time, and (on failure) the
+        exception text. Caller decides what to attach to stages.
+        """
         backend = self._resolve_backend_for_loop()
         if backend is None:
             return None
-        try:
-            from llive.llm import GenerateRequest
+        from llive.llm import GenerateRequest
 
-            response = backend.generate(
-                GenerateRequest(
-                    prompt=self._build_llm_prompt(stim, curiosity_score, triz),
-                    max_tokens=512,
-                    temperature=0.3,
-                )
-            )
+        prompt = self._build_llm_prompt(stim, curiosity_score, triz)
+        request = GenerateRequest(prompt=prompt, max_tokens=512, temperature=0.3)
+        if debug is not None:
+            debug["backend_name"] = getattr(backend, "name", "?")
+            debug["llm_prompt"] = prompt
+            debug["llm_request"] = {
+                "max_tokens": request.max_tokens,
+                "temperature": request.temperature,
+            }
+        t0 = time.perf_counter()
+        try:
+            response = backend.generate(request)
         except BackendConfigurationError:
             raise
-        except Exception:
+        except Exception as e:
+            if debug is not None:
+                debug["llm_error"] = repr(e)
+                debug["llm_elapsed_ms"] = round((time.perf_counter() - t0) * 1000, 2)
             return None
+        elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
+        if debug is not None:
+            debug["llm_elapsed_ms"] = elapsed_ms
+            debug["llm_response_text"] = response.text
+            debug["llm_response_chars"] = len(response.text or "")
+            debug["llm_finish_reason"] = getattr(response, "finish_reason", "stop")
+            debug["llm_response_model"] = getattr(response, "model", "")
+            debug["llm_response_raw"] = dict(getattr(response, "raw", {}) or {})
         if getattr(response, "finish_reason", "stop") == "error":
             return None
         text = (response.text or "").strip()
