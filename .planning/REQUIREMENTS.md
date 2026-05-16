@@ -249,8 +249,60 @@
 - v3 (Phase 3) requirements: 12 + 2 LLW = 14 total
 - v4 (Phase 4) requirements: 9 + 2 LLW = 11 total
 - v0.7 (Phase 5-7) Rust acceleration: 14 total (10 P5 + 3 P6 + 1 P7)
-- Mapped to phases: 68 / 68 ✓
+- v0.8 (Phase 8) Cognitive-aware Transformer Block (CABT): 7 total (CABT-01〜07)
+- Mapped to phases: 75 / 75 ✓
+
+---
+
+## v0.8 — Cognitive-aware Transformer Block (CABT) 群 (2026-05-17 追加)
+
+**動機:** LLMBackend を素の OSS LLM 依存にせず、llive の FullSense 6-stage
+loop と親和性の高い「思考層対応 Transformer ブロック」を内製化する。スパイ
+ラル開発で各 FR を「最小試作 → Brief API 経由で評価 → 次イテレーション」
+のサイクルで回す。
+
+### 関連設計パターン
+
+- **Mediator** (TRIZ 原理 24) — Attention は値を直接混ぜず、参照ポインタを介す
+- **Bridge** (GoF) — token-id (abstraction) と data + metadata (implementation) の分離
+- **Provenance** (DDD) — 各データに source / confidence / timestamp / trust_score を付随
+- **Strategy** (GoF) — Stage ごとに異なる block 構成を切り替え可能
+
+### 要件詳細
+
+| FR | 名前 | 概要 | 親和層 | RAD 裏付け候補 |
+|---|---|---|---|---|
+| CABT-01 | **Reference-based Attention with Metadata** | 値で並べ替えていた箇所を参照 (id ポインタ) ベースに置換。並べ替え対象データに metadata (provenance / trust / epistemic_type / timestamp / source domain) を貼り付け、attention は参照を選択した後に metadata を集約 | KAR / Provenance | pointer_networks / memorizing_transformers / retrieval_augmented |
+| CABT-02 | **Stage-aware Block Routing** | FullSense 6 stage (salience / curiosity / thought / ego/altruism / plan / output) ごとに異なる block 構成を活性化 (Strategy + Soft-MoE 風 routing) | Loop / APO | mixture_of_experts / soft_moe / mixture_of_depths |
+| CABT-03 | **Epistemic-typed Token Pool** | 各 token に `EpistemicType` (FACTUAL / EMPIRICAL / NORMATIVE / INTERPRETIVE / PRAGMATIC / RESERVED_*) を付与し、同 type 優先 attention bias を加える (Multi-track Filter Architecture A-1.5 の token 化) | DTKR / Filter Track | dialogue_filter / multi_track_reasoning |
+| CABT-04 | **Salience-gated Attention** | Token-level surprise score (FR-21 と連携) で attention 強度を変える。surprise 低い token は MLP のみ通過、高い token は full attention に | APO / FR-21 | bayesian_surprise / hippocampal_consolidation / sparse_attention |
+| CABT-05 | **TRIZ-conditioned Head Selection** | Brief で検出された TRIZ 原理 (BriefGrounder の triz citation) に応じて attention head の一部を bias / mask | TRIZ / FR-25 | head_pruning / triz_principles |
+| CABT-06 | **Approval-gated Decoding** | 出力 token sequence を Approval Bus が検査。policy 違反候補は generation 段階で reject (post-attention の前段ゲート) | Approval Bus / SIL | constitutional_ai / decoding_constraints |
+| CABT-07 | **Memory-augmented Residual** | 各層 residual path に 4 層メモリ (semantic / episodic / structural / parameter) の埋め込みを加算。surprise gate で 4 層別の write 経路と双対化 | MEM / FR-12〜16 | memorizing_transformers / retro / longmem |
+
+### スパイラル開発のイテレーション計画
+
+| Iter | スコープ | 評価 | リスク |
+|---|---|---|---|
+| **S1** | BriefGrounder (L1 grounding 層, 2026-05-17 実装) — Reference-based の「外側」原型 | Brief API ledger の citation 完全性 | 低 (CPU only, 既存) |
+| **S2** | CABT-01 prototype — HF transformers forward hook で attention に metadata column を注入 | Brief × {grounded, ungrounded} 比較ベンチ | 中 (HF 内部依存) |
+| **S3** | CABT-03 + CABT-04 — EpistemicType embedding + Salience gate を hook で追加 | A/B with token-level surprise log | 中 (学習が必要なら LoRA) |
+| **S4** | CABT-02 — Stage-aware routing 試作。Soft-MoE 風の lightweight gate | per-stage benchmark | 高 (アーキ変更幅大) |
+| **S5** | CABT-05 + CABT-06 — TRIZ-conditioned head + Approval-gated decoding | safety bench (RPAR) | 高 (Approval Bus 性能影響) |
+| **S6** | CABT-07 統合 — 4 層メモリ residual fusion | full progressive matrix (xs〜xl × 3 models × {plain, CABT}) | 高 (品質測定が困難) |
+
+### CABT 要件のフェーズマッピング
+
+| FR | Phase | Status |
+|---|---|---|
+| CABT-01 | Phase 8 | Pending |
+| CABT-02 | Phase 8 | Pending |
+| CABT-03 | Phase 8 | Pending |
+| CABT-04 | Phase 8 | Pending |
+| CABT-05 | Phase 8 | Pending |
+| CABT-06 | Phase 8 | Pending |
+| CABT-07 | Phase 8 | Pending |
 
 ---
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-13 — v0.7 Rust acceleration addendum (RUST-01〜14)*
+*Last updated: 2026-05-17 — v0.8 CABT addendum (CABT-01〜07, Cognitive-aware Transformer Block)*
