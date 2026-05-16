@@ -25,6 +25,7 @@ from dataclasses import asdict, is_dataclass
 from typing import Any, Callable, Mapping
 
 from llive.approval.bus import ApprovalBus, Verdict
+from llive.brief.grounding import BriefGrounder, GroundedBrief
 from llive.brief.ledger import BriefLedger, default_ledger_path
 from llive.brief.types import Brief, BriefResult, BriefStatus, brief_to_dict
 from llive.fullsense.loop import FullSenseLoop, FullSenseResult
