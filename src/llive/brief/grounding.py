@@ -203,6 +203,12 @@ class BriefGrounder:
         return tuple(seen.values())
 
     def _lookup_rad(self, brief: Brief) -> tuple[RadCitation, ...]:
+        # Env opt-out — CI / unit tests that don't need the real corpus avoid
+        # the slow RadCorpusIndex bootstrap entirely.
+        import os
+
+        if os.environ.get("LLIVE_DISABLE_RAD_GROUNDING") == "1":
+            return ()
         if self._rad_index is None:
             try:
                 self._rad_index = RadCorpusIndex()
