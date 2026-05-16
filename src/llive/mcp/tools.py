@@ -546,6 +546,8 @@ def dispatch(name: str, arguments: dict[str, Any]) -> Any:
         return tool_code_complete(**args)
     if name == "code_review":
         return tool_code_review(**args)
+    if name == "submit_brief":
+        return tool_submit_brief(**args)
     raise KeyError(f"unknown tool: {name}")
 
 
@@ -562,5 +564,6 @@ __all__ = [
     "tool_list_rad_domains",
     "tool_query_rad",
     "tool_read_document",
+    "tool_submit_brief",
     "tool_vlm_describe_image",
 ]
