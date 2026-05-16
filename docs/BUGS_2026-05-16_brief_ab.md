@@ -100,6 +100,14 @@ and "what llive does with it" is the entire delivery surface for v0.2.x.
 - **Fix:** always populate `stages.thought = None` (or a placeholder) so
   diff tools don't have to guess.
 
+#### LLIVE-D-DEBUG — DebugMode added  *[NEW 2026-05-16]*
+- **Status:** Implemented. `FullSenseLoop(debug=True)` attaches a `debug`
+  dict to `stages["thought"]` populated with backend name / prompt /
+  raw response / wall time / finish reason (LLM path) or template inputs
+  (rule-based path). Release mode (`debug=False`, default) has zero overhead.
+- **Why:** user requested traceability + variable watch for each model.
+- **Tests:** existing 9 wiring tests stay green with debug both on and off.
+
 #### LLIVE-008 — Approval Bus is not exercised by `FullSenseLoop`
 - **What:** The C-1 Approval Bus + SQLite Ledger are described as the v0.6
   flagship feature, but `FullSenseLoop.process()` does not call them. The
