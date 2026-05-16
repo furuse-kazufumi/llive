@@ -40,6 +40,12 @@
 
 - [x] ~~GitHub Pages を有効化~~ — llive 完了 (`https://furuse-kazufumi.github.io/llive/`)
 - [ ] **llmesh / llove で Pages を有効化** — Settings → Pages → Source: main / docs を各リポジトリで実施
+- [ ] **fullsense umbrella の GitHub repo を作成 + Pages 公開** (新規)
+  - local には `D:/projects/fullsense/` に portal の README + docs/_config.yml + docs/index.md 整備済 (commit 済)
+  - `gh repo create furuse-kazufumi/fullsense --public --source D:/projects/fullsense --remote origin --push --description "FullSense umbrella portal — llmesh / llive / llove family"`
+  - 続けて Settings → Pages → Source: main / docs で公開
+  - 期待 URL: `https://furuse-kazufumi.github.io/fullsense/`
+  - FullSense → 3 製品の親子関係を URL 上で明示できる
 - [ ] **llmesh-demos の GitHub repo を作成**
   - `gh repo create furuse-kazufumi/llmesh-demos --public --source D:/projects/llmesh-demos --remote origin --push`
   - Claude が試みたが PAT に `repo` scope なし。Token 設定変更 or GitHub UI で作成
