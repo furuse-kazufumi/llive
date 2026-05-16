@@ -7,6 +7,39 @@ tags: Python,LLM,継続学習,形式検証,Rust
 
 > Self-evolving modular memory LLM framework — `pip install llmesh-llive`
 
+## アーキテクチャ概観 (FullSense family + Approval Bus + Migration)
+
+```mermaid
+flowchart TD
+    F["<b>FullSense ™</b><br/>umbrella brand &amp; spec"]
+    LM["<b>llmesh</b><br/>secure LLM hub"]
+    LI["<b>llive</b><br/>self-evolving memory"]
+    LO["<b>llove</b><br/>TUI dashboard"]
+    F --> LM
+    F --> LI
+    F --> LO
+    LM <-.->|MCP| LI
+    LI <-.->|bridge| LO
+```
+
+Approval Bus 経路 (v0.6.0 C-1 + C-2):
+
+```mermaid
+flowchart LR
+    A["Agent action"]
+    B["ApprovalBus.request()"]
+    P["Policy"]
+    L["SqliteLedger"]
+    PROD["ProductionOutputBus"]
+    SBX["SandboxOutputBus"]
+    A --> B --> P
+    P -->|APPROVED/DENIED| L
+    L -->|APPROVED| PROD
+    L -.->|DENIED| SBX
+```
+
+詳細図は GitHub Pages (<https://furuse-kazufumi.github.io/llive/>) 参照。記事更新時に各 Phase の図 / SVG / アニメ画像を貼り付ける方針 (詳細: [AUTHORING.md](AUTHORING.md))。
+
 ## TL;DR
 
 - **llive** は、固定 LLM コアの周りに **4 層外部記憶** (semantic / episodic / structural / parameter) と **可変長 BlockContainer** を配置し、コア重みを再学習せずに能力を継続的に取り込む Python フレームワーク。
