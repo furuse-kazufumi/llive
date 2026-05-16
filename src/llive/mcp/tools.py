@@ -497,6 +497,29 @@ def tool_describe() -> list[dict[str, Any]]:
                 },
             },
         },
+        {
+            "name": "submit_brief",
+            "description": (
+                "Submit a Brief to llive for processing through the FullSense "
+                "loop. Returns a BriefResult with status, rationale, and the "
+                "ledger entry count for replay/audit."
+            ),
+            "input_schema": {
+                "type": "object",
+                "required": ["goal"],
+                "properties": {
+                    "goal": {"type": "string"},
+                    "brief_id": {"type": "string"},
+                    "constraints": {"type": "array", "items": {"type": "string"}},
+                    "source": {"type": "string", "default": "mcp"},
+                    "priority": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+                    "backend": {"type": "string"},
+                    "tools": {"type": "array", "items": {"type": "string"}},
+                    "success_criteria": {"type": "array", "items": {"type": "string"}},
+                    "approval_required": {"type": "boolean", "default": True},
+                },
+            },
+        },
     ]
 
 
