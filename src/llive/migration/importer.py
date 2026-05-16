@@ -75,6 +75,18 @@ def import_state(bundle_path: Path | str, *, dest_dir: Path | str) -> ImportResu
     sandbox_denied = dest_dir / "sandbox" / "denied_emits.jsonl"
     production = dest_dir / "production" / "records.jsonl"
 
+    memory_root = dest_dir / "memory"
+    memory_paths: dict[str, Path] = {}
+    if memory_root.is_dir():
+        for tier_dir in sorted(memory_root.iterdir()):
+            if not tier_dir.is_dir():
+                continue
+            children = list(tier_dir.iterdir())
+            if len(children) == 1:
+                memory_paths[tier_dir.name] = children[0]
+            else:
+                memory_paths[tier_dir.name] = tier_dir
+
     return ImportResult(
         manifest=manifest,
         dest_dir=dest_dir,
@@ -82,6 +94,7 @@ def import_state(bundle_path: Path | str, *, dest_dir: Path | str) -> ImportResu
         sandbox_records_path=sandbox_records if sandbox_records.exists() else None,
         sandbox_denied_emits_path=sandbox_denied if sandbox_denied.exists() else None,
         production_records_path=production if production.exists() else None,
+        memory_paths=memory_paths,
     )
 
 
