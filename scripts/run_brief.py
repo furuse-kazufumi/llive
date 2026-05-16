@@ -21,11 +21,19 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import io
 import json
 import pathlib
 import sys
 import time
 from typing import Any
+
+# Windows default stdout (cp932) can't print U+2014 etc. — force UTF-8.
+if isinstance(sys.stdout, io.TextIOWrapper):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:  # pragma: no cover
+        pass
 
 from llive.fullsense.loop import FullSenseLoop
 from llive.fullsense.types import EpistemicType, Stimulus
