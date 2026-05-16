@@ -6,6 +6,34 @@
 
 ---
 
+## 2026-05-16 (続 5) — C-6: Bundle encryption (AES-256-GCM)
+
+機密度の高い memory tier や production records を含む bundle を
+clear-text のまま転送するのを避けるため、AEAD 暗号化を追加。整合性
+は GCM の tag が担保するため、C-5 の `.sha256` / `.sig` と組合せ可能。
+
+### Done
+
+- `src/llive/migration/encryption.py`:
+  - `encrypt_bundle(bundle, key, out_path=)` / `decrypt_bundle(...)`
+  - Layout: `MAGIC || nonce(12B) || ciphertext_with_tag`、associated
+    data = magic
+  - `derive_key(password, salt)` — scrypt N=2^15 / r=8 / p=1 / 32B
+  - `encrypt_bundle_with_password()` / `decrypt_bundle_with_password()`
+  - `key_fingerprint(key)` — 16-hex char SHA-256 prefix (audit log 用)
+  - `BundleCryptoError` exception
+- テスト +13 件 (round trip / 鍵短長 / 鍵 mismatch / 改ざん /
+  magic 欠落 / nonce 反復 / scrypt 決定性 / 空 password / 短 salt / 鍵 fp)
+- **881 PASS / ruff clean / 回帰ゼロ**
+
+### 次セッション 着手宣言文 (v9)
+
+「C-1〜C-6 で migration / portability が完成 (state + memory +
+integrity + signature + encryption)。次は 9 軸 production 化 (APO /
+TLB / ICP / SIL 等) または D 章へ進む。」
+
+---
+
 ## 2026-05-16 (続 4) — C-5: Bundle integrity hash + Ed25519 signature
 
 C-3 / C-4 で確立した bundle 形式に **改ざん検知** と **発行元の attribution**
