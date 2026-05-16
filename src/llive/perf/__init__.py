@@ -13,14 +13,28 @@ from llive.perf.diagnostics import (
     Severity,
     Threshold,
 )
+from llive.perf.optimizer import (
+    Modification,
+    ModificationBound,
+    OptimizationStrategy,
+    Optimizer,
+    raise_threshold_strategy,
+    reduce_load_strategy,
+)
 from llive.perf.profiler import Profiler, Sample
 
 __all__ = [
     "Diagnostics",
     "Issue",
+    "Modification",
+    "ModificationBound",
+    "OptimizationStrategy",
+    "Optimizer",
     "Profiler",
     "RegressionRule",
     "Sample",
     "Severity",
     "Threshold",
+    "raise_threshold_strategy",
+    "reduce_load_strategy",
 ]
