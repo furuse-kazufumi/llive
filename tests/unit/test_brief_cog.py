@@ -233,3 +233,123 @@ def test_cog02_propose_without_tools_lowers_feasibility() -> None:
     brief = Brief(brief_id="cog02-6", goal="propose a fix")
     v = scorer.score(brief, ActionDecision.PROPOSE)
     assert v.feasibility < 0.6
+
+
+# ===========================================================================
+# COG-03 — Trace Graph (evidence / tool / decision)
+# ===========================================================================
+
+
+def test_cog03_trace_graph_empty_for_no_run(tmp_path: Path) -> None:
+    from llive.brief import TraceGraph
+
+    ledger = BriefLedger(tmp_path / "empty.jsonl")
+    tg = ledger.trace_graph()
+    assert isinstance(tg, TraceGraph)
+    assert tg.is_empty
+
+
+def test_cog03_trace_graph_captures_decision_chain(tmp_path: Path) -> None:
+    runner = BriefRunner(loop=FullSenseLoop(sandbox=True, salience_threshold=0.0))
+    brief = Brief(
+        brief_id="cog03-1",
+        goal="novel exploration to trigger note",
+        approval_required=False,
+        ledger_path=tmp_path / "cog03-1.jsonl",
+    )
+    runner.submit(brief)
+
+    tg = BriefLedger(brief.ledger_path).trace_graph()  # type: ignore[arg-type]
+    decision_events = [d["event"] for d in tg.decision_chain]
+    assert "decision" in decision_events
+    assert "outcome" in decision_events
+
+
+def test_cog03_trace_graph_captures_governance_in_decision_chain(tmp_path: Path) -> None:
+    from llive.brief import GovernanceScorer
+
+    runner = BriefRunner(
+        loop=FullSenseLoop(sandbox=True, salience_threshold=0.0),
+        governance_scorer=GovernanceScorer(),
+    )
+    brief = Brief(
+        brief_id="cog03-2",
+        goal="another exploration",
+        approval_required=False,
+        ledger_path=tmp_path / "cog03-2.jsonl",
+    )
+    runner.submit(brief)
+
+    tg = BriefLedger(brief.ledger_path).trace_graph()  # type: ignore[arg-type]
+    assert any(d["event"] == "governance_scored" for d in tg.decision_chain)
+
+
+def test_cog03_trace_graph_captures_tool_chain(tmp_path: Path) -> None:
+    from typing import Any
+
+    from llive.fullsense.loop import FullSenseResult
+    from llive.fullsense.types import ActionDecision, ActionPlan, Thought
+
+    class _PlanWithTools:
+        def process(self, stim: Any) -> Any:
+            plan = ActionPlan(
+                decision=ActionDecision.NOTE,
+                rationale="r",
+                thought=Thought(text="t"),
+            )
+            return FullSenseResult(
+                stim=stim,
+                plan=plan,
+                stages={"tools": [{"name": "echo", "args": {"x": 1}}]},
+            )
+
+    def echo(args: dict[str, Any]) -> dict[str, Any]:
+        return {"echoed": args}
+
+    runner = BriefRunner(
+        loop=_PlanWithTools(),  # type: ignore[arg-type]
+        tools={"echo": echo},
+    )
+    brief = Brief(
+        brief_id="cog03-3",
+        goal="tool run",
+        approval_required=False,
+        tools=("echo",),
+        ledger_path=tmp_path / "cog03-3.jsonl",
+    )
+    runner.submit(brief)
+
+    tg = BriefLedger(brief.ledger_path).trace_graph()  # type: ignore[arg-type]
+    assert len(tg.tool_chain) >= 1
+    assert tg.tool_chain[0]["event"] == "tool_invoked"
+
+
+def test_cog03_trace_graph_captures_evidence_when_grounded(tmp_path: Path, monkeypatch) -> None:
+    from llive.brief import BriefGrounder, GroundingConfig
+
+    monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "1")
+
+    class _P:
+        def __init__(self, pid: int, name: str) -> None:
+            self.id = pid
+            self.name = name
+            self.description = ""
+            self.examples: list[str] = []
+
+    principles = {1: _P(1, "Segmentation"), 15: _P(15, "Dynamics")}
+    grounder = BriefGrounder(principles=principles, config=GroundingConfig(max_triz=2))
+
+    runner = BriefRunner(
+        loop=FullSenseLoop(sandbox=True, salience_threshold=0.0),
+        grounder=grounder,
+    )
+    brief = Brief(
+        brief_id="cog03-4",
+        goal="trade-off between static and dynamic structures",
+        approval_required=False,
+        ledger_path=tmp_path / "cog03-4.jsonl",
+    )
+    runner.submit(brief)
+
+    tg = BriefLedger(brief.ledger_path).trace_graph()  # type: ignore[arg-type]
+    assert any(e.get("kind") == "triz" for e in tg.evidence_chain)
