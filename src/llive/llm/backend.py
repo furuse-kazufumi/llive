@@ -307,24 +307,38 @@ class OllamaBackend(LLMBackend):
     name = "ollama"
     DEFAULT_MODEL = "llama3.1"
 
-    def __init__(self, model: str | None = None, host: str | None = None, timeout: float = 120.0) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        host: str | None = None,
+        timeout: float = 120.0,
+        *,
+        num_ctx: int | None = None,
+    ) -> None:
         self.host = (host or os.environ.get("OLLAMA_HOST") or "http://localhost:11434").rstrip("/")
         self.model = model or self.DEFAULT_MODEL
         self.timeout = float(timeout)
+        # Override Ollama's default context window (typically 2048). Required
+        # when prompts exceed ~1500 tokens — otherwise they get silently
+        # truncated and benchmarks measure the wrong thing.
+        self.num_ctx: int | None = num_ctx
 
     def generate(self, request: GenerateRequest) -> GenerateResponse:  # pragma: no cover - requires running ollama
         import urllib.error
         import urllib.request
 
+        options: dict[str, Any] = {
+            "temperature": float(request.temperature),
+            "num_predict": int(request.max_tokens),
+            "stop": list(request.stop or []),
+        }
+        if self.num_ctx is not None:
+            options["num_ctx"] = int(self.num_ctx)
         body: dict[str, Any] = {
             "model": request.model or self.model,
             "prompt": request.prompt,
             "stream": False,
-            "options": {
-                "temperature": float(request.temperature),
-                "num_predict": int(request.max_tokens),
-                "stop": list(request.stop or []),
-            },
+            "options": options,
         }
         if request.system:
             body["system"] = request.system
