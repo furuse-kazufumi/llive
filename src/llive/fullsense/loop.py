@@ -38,6 +38,7 @@ class BackendConfigurationError(ValueError):
     when you deliberately want to wrap a cloud model inside the FullSense
     pipeline."""
 
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -52,15 +53,27 @@ def _tokenise(text: str) -> set[str]:
 # Very small TRIZ trigger keywords → principle id mapping for MVP
 _TRIZ_TRIGGERS: dict[str, int] = {
     # 矛盾系
-    "vs": 1, "versus": 1, "trade-off": 1, "tradeoff": 1, "contradiction": 1,
+    "vs": 1,
+    "versus": 1,
+    "trade-off": 1,
+    "tradeoff": 1,
+    "contradiction": 1,
     # 動きで魅せる
-    "static": 15, "dynamic": 15, "動かない": 15,
+    "static": 15,
+    "dynamic": 15,
+    "動かない": 15,
     # 仲介
-    "via": 24, "mediator": 24, "ground": 24, "grounding": 24,
+    "via": 24,
+    "mediator": 24,
+    "ground": 24,
+    "grounding": 24,
     # 退屈・idle
-    "idle": 19, "periodic": 19, "繰り返": 19,
+    "idle": 19,
+    "periodic": 19,
+    "繰り返": 19,
     # parameter 変更
-    "parameter": 35, "knob": 35,
+    "parameter": 35,
+    "knob": 35,
 }
 
 
@@ -206,22 +219,124 @@ class FullSenseLoop:
 
     def _inner_monologue(self, stim: Stimulus, *, curiosity_score: float) -> Thought:
         triz = _detect_triz_principles(stim.content)
-        # MVP: 単純テンプレで思考文を合成。Phase 2 で LLM backend (mock backend 既定) に差し替え。
+        confidence = min(1.0, 0.4 + 0.4 * curiosity_score)
+
+        # Phase 2: try opt-in LLM backend first. Falls through to the MVP
+        # template when nothing is configured or the backend errors out.
+        backend_text = self._try_llm_backend(stim, curiosity_score, triz)
+        if backend_text is not None:
+            return Thought(
+                text=backend_text,
+                triz_principles=triz,
+                references=[],
+                confidence=confidence,
+            )
+
+        # MVP template (default, rule-based, deterministic, no network).
         base = f"Observation about {stim.source!r}: {stim.content.strip()[:120]}"
-        triz_note = (
-            f" [TRIZ principles: {','.join(str(p) for p in triz)}]" if triz else ""
-        )
+        triz_note = f" [TRIZ principles: {','.join(str(p) for p in triz)}]" if triz else ""
         curiosity_note = (
-            " — novel territory, worth exploring." if curiosity_score >= self.curiosity_threshold
+            " — novel territory, worth exploring."
+            if curiosity_score >= self.curiosity_threshold
             else " — fits known patterns."
         )
-        text = base + triz_note + curiosity_note
-        confidence = 0.4 + 0.4 * curiosity_score
         return Thought(
-            text=text,
+            text=base + triz_note + curiosity_note,
             triz_principles=triz,
             references=[],
-            confidence=min(1.0, confidence),
+            confidence=confidence,
+        )
+
+    def _try_llm_backend(
+        self,
+        stim: Stimulus,
+        curiosity_score: float,
+        triz: list[int],
+    ) -> str | None:
+        """Call the configured LLM backend, or return ``None`` to fall back to the template."""
+        backend = self._resolve_backend_for_loop()
+        if backend is None:
+            return None
+        try:
+            from llive.llm import GenerateRequest
+
+            response = backend.generate(
+                GenerateRequest(
+                    prompt=self._build_llm_prompt(stim, curiosity_score, triz),
+                    max_tokens=512,
+                    temperature=0.3,
+                )
+            )
+        except BackendConfigurationError:
+            raise
+        except Exception:
+            return None
+        if getattr(response, "finish_reason", "stop") == "error":
+            return None
+        text = (response.text or "").strip()
+        return text or None
+
+    def _resolve_backend_for_loop(self) -> LLMBackend | None:
+        """On-prem-first backend resolver — see ``feedback_llive_measurement_purity``.
+
+        Resolution order:
+
+        1. Explicit ``llm_backend=`` kwarg passed to ``__init__`` (test injection,
+           always honoured regardless of vendor).
+        2. ``$LLIVE_LLM_BACKEND`` env. ``mock`` or unset → template fallback.
+           ``ollama*`` is always allowed (on-prem). Other values
+           (``anthropic`` / ``openai`` / ...) require ``LLIVE_ALLOW_CLOUD_BACKEND=1``
+           to opt in; otherwise raise ``BackendConfigurationError``.
+        """
+        if self._llm_backend is not None:
+            return self._llm_backend
+        name = os.environ.get("LLIVE_LLM_BACKEND", "").strip().lower()
+        if not name or name == "mock":
+            return None
+        if name == "ollama" or name.startswith("ollama:"):
+            from llive.llm import OllamaBackend
+
+            if ":" in name:
+                _, model = name.split(":", 1)
+                return OllamaBackend(model=model)
+            return OllamaBackend()
+        if os.environ.get("LLIVE_ALLOW_CLOUD_BACKEND") == "1":
+            from llive.llm import resolve_backend
+
+            try:
+                return resolve_backend(name)
+            except Exception:
+                return None
+        raise BackendConfigurationError(
+            f"refusing cloud LLM backend {name!r} inside FullSenseLoop; "
+            f"set LLIVE_ALLOW_CLOUD_BACKEND=1 to override (rare), or "
+            f"benchmark the cloud API directly without llive (see "
+            f"docs/proposals/brief_api_design.md and "
+            f"feedback_llive_measurement_purity for rationale)"
+        )
+
+    @staticmethod
+    def _build_llm_prompt(
+        stim: Stimulus,
+        curiosity_score: float,
+        triz: list[int],
+    ) -> str:
+        triz_str = ", ".join(str(p) for p in triz) if triz else "none"
+        novelty_label = "novel" if curiosity_score >= 0.6 else "familiar"
+        return (
+            f"You are llive's inner monologue stage in a 6-stage cognitive "
+            f"loop (salience -> curiosity -> thought -> ego/altruism -> "
+            f"plan -> output).\n"
+            f"Stimulus source: {stim.source}\n"
+            f"Curiosity: {novelty_label} (score {curiosity_score:.2f})\n"
+            f"TRIZ principles already detected: {triz_str}\n"
+            f"---\n"
+            f"Stimulus content:\n{stim.content}\n"
+            f"---\n"
+            f"Write a concise (1-3 sentences) first-person internal "
+            f"observation about this stimulus. Note any patterns, "
+            f"contradictions, or connections to known concepts. Do not "
+            f"propose actions yet -- this is internal monologue only."
         )
 
     def _score_thought(self, thought: Thought) -> tuple[float, float]:
