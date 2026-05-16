@@ -101,6 +101,60 @@ class BriefLedger:
                     meta=obj.get("meta", {}),
                 )
 
+    # -- COG-03: trace graph -------------------------------------------------
+
+    def trace_graph(self) -> "TraceGraph":
+        """Build the 3-layer trace graph (evidence / tool / decision).
+
+        Each chain is an ordered list of nodes; nodes carry just enough
+        identifiers for an auditor to follow the link back to the original
+        ledger row. Designed as a *view* — no state is materialised on disk
+        beyond the JSONL itself.
+
+        * **evidence_chain**: TRIZ citations + RAD doc_paths + calculations
+          that grounded the Brief
+        * **tool_chain**: tool_invoked / tool_rejected / tool_failed events
+        * **decision_chain**: decision event + approval verdict + outcome
+        """
+        evidence: list[dict[str, Any]] = []
+        tools: list[dict[str, Any]] = []
+        decisions: list[dict[str, Any]] = []
+        for r in self.read():
+            if r.event == "grounding_applied":
+                p = r.payload
+                for t in p.get("triz", []) or []:
+                    evidence.append({"kind": "triz", **t})
+                for c in p.get("rad", []) or []:
+                    evidence.append({"kind": "rad", **c})
+                for c in p.get("calc", []) or []:
+                    evidence.append({"kind": "calc", **c})
+            elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
+                tools.append({"event": r.event, **r.payload})
+            elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored"}:
+                decisions.append({"event": r.event, **r.payload})
+        return TraceGraph(
+            evidence_chain=tuple(evidence),
+            tool_chain=tuple(tools),
+            decision_chain=tuple(decisions),
+        )
+
+
+@dataclass(frozen=True)
+class TraceGraph:
+    """COG-03 — 3-layer view over a BriefLedger.
+
+    Each chain is a tuple of dicts so the view is hashable and safe to
+    persist (e.g. for cross-Brief comparisons or evolution learning data).
+    """
+
+    evidence_chain: tuple[dict[str, Any], ...] = ()
+    tool_chain: tuple[dict[str, Any], ...] = ()
+    decision_chain: tuple[dict[str, Any], ...] = ()
+
+    @property
+    def is_empty(self) -> bool:
+        return not (self.evidence_chain or self.tool_chain or self.decision_chain)
+
 
 def default_ledger_path(brief_id: str, root: Path | None = None) -> Path:
     """Resolve the default ledger location for a given ``brief_id``.
