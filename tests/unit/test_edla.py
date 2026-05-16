@@ -39,9 +39,9 @@ def test_bp_learns_xor() -> None:
     """BP は XOR を学習できる (再現性確認)."""
     x, y = _xor_data()
     net = TwoLayerNet.init(in_dim=2, hidden_dim=8, out_dim=1, seed=0)
-    learner = BPLearner(lr=0.5)
+    learner = BPLearner(lr=0.05)
     losses = []
-    for _ in range(2000):
+    for _ in range(8000):
         losses.append(learner.step(net, x, y))
     assert losses[-1] < 0.05  # 十分小さい誤差まで収束
     assert losses[-1] < losses[0]  # 改善している
