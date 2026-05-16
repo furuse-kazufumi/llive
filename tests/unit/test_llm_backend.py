@@ -137,6 +137,65 @@ def test_ollama_generate_via_mocked_urlopen() -> None:
     assert captured["body"]["stream"] is False
 
 
+def test_ollama_generate_passes_num_ctx_when_set() -> None:
+    """num_ctx kwarg lands in options.num_ctx (used for l/xl progressive bench)."""
+    backend = OllamaBackend(model="llama3.1", host="http://x.local:1234", num_ctx=8192)
+
+    class _Resp:
+        def __init__(self, body: bytes) -> None:
+            self._body = body
+
+        def __enter__(self) -> _Resp:
+            return self
+
+        def __exit__(self, *args: Any) -> None:
+            pass
+
+        def read(self) -> bytes:
+            return self._body
+
+    captured: dict[str, Any] = {}
+
+    def fake_urlopen(req: Any, timeout: float | None = None) -> _Resp:
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return _Resp(json.dumps({"response": "ok", "done": True}).encode("utf-8"))
+
+    with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        backend.generate(GenerateRequest(prompt="ping", max_tokens=8))
+
+    assert captured["body"]["options"]["num_ctx"] == 8192
+
+
+def test_ollama_omits_num_ctx_when_unset() -> None:
+    """Default OllamaBackend (no num_ctx) must NOT inject options.num_ctx —
+    Ollama uses its own per-model default in that case."""
+    backend = OllamaBackend(model="llama3.1", host="http://x.local:1234")
+
+    class _Resp:
+        def __init__(self, body: bytes) -> None:
+            self._body = body
+
+        def __enter__(self) -> _Resp:
+            return self
+
+        def __exit__(self, *args: Any) -> None:
+            pass
+
+        def read(self) -> bytes:
+            return self._body
+
+    captured: dict[str, Any] = {}
+
+    def fake_urlopen(req: Any, timeout: float | None = None) -> _Resp:
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return _Resp(json.dumps({"response": "ok", "done": True}).encode("utf-8"))
+
+    with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+        backend.generate(GenerateRequest(prompt="ping", max_tokens=8))
+
+    assert "num_ctx" not in captured["body"]["options"]
+
+
 def test_ollama_generate_http_error_returns_error_response() -> None:
     import urllib.error
 
