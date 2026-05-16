@@ -345,12 +345,17 @@ class BriefRunner:
         brief: Brief,
         result: FullSenseResult,
         ledger: BriefLedger,
+        governance_verdict: GovernanceVerdict | None = None,
     ) -> BriefResult | None:
         """Returns a terminal BriefResult if the gate blocks; ``None`` to proceed.
 
         With no ApprovalBus configured, ``approval_required=True`` Briefs
         cannot proceed past PROPOSE / INTERVENE — they end as
         AWAITING_APPROVAL so the operator can wire a bus and resume.
+
+        COG-02: when a Governance scorer recommends a block, the Approval
+        request payload includes the scoring rationale so the Bus's policy
+        can honour it.
         """
         if self._approval_bus is None:
             ledger.append(
@@ -366,13 +371,18 @@ class BriefRunner:
                 ledger_entries=ledger.entries_written + 1,
             )
 
+        payload: dict[str, object] = {
+            "brief_id": brief.brief_id,
+            "goal": brief.goal,
+            "rationale": result.plan.rationale,
+        }
+        if governance_verdict is not None:
+            payload["governance_total"] = governance_verdict.weighted_total
+            payload["governance_recommend_block"] = governance_verdict.recommend_block
+            payload["governance_safety"] = governance_verdict.safety
         req = self._approval_bus.request(
             action=f"brief:{result.plan.decision.value}",
-            payload={
-                "brief_id": brief.brief_id,
-                "goal": brief.goal,
-                "rationale": result.plan.rationale,
-            },
+            payload=payload,
             principal=self._approver,
         )
         ledger.append(
