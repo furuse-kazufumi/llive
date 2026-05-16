@@ -63,17 +63,20 @@ def _coerce_value(v: Any) -> Any:
     return str(v)
 
 
-def _brief_to_stimulus(brief: Brief) -> Stimulus:
+def _brief_to_stimulus(brief: Brief, *, goal_override: str | None = None) -> Stimulus:
     """Encode the Brief as a Stimulus suitable for FullSenseLoop.
 
     Constraints are appended to the goal as a constraints block so they
     inform _inner_monologue without changing the Stimulus shape.
+    ``goal_override`` lets the grounder substitute an augmented goal while
+    leaving the original Brief object frozen and unmodified.
     """
+    goal = goal_override if goal_override is not None else brief.goal
     if brief.constraints:
         constraints = "\n".join(f"- {c}" for c in brief.constraints)
-        content = f"Goal:\n{brief.goal}\n\nConstraints:\n{constraints}"
+        content = f"Goal:\n{goal}\n\nConstraints:\n{constraints}"
     else:
-        content = f"Goal:\n{brief.goal}"
+        content = f"Goal:\n{goal}"
     return Stimulus(
         content=content,
         source=brief.source,
