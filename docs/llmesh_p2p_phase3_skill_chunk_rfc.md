@@ -230,7 +230,7 @@ class SkillReplica:
 | 3.6a | License filter (`LicenseFilter` + `allow_licenses()` + `DEFAULT_ALLOWED_LICENSES`) | **done** (llmesh v3.4.0, 2026-05-16) |
 | 3.6b | Reputation system (`PeerReputation`, 30-day rolling SQLite window) | **done** (llmesh v3.4.0, 2026-05-16) |
 | 3.6c | Router integration glue (`report-corrupt` → `PeerReputation`, `RateLimiter`, sync `record_transfer` hook) | **done** (llmesh v3.4.0, 2026-05-16) |
-| 3.7 | 10-peer demo + KPI 測定 | **planned** (llmesh v3.5.0) |
+| 3.7 | 10-peer demo + KPI 測定 (`scripts/demo_skill_sync.py`、in-process InMemoryTransport) | **done** (llmesh v3.4.0, 2026-05-16) — 10 peer × 20 chunk × 50 KB × 5 round: coverage 1.000 in 1 round, total 843 ms, max storage 1 MB / peer — RFC §評価指標 Overall PASS |
 
 ## 倫理 / 法的注意
 
