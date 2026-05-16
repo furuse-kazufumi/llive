@@ -338,6 +338,131 @@ def triz_matrix(
 
 
 # ---------------------------------------------------------------------------
+# brief — LLIVE-002 Step 6
+# ---------------------------------------------------------------------------
+
+
+brief_app = typer.Typer(no_args_is_help=True, help="Brief API — submit work units to the FullSense loop")
+app.add_typer(brief_app, name="brief")
+
+
+@brief_app.command("submit")
+def brief_submit(
+    file: Path | None = typer.Argument(None, help="Path to a Brief YAML file"),
+    goal: str | None = typer.Option(None, "--goal", help="Inline goal text (bypasses YAML)"),
+    brief_id: str | None = typer.Option(None, "--brief-id", help="Required with --goal"),
+    priority: float = typer.Option(0.5, "--priority", min=0.0, max=1.0),
+    backend: str = typer.Option("", "--backend", help="Override Brief backend (e.g. ollama:qwen2.5:14b)"),
+    no_approval: bool = typer.Option(
+        False,
+        "--no-approval",
+        help="Set approval_required=False — useful for unattended bench runs",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Emit result as JSON to stdout"),
+):
+    """Submit a Brief to llive and print the BriefResult."""
+    from llive.brief import (
+        Brief,
+        BriefRunner,
+        brief_to_dict,
+        load_brief,
+    )
+    from llive.fullsense.loop import FullSenseLoop
+
+    if file is None and goal is None:
+        console.print("[red]must pass either a YAML file or --goal[/red]")
+        raise typer.Exit(code=2)
+    if file is not None and goal is not None:
+        console.print("[red]pass either a YAML file OR --goal, not both[/red]")
+        raise typer.Exit(code=2)
+
+    if file is not None:
+        brief = load_brief(file)
+    else:
+        if not brief_id:
+            console.print("[red]--brief-id is required with --goal[/red]")
+            raise typer.Exit(code=2)
+        brief = Brief(
+            brief_id=brief_id,
+            goal=goal or "",
+            priority=priority,
+            backend=backend,
+            approval_required=not no_approval,
+        )
+
+    loop = FullSenseLoop(sandbox=True)
+    runner = BriefRunner(loop=loop)
+    result = runner.submit(brief)
+
+    if json_output:
+        payload = {
+            "brief": brief_to_dict(brief),
+            "result": {
+                "brief_id": result.brief_id,
+                "status": result.status.value,
+                "rationale": result.rationale,
+                "artifacts": list(result.artifacts),
+                "ledger_entries": result.ledger_entries,
+                "error": result.error,
+            },
+        }
+        json.dump(payload, sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+        return
+
+    console.print(f"[bold]brief_id[/bold]       : {result.brief_id}")
+    console.print(f"[bold]status[/bold]         : {result.status.value}")
+    console.print(f"[bold]rationale[/bold]      : {result.rationale}")
+    console.print(f"[bold]artifacts[/bold]      : {list(result.artifacts) or '—'}")
+    console.print(f"[bold]ledger_entries[/bold] : {result.ledger_entries}")
+    if result.error:
+        console.print(f"[red]error[/red]           : {result.error}")
+
+
+@brief_app.command("ledger")
+def brief_ledger(
+    brief_id: str = typer.Argument(..., help="brief_id whose ledger to inspect"),
+    limit: int = typer.Option(0, "--limit", help="Show only the last N entries (0 = all)"),
+    json_output: bool = typer.Option(False, "--json"),
+):
+    """Print a Brief's append-only ledger trail."""
+    from llive.brief import BriefLedger, default_ledger_path
+
+    path = default_ledger_path(brief_id)
+    if not path.is_file():
+        console.print(f"[red]no ledger found at {path}[/red]")
+        raise typer.Exit(code=2)
+
+    records = list(BriefLedger(path).read())
+    if limit > 0:
+        records = records[-limit:]
+
+    if json_output:
+        json.dump(
+            [
+                {"event": r.event, "payload": r.payload, "meta": r.meta}
+                for r in records
+            ],
+            sys.stdout,
+            ensure_ascii=False,
+            indent=2,
+        )
+        sys.stdout.write("\n")
+        return
+
+    table = Table(title=f"Brief ledger — {brief_id}")
+    table.add_column("#", justify="right")
+    table.add_column("event")
+    table.add_column("payload (truncated)")
+    for i, r in enumerate(records, 1):
+        body = json.dumps(r.payload, ensure_ascii=False)
+        if len(body) > 200:
+            body = body[:200] + "..."
+        table.add_row(str(i), r.event, body)
+    console.print(table)
+
+
+# ---------------------------------------------------------------------------
 
 
 if __name__ == "__main__":
