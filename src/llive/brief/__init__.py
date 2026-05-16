@@ -61,6 +61,7 @@ __all__ = [
     "LedgerRecord",
     "RadCitation",
     "ToolHandler",
+    "TraceGraph",
     "TrizCitation",
     "brief_to_dict",
     "default_ledger_path",
