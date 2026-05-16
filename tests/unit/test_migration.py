@@ -163,3 +163,112 @@ def test_manifest_includes_substrate_metadata(tmp_path: Path) -> None:
     assert "python_version" in sub
     assert "machine" in sub
     assert "hostname" in sub
+
+
+# ---------------------------------------------------------------------------
+# C-4: memory tier bundling
+# ---------------------------------------------------------------------------
+
+
+def test_memory_file_tier_round_trip(tmp_path: Path) -> None:
+    """A single-file tier (DuckDB-style) survives round-trip."""
+    src = tmp_path / "src" / "episodic.duckdb"
+    src.parent.mkdir(parents=True)
+    src.write_bytes(b"DUCKDB-LIKE-PAYLOAD\x00\x01\x02")
+
+    out = tmp_path / "bundle.tar.gz"
+    bundle = export_state(
+        ledger_path=None,
+        sandbox=None,
+        production_bus=None,
+        memory_paths={"episodic": src},
+        out_path=out,
+    )
+    assert "memory" in bundle.manifest.components
+
+    dest = tmp_path / "imported"
+    result = import_state(out, dest_dir=dest)
+    assert "episodic" in result.memory_paths
+    restored = result.memory_paths["episodic"]
+    assert restored.exists()
+    assert restored.read_bytes() == b"DUCKDB-LIKE-PAYLOAD\x00\x01\x02"
+
+
+def test_memory_directory_tier_round_trip(tmp_path: Path) -> None:
+    """A directory tier (faiss/Kùzu-style) survives round-trip with all children."""
+    src = tmp_path / "src" / "semantic"
+    src.mkdir(parents=True)
+    (src / "index.faiss").write_bytes(b"FAISSBIN")
+    (src / "rows.jsonl").write_text('{"id":1}\n{"id":2}\n', encoding="utf-8")
+
+    out = tmp_path / "bundle.tar.gz"
+    export_state(
+        ledger_path=None,
+        sandbox=None,
+        production_bus=None,
+        memory_paths={"semantic": src},
+        out_path=out,
+    )
+
+    dest = tmp_path / "imported"
+    result = import_state(out, dest_dir=dest)
+    assert "semantic" in result.memory_paths
+    restored_dir = result.memory_paths["semantic"]
+    assert restored_dir.is_dir()
+    assert (restored_dir / "index.faiss").read_bytes() == b"FAISSBIN"
+    rows = (restored_dir / "rows.jsonl").read_text(encoding="utf-8").splitlines()
+    assert rows == ['{"id":1}', '{"id":2}']
+
+
+def test_multiple_memory_tiers_in_one_bundle(tmp_path: Path) -> None:
+    ep = tmp_path / "src" / "episodic.duckdb"
+    ep.parent.mkdir(parents=True)
+    ep.write_bytes(b"EP")
+    sem = tmp_path / "src" / "semantic"
+    sem.mkdir(parents=True)
+    (sem / "rows.jsonl").write_text("{}\n", encoding="utf-8")
+    struct = tmp_path / "src" / "structural.kuzu"
+    struct.mkdir()
+    (struct / "catalog.kz").write_bytes(b"KZ")
+
+    out = tmp_path / "bundle.tar.gz"
+    export_state(
+        ledger_path=None,
+        sandbox=None,
+        production_bus=None,
+        memory_paths={"episodic": ep, "semantic": sem, "structural": struct},
+        out_path=out,
+    )
+
+    dest = tmp_path / "imported"
+    result = import_state(out, dest_dir=dest)
+    assert sorted(result.memory_paths.keys()) == ["episodic", "semantic", "structural"]
+
+
+def test_missing_memory_path_silently_skipped(tmp_path: Path) -> None:
+    out = tmp_path / "bundle.tar.gz"
+    bundle = export_state(
+        ledger_path=None,
+        sandbox=None,
+        production_bus=None,
+        memory_paths={"episodic": tmp_path / "does" / "not" / "exist"},
+        out_path=out,
+    )
+    # Nothing was added → "memory" component is NOT listed.
+    assert "memory" not in bundle.manifest.components
+
+    dest = tmp_path / "imported"
+    result = import_state(out, dest_dir=dest)
+    assert result.memory_paths == {}
+
+
+def test_empty_memory_paths_dict_does_not_create_component(tmp_path: Path) -> None:
+    out = tmp_path / "bundle.tar.gz"
+    bundle = export_state(
+        ledger_path=None,
+        sandbox=None,
+        production_bus=None,
+        memory_paths={},
+        out_path=out,
+    )
+    assert "memory" not in bundle.manifest.components
