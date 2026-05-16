@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-05-16 (続 8) — C-9: APO Verifier (§E3 formal pre-check)
+
+Optimizer (C-8) → ApprovalBus (C-1) の **間** に挟まる最後の pure gate。
+Modification ごとに invariants を直列実行し、accepted / rejected に
+分離する。
+
+### Done
+
+- `src/llive/perf/verifier.py`:
+  - `InvariantCheck = Callable[[Modification], bool | tuple[bool, reason]]`
+  - `Verifier(invariants)` — `verify(mods) -> VerificationResult`
+  - `VerificationResult(accepted, rejected, all_accepted)`
+  - `RejectedModification(modification, invariant, reason)`
+  - 例外発生時も rejected に record (raise はしない)
+- Built-in invariants:
+  - `non_negative` — `proposed >= 0`
+  - `relaxation_only(target_prefix="profiler.threshold")` — threshold は緩める方向のみ
+  - `load_reduction_only(target_prefix="scheduler")` — load 系は減らす方向のみ
+  - `bounded_step(max_step_ratio=0.5)` — 単発で 50% 以上変動禁止
+  - `default_invariants()` — 上記 4 つの conservative pack
+- テスト +19 件 (built-in 9 / orchestration 10)
+- **926 PASS / ruff clean / 回帰ゼロ**
+- 既存 `evolution/verifier.py` (構造変更 + Z3) は別ドメインなので維持
+
+### 次セッション 着手宣言文 (v12)
+
+「APO レーン (Profiler → Diagnostics → Optimizer → Verifier) 全層
+production 化完了。残りは C-10 ApprovalBus 接続 (Verifier の
+accepted を `@govern` で gate)、もしくは別軸 (TLB / SIL / D 章)。」
+
+---
+
 ## 2026-05-16 (続 7) — C-8: APO Optimizer (§E2 bounded modification)
 
 Diagnostics (C-7) の出力を入力に取り、bounded な Modification を提案
