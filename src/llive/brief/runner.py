@@ -300,6 +300,10 @@ class BriefRunner:
                     {"name": t["name"], "output": _coerce_value(t["output"])}
                     for t in outcome.tool_outputs
                 ],
+                # COG-01 — uncertainty triple in the audit trail
+                "confidence": outcome.confidence,
+                "assumptions": list(outcome.assumptions),
+                "missing_evidence": list(outcome.missing_evidence),
             },
         )
         return outcome
