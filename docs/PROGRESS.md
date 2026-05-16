@@ -6,6 +6,37 @@
 
 ---
 
+## 2026-05-16 (続 13) — C-14: ICP IdleCollaborator MVP
+
+idle 中に peer Local LLM (llmesh 経由想定) に問い合わせる scheduler 層
+を追加。実 transport は ``PeerClient`` callable に injection、本モジュー
+ル自体は llmesh import を持たず疎結合。
+
+### Done
+
+- `src/llive/idle/collab.py`:
+  - `CollabQuery(intent, query, metadata)` / `CollabResult(peer, success, payload, error, at)`
+  - `PeerClient = Callable[[str, CollabQuery], CollabResult]`
+  - `IdleCollaborator(detector, peer_provider, peer_client, *, max_peers_per_tick=3, cooldown_s=0)`
+    - `tick(query, *, now=None) -> TickReport`
+    - idle 判定 / peer 取得 / max_peers cap / cooldown / 例外捕捉 / timestamp 付与
+  - `TickReport(triggered, reason, results)` — reason は `"not_idle"` /
+    `"no_peers"` / `"max_peers_zero"` / `"cooldown"` / `"ok"`
+- テスト +10 件:
+  - not idle skip / peers 空 / dispatch / max_peers cap / cap=0 /
+    client 例外 / cooldown block / cooldown 解除 / timestamp 付与 /
+    empty-string peer フィルタ
+- **970 PASS / ruff clean / 回帰ゼロ** (960 + 10)
+- 9 軸進捗: APO ✓ / TLB ✓ / SIL ✓ / **ICP ✓ (C-14)**
+
+### 次セッション 着手宣言文 (v17)
+
+「9 軸 4 軸 (APO / TLB / SIL / ICP) production 化済。残り KAR / DTKR /
+RPAR / Math / PM。最も影響大は KAR (RAD 100 分野拡張) か RPAR
+(Robotic Process Automation realisation)。次セッションで選択。」
+
+---
+
 ## 2026-05-16 (続 12) — C-13: SILRunner (SIL × TLB integration)
 
 既存 `SelfInterrogator` (5 Interrogator) を **C-12 TLBCoordinator
