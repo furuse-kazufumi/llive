@@ -157,9 +157,9 @@ def apply_with_approval(
 
 
 __all__ = [
+    "Applier",
     "ApplyOutcome",
     "ApplyResult",
     "ApplyStatus",
-    "Applier",
     "apply_with_approval",
 ]
