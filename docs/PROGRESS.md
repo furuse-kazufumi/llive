@@ -6,6 +6,67 @@
 
 ---
 
+## 2026-05-16 (続 10) — C-11: APO applier reference + end-to-end test
+
+C-7〜C-10 が「proposal までは作る、適用は caller 側 hook」だった
+ところに、最も典型的な applier である **Diagnostics の threshold を
+動的更新する ThresholdRegistry** を reference 実装として追加。これで
+APO レーンが「Profiler → 自動 relax」までユニットテストで完走する。
+
+### Done
+
+- `src/llive/perf/registry.py`:
+  - `ThresholdRegistry(initial: Iterable[Threshold])`
+    - `register(threshold)` / `get(target)` / `snapshot()` /
+      `live_thresholds`
+    - `apply(mod: Modification)` — `Applier` 互換、未登録 target は
+      `KeyError` で fail-closed
+  - canonical target = `f"profiler.threshold.{metric}.{stat}"`
+    (`raise_threshold_strategy` の出力と一致)
+- テスト +6 件:
+  - 単体: canonical / register / apply / 未登録 reject
+  - **end-to-end test**: Profiler→Diagnostics→Optimizer→Verifier→
+    ApprovalBus→ThresholdRegistry を 1 round 回し、再診断で issue が
+    解消することを assert
+  - 安全側 end-to-end test: 12× の暴走 bump は Verifier 段で reject、
+    registry は不変
+- **939 PASS / ruff clean / 回帰ゼロ** (933 + 6)
+
+### APO レーン: 何でも動く最小 example
+
+```python
+from llive.perf import (
+    Profiler, Diagnostics, Threshold, ThresholdRegistry,
+    Optimizer, raise_threshold_strategy,
+    Verifier, default_invariants,
+    apply_with_approval,
+)
+from llive.approval.bus import ApprovalBus
+from llive.approval.policy import AllowList
+
+p = Profiler()
+# … runtime fills p …
+reg = ThresholdRegistry([Threshold("loop.tick.ms", "p95", max_value=200.0)])
+d   = Diagnostics(p, thresholds=reg.live_thresholds)
+opt = Optimizer(strategies=(raise_threshold_strategy(bump=1.3),))
+ver = Verifier(invariants=tuple(default_invariants()))
+bus = ApprovalBus(policy=AllowList({"apo.modify"}))
+
+result = apply_with_approval(
+    bus,
+    ver.verify(opt.propose(d.check())).accepted,
+    applier=reg.apply,
+)
+```
+
+### 次セッション 着手宣言文 (v14)
+
+「APO レーン C-7〜C-11 + reference applier 完了、end-to-end PASS。
+次は **別軸** (TLB Manifold Cache / SIL 強化 / ICP collaboration)
+or **D 章** (実機 / 大規模統合) へ。」
+
+---
+
 ## 2026-05-16 (続 9) — C-10: APO ApprovalBus 接続 (APO loop closure)
 
 C-7 Diagnostics → C-8 Optimizer → C-9 Verifier の出力を **C-1 ApprovalBus**
