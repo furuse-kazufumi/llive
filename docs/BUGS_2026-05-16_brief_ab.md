@@ -17,16 +17,27 @@ and "what llive does with it" is the entire delivery surface for v0.2.x.
 
 ### 🔴 CRITICAL — gap
 
-#### LLIVE-001 — no LLM backend wired into FullSenseLoop
-- **What:** `FullSenseLoop.process()` does no Ollama / LM Studio / vLLM call.
-  `_inner_monologue` is a string-format template.
-- **Impact:** Briefs cannot produce LLM-generated artifacts. The "self-evolving"
-  promise needs at least one LLM call per cycle.
-- **Reproduction:** `py -3.11 scripts/run_brief.py --json "<any brief>"` →
-  `thought.text` is `f"Observation about {source!r}: {content[:140]}… — novel territory, worth exploring."`
-- **Fix sketch:** add a `LLMBackend` protocol; default to `OllamaBackend`;
-  call it inside `_inner_monologue` with the salience + curiosity context.
-- **Estimated effort:** 1 day (skeleton + 1 Ollama adapter + offline-mock test).
+#### LLIVE-001 — no LLM backend wired into FullSenseLoop  *[CORRECTED + RESOLVED 2026-05-16]*
+- **Correction (re: implementation status):** The `llive.llm` module
+  already shipped `LLMBackend / OllamaBackend / AnthropicBackend /
+  OpenAIBackend / MockBackend` (Phase C-1.0). The original wording
+  "no LLM backend" was inaccurate — the backend layer existed; what was
+  missing was the **wiring** from `FullSenseLoop._inner_monologue` to
+  any of them. See `feedback_implementation_status_record` for the
+  4-tier status taxonomy that this episode produced.
+- **Status:** Wired in 2026-05-16 (this session). `FullSenseLoop(llm_backend=...)`
+  injection and `LLIVE_LLM_BACKEND=ollama:<model>` env opt-in both
+  available. Default (no env, no kwarg) keeps the rule-based template
+  path active — backward-compatible.
+- **Purity guard:** cloud backends (anthropic / openai / ...) refused
+  unless `LLIVE_ALLOW_CLOUD_BACKEND=1` is set. See
+  `feedback_llive_measurement_purity` for the measurement-design rationale.
+- **Tests added:** 9 (injection / fallback on raise / fallback on empty /
+  env-mock = template / env-anthropic refused / env-openai refused /
+  cloud override resolves / ollama path open).
+- **Empirical confirmation:** `LLIVE_LLM_BACKEND=ollama:llama3.2
+  py -3.11 scripts/run_brief.py --json "hi"` returns a real LLM thought
+  ("That's an unusual greeting...") instead of the template echo.
 
 #### LLIVE-002 — no Brief API (CLI / MCP) exposed
 - **What:** The only public entry point is `FullSenseLoop.process(Stimulus)` —
