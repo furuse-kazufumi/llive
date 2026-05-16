@@ -457,16 +457,17 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 | MATH-01 | Phase 10 | Pending | **1st** |
 | MATH-02 | Phase 10 | Pending | **2nd** |
 | MATH-05 | Phase 10 | Pending | **3rd** |
+| MATH-08 | Phase 10 | Pending | **4th (差別化)** |
 | MATH-03 | Phase 10 | Pending | MED |
 | MATH-04 | Phase 10 | Pending | MED |
 | MATH-06 | Phase 10 | Pending | MED |
 | MATH-07 | Phase 10 | Pending | MED |
 
 **Coverage (final):**
-- v0.7-vertical (Phase 10) MATH: 7 total
+- v0.7-vertical (Phase 10) MATH: 8 total (内 MATH-08 が差別化軸)
 - v0.8 (Phase 8) CABT: 7 total
 - v0.9 (Phase 9) CREAT: 5 total
-- Mapped to phases: 87 / 87 ✓
+- Mapped to phases: 88 / 88 ✓
 
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-17 — v0.7-vertical MATH (Math & Units Specialisation), v0.8 CABT, v0.9 CREAT*
+*Last updated: 2026-05-17 — v0.7-vertical MATH 8 件 (内蔵計算エンジン MATH-08 を差別化軸として明示), v0.8 CABT, v0.9 CREAT*
