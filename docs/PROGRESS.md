@@ -6,6 +6,38 @@
 
 ---
 
+## 2026-05-16 (続 12) — C-13: SILRunner (SIL × TLB integration)
+
+既存 `SelfInterrogator` (5 Interrogator) を **C-12 TLBCoordinator
+経由でキャッシュ** する thin facade を追加。同 stim/plan の再評価が
+1 round で済むようになり、idle re-tick や retry のコストを削減。
+
+### Done
+
+- `src/llive/fullsense/sil_runner.py`:
+  - `SILRunner(base: SelfInterrogator, coordinator: TLBCoordinator)`
+  - `run(stim, plan) -> tuple[InterrogationResult, ...]`
+  - `cache_key(stim, plan)` — content / source / epistemic_type /
+    decision / confidence をまとめて semantic_hash (16 hex)
+  - `stats()` — `{hits, misses, hit_rate}` で観測性
+  - ThoughtLayer = ``"SIL/interrogate"`` で coordinator stats に
+    1 行として現れる
+- テスト +7 件:
+  - 初回 miss / 反復 hit (`a is b is c` で identity 一致) /
+    decision 違い別エントリ (SI5 PROPOSE のみ発火) / stim 違い別
+    エントリ / cache_key 決定性 / stats empty / **coordinator 共有
+    で異なる runner 間でも cache hit**
+- **960 PASS / ruff clean / 回帰ゼロ** (953 + 7)
+- 9 軸進捗: APO ✓ (C-7〜C-11) / TLB ✓ (C-12) / **SIL ✓ (C-13)**
+
+### 次セッション 着手宣言文 (v16)
+
+「9 軸のうち APO + TLB + SIL が production 化済。残り SI 上位軸:
+ICP collab (idle×peer) / RPAR / DTKR / Math / PM / KAR。最も影響大は
+ICP (llmesh ↔ llive 連携) なので次セッションでこれを進める。」
+
+---
+
 ## 2026-05-16 (続 11) — C-12: TLB Coordinator (Thought Layer Bridge)
 
 既存 ManifoldCache (LRU) の上に **per-layer coordinator** を載せ、
