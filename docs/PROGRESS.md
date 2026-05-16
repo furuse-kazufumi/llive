@@ -6,6 +6,60 @@
 
 ---
 
+## 2026-05-16 (続 14) — LLIVE-002: Brief API end-to-end + progressive validation matrix
+
+NEXT_SESSION.md の Priority 1 を完走。`docs/proposals/brief_api_design.md`
+で設計したまま Step 1〜7 を一気に実装し、CLI / MCP / Ledger / Approval gate /
+Tool whitelist を含むフルパスを通した。並行して
+`feedback_benchmark_progressive_tokens` + `feedback_llive_measurement_purity`
+に従って on-prem 限定 progressive matrix を回し、Brief API の overhead
+が < 1% であることを実測。
+
+### Done
+
+- `src/llive/brief/`:
+  - `types.py` — `Brief` (frozen dataclass + validation) / `BriefStatus` /
+    `BriefResult` / `BriefValidationError` / `brief_to_dict`
+  - `loader.py` — `loads_brief` / `load_brief` (YAML, unknown-key 拒否,
+    EpistemicType / Path / list 強制)
+  - `ledger.py` — `BriefLedger` (append-only JSONL, replay-friendly meta) +
+    `default_ledger_path` (env: `LLIVE_BRIEF_LEDGER_DIR`)
+  - `runner.py` — `BriefRunner.submit(brief) -> BriefResult` 全 7 ステップ
+    (Stimulus 変換 / 全 stage 記録 / 決定書き出し / Approval gate /
+    Tool whitelist + 実行 / outcome)
+- `src/llive/cli/main.py` — `llive brief submit` (file or `--goal`) /
+  `llive brief ledger <id>` (JSON or rich table)
+- `src/llive/mcp/tools.py` — `tool_submit_brief` + `dispatch` + describe schema
+- `scripts/bench_progressive.py` — xs/s/m/l/xl × multi-model matrix runner
+  (debug=True で `llm_elapsed_ms` まで採取、`matrix.json` + `summary.md` 自動生成)
+- テスト +46 件 (24 schema + 12 runner + 6 CLI + 4 MCP) すべて PASS
+- **926 → 936 PASS / 回帰ゼロ**
+- 9 軸進捗: APO / TLB / SIL / ICP に加え、Brief を通した **外部 → loop
+  完結フロー** が成立 (NEXT_SESSION Priority 1 close)
+
+### 実測 (xs/s × {llama3.2:3b, qwen2.5:7b, qwen2.5:14b}, on-prem only)
+
+| model         | xs ms (cold)  | s ms          | LLM-only / Wall |
+|---------------|---------------|---------------|-----------------|
+| llama3.2:3b   | 8 908         | 43 978        | > 99.8 %        |
+| qwen2.5:7b    | 59 447        | 94 158        | > 99.9 %        |
+| qwen2.5:14b   | 121 560       | 122 160       | > 99.9 %        |
+
+- 全 6 セルで decision = `note` → loop は token 圧力に対し安定
+- LLM-only ≈ Wall → Brief API + loop の overhead < 1%
+- thought_chars は 222〜494 と大きく変動 (モデル品質 × サイズの効き)
+
+### 次セッション 着手宣言文 (v18)
+
+「Brief API は CLI/MCP/Ledger/Approval/Tool まで完成。次は (a) m/l/xl の
+追加 progressive run で token-pressure 曲線を埋める、(b) Brief から
+loop.tools を経由した実際の自動 tool 起動 (現在は plan に tools が乗らない
+ので validation スコープ外) を loop 側で実装、(c) llove ↔ Brief の双方向
+バインディング、(d) ProductionOutputBus + @govern の C-2 切替。残り KAR /
+DTKR / RPAR / Math / PM。」
+
+---
+
 ## 2026-05-16 (続 13) — C-14: ICP IdleCollaborator MVP
 
 idle 中に peer Local LLM (llmesh 経由想定) に問い合わせる scheduler 層
