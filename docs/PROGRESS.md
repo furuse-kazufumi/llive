@@ -6,6 +6,62 @@
 
 ---
 
+## 2026-05-17 — v0.7-vertical MATH + v0.8 CABT + v0.9 CREAT 要件追加 + 進捗
+
+ユーザー指示「LLMBackend 内製・最適化 (TRIZ × コーパス)」「数学・単位特化」
+「計算機能内蔵」「Transformer ブロック高度化」「人間の思考流れ KJ法/MindMap/
+TRIZ」を要件として一気に取り込み。
+
+### Done
+
+- **REQUIREMENTS.md** に v0.7-vertical (MATH-01〜08, 8 件) + v0.8 (CABT-01〜07,
+  7 件) + v0.9 (CREAT-01〜05, 5 件) を追加。合計 20 件の新規 FR
+- **ROADMAP.md** に Phase 8 (CABT) / Phase 9 (CREAT) を追加
+- **S1 BriefGrounder** (L1 grounding) 実装完了 — TRIZ + RAD の citation を
+  ledger に固定記録、precision-first 設計、`LLIVE_DISABLE_RAD_GROUNDING=1`
+  で CI/unit テストの bootstrap 回避
+- **S2 設計 doc** — `docs/proposals/cabt-01_reference_attention.md` 完成
+  (HFAdapter forward hook で attention 出力に metadata bias 加算、6 列
+  metadata 設計)
+- **MATH-01 minimal skeleton** — `src/llive/math/units.py` で SI 7 基本単位 +
+  頻出派生単位 (N / J / W / Pa / Hz / C / V / ohm)、`Dimensions` 演算 +
+  `Quantity` 加減算で unit mismatch を raise、`parse_unit("m/s")` parser
+- **MATH-08 内蔵計算エンジン (差別化軸最大)** — `src/llive/math/calculator.py`
+  に AST visitor `SafeCalculator` (whitelist 関数 + 定数 + 0 除算検出 +
+  attribute access reject)。`extract_expressions()` で自由テキストから式抽出
+- **テスト 67 件追加** — grounding 13 + math_units 22 + math_calculator 24 +
+  num_ctx 2 + l/xl 関連調整。**951 → 998 PASS / 回帰ゼロ**
+- **progressive matrix 5×3** — xs/s/m/l/xl × {llama3.2:3b, qwen2.5:7b, qwen2.5:14b}
+  完走、`docs/benchmarks/2026-05-16-progressive-full/summary.md`
+
+### 実測サマリ (Brief API → FullSenseLoop, on-prem only)
+
+| model         | xs (cold) | s     | m     | l       | xl (timeout) |
+|---------------|-----------|-------|-------|---------|--------------|
+| llama3.2:3b   | 8.9 s     | 44 s  | 89 s  | 458 s   | 1202 s ⌛    |
+| qwen2.5:7b    | 59 s      | 94 s  | 122 s | 723 s   | 1202 s ⌛    |
+| qwen2.5:14b   | 122 s     | 122 s | 122 s | 1202 s⌛ | 1202 s ⌛    |
+
+- 全 15 セルで **decision = `note`** → loop は token 圧力に対し完全 stable
+- LLM-only ≈ Wall → Brief API + loop overhead < 1 % (全セル維持)
+- xl は timeout=1200s が cap、より長 timeout もしくは smaller models 推奨
+- 14b は m から thought_chars=222 で plateau (出力 truncate 境界)
+
+### llive vs 素の OSS LLM (Qwen / Llama / Mistral / ...) の比較表
+
+`docs/index.md` / `README.md` / `D:/projects/fullsense/docs/comparison.md`
+の 3 箇所に同型表を配置。10 軸 (推論コア / 記憶 / 意思決定 / 入力契約 / 安全 /
+監査 / 自己進化 / アイデア源 / HITL / 産業 IoT) で差別化を明示。
+
+### 次セッション 着手宣言文 (v19)
+
+「v0.7-vertical MATH の最優先 (MATH-01, MATH-08) の最小実装は完了。次は
+(a) BriefGrounder に SafeCalculator を統合して calc citation を ledger に
+記録、(b) MATH-05 CODATA 辞書を RAD metrology に append、(c) S2 CABT-01
+HFAdapter forward hook の試作。CREAT-01 KJ法ノードは Phase 9 まで待機。」
+
+---
+
 ## 2026-05-16 (続 14) — LLIVE-002: Brief API end-to-end + progressive validation matrix
 
 NEXT_SESSION.md の Priority 1 を完走。`docs/proposals/brief_api_design.md`
