@@ -134,6 +134,7 @@ class FullSenseLoop:
         known_corpus: set[str] | None = None,
         sandbox: bool = True,
         llm_backend: LLMBackend | None = None,
+        debug: bool = False,
     ) -> None:
         if not sandbox:
             raise ValueError(
