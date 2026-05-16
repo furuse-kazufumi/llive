@@ -10,8 +10,10 @@ Sandbox = 外向け副作用一切なし。**OUTPUT BUS は :class:`SandboxOutpu
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from llive.fullsense.sandbox import SandboxOutputBus, SandboxRecord
 from llive.fullsense.scorer import EgoAltruismScorer
@@ -21,6 +23,20 @@ from llive.fullsense.types import (
     Stimulus,
     Thought,
 )
+
+if TYPE_CHECKING:
+    from llive.llm import LLMBackend
+
+
+class BackendConfigurationError(ValueError):
+    """Raised when a cloud LLM backend is configured on FullSenseLoop without
+    the explicit ``LLIVE_ALLOW_CLOUD_BACKEND=1`` override.
+
+    Default policy keeps llive measurements pure: the loop only consults
+    on-prem (ollama) backends, so the llive contribution can be cleanly
+    separated from cloud-model contribution in benchmarks. Override only
+    when you deliberately want to wrap a cloud model inside the FullSense
+    pipeline."""
 
 # ---------------------------------------------------------------------------
 # Internal helpers
