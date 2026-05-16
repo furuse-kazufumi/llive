@@ -1,8 +1,11 @@
 # Proposal — Brief API + LLM Backend (LLIVE-001 / LLIVE-002)
 
-> **Status:** draft (2026-05-16). Not yet implemented. Captures the design
-> the maintainer agreed to after the A/B run that produced
-> `docs/BUGS_2026-05-16_brief_ab.md`.
+> **Status:** implemented (2026-05-16, same day). All 7 steps closed in one
+> session — see `src/llive/brief/`, `llive brief submit|ledger`,
+> `submit_brief` MCP tool, and `docs/benchmarks/2026-05-16-progressive-xss/`
+> for the validation matrix that confirms Brief-API overhead < 1 % of LLM
+> wall time. The draft below is preserved as the design record; deviations
+> from the plan are noted inline with `[impl note]`.
 
 ## Why
 
