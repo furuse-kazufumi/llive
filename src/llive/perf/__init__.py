@@ -14,10 +14,10 @@ from llive.perf.diagnostics import (
     Threshold,
 )
 from llive.perf.governance import (
+    Applier,
     ApplyOutcome,
     ApplyResult,
     ApplyStatus,
-    Applier,
     apply_with_approval,
 )
 from llive.perf.optimizer import (
@@ -42,6 +42,10 @@ from llive.perf.verifier import (
 )
 
 __all__ = [
+    "Applier",
+    "ApplyOutcome",
+    "ApplyResult",
+    "ApplyStatus",
     "Diagnostics",
     "InvariantCheck",
     "Issue",
@@ -57,6 +61,7 @@ __all__ = [
     "Threshold",
     "VerificationResult",
     "Verifier",
+    "apply_with_approval",
     "bounded_step",
     "default_invariants",
     "load_reduction_only",
