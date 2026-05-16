@@ -101,6 +101,8 @@ class Optimizer:
         )
         proposals: list[Modification] = []
         for issue in ranked:
+            if len(proposals) >= self.max_modifications:
+                break
             mod: Modification | None = None
             for strat in self.strategies:
                 mod = strat(issue)
