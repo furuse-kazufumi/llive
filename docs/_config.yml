@@ -26,6 +26,8 @@ search:
   rel_url: true
   button: false
 heading_anchors: true
+mermaid:
+  version: "10.9.0"
 aux_links:
   "GitHub":
     - "https://github.com/furuse-kazufumi/llive"
