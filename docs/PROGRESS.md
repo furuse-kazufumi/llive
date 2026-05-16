@@ -6,6 +6,45 @@
 
 ---
 
+## 2026-05-16 (続 11) — C-12: TLB Coordinator (Thought Layer Bridge)
+
+既存 ManifoldCache (LRU) の上に **per-layer coordinator** を載せ、
+多視点並列 (SI2 three-experts / multi-track / peer mesh) で同一入力が
+N レーンに来た時の指数爆発を ``N×compute → 1×compute + (N-1)×cache_hit``
+に抑制。
+
+### Done
+
+- `src/llive/fullsense/bridges/tlb.py`:
+  - `ThoughtLayer(name, namespace="")` — 識別子 (immutable / hashable)
+  - `LayerStats(hits, misses, last_key)` — `.hit_rate` / `.total`
+  - `TLBCoordinator(cache=ManifoldCache())`:
+    - `query(layer, input_key, computer)` — thread-safe gate、computer
+      呼出は lock 外 (長時間処理が直列化しない)
+    - `invalidate(layer, input_key)` / `stats()` / `reset()`
+    - composite key = `f"{layer.id}::{input_key}"`
+    - **first-write-wins**: 並行 thread が同 key を打つと computer は 1 度のみ
+  - `FanOut(coordinator, pairs)` — 同入力 → N layer の dispatch、各 result を
+    `{layer.id: result}` で返す
+- テスト +14 件:
+  - composite key / 初回 miss / 反復 hit / 異 layer 分離 / invalidate /
+    reset / namespace / 例外伝播 (キャッシュしない) / cache capacity 共有 /
+    FanOut dispatch / FanOut cache 再利用 / **20-thread contention 下で
+    first-write-wins** / semantic_hash 再 export / LayerStats 空
+- **953 PASS / ruff clean / 回帰ゼロ** (939 + 14)
+- 細かい trap: ManifoldCache は `__len__` 持ち → `cache or default()` だと
+  空 cache が falsy になるので `is not None` で初期化
+
+### 次セッション 着手宣言文 (v15)
+
+「APO レーン (C-7〜C-11) + TLB Coordinator (C-12) production 化。
+残り 9 軸は SIL 強化 / ICP collab / RPAR / DTKR / Math / PM / KAR。
+APO + TLB が「自己進化の 1 + 並列思考」の 2 軸を押さえたので、
+次は ICP (idle 時の peer 協調) か SIL 5-Interrogator の完全実装に
+進むのが筋。」
+
+---
+
 ## 2026-05-16 (続 10) — C-11: APO applier reference + end-to-end test
 
 C-7〜C-10 が「proposal までは作る、適用は caller 側 hook」だった
