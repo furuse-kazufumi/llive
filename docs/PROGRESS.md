@@ -6,6 +6,49 @@
 
 ---
 
+## 2026-05-16 (続 9) — C-10: APO ApprovalBus 接続 (APO loop closure)
+
+C-7 Diagnostics → C-8 Optimizer → C-9 Verifier の出力を **C-1 ApprovalBus**
+に gate して、APPROVED のみ applier callback で実行。APO 自己進化
+ループ全層 (measurement → diagnosis → optimisation → pre-check →
+governance → application) が production 化。
+
+### Done
+
+- `src/llive/perf/governance.py`:
+  - `apply_with_approval(bus, mods, applier, *, principal="apo", action="apo.modify")`
+  - `ApplyOutcome(modification, status, verdict, request_id, reason)`
+  - `ApplyResult(outcomes)` + `.applied` / `.denied` / `.errors` view
+  - applier 例外は ``status="applier_error"`` に捕捉 (raise しない)
+  - payload は target / current / proposed / delta / rationale を全部運ぶ
+- テスト +7 件 (auto-approve / auto-deny / pending=silence / applier 例外 /
+  payload 形 / principal+action override / empty)
+- **933 PASS / ruff clean / 回帰ゼロ** (926 + 7)
+
+### APO レーン全層完成図 (2026-05-16 末時点)
+
+```
+Profiler (C-skeleton)
+   ↓ snapshot
+Diagnostics (C-7) — threshold + regression → Issue
+   ↓ issues
+Optimizer (C-8) — strategies × bounds × cap → Modification (proposed)
+   ↓ proposals
+Verifier (C-9) — invariants × default pack → VerificationResult.accepted
+   ↓ accepted
+ApprovalBus glue (C-10) — request("apo.modify", payload) → APPROVED only
+   ↓
+applier(mod) — domain-specific mutation (caller-provided)
+```
+
+### 次セッション 着手宣言文 (v13)
+
+「APO レーン (C-7〜C-10) 完了。次は **別軸 production 化** (TLB
+Manifold Cache / SIL 5-Interrogator / ICP Idle Collaboration) もしくは
+APO の applier 側 reference impl (Profiler 閾値の動的更新等) へ。」
+
+---
+
 ## 2026-05-16 (続 8) — C-9: APO Verifier (§E3 formal pre-check)
 
 Optimizer (C-8) → ApprovalBus (C-1) の **間** に挟まる最後の pure gate。
