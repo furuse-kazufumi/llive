@@ -251,6 +251,18 @@ class BriefRunner:
                         }
                         for u in grounded.units
                     ],
+                    "constants": [
+                        {
+                            "matched_alias": c.matched_alias,
+                            "name": c.name,
+                            "symbol": c.symbol,
+                            "value": c.value,
+                            "dimensions": c.dimensions,
+                            "relative_uncertainty": c.relative_uncertainty,
+                            "source": c.source,
+                        }
+                        for c in grounded.constants
+                    ],
                     "augmented_goal_chars": len(grounded.augmented_goal),
                 },
             )
