@@ -39,6 +39,7 @@ class EpistemicType(StrEnum):
     NORMATIVE = "normative"        # 倫理判断 (§F5 ethical 優先)
     INTERPRETIVE = "interpretive"  # 歴史認識など perspective-dependent
     PRAGMATIC = "pragmatic"        # 建前 / 社交 (audience-aware framing)
+    MATHEMATICAL = "mathematical"  # MATH-07: 数学的命題 (Z3/Sympy で deterministic 検証)
     RESERVED_1 = "reserved_1"
     RESERVED_2 = "reserved_2"
     RESERVED_3 = "reserved_3"
