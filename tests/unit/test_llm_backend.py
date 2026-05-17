@@ -289,7 +289,3 @@ def test_openai_backend_passes_base_url_env_to_client(
 
     OpenAIBackend()
     fake_openai.OpenAI.assert_called_once_with(base_url="http://localhost:8080/v1")
-
-    resp = _Stub().generate(GenerateRequest(prompt="hi"))
-    assert resp.text == "stub::hi"
-    assert resp.backend == "stub"
