@@ -16,7 +16,12 @@ from llive.brief import (
     GroundedBrief,
     GroundingConfig,
 )
-from llive.brief.grounding import CalcCitation, RadCitation, TrizCitation
+from llive.brief.grounding import (
+    CalcCitation,
+    RadCitation,
+    TrizCitation,
+    UnitCitation,
+)
 from llive.fullsense.loop import FullSenseLoop
 
 
