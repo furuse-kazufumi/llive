@@ -154,6 +154,10 @@ class BriefLedger:
                 # VRB-02 — promptlint hits land as evidence so audit can see
                 # "this Brief was reviewed at submission time and yielded N hits".
                 evidence.append({"kind": "lint", **r.payload})
+            elif r.event == "premortem_generated":
+                # VRB-04 — formal failure scenarios. Marked as evidence so the
+                # audit trail shows the Brief was pre-mortem'd before action.
+                evidence.append({"kind": "premortem", **r.payload})
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored", "oka_strategy_switched"}:
