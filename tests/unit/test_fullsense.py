@@ -168,6 +168,27 @@ def test_loop_low_surprise_yields_silent() -> None:
     assert res.stages["salience"]["pass"] is False
 
 
+def test_loop_silent_path_populates_stage_placeholders() -> None:
+    """LLIVE-007 fix: SILENT cycles still expose every stage key.
+
+    Even when the salience gate short-circuits, downstream stages
+    (curiosity / thought / ego_score / altruism_score) MUST appear in
+    ``res.stages`` as ``None`` so A/B diff tooling can iterate keys
+    without conditional guards.
+    """
+    loop = FullSenseLoop(salience_threshold=0.9)
+    res = loop.process(Stimulus(content="trivial", surprise=0.1))
+    assert res.plan.decision == ActionDecision.SILENT
+    for key in ("salience", "curiosity", "thought", "ego_score", "altruism_score"):
+        assert key in res.stages, f"key {key!r} missing on SILENT cycle"
+    # salience must still carry the real gate result; the rest are placeholders
+    assert res.stages["salience"]["pass"] is False
+    assert res.stages["curiosity"] is None
+    assert res.stages["thought"] is None
+    assert res.stages["ego_score"] is None
+    assert res.stages["altruism_score"] is None
+
+
 def test_loop_high_surprise_traverses_all_stages() -> None:
     loop = FullSenseLoop(
         salience_threshold=0.3,
