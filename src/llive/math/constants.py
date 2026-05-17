@@ -45,7 +45,7 @@ class PhysicalConstant:
             "name": self.name,
             "symbol": self.symbol,
             "value": self.quantity.value,
-            "unit": self.quantity.dimensions.symbol,
+            "dimensions": str(self.quantity.dimensions),
             "relative_uncertainty": self.relative_uncertainty,
             "source": self.source,
             "aliases": list(self.aliases),
