@@ -131,8 +131,8 @@ _CODATA_MEASURED: tuple[PhysicalConstant, ...] = (
         quantity=_q(6.67430e-11, "m^3/kg/s^2"),
         relative_uncertainty=2.2e-5,
         source="CODATA 2022",
-        aliases=("G", "gravitation", "big_g"),
-        description="万有引力定数 (CODATA 2022 推奨値)",
+        aliases=("gravitation", "big_g"),
+        description="万有引力定数 (CODATA 2022 推奨値). 注: 'G' は symbol 経由で lookup 可、'g' (小文字) は standard_gravity を指す",
     ),
     PhysicalConstant(
         name="electron_mass", symbol="m_e",
