@@ -179,6 +179,35 @@ def test_extract_ignores_pure_numbers() -> None:
     assert exprs == []
 
 
+def test_extract_scientific_notation_in_parens() -> None:
+    """Regression: '(1.38e-23 * 300)' was being captured as '23 * 300'.
+
+    Surfaced by docs/benchmarks/2026-05-17-grounding-observation. The
+    extractor must treat scientific-notation numbers as a single atom.
+    """
+    text = "Compare with (1.38e-23 * 300) for kT at 300 K."
+    exprs = extract_expressions(text)
+    # The intact expression must be present, NOT the truncated form
+    assert any("1.38e-23 * 300" in e for e in exprs)
+    assert not any(e.strip() == "23 * 300" for e in exprs)
+
+
+def test_extract_scientific_notation_bare() -> None:
+    text = "Estimate 6.022e23 * 1.5 molecules."
+    exprs = extract_expressions(text)
+    assert any("6.022e23 * 1.5" in e for e in exprs)
+
+
+def test_extract_scientific_evaluates_correctly() -> None:
+    """The bigger payoff: extract → evaluate must produce the right number."""
+    calc = SafeCalculator()
+    text = "(1.38e-23 * 300)"
+    exprs = extract_expressions(text)
+    assert exprs, "scientific-notation expression should be extracted"
+    r = calc.evaluate(exprs[0])
+    assert r.value == pytest.approx(1.38e-23 * 300)
+
+
 # ---------------------------------------------------------------------------
 # End-to-end: extract → evaluate → grounded result
 # ---------------------------------------------------------------------------
