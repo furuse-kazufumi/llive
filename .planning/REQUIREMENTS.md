@@ -563,6 +563,10 @@ agent, evolution scheduler) が機械的に消費できる。
 | COG-03 | Phase 4 (v1.0) | **Implemented** (2026-05-17) | MED |
 | COG-04 | Phase 9 (CREAT 後) | **Implemented** (2026-05-17, with CREAT-04) | LOW |
 | CREAT-04 | Phase 9 | **Implemented** (2026-05-17, with COG-04) | — |
+| CREAT-01 | Phase 9 | **Implemented** (2026-05-17) | — |
+| CREAT-02 | Phase 9 | **Implemented** (2026-05-17) | — |
+| CREAT-03 | Phase 9 | **Implemented** (2026-05-17) | — |
+| CREAT-05 | Phase 9 | **Implemented** (2026-05-17) | — |
 
 **COG-04 + CREAT-04 統合実装ノート (2026-05-17)**: 「4 roles (architect/critic/
 executor/auditor) × 6 hats (white/red/black/yellow/green/blue) = 10 視点」を
