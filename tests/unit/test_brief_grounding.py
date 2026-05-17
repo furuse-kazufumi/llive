@@ -376,3 +376,86 @@ def test_runner_records_calc_in_ledger(tmp_path: Path) -> None:
     assert calc_payload[0]["value"] == pytest.approx(14.0)
     assert calc_payload[0]["error"] is None
     assert calc_payload[0]["operation_count"] >= 2
+
+
+# ---------------------------------------------------------------------------
+# MATH-01 — value + unit grounding (minimal layer)
+# ---------------------------------------------------------------------------
+
+
+def test_grounder_recognises_known_units() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(
+        brief_id="b1",
+        goal="design a drone that maintains 5 m/s during a 30 s window at 100 kg payload",
+    )
+    grounded = grounder.ground(brief)
+    raws = {u.raw_text for u in grounded.units}
+    assert "5 m/s" in raws
+    assert "30 s" in raws
+    assert "100 kg" in raws
+    # Successful entries carry parsed dimensions, no error
+    for u in grounded.units:
+        if u.raw_text in {"5 m/s", "30 s", "100 kg"}:
+            assert u.error is None
+    assert "[Quantities recognised (MATH-01)]" in grounded.augmented_goal
+
+
+def test_grounder_surfaces_unknown_units_as_errors() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(brief_id="b1", goal="ship in 5 days with 2 pages each")
+    grounded = grounder.ground(brief)
+    # both matches should appear as errored citations (parser doesn't know
+    # "days" or "pages" yet) — kept so the auditor can spot the gap
+    raws = {u.raw_text for u in grounded.units}
+    assert "5 days" in raws or "2 pages" in raws
+    errored = [u for u in grounded.units if u.error is not None]
+    assert errored, "unknown units should be kept as error citations, not silently dropped"
+
+
+def test_grounder_respects_max_units_cap() -> None:
+    grounder = BriefGrounder(
+        principles=_PRINCIPLE_INDEX,
+        config=GroundingConfig(max_units=2),
+    )
+    brief = Brief(
+        brief_id="b1",
+        goal="quantities: 1 m, 2 kg, 3 s, 4 A, 5 K, 6 mol",
+    )
+    grounded = grounder.ground(brief)
+    assert len(grounded.units) <= 2
+
+
+def test_grounder_no_units_when_no_quantities() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(brief_id="b1", goal="discuss the architecture rationale")
+    grounded = grounder.ground(brief)
+    assert grounded.units == ()
+
+
+def test_unit_citation_is_frozen() -> None:
+    u = UnitCitation(raw_text="5 m/s", value=5.0, unit_text="m/s", dimensions="m·s^-1")
+    with pytest.raises(Exception):
+        u.value = 99.0  # type: ignore[misc]
+
+
+def test_runner_records_units_in_ledger(tmp_path: Path) -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    runner = BriefRunner(
+        loop=FullSenseLoop(sandbox=True, salience_threshold=0.0),
+        grounder=grounder,
+    )
+    brief = Brief(
+        brief_id="units-1",
+        goal="verify the gravitational acceleration of 9.81 m/s^2 fits the constraints",
+        approval_required=False,
+        ledger_path=tmp_path / "units-1.jsonl",
+    )
+    runner.submit(brief)
+    records = list(BriefLedger(brief.ledger_path).read())  # type: ignore[arg-type]
+    grounding = next(r for r in records if r.event == "grounding_applied")
+    units_payload = grounding.payload["units"]
+    assert any(p["raw_text"] == "9.81 m/s^2" for p in units_payload)
+    grav = next(p for p in units_payload if p["raw_text"] == "9.81 m/s^2")
+    assert grav["error"] is None
+    assert "m" in grav["dimensions"] and "s" in grav["dimensions"]
