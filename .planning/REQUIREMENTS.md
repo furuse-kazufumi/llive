@@ -455,7 +455,16 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 | FR | Phase | Status | Priority |
 |---|---|---|---|
 | MATH-01 | Phase 10 | Pending | **1st** |
-| MATH-02 | Phase 10 | Pending | **2nd** |
+| MATH-02 | Phase 10 | **Implemented** (2026-05-17) | **2nd** |
+
+**MATH-02 実装ノート (2026-05-17)**: `src/llive/math/verifier.py` に `MathVerifier`
++ `VerificationResult` を新規実装。3 メソッド (check_equivalence / check_implication
+/ check_satisfiable) を提供し、Sympy で代数等価、Z3 で含意・SAT/UNSAT を決定論的に
+検証。**トレーサビリティ重視設計**: `MathVerifier(ledger=...)` で attach すると
+全 check が ledger に `math_verified` event として自動記録、`BriefLedger.trace_graph()`
+の `evidence_chain` に `kind="math"` (+ `check_kind`) として COG-03 と統合される。
+sympy>=1.12, z3-solver>=4.13 を required dependency に昇格。テスト 16 件追加
+(verifier 12 + traceability 4)、1034 → 1052 PASS / 回帰ゼロ。
 | MATH-05 | Phase 10 | Pending | **3rd** |
 | MATH-08 | Phase 10 | Pending | **4th (差別化)** |
 | MATH-03 | Phase 10 | Pending | MED |
