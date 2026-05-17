@@ -549,10 +549,21 @@ agent, evolution scheduler) が機械的に消費できる。
 
 | FR | Phase | Status | Priority |
 |---|---|---|---|
-| COG-01 | Phase 4 (v1.0) | Pending | MED |
-| COG-02 | Phase 4 (v1.0) | Pending | **HIGH** |
-| COG-03 | Phase 4 (v1.0) | Pending | MED |
-| COG-04 | Phase 9 (CREAT 後) | Pending | LOW |
+| COG-01 | Phase 4 (v1.0) | **Implemented** (2026-05-17) | MED |
+| COG-02 | Phase 4 (v1.0) | **Implemented** (2026-05-17) | **HIGH** |
+| COG-03 | Phase 4 (v1.0) | **Implemented** (2026-05-17) | MED |
+| COG-04 | Phase 9 (CREAT 後) | **Implemented** (2026-05-17, with CREAT-04) | LOW |
+| CREAT-04 | Phase 9 | **Implemented** (2026-05-17, with COG-04) | — |
+
+**COG-04 + CREAT-04 統合実装ノート (2026-05-17)**: 「4 roles (architect/critic/
+executor/auditor) × 6 hats (white/red/black/yellow/green/blue) = 10 視点」を
+直交軸として 1 つの `RoleBasedMultiTrack` に集約。`src/llive/brief/roles.py`
+に deterministic heuristic で 10 lens を実装し、`PerspectiveLens` Protocol で
+後段 LLM-as-judge / 並列 sub-Brief に Strategy 差し替え可能。Approval は行わず
+scoring 専念 (Governance と同じ責務分離)。Runner に opt-in 注入、`perspectives_observed`
+ledger event + `BriefResult.perspectives` / `perspective_summary` 拡張。
+`MultiTrackSummary.consensus_recommendation` で `proceed` / `review` / `hold`
+の short verdict を出すが gating ではなく示唆。テスト 20 件追加、1014 → 1034 PASS。
 
 **Coverage (final):**
 - v0.7-vertical (Phase 10) MATH: 8 total
