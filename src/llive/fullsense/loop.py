@@ -409,8 +409,13 @@ class FullSenseLoop:
             f"propose actions yet -- this is internal monologue only."
         )
 
-    def _score_thought(self, thought: Thought) -> tuple[float, float]:
-        return self.scorer.score(thought)
+    def _score_thought(
+        self,
+        thought: Thought,
+        *,
+        brief_content: str = "",
+    ) -> tuple[float, float]:
+        return self.scorer.score(thought, brief_content=brief_content)
 
     def _decide_action(
         self,
