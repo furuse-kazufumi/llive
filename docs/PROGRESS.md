@@ -6,6 +6,57 @@
 
 ---
 
+## 2026-05-17 (5 回目) — OKA-FX 着地 (岡潔の数学観 → 最小プロトタイプ)
+
+ユーザー指示「岡潔の視点を踏まえた数学 LLM 進化提案」を受け、OKA-FX 10 件を
+要件化 + OKA-01〜04 を最小プロトタイプで実装。MathVerifier の BriefRunner
+opt-in 統合も同セッション内で完了。
+
+### Done
+
+- **MathVerifier ↔ BriefRunner 統合** (前段)
+  - `MathVerifier.bind_ledger(ledger)` 追加
+  - `BriefRunner(math_verifier=mv)` で attach、submit 内で per-Brief ledger に bind
+  - tests/unit/test_brief_runner_verifier.py 4 件
+- **OKA-FX 要件追加** — `.planning/REQUIREMENTS.md` に v0.7-vertical+OKA セクション。
+  10 件 (OKA-01〜10)、中核仮説 → 設計マッピング、フェーズ別 priority
+- **OKA-01〜04 最小プロトタイプ**:
+  - `src/llive/oka/essence.py` — `CoreEssenceExtractor` + 3 lens (mystery/invariants/symmetries)
+    + `EssenceLens` Protocol で LLM lens 差し替え可能
+  - `src/llive/oka/notebook.py` — `ReflectiveNotebook` (JSONL append-only)。
+    5 note kinds + `find` / `related_to` で cross-Brief 再利用
+  - `src/llive/oka/orchestrator.py` — `StrategyOrchestrator`。戦略ファミリー登録 +
+    停滞検知 (window 内 max-min Δ < stall_delta) + deterministic `StrategySwitchEvent`
+- **トレーサビリティ統合** — 3 つすべて `bind_ledger()` パターンで BriefLedger に attach。
+  COG-03 trace_graph 拡張:
+  - `oka_essence_extracted` → evidence_chain (kind="oka_essence")
+  - `oka_notebook_appended` → evidence_chain (kind="oka_note" + note_kind 退避)
+  - `oka_strategy_switched` → decision_chain
+- **テスト 25 件追加** (verifier-runner 4 + essence 5 + notebook 7 + orchestrator 9):
+  **1054 → 1077 PASS / 回帰ゼロ**
+
+### llive 全 vertical 進捗
+
+| 系 | 状態 |
+|---|---|
+| MATH-01/02/08 | 実装済 (units / verifier / calculator) |
+| OKA-01/02/03/04 | **実装済 (今回)** |
+| COG-01〜04 + CREAT-04 | 実装済 (前回) |
+| CABT-01 (S2) | Pending (torch 依存) |
+| CREAT-01 (KJ法) | Pending |
+| 現実接続 (10 因子 #10) | Phase 4 待ち |
+
+### 次セッション候補
+
+1. **OKA-05 再定式化コーパス** — RAD `mathematics` / `metrology` から異表現抽出
+2. **OKA-06 Explanation Alignment** — 解答 + 「なぜ自然か」テンプレ + 納得感報酬
+3. **OKA + BriefRunner 統合** — Brief 開始時に自動 essence 抽出 / 停滞時 notebook 自動 append
+4. **OKA-03 × MathVerifier 協調** — 数式書き換え戦略内で等価性即時検証
+5. **横断 metadata schema migration** (繰越)
+6. **MATH-05 CODATA / NIST 物理定数辞書**
+
+---
+
 ## 2026-05-17 (4 回目) — MATH-02 Z3/Sympy 検証層 + 9 因子 E2E ハーネス
 
 ユーザー指示「トレーサビリティの確保を気にしながら、実装を進めてください」を
