@@ -150,6 +150,10 @@ class BriefLedger:
                 entry["note_kind"] = entry.pop("kind", "")
                 entry["kind"] = "oka_note"
                 evidence.append(entry)
+            elif r.event == "lint_findings_recorded":
+                # VRB-02 — promptlint hits land as evidence so audit can see
+                # "this Brief was reviewed at submission time and yielded N hits".
+                evidence.append({"kind": "lint", **r.payload})
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored", "oka_strategy_switched"}:
