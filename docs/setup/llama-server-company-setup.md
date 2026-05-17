@@ -114,9 +114,10 @@ D:\llm\bin\llama-server.exe `
 | `--model <path.gguf>` | model ファイル指定 (必須) |
 | `--port 8080` | listen port (default 8080) |
 | `--ctx-size 8192` | context 長 (default 512 だと llive で短すぎる、8192+ 推奨) |
-| `--n-gpu-layers <N>` | GPU offload 層数. NVIDIA で `-1` を渡すと全層 GPU |
+| `--n-gpu-layers <N>` | GPU offload 層数. 全層 GPU offload したい場合は十分大きい数 (`99` 等) を渡す慣習. 古いビルドでは `-1` も全層を意味したが、b8864 系では `99` が安全 |
 | `--host 0.0.0.0` | LAN 内別ホストから接続させる場合 (社外 bind は厳禁) |
 | `--api-key <key>` | API key 認証を有効化 (推奨). 設定すると llive 側で `OPENAI_API_KEY` をその値に |
+| `--parallel <N>` | 並列 request slots. **複数 Brief 同時投入**する運用なら 4 以上 (llive の `orchestration.Pipeline` が `max_workers=4` で並列化). 単一 Brief 順次なら 1 で OK |
 | `--alias <name>` | model alias. **本手順では不要** (llive 側 env で model 名指定するため) |
 | `--verbose` | debug log |
 
