@@ -111,6 +111,7 @@ class BriefRunner:
         grounder: BriefGrounder | None = None,
         governance_scorer: GovernanceScorer | None = None,
         perspectives: RoleBasedMultiTrack | None = None,
+        math_verifier: MathVerifier | None = None,
     ) -> None:
         self._loop = loop
         self._approval_bus = approval_bus
