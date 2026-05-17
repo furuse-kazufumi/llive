@@ -136,6 +136,20 @@ _QUANTITY_RE = re.compile(
     r"\b(\d+(?:\.\d+)?)\s+([A-Za-z][A-Za-z0-9*/\^·]{0,15})\b"
 )
 
+# 「数値の後ろに来るがどう見ても単位ではない」ドメイン語のブラックリスト。
+# 2026-05-17-grounding-observation で `1 email` `30 pages` が citation
+# に大量に残っていた対応。これらは silently skip して error citation の
+# 価値 (= 未知単位の自動収集) を守る。
+_NON_UNIT_WORDS: frozenset[str] = frozenset({
+    "email", "emails", "user", "users", "page", "pages", "item", "items",
+    "request", "requests", "point", "points", "slide", "slides",
+    "chapter", "chapters", "widget", "widgets", "ticket", "tickets",
+    "comment", "comments", "issue", "issues", "story", "stories",
+    "row", "rows", "column", "columns", "record", "records",
+    "people", "person", "customer", "customers", "step", "steps",
+    "task", "tasks", "milestone", "milestones",
+})
+
 
 @dataclass(frozen=True)
 class TrizCitation:
