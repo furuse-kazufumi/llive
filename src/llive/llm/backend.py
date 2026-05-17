@@ -235,7 +235,10 @@ class OpenAIBackend(LLMBackend):
     """Calls OpenAI (or any OpenAI-compatible HTTP API) via the ``openai`` SDK.
 
     Requires ``[openai]`` extra: ``pip install openai>=1.0``.
-    Set ``OPENAI_BASE_URL`` to point at LM Studio / vLLM / etc.
+    Set ``OPENAI_BASE_URL`` to point at LM Studio / vLLM / llama-server / etc.
+    Set ``LLIVE_OPENAI_MODEL`` to choose a default model name without code
+    changes (useful when ``LLIVE_LLM_BACKEND=openai`` is set in env and the
+    actual served model is not ``gpt-4o-mini``).
     """
 
     name = "openai"
@@ -252,7 +255,7 @@ class OpenAIBackend(LLMBackend):
         if base_url or os.environ.get("OPENAI_BASE_URL"):
             kwargs["base_url"] = base_url or os.environ["OPENAI_BASE_URL"]
         self._client = openai.OpenAI(**kwargs)
-        self.model = model or self.DEFAULT_MODEL
+        self.model = model or os.environ.get("LLIVE_OPENAI_MODEL") or self.DEFAULT_MODEL
 
     @property
     def supports_vlm(self) -> bool:
