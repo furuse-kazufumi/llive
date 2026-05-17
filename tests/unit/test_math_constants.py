@@ -31,7 +31,7 @@ def test_lookup_by_alias_case_insensitive() -> None:
 
 
 def test_measured_constants_have_uncertainty() -> None:
-    g = get_constant("G")
+    g = get_constant("newtonian_gravitation")
     assert g.relative_uncertainty > 0.0
     me = get_constant("m_e")
     assert me.relative_uncertainty > 0.0
