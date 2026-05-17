@@ -259,6 +259,44 @@ essence → KJ → mindmap → synectics → perspectives → structurize → ex
 
 ---
 
+## 9g. 他 LLM 比較 拡張 (`vs_cloud.json`) — llive vs Anthropic vs Perplexity
+
+per `feedback_llive_measurement_purity`: llive 経由 vs cloud 直接の **2 系統分離**
+
+| Backend | kind | 平均 wall | 平均 coverage | 平均 chars | typo |
+|---|---|---|---|---|---|
+| **llive 単独** (LLM なし) | rule-based | 0.0 s | 0.567 | 122 | 0 |
+| llive + ollama qwen2.5:14b | on-prem (via loop) | 75.5 s | 0.367 | 142 | 0 |
+| **Claude Haiku 4.5** | cloud (direct) | **3.0 s** | **0.65** | 309 | 0 |
+| **Perplexity Sonar** | cloud (direct) | **2.7 s** | **0.65** | 253 | 0 |
+
+### 観察
+
+1. **Cloud 圧勝** — Haiku / Sonar は ~3s で coverage 0.65、qwen2.5:14b (75s, 0.37) を **25× 高速 × 2× 品質** で凌駕
+2. **llive 単独 (rule-based)** の coverage 0.567 は Brief 本文の echo back 効果 (qwen より高いが偽性能、honest disclosure)
+3. **llive + qwen2.5:14b の不利**: gating / multi-track filter のオーバヘッド + on-prem モデル能力差 = cloud に大差
+4. **典型 B3_spec で llive_qwen 完璧** (coverage 1.0) — Brief が技術仕様で qwen の得意領域に当たった
+5. **typo 0 件** — qwen2.5 / Haiku / Sonar すべて `lllive` 等の安全圏
+
+### 差別化軸 (4 つ) の再確認
+
+| 軸 | llive | Claude Haiku | Perplexity |
+|---|---|---|---|
+| on-prem inference | ✓ | ✗ | ✗ |
+| end-to-end OSS | ✓ | ✗ | ✗ |
+| 監査ログ (SIL) | ✓ (BriefLedger) | ✗ | ✗ |
+| HITL workbench | ✓ (Approval Bus + llove) | ✗ | ✗ |
+
+→ **品質・速度で cloud に劣るが、4 差別化軸はすべて llive のみ**。コンプライアンス・on-prem 制約のある業界では唯一の選択肢。
+
+### 除外 (honest disclosure)
+
+- **Gemini 2.0 Flash**: 429 quota exceeded (billing 設定要)
+- **OpenAI GPT-4o-mini**: SDK 未インストール (`pip install openai` で復旧可)
+- **Claude Sonnet 4.6 / Opus 4.7**: コスト判断でこの回は Haiku 4.5 のみ
+
+---
+
 ## 10. 次の検証 (将来)
 
 1. **実 LLM ベンチ** — ollama qwen2.5:7b/14b を runner に attach した progressive 5 段ラダー
