@@ -559,7 +559,103 @@ agent, evolution scheduler) が機械的に消費できる。
 - v0.8 (Phase 8) CABT: 7 total
 - v0.9 (Phase 9) CREAT: 5 total
 - v1.0-frame COG-FX: 4 新規 + 10 因子マッピング (横断)
-- Mapped to phases: 92 / 92 ✓
+- v2.0-core (Phase 11) ORG-FX: 8 件 (LLM コア独自化)
+- Mapped to phases: 100 / 100 ✓
+
+---
+
+## v2.0-core — ORG-FX (Originality Framework) 2026-05-17 追加
+
+**ユーザー指示 (2026-05-17 終盤)**: 「Qwen の設計思想から徐々に離れて独自路線を
+突っ走るのが理想。差別化されていないと研究の価値がない。普及している AI を
+使った方がマシってなりそう。」
+
+**動機**: 現状 (v0.6) の llive は周辺認知 OS としては独自だが、**LLM コア
+自体は Qwen / Llama / Mistral に依存**。中長期的に研究としての価値を保つ
+ためには、コア自体を独自化する経路を要件化しておく必要がある。
+
+### 「Qwen から離れる」5 段階ロードマップ
+
+```
+段階              | 期間      | 内容
+──────────────────┼───────────┼──────────────────────────────
+Stage A (短期)    | 〜3 ヶ月  | LLM コアは凍結、周辺の差別化を最大化
+                  |           | (CABT forward hook / MATH / CREAT)
+Stage B (中期 1)  | 3〜6 ヶ月 | LoRA で llive 用 specialised adapter
+                  |           | 訓練、attention に memory bias 注入
+Stage C (中期 2)  | 6〜12 ヶ月| Distillation で小型 specialised model
+                  |           | (qwen2.5:14b → llive-7b 蒸留)
+Stage D (長期 1)  | 1〜2 年   | Transformer block を memory-coupled
+                  |           | architecture に置換 (CABT-07 の本実装)
+Stage E (長期 2)  | 2〜3 年   | Transformer 以外の LLM コア (Mamba /
+                  |           | RWKV / Hyena 系 + llive 思考層 native)
+```
+
+### 関連設計パターン
+
+- **Composite** (TRIZ 原理 40) — LLM コア = Transformer + Memory + Multi-track の合成
+- **Strategy** (GoF) — コア architecture を差し替え可能に
+- **Mediator** (TRIZ 原理 24) — Memory を attention に参照経由で持ち込む
+- **Local Quality** (TRIZ 原理 3) — Stage 別に異なる sub-network を活性化
+
+### 要件詳細
+
+| FR | 名前 | 概要 | ロードマップ Stage | 関連既存 FR |
+|---|---|---|---|---|
+| **ORG-01** | **Cognitive Block Replacement** | Transformer ブロックを llive 思考層と同期した構造に置換。salience / curiosity を直接 attention に持ち込む | Stage D | CABT-01〜07 (Phase 8) の本実装版 |
+| **ORG-02** | **Memory-coupled inference** | LLM 推論時に 4 層メモリを直接参照 (Memorizing Transformer の発展)。inference 中に memory write も発生 | Stage C/D | MEM-01〜09 |
+| **ORG-03** | **Multi-track sub-network** | EpistemicType ごとに別の sub-network を持つ MoE の認知版。FACTUAL / NORMATIVE / INTERPRETIVE で異なる weights | Stage C | A-1.5 Multi-track Filter |
+| **ORG-04** | **TRIZ-guided architecture search** | LLM コア自体を TRIZ 矛盾解決で自己改良。AutoML-Zero + TRIZ ハイブリッド | Stage D | FR-23〜27 + EVO-04 |
+| **ORG-05** | **Surprise-native pretraining** | Bayesian Surprise を loss に組み込んだ事前学習。novelty / saliency を内在化 | Stage E | FR-21 BayesianSurpriseGate |
+| **ORG-06** | **Provenance-aware tokens** | 各 token に metadata 列 (provenance / trust / epistemic_type) を持たせ attention で参照 | Stage B/D | CABT-01, CABT-03, CABT-07 の統合 |
+| **ORG-07** | **Approval-native decoding** | 出力 token sequence を decoder 内で Approval policy が検査。constitutional AI の architectural 版 | Stage C/D | CABT-06, COG-02 |
+| **ORG-08** | **llive-specialized small model distillation** | qwen2.5:14b → llive-7b 蒸留。学習データは RAD コーパス + ledger 成功例 + TRIZ 出力 | Stage C | Phase 5 RUST extensions, Phase 9 CREAT |
+
+### なぜこの順序か
+
+- **Stage A (LLM 凍結)** = 既存 OSS LLM の更新 (Qwen 2.6 / Llama 4 等) を直接取り込める利点を保ったまま差別化
+- **Stage B (LoRA)** = リスク中、GPU は RTX 3090 級で可、コア重みは触らない
+- **Stage C (蒸留)** = 小型化することで on-prem 普及性が上がり、かつ llive 専用化
+- **Stage D (block 置換)** = 学習やり直しになるが、研究としての独自性が確立
+- **Stage E (Transformer 以外)** = 完全な独自路線、Mamba / RWKV 系の学術成果を取り込む
+
+### ORG-FX 要件のフェーズマッピング
+
+| FR | Phase | Stage | Status | Priority |
+|---|---|---|---|---|
+| ORG-06 | Phase 8 拡張 | B+D | Pending | HIGH (CABT-01〜07 の統合) |
+| ORG-02 | Phase 11 | C/D | Pending | HIGH |
+| ORG-03 | Phase 11 | C | Pending | MED |
+| ORG-08 | Phase 11 | C | Pending | MED (GPU 投資要) |
+| ORG-07 | Phase 11 | C/D | Pending | MED |
+| ORG-01 | Phase 11 | D | Pending | LOW (長期) |
+| ORG-04 | Phase 12 | D | Pending | LOW |
+| ORG-05 | Phase 12 | E | Pending | LOW (要 GPU クラスタ) |
+
+### 評価指標
+
+「Qwen との距離」を測る metric を導入:
+
+- **Architectural Originality Score** = Σ (差別化 FR 実装数) / 全 FR 数
+- **LLM Core Independence Ratio** = (llive 専用 inference path) / (全 inference path)
+- **Replaceability Test** = qwen を抜いて llive-only で動作するか (Stage C 以降)
+
+### Phase Dependencies
+
+```
+Phase 8 (CABT) → ORG-06 (Provenance-aware tokens)
+Phase 9 (CREAT) → ORG-03 (Multi-track sub-network) との連携
+Phase 4 (Production) → ORG-07 (Approval-native decoding) の前提
+Phase 11 (ORG-FX core) → Phase 12 (full independence)
+```
+
+**Coverage (final final):**
+- v0.7-vertical (Phase 10) MATH: 8 total
+- v0.8 (Phase 8) CABT: 7 total
+- v0.9 (Phase 9) CREAT: 5 total
+- v1.0-frame COG-FX: 4 + 10 因子マッピング
+- v2.0-core (Phase 11) ORG-FX: 8 total
+- Mapped to phases: 100 / 100 ✓
 
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-17 — v1.0-frame COG-FX (Cognitive Factor Framework, 10 因子マッピング + 4 新規 FR)*
+*Last updated: 2026-05-17 — v2.0-core ORG-FX (Originality Framework, Qwen 依存からの離脱 5 段階)*
