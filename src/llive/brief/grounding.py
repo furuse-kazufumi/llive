@@ -144,6 +144,8 @@ class GroundingConfig:
     rad_domains: tuple[str, ...] | None = None  # None = all domains
     rad_max_bytes_per_file: int = 32_768
     include_learned: bool = True
+    max_calc: int = 5
+    # MATH-08: 内蔵計算結果の上限。大きい数を扱う Brief で prompt が膨れないよう抑制。
 
 
 def _extract_keywords(text: str, *, max_terms: int = 8) -> list[str]:
