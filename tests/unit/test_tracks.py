@@ -197,8 +197,41 @@ def test_default_registry_has_all_standard_tracks() -> None:
         EpistemicType.NORMATIVE,
         EpistemicType.INTERPRETIVE,
         EpistemicType.PRAGMATIC,
+        EpistemicType.MATHEMATICAL,
     ):
         assert et in r.transforms
+
+
+# ---------------------------------------------------------------------------
+# MATH-07 — MATHEMATICAL track
+# ---------------------------------------------------------------------------
+
+
+def test_mathematical_track_tags_rationale() -> None:
+    stim = _stim(et=EpistemicType.MATHEMATICAL)
+    plan = mathematical_track(stim, _plan(confidence=0.9))
+    assert "[track:mathematical]" in plan.rationale
+
+
+def test_mathematical_track_demotes_low_confidence_to_silent() -> None:
+    """MATHEMATICAL は FACTUAL より厳格 (< 0.8 で SILENT 降格)."""
+    stim = _stim(et=EpistemicType.MATHEMATICAL)
+    plan = mathematical_track(stim, _plan(confidence=0.7))
+    assert plan.decision is ActionDecision.SILENT
+    assert "MathVerifier" in plan.rationale
+
+
+def test_mathematical_track_passes_high_confidence() -> None:
+    stim = _stim(et=EpistemicType.MATHEMATICAL)
+    plan = mathematical_track(stim, _plan(confidence=0.95, decision=ActionDecision.NOTE))
+    assert plan.decision is ActionDecision.NOTE
+
+
+def test_mathematical_routed_through_registry() -> None:
+    r = build_default_registry()
+    stim = _stim(et=EpistemicType.MATHEMATICAL)
+    plan = r.apply(stim, _plan(confidence=0.95))
+    assert "[track:mathematical]" in plan.rationale
 
 
 def test_double_tag_does_not_stack() -> None:
