@@ -163,6 +163,14 @@ class BriefLedger:
                 # judgement about the Brief (pass / fail / stop), not raw
                 # evidence material.
                 decisions.append({"event": r.event, **r.payload})
+            elif r.event == "explanation_aligned":
+                # OKA-06 — explanation draft. Evidence because it's a
+                # rationale, not a decision.
+                evidence.append({"kind": "oka_explanation", **r.payload})
+            elif r.event == "insight_score_recorded":
+                # OKA-07 — insight evaluation. Decision because it's a
+                # judgement about the candidate essence.
+                decisions.append({"event": r.event, **r.payload})
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored", "oka_strategy_switched"}:
