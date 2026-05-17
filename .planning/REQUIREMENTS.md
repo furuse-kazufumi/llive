@@ -924,5 +924,96 @@ class Annotation:
 
 ---
 
+## ORG-FX 追補 — Qwen 商用障壁とロードマップ加速 (2026-05-17 9 回目)
+
+**ユーザー指示**: 「qwen 依存からの脱却のための要件定義も追々進めたいですね。
+商用利用の障壁になりそうなので。」
+
+### Qwen 依存の商用利用障壁 (具体化)
+
+1. **ライセンス変更リスク** — Qwen2.5 系は現在 Apache 2.0 ベースだが、Qwen3 系で
+   ライセンス変更の可能性。長期商用契約では将来コミットメントが取れない
+2. **配布権利の不確実性** — エンタープライズ on-prem 配信時に Qwen バイナリ同梱
+   の権利・サポート範囲が不明瞭。法務リスク
+3. **地政学的調達リスク** — Alibaba 開発元への依存は一部企業の調達ポリシー
+   (中国製 AI モデル禁止条項) に抵触する可能性
+4. **品質ドリフト** — `vs_other_llms.json` で実測: qwen2.5:7b は日本語 Brief に
+   中国語で応答する事例 → 商用品質保証が困難
+5. **on-prem 性能の天井** — qwen2.5:14b でも cloud (Claude Haiku) に品質速度
+   両面で劣る (`vs_cloud.json`: 75s/0.37 vs 3s/0.65)
+
+### ORG-FX ロードマップの再優先付け (商用障壁解消視点)
+
+| Stage | 元優先度 | 改訂優先度 | 理由 |
+|---|---|---|---|
+| Stage A (LLM 凍結、周辺差別化) | 短期 | 維持 | 既に達成済 |
+| **Stage B (LoRA specialised adapter)** | 中期 1 | **昇格 HIGH** | 「Qwen を素材として使うが、配布物は llive 専用 adapter」と切り分けることで商用契約上のリスクを限定可能 |
+| **Stage C (Distillation で小型化)** | 中期 2 | **昇格 HIGH** | qwen2.5:14b → llive-7b 蒸留すると配布物は llive 独自モデル。Qwen 系列名から完全切り離し |
+| Stage D (Transformer block 置換) | 長期 1 | 維持 | 学術的差別化、商用は B/C で先に解決 |
+| Stage E (Mamba/RWKV 系) | 長期 2 | 維持 | 学術ロードマップ、商用契約には Stage C で十分 |
+
+### 追加要件 ORG-09 / 10 (2026-05-17 9 回目)
+
+| FR | 名前 | 概要 | 優先度 |
+|---|---|---|---|
+| **ORG-09** | **License Audit Pipeline** | 使用 OSS LLM すべてのライセンス・配布権利・redistribution 範囲を機械監査。pyproject に license metadata 必須、CI で逸脱検出 | **HIGH** |
+| **ORG-10** | **Model Abstraction Boundary** | LLMBackend Protocol を「Qwen 固有挙動に依存しない」よう契約強化。tokenizer 差異・stop sequence 差異を吸収。Mistral / Llama / Gemma / 自前モデルへ即時 swap 可能 | **HIGH** |
+
+### 評価指標 (Qwen 依存度の計測)
+
+- **Vendor Lock-in Score** = (Qwen 固有 API 呼び出し数) / (全 LLM 呼び出し数)
+- **Replaceability Test** = Mistral 7B / Llama 3.1 8B / Gemma 2 9B などで同じ Brief を動かし、coverage が ±15% 内に収まるか
+- **Distribution Cleanness** = 配布物 (PyPI / wheel) に Qwen weights / tokenizer が含まれない (verified by `audit_independence` の拡張)
+
+→ **Stage C 完了時点で「llive は Qwen 由来であることは認めるが、配布物は llive 独自」と
+言える状態**を目指す。これで商用契約の障壁を最小化。
+
+---
+
+## VLM-FX — Vision Language Model Framework (将来要件、2026-05-17 9 回目)
+
+**ユーザー指示**: 「私の専門は画像処理や三次元計測なので、将来的に VLM としての
+機能も増やしたいです。その際は簡単な図形の判断などからテストが必要でしょうね。」
+
+**動機**: ユーザーの専門領域 (画像処理 / 三次元計測) を活かす差別化軸。MCP-3D
+プロジェクトとの統合先候補。既存資産との接続:
+
+* `AnthropicBackend.supports_vlm = True` (画像入力対応済)
+* `OllamaBackend` で `llama3.2-vision` / `llava:7b` が利用可 (`ollama list` 確認済)
+* `mcp-3d` (別プロジェクト) に SH-VQ tokenizer などの実装あり
+
+### 要件 VLM-01〜10 (将来実装、Phase 5+)
+
+| FR | 名前 | 優先度 |
+|---|---|---|
+| **VLM-01** | Visual Stimulus 型 — `Stimulus.image_refs` (URI / bytes / numpy array) を追加 | HIGH |
+| **VLM-02** | Shape Recognition Bench — 簡単な図形 (○△□ / 立方体 / 球) の判定精度テストハーネス | HIGH (テストから着手) |
+| **VLM-03** | 3D Geometry Brief — point cloud / depth map を Brief 経由で処理 | MED |
+| **VLM-04** | VLM Verifier (MathVerifier の VLM 版) — 「画像内のオブジェクトを deterministic に grade」できる検証層 | MED |
+| **VLM-05** | mcp-3d 統合 — SH-VQ tokenizer + Gaussian Splatting weights を Stimulus に embed | MED |
+| **VLM-06** | Spatial Reasoning Brief — 「物体 A は物体 B の左にあるか」等の空間推論ベンチ | MED |
+| **VLM-07** | Camera Calibration Brief — 内部・外部パラメータの推定 / 検証 | MED |
+| **VLM-08** | Surface Reconstruction Brief — 点群 → メッシュ生成の品質評価 | LOW |
+| **VLM-09** | Multi-modal Notebook — OKA-04 ReflectiveNotebook に画像エビデンス保存 | LOW |
+| **VLM-10** | VLM Annotation Channel — Annotation.value に image_uri を含められる拡張 | LOW |
+
+### 着手戦略 (実装ではなく要件のみ)
+
+1. **VLM-02 (Shape Recognition Bench) を最初に作る** — 簡単な図形画像 (matplotlib で生成)
+   を Claude Haiku / Llava / Llama-vision で判定させ deterministic に grade
+2. このベンチを **正答率指標** として、VLM-01 Visual Stimulus 型実装時の回帰検出に使う
+3. mcp-3d 統合 (VLM-05) は別プロジェクト依存度が高いので、IND-FX 原則に従い
+   optional dependency として隔離
+4. ユーザー専門領域 (三次元計測) を強みとして、VLM-06 / VLM-07 で
+   **Claude / GPT-4V も難しい spatial reasoning 領域**を狙う差別化
+
+### 評価指標
+
+- Shape Recognition Accuracy: ○△□ など 10 種類で正答率 ≥80%
+- Spatial Reasoning F1: 「左/右/前/後」判定で F1 ≥0.7
+- 3D Reconstruction RMSE: 既知形状で表面誤差 < 1 mm
+
+---
+
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-17 — v0.8-meta VRB-FX (Verbalization Framework, 4 件、Local LLM 研究開発の思考・意思決定の構造化)*
+*Last updated: 2026-05-17 — ORG-09/10 (Qwen 商用障壁解消) + VLM-FX (VLM 将来要件 10 件、ユーザー専門領域 画像処理/三次元計測)*
