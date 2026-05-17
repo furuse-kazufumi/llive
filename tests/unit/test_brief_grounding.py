@@ -18,6 +18,7 @@ from llive.brief import (
 )
 from llive.brief.grounding import (
     CalcCitation,
+    ConstantCitation,
     RadCitation,
     TrizCitation,
     UnitCitation,
