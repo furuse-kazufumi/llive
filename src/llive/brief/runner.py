@@ -119,6 +119,7 @@ class BriefRunner:
         essence_extractor: CoreEssenceExtractor | None = None,
         notebook: ReflectiveNotebook | None = None,
         strategy_orchestrator: StrategyOrchestrator | None = None,
+        prompt_linter: PromptLinter | None = None,
     ) -> None:
         self._loop = loop
         self._approval_bus = approval_bus
