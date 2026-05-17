@@ -6,6 +6,59 @@
 
 ---
 
+## 2026-05-17 (4 回目) — MATH-02 Z3/Sympy 検証層 + 9 因子 E2E ハーネス
+
+ユーザー指示「トレーサビリティの確保を気にしながら、実装を進めてください」を
+受け、MATH-02 をトレーサビリティ重視で実装。同時に 10 因子全部入った状態の
+動作確認用 E2E test を追加。
+
+### Done
+
+- **MATH-02 MathVerifier** — `src/llive/math/verifier.py` 新規。3 メソッド:
+  - `check_equivalence(lhs, rhs)` — Sympy `simplify(lhs-rhs)==0` で代数等価
+    + 不一致時は数値 witness を counterexample に格納
+  - `check_implication(premises, conclusion)` — Z3 で ¬(P→C) unsat ⇔ valid。
+    invalid 時は反例 model を counterexample に
+  - `check_satisfiable(constraints)` — Z3 で SAT/UNSAT。SAT 時は assignment 例を返す
+  - sympy AST → z3 lowering を自前実装 (整数/有理数/加減乗・冪・等式・不等式)。
+    sin/cos 等の transcendental は意図的に unsupported = `verdict="error"` で
+    audit に「未対応」として残る
+- **トレーサビリティ統合** — `MathVerifier(ledger=BriefLedger(...))` で attach
+  すると全 check が `math_verified` event として ledger に自動記録される
+  (`source_id` / `verdict` / `solver` / `inputs` / `counterexample` / `elapsed_s` 込)。
+  `BriefLedger.trace_graph()` の `evidence_chain` に `kind="math"` + `check_kind`
+  (equivalence/implication/satisfiability) として COG-03 と統合
+- **9 因子 E2E harness** — `tests/component/test_cog_fx_e2e.py` 新規。
+  grounder + governance + perspectives + approval_bus + tools = 全 enabled で
+  1 つの Brief を走らせ、9 因子それぞれの証拠が ledger に出ることを 1 test で
+  一括検証。回帰検出ハーネス
+- **依存追加** — `sympy>=1.12` を required に昇格 (z3-solver は既存)
+- **テスト 18 件追加**:
+  - `tests/unit/test_math_verifier.py` — 12 件 (etc, parser error, solver behaviour)
+  - `tests/unit/test_math_verifier_trace.py` — 4 件 (ledger auto-record, evidence_chain merge)
+  - `tests/component/test_cog_fx_e2e.py` — 2 件 (9-factor smoke, role/hat id coverage)
+- **1034 → 1052 PASS / 回帰ゼロ**
+
+### llive vertical 進捗 (Phase 10 MATH 系)
+
+| FR | 状態 |
+|---|---|
+| MATH-01 SI 単位次元 | 実装済 (前回) |
+| MATH-02 Sympy/Z3 検証 | **実装済 (今回)** |
+| MATH-05 CODATA/NIST 辞書 | Pending |
+| MATH-08 SafeCalculator | 実装済 (前回) |
+| MATH-03/04/06/07 | Pending (low priority) |
+
+### 次セッション候補
+
+- 横断 metadata schema migration (継続課題)
+- MATH-05 CODATA/NIST 物理定数辞書 → RAD metrology
+- S2 CABT-01 HFAdapter forward hook prototype (torch 依存導入)
+- CREAT-01 KJ法ノード prototype (LLM mock 可)
+- MathVerifier を BriefRunner に opt-in 統合 (`verifier=` 引数で grounder と同様に)
+
+---
+
 ## 2026-05-17 (続々) — COG-04 + CREAT-04 統合実装 (Role × Hat multi-track)
 
 前回 PROGRESS で「COG-04 は CREAT-04 Six Hats と統合する設計上、次セッション

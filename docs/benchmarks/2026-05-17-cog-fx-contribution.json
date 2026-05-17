@@ -1,0 +1,341 @@
+{
+  "baseline": {
+    "config_name": "baseline (all-on)",
+    "status": "completed",
+    "confidence": 0.925,
+    "perspective_consensus": "proceed",
+    "perspective_support": 0.8625,
+    "perspective_risk": 0.25,
+    "governance_total": 0.8675000000000002,
+    "event_counts": {
+      "brief_submitted": 1,
+      "grounding_applied": 1,
+      "stimulus_built": 1,
+      "loop_completed": 1,
+      "decision": 1,
+      "governance_scored": 1,
+      "perspectives_observed": 1,
+      "approval_requested": 1,
+      "approval_resolved": 1,
+      "tool_invoked": 1,
+      "outcome": 1
+    },
+    "factor_event_present": {
+      "structure": true,
+      "recomposition": true,
+      "closed_loop": true,
+      "self_extension": true,
+      "uncertainty": true,
+      "exploration": true,
+      "alignment": true,
+      "provenance": true,
+      "multi_perspective": true
+    }
+  },
+  "ablations": {
+    "structure": {
+      "outcome": {
+        "config_name": "off:structure",
+        "status": "completed",
+        "confidence": 0.925,
+        "perspective_consensus": "proceed",
+        "perspective_support": 0.8125,
+        "perspective_risk": 0.25,
+        "governance_total": 0.8175000000000001,
+        "event_counts": {
+          "brief_submitted": 1,
+          "grounding_applied": 1,
+          "stimulus_built": 1,
+          "loop_completed": 1,
+          "decision": 1,
+          "governance_scored": 1,
+          "perspectives_observed": 1,
+          "approval_requested": 1,
+          "approval_resolved": 1,
+          "tool_invoked": 1,
+          "outcome": 1
+        },
+        "factor_event_present": {
+          "structure": true,
+          "recomposition": true,
+          "closed_loop": true,
+          "self_extension": true,
+          "uncertainty": true,
+          "exploration": true,
+          "alignment": true,
+          "provenance": true,
+          "multi_perspective": true
+        }
+      },
+      "delta_from_baseline": {
+        "delta_confidence": 0.0,
+        "delta_perspective_support": -0.05,
+        "delta_perspective_risk": 0.0,
+        "delta_governance_total": -0.05,
+        "consensus_changed": false,
+        "events_lost": [],
+        "events_gained": []
+      }
+    },
+    "recomposition": {
+      "outcome": {
+        "config_name": "off:recomposition",
+        "status": "completed",
+        "confidence": 0.925,
+        "perspective_consensus": "proceed",
+        "perspective_support": 0.8625,
+        "perspective_risk": 0.25,
+        "governance_total": 0.8675000000000002,
+        "event_counts": {
+          "brief_submitted": 1,
+          "stimulus_built": 1,
+          "loop_completed": 1,
+          "decision": 1,
+          "governance_scored": 1,
+          "perspectives_observed": 1,
+          "approval_requested": 1,
+          "approval_resolved": 1,
+          "tool_invoked": 1,
+          "outcome": 1
+        },
+        "factor_event_present": {
+          "structure": true,
+          "recomposition": false,
+          "closed_loop": true,
+          "self_extension": true,
+          "uncertainty": true,
+          "exploration": true,
+          "alignment": true,
+          "provenance": true,
+          "multi_perspective": true
+        }
+      },
+      "delta_from_baseline": {
+        "delta_confidence": 0.0,
+        "delta_perspective_support": 0.0,
+        "delta_perspective_risk": 0.0,
+        "delta_governance_total": 0.0,
+        "consensus_changed": false,
+        "events_lost": [
+          "grounding_applied"
+        ],
+        "events_gained": []
+      }
+    },
+    "self_extension": {
+      "outcome": {
+        "config_name": "off:self_extension",
+        "status": "completed",
+        "confidence": 0.425,
+        "perspective_consensus": "proceed",
+        "perspective_support": 0.7125000000000001,
+        "perspective_risk": 0.25,
+        "governance_total": 0.7200000000000001,
+        "event_counts": {
+          "brief_submitted": 1,
+          "grounding_applied": 1,
+          "stimulus_built": 1,
+          "loop_completed": 1,
+          "decision": 1,
+          "governance_scored": 1,
+          "perspectives_observed": 1,
+          "approval_requested": 1,
+          "approval_resolved": 1,
+          "tool_rejected": 1,
+          "outcome": 1
+        },
+        "factor_event_present": {
+          "structure": true,
+          "recomposition": true,
+          "closed_loop": true,
+          "self_extension": false,
+          "uncertainty": true,
+          "exploration": true,
+          "alignment": true,
+          "provenance": true,
+          "multi_perspective": true
+        }
+      },
+      "delta_from_baseline": {
+        "delta_confidence": -0.5,
+        "delta_perspective_support": -0.15,
+        "delta_perspective_risk": 0.0,
+        "delta_governance_total": -0.1475,
+        "consensus_changed": false,
+        "events_lost": [
+          "tool_invoked"
+        ],
+        "events_gained": [
+          "tool_rejected"
+        ]
+      }
+    },
+    "exploration": {
+      "outcome": {
+        "config_name": "off:exploration",
+        "status": "completed",
+        "confidence": 0.925,
+        "perspective_consensus": "proceed",
+        "perspective_support": 0.8625,
+        "perspective_risk": 0.25,
+        "governance_total": 0.8675000000000002,
+        "event_counts": {
+          "brief_submitted": 1,
+          "grounding_applied": 1,
+          "stimulus_built": 1,
+          "loop_completed": 1,
+          "decision": 1,
+          "governance_scored": 1,
+          "perspectives_observed": 1,
+          "approval_requested": 1,
+          "approval_resolved": 1,
+          "tool_invoked": 1,
+          "outcome": 1
+        },
+        "factor_event_present": {
+          "structure": true,
+          "recomposition": true,
+          "closed_loop": true,
+          "self_extension": true,
+          "uncertainty": true,
+          "exploration": true,
+          "alignment": true,
+          "provenance": true,
+          "multi_perspective": true
+        }
+      },
+      "delta_from_baseline": {
+        "delta_confidence": 0.0,
+        "delta_perspective_support": 0.0,
+        "delta_perspective_risk": 0.0,
+        "delta_governance_total": 0.0,
+        "consensus_changed": false,
+        "events_lost": [],
+        "events_gained": []
+      }
+    },
+    "alignment": {
+      "outcome": {
+        "config_name": "off:alignment",
+        "status": "completed",
+        "confidence": 0.925,
+        "perspective_consensus": "proceed",
+        "perspective_support": 0.8250000000000001,
+        "perspective_risk": 0.25,
+        "governance_total": null,
+        "event_counts": {
+          "brief_submitted": 1,
+          "grounding_applied": 1,
+          "stimulus_built": 1,
+          "loop_completed": 1,
+          "decision": 1,
+          "perspectives_observed": 1,
+          "tool_invoked": 1,
+          "outcome": 1
+        },
+        "factor_event_present": {
+          "structure": true,
+          "recomposition": true,
+          "closed_loop": true,
+          "self_extension": true,
+          "uncertainty": true,
+          "exploration": true,
+          "alignment": false,
+          "provenance": true,
+          "multi_perspective": true
+        }
+      },
+      "delta_from_baseline": {
+        "delta_confidence": 0.0,
+        "delta_perspective_support": -0.0375,
+        "delta_perspective_risk": 0.0,
+        "delta_governance_total": null,
+        "consensus_changed": false,
+        "events_lost": [
+          "approval_requested",
+          "approval_resolved",
+          "governance_scored"
+        ],
+        "events_gained": []
+      }
+    },
+    "multi_perspective": {
+      "outcome": {
+        "config_name": "off:multi_perspective",
+        "status": "completed",
+        "confidence": 0.925,
+        "perspective_consensus": null,
+        "perspective_support": null,
+        "perspective_risk": null,
+        "governance_total": 0.8675000000000002,
+        "event_counts": {
+          "brief_submitted": 1,
+          "grounding_applied": 1,
+          "stimulus_built": 1,
+          "loop_completed": 1,
+          "decision": 1,
+          "governance_scored": 1,
+          "approval_requested": 1,
+          "approval_resolved": 1,
+          "tool_invoked": 1,
+          "outcome": 1
+        },
+        "factor_event_present": {
+          "structure": true,
+          "recomposition": true,
+          "closed_loop": true,
+          "self_extension": true,
+          "uncertainty": true,
+          "exploration": false,
+          "alignment": true,
+          "provenance": true,
+          "multi_perspective": false
+        }
+      },
+      "delta_from_baseline": {
+        "delta_confidence": 0.0,
+        "delta_perspective_support": null,
+        "delta_perspective_risk": null,
+        "delta_governance_total": 0.0,
+        "consensus_changed": true,
+        "events_lost": [
+          "perspectives_observed"
+        ],
+        "events_gained": []
+      }
+    }
+  },
+  "factor_event_map": {
+    "structure": [
+      "stimulus_built"
+    ],
+    "recomposition": [
+      "grounding_applied"
+    ],
+    "closed_loop": [
+      "loop_completed",
+      "decision",
+      "outcome"
+    ],
+    "self_extension": [
+      "tool_invoked"
+    ],
+    "uncertainty": [
+      "outcome"
+    ],
+    "exploration": [
+      "perspectives_observed"
+    ],
+    "alignment": [
+      "governance_scored",
+      "approval_resolved"
+    ],
+    "provenance": [
+      "outcome"
+    ],
+    "multi_perspective": [
+      "perspectives_observed"
+    ]
+  },
+  "notes": "closed_loop / uncertainty / provenance are not ablated — they are structural invariants of the Brief pipeline. The other 6 factors are toggled individually and compared against the 9-factor baseline."
+}
