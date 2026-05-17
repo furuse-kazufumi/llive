@@ -164,6 +164,8 @@ _DERIVED: dict[str, Dimensions] = {
     # ---- time conventions (倍率は v0 で無視、次元のみ。MATH-06 で scale 化) ----
     # 2026-05-17 grounding-observation で "5 days" 等が UNKNOWN だった対応。
     # 「これは時間単位だ」という次元認識だけ与え、scale conversion は後段。
+    "second": Dimensions(s=1),
+    "seconds": Dimensions(s=1),
     "min": Dimensions(s=1),
     "h": Dimensions(s=1),       # hour (conflict 注意: 質量定数 'h' は constants 側で別管理)
     "hour": Dimensions(s=1),
@@ -172,6 +174,8 @@ _DERIVED: dict[str, Dimensions] = {
     "days": Dimensions(s=1),
     "week": Dimensions(s=1),
     "weeks": Dimensions(s=1),
+    "month": Dimensions(s=1),
+    "months": Dimensions(s=1),
     "year": Dimensions(s=1),
     "years": Dimensions(s=1),
 }
