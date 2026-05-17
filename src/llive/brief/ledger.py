@@ -171,6 +171,12 @@ class BriefLedger:
                 # OKA-07 — insight evaluation. Decision because it's a
                 # judgement about the candidate essence.
                 decisions.append({"event": r.event, **r.payload})
+            elif r.event == "kj_board_constructed":
+                # CREAT-01 — KJ board with ideas + affinity clusters.
+                # Each node becomes a separate evidence entry so downstream
+                # filters can find specific ideas without unpacking the board.
+                for n in r.payload.get("nodes", []) or []:
+                    evidence.append({"kind": "kj_node", **n})
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored", "oka_strategy_switched"}:
