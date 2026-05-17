@@ -28,7 +28,7 @@
 | **LLIVE-005** | 🟠 high | `ego_score / altruism_score` が 0.1 固定、Brief 内容を解析していない | **✗ Open** | git log で `EgoAltruismScorer` 関連 commit 見えない | Week 2: `EgoAltruismScorer.score()` 実装確認、Brief 内容を反映、または基準値として明示 |
 | **LLIVE-006** | 🟡 medium | `run_brief.py` が Windows cp932 stdout で crash | **✓ Resolved (2026-05-16)** | `sys.stdout.reconfigure(encoding="utf-8")` 追加 | 同種の Windows 互換性問題が他にないか、CONTRIBUTING に記載 |
 | **LLIVE-007** | 🟡 medium | salience 落ち cycle の `stages.thought` 欠落、A/B diff しづらい | **✗ Open (documented design)** | SILENT path の design として認知済、ただし dict 構造が sparse | Week 2: `stages.thought = None` placeholder で diff tool に対応 |
-| **LLIVE-008** | 🟡 medium | Approval Bus + SQLite Ledger が `FullSenseLoop._finalise` に配線されていない | **✗ Open (戦略的重要)** | C-1 自体は完了 ([[project-llive-9axis-skeleton]])、`process()` から呼ばれていない状態 | **Week 1-2 最優先**: `_finalise` に Ledger record + Approval Bus gate、SIL 差別化軸の核 |
+| **LLIVE-008** | 🟡 medium | Approval Bus + SQLite Ledger が `FullSenseLoop._finalise` に配線されていない | **△ 部分対応 (Brief API 経由は resolved)** | memory [[project-llive-brief-api-done]] 確認 — "ApprovalBus / SqliteLedger / SIL ledger / Tool whitelist がすべて Brief パスに乗っている". ただし `process(Stimulus)` 直接呼び出しでは未配線の可能性 | Brief API 経由を main path とし、`process()` 直接呼び出しは deprecated 検討. 確認は Week 2 |
 | **LLIVE-D-DEBUG** | (新規) | DebugMode 追加要望 | **🆕 Implemented (2026-05-16)** | `FullSenseLoop(debug=True)` で backend name / prompt / raw response / wall time / template inputs 等を `stages["thought"].debug` に attach、release では zero overhead | dogfooding で実 debug 体験、改善点抽出 |
 
 ## Severity 別 Week 計画 (修正版)
