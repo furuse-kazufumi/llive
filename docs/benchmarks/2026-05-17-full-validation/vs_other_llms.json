@@ -1,0 +1,173 @@
+{
+  "backends": [
+    "mock",
+    "ollama:qwen2.5:7b",
+    "ollama:qwen2.5:14b"
+  ],
+  "briefs": [
+    "B1_math",
+    "B2_design",
+    "B3_spec"
+  ],
+  "grid": {
+    "mock": {
+      "B1_math": {
+        "ok": true,
+        "elapsed_s": 0.0,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      },
+      "B2_design": {
+        "ok": true,
+        "elapsed_s": 0.0,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      },
+      "B3_spec": {
+        "ok": true,
+        "elapsed_s": 0.0,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      }
+    },
+    "ollama:qwen2.5:7b": {
+      "B1_math": {
+        "ok": true,
+        "elapsed_s": 53.587,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      },
+      "B2_design": {
+        "ok": true,
+        "elapsed_s": 29.355,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      },
+      "B3_spec": {
+        "ok": true,
+        "elapsed_s": 27.824,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      }
+    },
+    "ollama:qwen2.5:14b": {
+      "B1_math": {
+        "ok": true,
+        "elapsed_s": 123.484,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      },
+      "B2_design": {
+        "ok": true,
+        "elapsed_s": 73.341,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      },
+      "B3_spec": {
+        "ok": true,
+        "elapsed_s": 69.013,
+        "decision": "note",
+        "rationale": "novel territory; record for later consolidation",
+        "grade": {
+          "rationale_chars": 47,
+          "rationale_words": 6,
+          "expected_terms_hit": [],
+          "expected_coverage": 0.0,
+          "typo_terms_hit": [],
+          "has_typo": false
+        }
+      }
+    }
+  },
+  "summary": {
+    "mock": {
+      "runs": 3,
+      "ok_count": 3,
+      "mean_elapsed_s": 0.0,
+      "mean_coverage": 0.0,
+      "any_typo": false,
+      "typo_briefs": 0
+    },
+    "ollama:qwen2.5:7b": {
+      "runs": 3,
+      "ok_count": 3,
+      "mean_elapsed_s": 36.922,
+      "mean_coverage": 0.0,
+      "any_typo": false,
+      "typo_briefs": 0
+    },
+    "ollama:qwen2.5:14b": {
+      "runs": 3,
+      "ok_count": 3,
+      "mean_elapsed_s": 88.613,
+      "mean_coverage": 0.0,
+      "any_typo": false,
+      "typo_briefs": 0
+    }
+  },
+  "notes": "All on-prem (mock + ollama). Cloud APIs excluded — credentials rotated. Quality grading is deterministic post-check only."
+}
