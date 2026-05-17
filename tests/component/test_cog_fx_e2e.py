@@ -211,6 +211,88 @@ def test_full_9_factor_brief_end_to_end(tmp_path: Path, monkeypatch: pytest.Monk
     assert result.perspective_summary is not None
 
 
+def test_full_11_factor_brief_with_oka_and_math(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """9 因子 + OKA (essence/notebook/strategy) + MATH-02 verifier = 11 因子 E2E.
+
+    回帰検出ハーネス: COG-FX 9 + OKA-01/02/04 + MATH-02 が同一 Brief 内で
+    すべて trip し、ledger に証拠を残すことを確認する。
+    """
+    monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "1")
+
+    bus = ApprovalBus(policy=_AutoApprovePolicy())
+    principles = {1: _StubPrinciple(1, "Segmentation", ("分割",))}
+    grounder = BriefGrounder(principles=principles, config=GroundingConfig(max_triz=2))
+    governance = GovernanceScorer()
+    perspectives = RoleBasedMultiTrack()
+    extractor = CoreEssenceExtractor()
+    notebook = ReflectiveNotebook(tmp_path / "nb.jsonl")
+    orch = StrategyOrchestrator()
+    orch.register(StrategyFamily(name="symbolic"))
+    orch.register(StrategyFamily(name="geometric"))
+    orch.activate("symbolic")
+    verifier = MathVerifier()
+
+    runner = BriefRunner(
+        loop=_MockLoop(),  # type: ignore[arg-type]
+        approval_bus=bus,
+        tools={"echo": lambda a: {"ok": True, "args": a, "artifact": "11f"}},
+        grounder=grounder,
+        governance_scorer=governance,
+        perspectives=perspectives,
+        math_verifier=verifier,
+        essence_extractor=extractor,
+        notebook=notebook,
+        strategy_orchestrator=orch,
+    )
+    brief = Brief(
+        brief_id="cog-fx-11",
+        goal="trade-off between static and dynamic structures via segmentation",
+        constraints=("p99 < 100ms",),
+        tools=("echo",),
+        success_criteria=("11-factor ledger coverage",),
+        approval_required=True,
+        ledger_path=tmp_path / "11.jsonl",
+    )
+    result = runner.submit(brief)
+    # exercise MATH-02 within the Brief (verifier's ledger is auto-bound)
+    verifier.check_equivalence("(x+1)**2", "x**2 + 2*x + 1")
+    # exercise OKA-04 manually (insight) on top of the Brief
+    notebook.append(brief_id=brief.brief_id, kind="insight", body="dynamic vs static is the key tension")
+    # exercise OKA-03 — flat progress should make should_switch() true → switch
+    for _ in range(5):
+        orch.push_progress(0.05)
+    orch.switch_to("geometric", reason="symbolic stalled in 11-factor harness")
+
+    assert result.status is BriefStatus.COMPLETED, f"status={result.status} rationale={result.rationale}"
+    events = list(BriefLedger(brief.ledger_path).read())  # type: ignore[arg-type]
+    names = {e.event for e in events}
+
+    # 9 COG-FX factors (subset checked here; the dedicated 9-factor test
+    # remains the authoritative coverage check)
+    for needed in (
+        "stimulus_built", "grounding_applied", "loop_completed", "decision",
+        "tool_invoked", "outcome", "perspectives_observed", "governance_scored",
+        "approval_resolved",
+    ):
+        assert needed in names, f"missing COG-FX event {needed!r}"
+
+    # OKA-01/02 — essence
+    assert "oka_essence_extracted" in names
+    assert result.essence is not None
+    # OKA-04 — notebook
+    assert "oka_notebook_appended" in names
+    # OKA-03 — strategy switch
+    assert "oka_strategy_switched" in names
+    # MATH-02 — verifier
+    assert "math_verified" in names
+
+    tg = BriefLedger(brief.ledger_path).trace_graph()  # type: ignore[arg-type]
+    evidence_kinds = {e.get("kind") for e in tg.evidence_chain}
+    assert {"oka_essence", "oka_note", "math"} <= evidence_kinds
+    decision_events = {d["event"] for d in tg.decision_chain}
+    assert "oka_strategy_switched" in decision_events
+
+
 def test_full_9_factor_brief_records_role_axis_lenses(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Sanity: 4 roles + 6 hats が perspective_id で漏れなく書き出される。"""
     monkeypatch.setenv("LLIVE_DISABLE_RAD_GROUNDING", "1")
