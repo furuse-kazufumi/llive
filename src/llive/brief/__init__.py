@@ -87,6 +87,7 @@ __all__ = [
     "BriefValidationError",
     "CriticLens",
     "ExecutorLens",
+    "FailureScenario",
     "GovernanceConfig",
     "GovernanceScorer",
     "GovernanceVerdict",
