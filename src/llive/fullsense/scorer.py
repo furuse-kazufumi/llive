@@ -30,13 +30,19 @@ def _count_hits(text: str, hints: tuple[str, ...]) -> int:
     return sum(1 for h in hints if h.lower() in low)
 
 
-def score_thought(thought: Thought) -> tuple[float, float]:
+def score_thought(thought: Thought, *, brief_content: str = "") -> tuple[float, float]:
     """Return ``(ego_score, altruism_score)`` in roughly [0, 1] each.
 
     Crude lexical heuristic. Returns equal small baseline if no hints match,
     so callers can still rank thoughts by other criteria.
+
+    LLIVE-005 fix (2026-05-18): ``brief_content`` (optional) lets the
+    scorer also draw signal from the original Brief text, so the score
+    no longer collapses to the (0.1, 0.1) baseline when the LLM-generated
+    ``thought.text`` is short / template-shaped. Keeping the parameter
+    keyword-only and defaulted preserves the existing single-arg API.
     """
-    text = thought.text or ""
+    text = (thought.text or "") + "\n" + (brief_content or "")
     ego = _count_hits(text, _EGO_HINTS)
     alt = _count_hits(text, _ALTRUISM_HINTS)
     total = ego + alt
@@ -51,11 +57,22 @@ class EgoAltruismScorer:
     ``altruism_bias=1.0`` (default) means equal weight. ``> 1.0`` favours
     altruistic thoughts (Output Bus more likely to PROPOSE). ``< 1.0`` makes
     the loop more cautious / self-preserving.
+
+    LLIVE-005 fix (2026-05-18): :meth:`score` accepts an optional
+    ``brief_content`` so callers (e.g. ``FullSenseLoop._score_thought``)
+    can pass the original Stimulus text. This avoids the previous
+    failure mode where Briefs without ego/altruism keywords in the
+    LLM-generated ``thought.text`` always returned (0.1, 0.1).
     """
 
     def __init__(self, altruism_bias: float = 1.0) -> None:
         self.altruism_bias = float(altruism_bias)
 
-    def score(self, thought: Thought) -> tuple[float, float]:
-        ego, alt = score_thought(thought)
+    def score(
+        self,
+        thought: Thought,
+        *,
+        brief_content: str = "",
+    ) -> tuple[float, float]:
+        ego, alt = score_thought(thought, brief_content=brief_content)
         return ego, alt * self.altruism_bias
