@@ -222,6 +222,8 @@ class UnitCitation:
     value: float          # numeric magnitude as parsed
     unit_text: str        # e.g. "m/s"
     dimensions: str       # str(Dimensions), e.g. "m·s^-1"
+    si_factor: float = 1.0   # MATH-06: SI base 換算倍率 (e.g. "5 days" → 86400)
+    si_value: float = 0.0    # value * si_factor — SI base 単位での値
     error: str | None = None
 
 
