@@ -56,4 +56,5 @@ __all__ = [
     "get_constant",
     "list_constants",
     "parse_unit",
+    "unit_scale_factor",
 ]
