@@ -548,4 +548,16 @@ class BriefGrounder:
                         f"- {u.raw_text} → value={u.value}, dimensions={u.dimensions}"
                     )
             sections.append("\n".join(block))
+        if constants:
+            block = ["", "[Physical constants grounded (MATH-05)]"]
+            for c in constants:
+                rel_u = (
+                    f", rel.unc.={c.relative_uncertainty:.1e}"
+                    if c.relative_uncertainty
+                    else ""
+                )
+                block.append(
+                    f"- {c.matched_alias} → {c.symbol} = {c.value!r} [{c.dimensions}]{rel_u} ({c.source})"
+                )
+            sections.append("\n".join(block))
         return "\n".join(sections)
