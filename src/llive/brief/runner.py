@@ -247,6 +247,8 @@ class BriefRunner:
                             "value": u.value,
                             "unit_text": u.unit_text,
                             "dimensions": u.dimensions,
+                            "si_factor": u.si_factor,
+                            "si_value": u.si_value,
                             "error": u.error,
                         }
                         for u in grounded.units
