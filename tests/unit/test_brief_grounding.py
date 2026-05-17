@@ -288,3 +288,86 @@ def test_grounded_brief_carries_both_axes() -> None:
     )
     assert gb.triz[0].principle_id == 1
     assert gb.rad[0].domain == "d"
+
+
+# ---------------------------------------------------------------------------
+# MATH-08 — Inlined calculation grounding
+# ---------------------------------------------------------------------------
+
+
+def test_grounder_inlines_calculations() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(
+        brief_id="b1",
+        goal="confirm that (2.5 * 7.8) / 0.3 fits the budget",
+    )
+    grounded = grounder.ground(brief)
+    assert len(grounded.calc) == 1
+    cc = grounded.calc[0]
+    assert cc.error is None
+    assert cc.value == pytest.approx(65.0)
+    assert cc.operation_count >= 2
+    # Augmented goal includes the inlined block so the LLM sees the proof.
+    assert "[Inlined calculations (MATH-08)]" in grounded.augmented_goal
+    assert "= 65.0" in grounded.augmented_goal
+
+
+def test_grounder_calc_handles_error_safely() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(brief_id="b1", goal="check 10 / 0 in the math")
+    grounded = grounder.ground(brief)
+    # extract_expressions finds "10 / 0"; SafeCalculator rejects it
+    assert len(grounded.calc) == 1
+    cc = grounded.calc[0]
+    assert cc.error is not None
+    assert "zero division" in cc.error
+    assert "ERROR" in grounded.augmented_goal
+
+
+def test_grounder_respects_max_calc_cap() -> None:
+    grounder = BriefGrounder(
+        principles=_PRINCIPLE_INDEX,
+        config=GroundingConfig(max_calc=2),
+    )
+    brief = Brief(
+        brief_id="b1",
+        goal="numbers: 1 + 1 and 2 * 3 and 4 - 1 and 5 / 1 and 6 + 6",
+    )
+    grounded = grounder.ground(brief)
+    assert len(grounded.calc) <= 2
+
+
+def test_grounder_no_calc_when_no_expressions() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(brief_id="b1", goal="write the architecture overview")
+    grounded = grounder.ground(brief)
+    assert grounded.calc == ()
+
+
+def test_calc_citation_is_frozen() -> None:
+    c = CalcCitation(expression="1+1", value=2.0)
+    with pytest.raises(Exception):
+        c.value = 99.0  # type: ignore[misc]
+
+
+def test_runner_records_calc_in_ledger(tmp_path: Path) -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    runner = BriefRunner(
+        loop=FullSenseLoop(sandbox=True, salience_threshold=0.0),
+        grounder=grounder,
+    )
+    brief = Brief(
+        brief_id="calc-1",
+        goal="verify (3 + 4) * 2 produces the expected throughput",
+        approval_required=False,
+        ledger_path=tmp_path / "calc-1.jsonl",
+    )
+    runner.submit(brief)
+
+    records = list(BriefLedger(brief.ledger_path).read())  # type: ignore[arg-type]
+    grounding = next(r for r in records if r.event == "grounding_applied")
+    calc_payload = grounding.payload["calc"]
+    assert len(calc_payload) == 1
+    assert calc_payload[0]["value"] == pytest.approx(14.0)
+    assert calc_payload[0]["error"] is None
+    assert calc_payload[0]["operation_count"] >= 2
