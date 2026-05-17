@@ -145,7 +145,13 @@ class RenderedBrief:
 
 
 class DualSpecWriter:
-    """Renders a Brief into one or more :class:`RenderMode` outputs."""
+    """Renders a Brief into one or more :class:`RenderMode` outputs.
+
+    IND-04: ``annotations`` を渡すと、出力末尾に HTML/Markdown コメント形式
+    (``<!-- llive:... -->``) で埋め込む。コメントは renderer で不可視になる
+    ため human-facing 出力を一切汚さない。consumer は raw text から
+    :meth:`AnnotationBundle.from_html_comments` で復元できる。
+    """
 
     def render(
         self,
@@ -153,6 +159,7 @@ class DualSpecWriter:
         mode: RenderMode,
         *,
         eval_spec: "EvalSpec | None" = None,
+        annotations: "AnnotationBundle | None" = None,
     ) -> RenderedBrief:
         if mode is RenderMode.HUMAN_BRIEF:
             body = _render_human_brief(brief)
@@ -166,6 +173,8 @@ class DualSpecWriter:
             body = _render_research_note(brief)
         else:  # pragma: no cover - StrEnum closed
             raise ValueError(f"unsupported mode: {mode!r}")
+        if annotations is not None and len(annotations) > 0:
+            body = body + "\n" + annotations.to_html_comments() + "\n"
         return RenderedBrief(brief_id=brief.brief_id, mode=mode, body=body)
 
     def render_all(
@@ -173,8 +182,12 @@ class DualSpecWriter:
         brief: "Brief",
         *,
         eval_spec: "EvalSpec | None" = None,
+        annotations: "AnnotationBundle | None" = None,
     ) -> dict[RenderMode, RenderedBrief]:
-        return {m: self.render(brief, m, eval_spec=eval_spec) for m in RenderMode}
+        return {
+            m: self.render(brief, m, eval_spec=eval_spec, annotations=annotations)
+            for m in RenderMode
+        }
 
 
 __all__ = [
