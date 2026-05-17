@@ -188,8 +188,16 @@ class BriefRunner:
             self._notebook.bind_ledger(ledger)
         if self._strategy_orchestrator is not None:
             self._strategy_orchestrator.bind_ledger(ledger)
+        if self._prompt_linter is not None:
+            self._prompt_linter.bind_ledger(ledger)
 
         ledger.append("brief_submitted", {"brief": brief_to_dict(brief)})
+
+        # VRB-02 — auto-lint the Brief at submit time so audit picks up
+        # design-time vagueness even when no operator triggered it.
+        lint_report: LintReport | None = None
+        if self._prompt_linter is not None:
+            lint_report = self._prompt_linter.lint(brief)
 
         # OKA-01/02 — auto-extract a core essence snapshot at the start of every
         # Brief. Deterministic + cheap; ledger event is appended by the extractor.
