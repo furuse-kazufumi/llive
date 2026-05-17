@@ -218,6 +218,16 @@ class MathVerifier:
             self._ledger.append("math_verified", result.to_payload())
         return result
 
+    def bind_ledger(self, ledger: "BriefLedger | None") -> None:
+        """Attach (or replace) the auto-record sink after construction.
+
+        Used by :class:`~llive.brief.runner.BriefRunner` to redirect a
+        shared verifier into the Brief's own per-run ledger, so multiple
+        Briefs each get their own audit trail without the caller having
+        to construct a verifier per Brief.
+        """
+        self._ledger = ledger
+
     # -- equivalence ---------------------------------------------------------
 
     def check_equivalence(self, lhs: str, rhs: str, *, source_id: str | None = None) -> VerificationResult:
