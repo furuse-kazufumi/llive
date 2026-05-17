@@ -206,18 +206,25 @@ class SafeCalculator:
 # Crude regex — pulls out parenthesised arithmetic expressions or simple
 # `a OP b` patterns from natural language. Misses corner cases but is the
 # minimum viable "find me the math in this Brief" tool.
+#
+# Number atom supports plain (1, 3.14), scientific (1.38e-23, 6.6E+10) and
+# negative exponents in the magnitude — surfaced by the
+# 2026-05-17-grounding-observation report which caught "(1.38e-23 * 300)"
+# being mis-extracted as "23 * 300".
+_NUM = r"\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
+
 _ARITH_RE = re.compile(
-    r"""
+    rf"""
     (?:                                    # an expression is...
         \(                                 # opens with (
-        [\d\s+\-*/.,()^]+                  #   contains arithmetic chars
+        [\d\s+\-*/.,()^eE]+                #   contains arithmetic chars (incl. exponent letter)
         \)                                 # closes with )
-        (?:\s*[\^*/%]\s*\d+(?:\.\d+)?)?    # optional trailing exponent/mul
+        (?:\s*[\^*/%]\s*{_NUM})?           # optional trailing exponent/mul
     )
     |                                       # ... OR ...
     (?:                                    # bare a OP b pattern
-        \d+(?:\.\d+)?                      # number
-        (?:\s*[+\-*/^]\s*\d+(?:\.\d+)?){1,} # at least one OP number
+        {_NUM}                              # number (plain or scientific)
+        (?:\s*[+\-*/^]\s*{_NUM}){{1,}}      # at least one OP number
     )
     """,
     re.VERBOSE,
