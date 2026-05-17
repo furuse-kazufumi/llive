@@ -265,7 +265,10 @@ print(b.generate(GenerateRequest(prompt='ping', max_tokens=32)).text)
 |---|---|---|
 | `ModuleNotFoundError: openai` | SDK 未インストール | `pip install openai>=1.0` |
 | `Connection refused` to 8080 | llama-server 未起動 | `llama-server.exe --model ...` を別ウィンドウ |
-| `404 model not found` | `LLIVE_OPENAI_MODEL` が llama-server の id と不一致 | `curl http://localhost:8080/v1/models` の id をコピー |
+| `404 model not found` | `LLIVE_OPENAI_MODEL` が llama-server の id と不一致 | `curl http://localhost:8080/v1/models` の id をコピー. **`.gguf` ファイル名と一致するとは限らない** (GGUF `general.name` メタデータ優先) |
+| `401 Unauthorized` | `--api-key` 設定済だが llive 側 key 不一致 | env `OPENAI_API_KEY` を llama-server の `--api-key` 値に合わせる |
+| 401 だが key は合っているはず | proxy / firewall が `Authorization: Bearer ...` ヘッダを落としている | openai SDK は自動で付けるが、社内 proxy 透過時に剥がれることあり. 直叩き `curl -H "Authorization: Bearer <key>" ...` で切り分け |
+| 複数 Brief 同時投入で応答が詰まる | llama-server `--parallel` 不足 | `--parallel 4` 以上で再起動 (llive `orchestration.Pipeline` の `max_workers=4` に合わせる) |
 | 応答が空 / 即終了 | `--ctx-size` が小さい (default 512) | `--ctx-size 8192` 以上で再起動 |
 | 応答途中で切れる | `max_tokens` 不足 | `GenerateRequest(max_tokens=2048)` 等で増やす |
 | Anthropic API に流れている | `LLIVE_LLM_BACKEND` 未設定 + `ANTHROPIC_API_KEY` 残留 | `Remove-Item Env:ANTHROPIC_API_KEY` + 明示設定 |
