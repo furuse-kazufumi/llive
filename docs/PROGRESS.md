@@ -6,6 +6,53 @@
 
 ---
 
+## 2026-05-17 (8 回目) — CREAT 系完結 (CREAT-02/03/05)
+
+ゴール継続「要件定義の残件を可能な限り進める」を受け、CREAT 系の残 3 件を完遂。
+これで CREAT は全 5 件 (CREAT-01〜05) すべて実装済となる。
+
+### Done
+
+- **CREAT-02 MindMapBuilder** — `src/llive/creat/mindmap.py`
+  - root + N 階層 DFS 展開、`BranchExpander` Protocol で LLM 差し替え可能
+  - `mindmap_constructed` event → evidence_chain kind=mindmap_node
+- **CREAT-05 SynecticsEngine** — `src/llive/creat/synectics.py`
+  - Gordon 4 mechanism (direct/personal/symbolic/fantasy) 各 1 analogy 生成
+  - `AnalogySource` Protocol で Strategy 差し替え可能
+  - `synectics_analogies_generated` event → evidence_chain kind=synectics_analogy (analogy_kind に元 kind 退避)
+- **CREAT-03 StructureSynthesizer** — `src/llive/creat/structurize.py`
+  - KJBoard + MindMapTree + perspectives + TRIZ → `RequirementDraft` (categories / risk_notes / themes)
+  - `to_markdown()` で人間可読出力
+  - `requirement_draft_generated` event → decision_chain
+
+### テスト
+
+- CREAT-02 mindmap: 4 件
+- CREAT-05 synectics: 4 件
+- CREAT-03 structurize: 4 件
+- 計 12 件追加 / 1145 → 1157 PASS / 回帰ゼロ
+
+### llive 全 vertical 進捗 (2026-05-17 8 回目時点)
+
+| 系 | 状態 |
+|---|---|
+| MATH | 01/02/05/08 実装済 (4/8) |
+| OKA-FX | 01〜04/06/07 実装済 (6/10) |
+| COG-FX | 01〜04 + CREAT-04 実装済 (5/5 内核) |
+| VRB-FX | 02/04/05/06 実装済 (4/4 新規分すべて) |
+| **CREAT** | **01〜05 全件実装済 (5/5)** |
+| Brief Runner 統合 | 8 components opt-in |
+
+### 次セッション候補
+
+1. CABT-01 HFAdapter forward hook (torch 依存導入)
+2. OKA-05/08/09/10 (再定式化コーパス / 美的選好 / 教育的評価 / Notebook 再利用 A/B)
+3. MATH-03/04/06/07 (LaTeX/MathML 解析 / 精度トラッキング / Buckingham π / MATHEMATICAL EpistemicType)
+4. VRB-02/04/05/06 を E2E ハーネスに追加して 18 因子化
+5. ORG-FX (Originality Framework) 着手 / 横断 metadata schema migration
+
+---
+
 ## 2026-05-17 (7 回目) — 要件残件 7 件一気消化 (VRB-04/05/06 + OKA-06/07 + MATH-05 + CREAT-01)
 
 ユーザー `/goal` 指示「作業の優先順は決めてよいので、要件定義の残件を可能な限り進める」を
