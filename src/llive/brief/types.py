@@ -136,6 +136,9 @@ class BriefResult:
     # runner was given a CoreEssenceExtractor). Already in JSON-friendly form
     # via :meth:`CoreEssence.to_payload`.
     essence: Mapping[str, Any] | None = None
+    # VRB-02 — submit-time prompt lint report (only present when the runner
+    # was given a PromptLinter). JSON-friendly via :meth:`LintReport.to_payload`.
+    lint_report: Mapping[str, Any] | None = None
 
 
 def brief_to_dict(brief: Brief) -> dict[str, Any]:
