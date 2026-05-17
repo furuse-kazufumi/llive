@@ -177,6 +177,17 @@ class BriefLedger:
                 # filters can find specific ideas without unpacking the board.
                 for n in r.payload.get("nodes", []) or []:
                     evidence.append({"kind": "kj_node", **n})
+            elif r.event == "mindmap_constructed":
+                # CREAT-02 — each MindMap node as evidence (kind="mindmap_node").
+                for n in r.payload.get("nodes", []) or []:
+                    evidence.append({"kind": "mindmap_node", **n})
+            elif r.event == "synectics_analogies_generated":
+                # CREAT-05 — each analogy as evidence.
+                for a in r.payload.get("analogies", []) or []:
+                    evidence.append({"kind": "synectics_analogy", **a})
+            elif r.event == "requirement_draft_generated":
+                # CREAT-03 — requirement draft is a synthesis decision.
+                decisions.append({"event": r.event, **r.payload})
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored", "oka_strategy_switched"}:
