@@ -1,9 +1,20 @@
 # SPDX-License-Identifier: Apache-2.0
-"""OKA-FX — Oka Kiyoshi Framework for the math vertical (v0.7-vertical+OKA).
+"""OKA-FX — Framework inspired by the writings of Prof. Oka Kiyoshi
+(v0.7-vertical+OKA).
 
-岡潔の数学観 (情緒 / 行き詰まり / 文章化 / 国語力) を実装仕様に変換した
-モジュール群。MATH-* が「計算の正確さ」を担うのに対し、OKA-* は
-「数学者の思考プロセスの質」を担う。
+岡潔先生 (1901-1978) が遺された数学観 ―― 「数学は情緒である」「発見の前に
+一度行き詰まる」「文章を書くことなしには思索を進められない」「国語が
+数学を育む」―― という思想に学ばせていただき、その 4 観点を **設計の
+切り口** として実装に取り込んだモジュール群。
+
+**重要**: 本モジュール群は、岡潔先生のお考えそのものを実装したと主張する
+ものではありません。先生が遺された豊かな思索のうち、エンジニアリング言語
+として参照させていただける 4 観点に着目し、それを **触発源** として
+モジュール設計に活かしたものです。命名にはその敬意を込めています。
+
+MATH-* が「計算の正確さ」(deterministic verification) を担うのに対し、
+OKA-* は「数学者の思考プロセスの質」(reflective process quality) を担う
+補強層として位置付けています。
 
 Minimal v0.7-vertical+OKA prototype (2026-05-17):
 
