@@ -161,7 +161,29 @@ _DERIVED: dict[str, Dimensions] = {
     "1": Dimensions(),
     "rad": Dimensions(),
     "sr": Dimensions(),
+    # ---- time conventions (倍率は v0 で無視、次元のみ。MATH-06 で scale 化) ----
+    # 2026-05-17 grounding-observation で "5 days" 等が UNKNOWN だった対応。
+    # 「これは時間単位だ」という次元認識だけ与え、scale conversion は後段。
+    "min": Dimensions(s=1),
+    "h": Dimensions(s=1),       # hour (conflict 注意: 質量定数 'h' は constants 側で別管理)
+    "hour": Dimensions(s=1),
+    "hours": Dimensions(s=1),
+    "day": Dimensions(s=1),
+    "days": Dimensions(s=1),
+    "week": Dimensions(s=1),
+    "weeks": Dimensions(s=1),
+    "year": Dimensions(s=1),
+    "years": Dimensions(s=1),
 }
+
+
+# SI 接頭辞 (倍率は v0 では無視、次元解釈のみに用いる)
+# 2026-05-17 grounding-observation で "500 nm" が UNKNOWN だった対応。
+# 接頭辞付きの単位記号 (nm, μs, kHz, MeV, ...) を base unit 次元に reduce する。
+_SI_PREFIXES: frozenset[str] = frozenset({
+    "Y", "Z", "E", "P", "T", "G", "M", "k", "h", "da",
+    "d", "c", "m", "μ", "u", "n", "p", "f", "a", "z", "y",
+})
 
 
 # Tokeniser: split on `/` and `*` (and `·`), keep ^N exponents.
