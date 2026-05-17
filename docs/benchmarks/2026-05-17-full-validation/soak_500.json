@@ -1,0 +1,78 @@
+{
+  "n_briefs": 500,
+  "completed": 500,
+  "all_completed": true,
+  "total_wall_s": 7.101,
+  "throughput_per_s": 70.42,
+  "per_brief_s": {
+    "mean": 0.013528,
+    "median": 0.012255,
+    "p95": 0.021628,
+    "p99": 0.030151,
+    "max": 0.045241
+  },
+  "tracemalloc": {
+    "baseline_kb": 0.0,
+    "end_kb": 191.9,
+    "end_peak_kb": 231.8,
+    "delta_kb": 191.9,
+    "leak_per_brief_bytes": 393.09,
+    "samples": [
+      {
+        "after_brief": 0,
+        "traced_kb": 26.4,
+        "peak_kb": 145.9
+      },
+      {
+        "after_brief": 50,
+        "traced_kb": 48.4,
+        "peak_kb": 145.9
+      },
+      {
+        "after_brief": 100,
+        "traced_kb": 61.3,
+        "peak_kb": 145.9
+      },
+      {
+        "after_brief": 150,
+        "traced_kb": 74.4,
+        "peak_kb": 145.9
+      },
+      {
+        "after_brief": 200,
+        "traced_kb": 87.4,
+        "peak_kb": 155.1
+      },
+      {
+        "after_brief": 250,
+        "traced_kb": 100.0,
+        "peak_kb": 168.0
+      },
+      {
+        "after_brief": 300,
+        "traced_kb": 112.6,
+        "peak_kb": 180.7
+      },
+      {
+        "after_brief": 350,
+        "traced_kb": 125.4,
+        "peak_kb": 193.4
+      },
+      {
+        "after_brief": 400,
+        "traced_kb": 139.0,
+        "peak_kb": 206.6
+      },
+      {
+        "after_brief": 450,
+        "traced_kb": 151.1,
+        "peak_kb": 219.1
+      }
+    ]
+  },
+  "perf_drift": {
+    "first_100_median_s": 0.01447,
+    "last_100_median_s": 0.011589,
+    "drift_factor": 0.801
+  }
+}

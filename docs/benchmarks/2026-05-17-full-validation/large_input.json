@@ -1,0 +1,64 @@
+{
+  "profiles": [
+    {
+      "profile": "baseline",
+      "goal_chars": 50,
+      "n_constraints": 2,
+      "n_criteria": 1,
+      "wall_per_brief_s": {
+        "mean": 0.0067,
+        "max": 0.00821
+      },
+      "ledger_size_after_5_runs_bytes": 46095,
+      "ledger_size_per_run_kb": 9.0
+    },
+    {
+      "profile": "medium",
+      "goal_chars": 500,
+      "n_constraints": 10,
+      "n_criteria": 5,
+      "wall_per_brief_s": {
+        "mean": 0.00578,
+        "max": 0.00668
+      },
+      "ledger_size_after_5_runs_bytes": 94660,
+      "ledger_size_per_run_kb": 18.49
+    },
+    {
+      "profile": "large",
+      "goal_chars": 1989,
+      "n_constraints": 50,
+      "n_criteria": 20,
+      "wall_per_brief_s": {
+        "mean": 0.00922,
+        "max": 0.01383
+      },
+      "ledger_size_after_5_runs_bytes": 258612,
+      "ledger_size_per_run_kb": 50.51
+    },
+    {
+      "profile": "xlarge",
+      "goal_chars": 4914,
+      "n_constraints": 100,
+      "n_criteria": 50,
+      "wall_per_brief_s": {
+        "mean": 0.00866,
+        "max": 0.00952
+      },
+      "ledger_size_after_5_runs_bytes": 575988,
+      "ledger_size_per_run_kb": 112.5
+    },
+    {
+      "profile": "huge",
+      "goal_chars": 19539,
+      "n_constraints": 200,
+      "n_criteria": 100,
+      "wall_per_brief_s": {
+        "mean": 0.01258,
+        "max": 0.01391
+      },
+      "ledger_size_after_5_runs_bytes": 2115036,
+      "ledger_size_per_run_kb": 413.09
+    }
+  ]
+}
