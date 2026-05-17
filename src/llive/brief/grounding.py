@@ -84,6 +84,14 @@ _TRIZ_TRIGGERS: dict[str, int] = {
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9_぀-ゟ゠-ヿ一-鿿]+", re.UNICODE)
 
+# MATH-01 minimal: 数値 + 単位 を抽出 (例: "5 m/s", "9.81 m/s^2", "100 kg").
+# 偽陽性 (e.g. "5 days") は parse_unit で UnitMismatchError → citation.error
+# に格納する。完全に正しい NER ではなく「Brief 中の単位候補を漏らさず拾う」
+# 緩い抽出器。
+_QUANTITY_RE = re.compile(
+    r"\b(\d+(?:\.\d+)?)\s+([A-Za-z][A-Za-z0-9*/\^·]{0,15})\b"
+)
+
 
 @dataclass(frozen=True)
 class TrizCitation:
