@@ -27,14 +27,20 @@ from llive.math.units import (
     UnitMismatchError,
     parse_unit,
 )
+from llive.math.verifier import (
+    MathVerifier,
+    VerificationResult,
+)
 
 __all__ = [
     "CalculationError",
     "CalculationResult",
     "Dimensions",
+    "MathVerifier",
     "Quantity",
     "SafeCalculator",
     "UnitMismatchError",
+    "VerificationResult",
     "extract_expressions",
     "parse_unit",
 ]
