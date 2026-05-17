@@ -171,8 +171,8 @@ _CODATA_MEASURED: tuple[PhysicalConstant, ...] = (
         quantity=_q(9.80665, "m/s^2"),
         relative_uncertainty=0.0,
         source="NIST SP 330 (conventional value)",
-        aliases=("g", "gn", "standard_gravity"),
-        description="標準重力加速度 (慣用値、地理的に exact)",
+        aliases=("gn", "standard_gravity"),
+        description="標準重力加速度 (慣用値、地理的に exact). 注: 'G' (大文字) は newtonian_gravitation",
     ),
 )
 
