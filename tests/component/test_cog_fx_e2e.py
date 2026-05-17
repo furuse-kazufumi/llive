@@ -37,6 +37,13 @@ from llive.brief import (
 )
 from llive.fullsense.loop import FullSenseResult
 from llive.fullsense.types import ActionDecision, ActionPlan, Stimulus, Thought
+from llive.math import MathVerifier
+from llive.oka import (
+    CoreEssenceExtractor,
+    ReflectiveNotebook,
+    StrategyFamily,
+    StrategyOrchestrator,
+)
 
 
 # ---------------------------------------------------------------------------
