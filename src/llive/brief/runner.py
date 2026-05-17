@@ -109,6 +109,7 @@ class BriefRunner:
         approver: str = "agent",
         grounder: BriefGrounder | None = None,
         governance_scorer: GovernanceScorer | None = None,
+        perspectives: RoleBasedMultiTrack | None = None,
     ) -> None:
         self._loop = loop
         self._approval_bus = approval_bus
@@ -123,6 +124,11 @@ class BriefRunner:
         # The scorer never blocks by itself; it surfaces recommend_block
         # which Approval Bus policy is free to honour or override.
         self._governance_scorer = governance_scorer
+        # COG-04 + CREAT-04 multi-track perspectives — opt-in. When attached,
+        # every (Brief, decision, plan) triple is observed through 10 lenses
+        # (4 roles + 6 hats). Like governance, perspectives never block —
+        # the summary is surfaced for downstream operators / UI.
+        self._perspectives = perspectives
 
     # -- public --------------------------------------------------------------
 
