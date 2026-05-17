@@ -158,6 +158,11 @@ class BriefLedger:
                 # VRB-04 — formal failure scenarios. Marked as evidence so the
                 # audit trail shows the Brief was pre-mortem'd before action.
                 evidence.append({"kind": "premortem", **r.payload})
+            elif r.event == "eval_spec_evaluated":
+                # VRB-05 — formal eval outcome. Decision-chain because it's a
+                # judgement about the Brief (pass / fail / stop), not raw
+                # evidence material.
+                decisions.append({"event": r.event, **r.payload})
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored", "oka_strategy_switched"}:
