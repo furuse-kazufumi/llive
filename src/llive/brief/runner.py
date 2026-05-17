@@ -379,6 +379,11 @@ class BriefRunner:
                 "confidence": outcome.confidence,
                 "assumptions": list(outcome.assumptions),
                 "missing_evidence": list(outcome.missing_evidence),
+                # COG-04 + CREAT-04 — perspectives reproduced in outcome row
+                "perspectives": list(outcome.perspectives),
+                "perspective_summary": dict(outcome.perspective_summary)
+                if outcome.perspective_summary is not None
+                else None,
             },
         )
         return outcome
