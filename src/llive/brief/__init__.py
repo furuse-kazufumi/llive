@@ -100,6 +100,7 @@ __all__ = [
     "BriefStatus",
     "BriefValidationError",
     "CriticLens",
+    "DualSpecWriter",
     "EvalEvaluator",
     "EvalReport",
     "EvalSpec",
