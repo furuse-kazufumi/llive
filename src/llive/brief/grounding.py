@@ -469,6 +469,10 @@ class BriefGrounder:
         out: list[UnitCitation] = []
         for m in _QUANTITY_RE.finditer(text):
             value_s, unit_text = m.group(1), m.group(2)
+            # Skip obvious domain words (pages/users/items …) so the
+            # error-citation channel stays useful for genuine unknown units.
+            if unit_text.lower() in _NON_UNIT_WORDS:
+                continue
             key = (value_s, unit_text)
             if key in seen:
                 continue
