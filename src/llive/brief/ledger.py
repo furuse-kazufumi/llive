@@ -182,9 +182,15 @@ class BriefLedger:
                 for n in r.payload.get("nodes", []) or []:
                     evidence.append({"kind": "mindmap_node", **n})
             elif r.event == "synectics_analogies_generated":
-                # CREAT-05 — each analogy as evidence.
+                # CREAT-05 — each analogy as evidence. The analogy payload's own
+                # ``kind`` (direct/personal/symbolic/fantasy) is preserved as
+                # ``analogy_kind`` so the evidence-chain slot can hold
+                # "synectics_analogy" without overwrite.
                 for a in r.payload.get("analogies", []) or []:
-                    evidence.append({"kind": "synectics_analogy", **a})
+                    entry = dict(a)
+                    entry["analogy_kind"] = entry.pop("kind", "")
+                    entry["kind"] = "synectics_analogy"
+                    evidence.append(entry)
             elif r.event == "requirement_draft_generated":
                 # CREAT-03 — requirement draft is a synthesis decision.
                 decisions.append({"event": r.event, **r.payload})
