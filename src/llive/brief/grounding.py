@@ -458,4 +458,14 @@ class BriefGrounder:
                         f"- {c.expression} = {c.value!r} (ops={c.operation_count}){fn_note}"
                     )
             sections.append("\n".join(block))
+        if units:
+            block = ["", "[Quantities recognised (MATH-01)]"]
+            for u in units:
+                if u.error is not None:
+                    block.append(f"- {u.raw_text} → UNKNOWN UNIT ({u.error})")
+                else:
+                    block.append(
+                        f"- {u.raw_text} → value={u.value}, dimensions={u.dimensions}"
+                    )
+            sections.append("\n".join(block))
         return "\n".join(sections)
