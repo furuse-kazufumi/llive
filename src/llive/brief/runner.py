@@ -494,6 +494,9 @@ class BriefRunner:
                 ledger_entries=ledger.entries_written + 1,
             )
 
+        # gate_approval is only called when approval is required AND we have a
+        # bus — no notebook hook here because the Brief is paused, not failed.
+
         payload: dict[str, object] = {
             "brief_id": brief.brief_id,
             "goal": brief.goal,
