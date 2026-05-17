@@ -502,6 +502,7 @@ class BriefGrounder:
         rad: tuple[RadCitation, ...],
         calc: tuple[CalcCitation, ...] = (),
         units: tuple[UnitCitation, ...] = (),
+        constants: tuple[ConstantCitation, ...] = (),
     ) -> str:
         sections: list[str] = [brief.goal]
         if triz:
