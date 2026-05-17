@@ -5,7 +5,13 @@ from __future__ import annotations
 
 import pytest
 
-from llive.math import Dimensions, Quantity, UnitMismatchError, parse_unit
+from llive.math import (
+    Dimensions,
+    Quantity,
+    UnitMismatchError,
+    parse_unit,
+    unit_scale_factor,
+)
 
 
 # ---------------------------------------------------------------------------
