@@ -140,8 +140,24 @@ class BriefRunner:
 
     # -- public --------------------------------------------------------------
 
+    @property
+    def math_verifier(self) -> MathVerifier | None:
+        """The bound MathVerifier (if any) — already pointed at this Brief's ledger.
+
+        Tool handlers and grounder extensions can grab this to perform
+        deterministic math checks whose ``math_verified`` events land in
+        the same audit trail as the rest of the Brief run.
+        """
+        return self._math_verifier
+
     def submit(self, brief: Brief) -> BriefResult:
         ledger = self._open_ledger(brief)
+
+        # Rebind the verifier's sink so every check_* during this submit lands
+        # in *this* Brief's ledger, not whatever ledger the verifier was
+        # constructed with (or no ledger at all).
+        if self._math_verifier is not None:
+            self._math_verifier.bind_ledger(ledger)
 
         ledger.append("brief_submitted", {"brief": brief_to_dict(brief)})
 
