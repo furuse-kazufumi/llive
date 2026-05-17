@@ -116,19 +116,37 @@ class CalcCitation:
 
 
 @dataclass(frozen=True)
+class UnitCitation:
+    """One value+unit pair recognised in a Brief (MATH-01 minimal grounding).
+
+    Recorded so the LLM (and later, the auditor) can see exactly how each
+    quantity in the Brief mapped to an SI dimension vector. Unknown unit
+    symbols are surfaced as ``error`` rather than silently dropped — both
+    so the auditor sees what was tried, and so we collect failure modes
+    for refining the parser.
+    """
+
+    raw_text: str         # e.g. "5 m/s"
+    value: float          # numeric magnitude as parsed
+    unit_text: str        # e.g. "m/s"
+    dimensions: str       # str(Dimensions), e.g. "m·s^-1"
+    error: str | None = None
+
+
+@dataclass(frozen=True)
 class GroundedBrief:
     """Result of running a Brief through :class:`BriefGrounder`.
 
     ``augmented_goal`` is what should replace ``brief.goal`` when building
-    the Stimulus. The ``triz`` and ``rad`` and ``calc`` fields are kept
-    separate so the ledger can record them as structured citations rather
-    than re-parsing text.
+    the Stimulus. The citation fields are kept separate so the ledger can
+    record them as structured citations rather than re-parsing text.
     """
 
     augmented_goal: str
     triz: tuple[TrizCitation, ...] = ()
     rad: tuple[RadCitation, ...] = ()
     calc: tuple[CalcCitation, ...] = ()
+    units: tuple[UnitCitation, ...] = ()
 
 
 @dataclass
