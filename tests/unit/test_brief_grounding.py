@@ -578,6 +578,26 @@ def test_triz_word_boundary_avoids_speedy_false_positive() -> None:
     assert 35 not in pids
 
 
+def test_grounder_emits_si_factor_for_time_units() -> None:
+    """MATH-06 minimal: '5 days' should grounded to si_value = 432000 s."""
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(brief_id="b1", goal="run a 5 days experiment from start")
+    grounded = grounder.ground(brief)
+    days = next(u for u in grounded.units if u.raw_text == "5 days")
+    assert days.si_factor == pytest.approx(86400.0)
+    assert days.si_value == pytest.approx(5 * 86400.0)
+
+
+def test_grounder_si_factor_for_prefix_unit() -> None:
+    """'500 nm' should grounded to si_value = 5e-7 m."""
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(brief_id="b1", goal="aim a laser at 500 nm wavelength")
+    grounded = grounder.ground(brief)
+    nm = next(u for u in grounded.units if u.raw_text == "500 nm")
+    assert nm.si_factor == pytest.approx(1e-9)
+    assert nm.si_value == pytest.approx(500e-9)
+
+
 def test_grounder_skips_domain_words_as_unit_candidates() -> None:
     """`1 email`, `30 pages` should not appear as error citations.
 
