@@ -1,0 +1,21 @@
+{
+  "n": 1000,
+  "build_total_s": 0.007952,
+  "build_per_annotation_us": 7.952,
+  "encode": {
+    "total_s": 0.0063,
+    "per_annotation_us": 6.3,
+    "output_bytes": 79724,
+    "bytes_per_annotation": 79.7
+  },
+  "decode": {
+    "total_s": 0.012401,
+    "per_annotation_us": 12.401,
+    "round_trip_ok": true
+  },
+  "filter_for_layer_ms_per_call": 0.1299,
+  "filter_by_namespace_ms_per_call": 0.0382,
+  "get_us_per_call": 34.324,
+  "small_bundle_3_items_bytes": 141,
+  "small_bundle_sample": "<!-- llive:core.brief_completed=true -->\n<!-- llive:oka.essence_card={\"summary\": \"s\"} target=llove -->\n<!-- llive:cog.consensus=\"proceed\" -->"
+}

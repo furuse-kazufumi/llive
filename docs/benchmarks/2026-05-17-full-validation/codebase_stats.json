@@ -1,0 +1,200 @@
+{
+  "src": {
+    "files": 172,
+    "total_lines": 27354,
+    "code_lines": 22844,
+    "blank_lines": 4510,
+    "classes": 376,
+    "functions": 1116,
+    "per_subpackage": {
+      "(root)": {
+        "files": 2,
+        "lines": 237,
+        "code": 188
+      },
+      "cli": {
+        "files": 2,
+        "lines": 475,
+        "code": 381
+      },
+      "orchestration": {
+        "files": 3,
+        "lines": 294,
+        "code": 247
+      },
+      "core": {
+        "files": 2,
+        "lines": 173,
+        "code": 143
+      },
+      "container": {
+        "files": 6,
+        "lines": 636,
+        "code": 518
+      },
+      "memory": {
+        "files": 21,
+        "lines": 3232,
+        "code": 2712
+      },
+      "evolution": {
+        "files": 8,
+        "lines": 1641,
+        "code": 1377
+      },
+      "observability": {
+        "files": 5,
+        "lines": 592,
+        "code": 492
+      },
+      "schema": {
+        "files": 3,
+        "lines": 331,
+        "code": 237
+      },
+      "triz": {
+        "files": 6,
+        "lines": 988,
+        "code": 831
+      },
+      "router": {
+        "files": 3,
+        "lines": 216,
+        "code": 177
+      },
+      "wiki": {
+        "files": 4,
+        "lines": 408,
+        "code": 337
+      },
+      "security": {
+        "files": 4,
+        "lines": 610,
+        "code": 502
+      },
+      "rust_ext": {
+        "files": 1,
+        "lines": 149,
+        "code": 120
+      },
+      "mcp": {
+        "files": 3,
+        "lines": 728,
+        "code": 652
+      },
+      "llm": {
+        "files": 2,
+        "lines": 491,
+        "code": 408
+      },
+      "server": {
+        "files": 2,
+        "lines": 357,
+        "code": 304
+      },
+      "demo": {
+        "files": 16,
+        "lines": 2844,
+        "code": 2498
+      },
+      "fullsense": {
+        "files": 20,
+        "lines": 3396,
+        "code": 2804
+      },
+      "perf": {
+        "files": 7,
+        "lines": 995,
+        "code": 811
+      },
+      "idle": {
+        "files": 3,
+        "lines": 251,
+        "code": 200
+      },
+      "approval": {
+        "files": 5,
+        "lines": 574,
+        "code": 457
+      },
+      "rpa": {
+        "files": 3,
+        "lines": 145,
+        "code": 122
+      },
+      "kar": {
+        "files": 2,
+        "lines": 198,
+        "code": 178
+      },
+      "output": {
+        "files": 2,
+        "lines": 237,
+        "code": 192
+      },
+      "migration": {
+        "files": 7,
+        "lines": 897,
+        "code": 740
+      },
+      "learning": {
+        "files": 2,
+        "lines": 168,
+        "code": 131
+      },
+      "brief": {
+        "files": 12,
+        "lines": 3213,
+        "code": 2735
+      },
+      "math": {
+        "files": 5,
+        "lines": 1183,
+        "code": 998
+      },
+      "oka": {
+        "files": 6,
+        "lines": 894,
+        "code": 719
+      },
+      "creat": {
+        "files": 5,
+        "lines": 801,
+        "code": 633
+      }
+    }
+  },
+  "tests": {
+    "files": 123,
+    "total_lines": 16978,
+    "code_lines": 13051,
+    "blank_lines": 3927,
+    "classes": 44,
+    "functions": 1463,
+    "per_subpackage": {
+      "(root)": {
+        "files": 1,
+        "lines": 34,
+        "code": 26
+      },
+      "unit": {
+        "files": 109,
+        "lines": 15477,
+        "code": 11888
+      },
+      "component": {
+        "files": 11,
+        "lines": 1222,
+        "code": 951
+      },
+      "property": {
+        "files": 2,
+        "lines": 245,
+        "code": 186
+      }
+    }
+  },
+  "test_to_code_ratio": 0.571,
+  "independence_audit_exit": 0,
+  "independence_audit_stdout": "wrote docs\\audits\\independence-2026-05-17.md\naudited 172 files / hard leaks=0 / soft=0"
+}

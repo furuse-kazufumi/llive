@@ -1,0 +1,61 @@
+{
+  "n_runs": 100,
+  "total_wall_s": 0.0373,
+  "throughput_per_s": 2679.69,
+  "pipeline_per_run": {
+    "mean_ms": 0.3656,
+    "median_ms": 0.3298,
+    "p95_ms": 0.5787,
+    "max_ms": 0.9742
+  },
+  "per_stage": {
+    "essence": {
+      "mean_ms": 0.026,
+      "median_ms": 0.0189,
+      "p95_ms": 0.0376,
+      "max_ms": 0.4949
+    },
+    "kj": {
+      "mean_ms": 0.1817,
+      "median_ms": 0.1707,
+      "p95_ms": 0.2535,
+      "max_ms": 0.3633
+    },
+    "mindmap": {
+      "mean_ms": 0.0344,
+      "median_ms": 0.0287,
+      "p95_ms": 0.0487,
+      "max_ms": 0.3137
+    },
+    "synectics": {
+      "mean_ms": 0.0114,
+      "median_ms": 0.0101,
+      "p95_ms": 0.0181,
+      "max_ms": 0.0289
+    },
+    "perspectives": {
+      "mean_ms": 0.0673,
+      "median_ms": 0.0604,
+      "p95_ms": 0.1177,
+      "max_ms": 0.1823
+    },
+    "structurize": {
+      "mean_ms": 0.0092,
+      "median_ms": 0.0083,
+      "p95_ms": 0.0144,
+      "max_ms": 0.0177
+    },
+    "explanation": {
+      "mean_ms": 0.0109,
+      "median_ms": 0.0093,
+      "p95_ms": 0.0183,
+      "max_ms": 0.038
+    },
+    "insight_score": {
+      "mean_ms": 0.0227,
+      "median_ms": 0.0193,
+      "p95_ms": 0.0361,
+      "max_ms": 0.1824
+    }
+  }
+}

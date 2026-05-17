@@ -1,0 +1,30 @@
+{
+  "n_per_kind": 200,
+  "equivalence": {
+    "wall_total_s": 2.9706,
+    "throughput_per_s": 67.33,
+    "mean_ms": 14.8382,
+    "median_ms": 13.0985,
+    "p95_ms": 20.561,
+    "p99_ms": 23.9729,
+    "max_ms": 218.9748
+  },
+  "implication": {
+    "wall_total_s": 0.5437,
+    "throughput_per_s": 367.86,
+    "mean_ms": 2.6907,
+    "median_ms": 2.3811,
+    "p95_ms": 3.7839,
+    "p99_ms": 10.5969,
+    "max_ms": 25.281
+  },
+  "satisfiable": {
+    "wall_total_s": 0.537,
+    "throughput_per_s": 372.45,
+    "mean_ms": 2.5828,
+    "median_ms": 2.4676,
+    "p95_ms": 3.7574,
+    "p99_ms": 4.3998,
+    "max_ms": 5.4292
+  }
+}

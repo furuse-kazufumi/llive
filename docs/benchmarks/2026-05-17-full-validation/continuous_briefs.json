@@ -1,0 +1,33 @@
+{
+  "n_briefs": 100,
+  "total_wall_s": 1.3434,
+  "throughput_briefs_per_s": 74.44,
+  "per_brief_s": {
+    "mean": 0.011678,
+    "median": 0.010123,
+    "p95": 0.022368,
+    "p99": 0.04727,
+    "min": 0.006536,
+    "max": 0.04727
+  },
+  "ledger_size_bytes": {
+    "first": 7293,
+    "last": 7309,
+    "mean": 7307,
+    "growth_factor_last_over_first": 1.002
+  },
+  "annotations_per_brief": {
+    "mean": 3,
+    "min": 3,
+    "max": 3
+  },
+  "memory_rss_mb": {
+    "baseline": null,
+    "after": null,
+    "samples": []
+  },
+  "status_counts": {
+    "completed": 100
+  },
+  "all_completed": true
+}
