@@ -454,7 +454,7 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 
 | FR | Phase | Status | Priority |
 |---|---|---|---|
-| MATH-01 | Phase 10 | Pending | **1st** |
+| MATH-01 | Phase 10 | **Implemented** (2026-05-17, internal: `src/llive/math/units.py`, **未配線**: Brief grounding 統合は次イテレーション) | **1st** |
 | MATH-02 | Phase 10 | **Implemented** (2026-05-17) | **2nd** |
 
 **MATH-02 実装ノート (2026-05-17)**: `src/llive/math/verifier.py` に `MathVerifier`
