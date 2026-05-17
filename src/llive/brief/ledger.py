@@ -139,9 +139,22 @@ class BriefLedger:
                 entry["check_kind"] = entry.pop("kind", "")
                 entry["kind"] = "math"
                 evidence.append(entry)
+            elif r.event == "oka_essence_extracted":
+                # OKA-01/02 — core essence as evidence backing the Brief's framing.
+                evidence.append({"kind": "oka_essence", **r.payload})
+            elif r.event == "oka_notebook_appended":
+                # OKA-04 — reflective note (intermediate / failed_attempt / insight /
+                # open_question / reframing). Preserves the note kind as note_kind
+                # so the evidence-chain ``kind`` slot can stay "oka_note".
+                entry = dict(r.payload)
+                entry["note_kind"] = entry.pop("kind", "")
+                entry["kind"] = "oka_note"
+                evidence.append(entry)
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
-            elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored"}:
+            elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored", "oka_strategy_switched"}:
+                # OKA-03 — strategy switches are decision-level audit events
+                # (a switch is a meta-decision about how to proceed).
                 decisions.append({"event": r.event, **r.payload})
         return TraceGraph(
             evidence_chain=tuple(evidence),
