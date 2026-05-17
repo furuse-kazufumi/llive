@@ -189,6 +189,34 @@ _SI_PREFIXES: frozenset[str] = frozenset({
     "d", "c", "m", "μ", "u", "n", "p", "f", "a", "z", "y",
 })
 
+# MATH-06 minimal scale layer: SI prefix → multiplier. Quantity 自体は
+# 触らず unit_scale_factor() 経由でのみ公開。互換性破壊を避けるため。
+_SI_PREFIX_SCALE: dict[str, float] = {
+    "Y": 1e24, "Z": 1e21, "E": 1e18, "P": 1e15, "T": 1e12,
+    "G": 1e9, "M": 1e6, "k": 1e3, "h": 1e2, "da": 1e1,
+    "d": 1e-1, "c": 1e-2, "m": 1e-3, "μ": 1e-6, "u": 1e-6,
+    "n": 1e-9, "p": 1e-12, "f": 1e-15, "a": 1e-18, "z": 1e-21, "y": 1e-24,
+}
+
+# 時間慣用単位 → seconds への変換係数。次元は既に _DERIVED で Dimensions(s=1)
+# として扱っているので、scale だけここで持つ。
+_TIME_SCALE: dict[str, float] = {
+    "second": 1.0, "seconds": 1.0, "s": 1.0,
+    "min": 60.0,
+    "h": 3600.0, "hour": 3600.0, "hours": 3600.0,
+    "day": 86400.0, "days": 86400.0,
+    "week": 604800.0, "weeks": 604800.0,
+    "month": 2629800.0, "months": 2629800.0,   # 平均月 = 30.4375 日
+    "year": 31557600.0, "years": 31557600.0,   # 365.25 日 (Julian year)
+}
+
+# 質量慣用 (g→kg)。_DERIVED で 'g' は Dimensions(kg=1) として登録済 (次元のみ)、
+# scale はここで持つ。
+_MASS_SCALE: dict[str, float] = {
+    "g": 1e-3,
+    "kg": 1.0,
+}
+
 
 # Tokeniser: split on `/` and `*` (and `·`), keep ^N exponents.
 _TOKEN_RE = re.compile(r"\s*([*/·])\s*|\s+")
