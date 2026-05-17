@@ -17,11 +17,41 @@ from llive.creat.kj import (
     KJExtractor,
     KJNode,
 )
+from llive.creat.mindmap import (
+    BranchExpander,
+    MindMapBuilder,
+    MindMapNode,
+    MindMapTree,
+)
+from llive.creat.structurize import (
+    RequirementCategory,
+    RequirementDraft,
+    StructureSynthesizer,
+)
+from llive.creat.synectics import (
+    Analogy,
+    AnalogyKind,
+    AnalogySource,
+    SynecticsEngine,
+    SynecticsReport,
+)
 
 __all__ = [
     "AffinityCluster",
+    "Analogy",
+    "AnalogyKind",
+    "AnalogySource",
+    "BranchExpander",
     "IdeaGenerator",
     "KJBoard",
     "KJExtractor",
     "KJNode",
+    "MindMapBuilder",
+    "MindMapNode",
+    "MindMapTree",
+    "RequirementCategory",
+    "RequirementDraft",
+    "StructureSynthesizer",
+    "SynecticsEngine",
+    "SynecticsReport",
 ]
