@@ -73,6 +73,19 @@ BRIEFS = [
 # ---- Backends --------------------------------------------------------------
 
 
+def _call_llive_alone(prompt: str) -> tuple[str, float]:
+    """llive 単独 (FullSenseLoop, LLM 無し / rule-based template) — baseline."""
+    loop = FullSenseLoop(sandbox=True, salience_threshold=0.0, llm_backend=None)
+    stim = Stimulus(content=prompt, source="manual", surprise=0.7,
+                    epistemic_type=EpistemicType.PRAGMATIC)
+    t0 = time.perf_counter()
+    result = loop.process(stim)
+    elapsed = time.perf_counter() - t0
+    thought = getattr(result.plan, "thought", None)
+    text = str(getattr(thought, "text", "") or "") if thought else ""
+    return text, elapsed
+
+
 def _call_llive_qwen14b(prompt: str) -> tuple[str, float]:
     """llive 経由 (FullSenseLoop + ollama qwen2.5:14b) — for comparison."""
     from llive.llm import OllamaBackend
