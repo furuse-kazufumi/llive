@@ -195,8 +195,9 @@ class BriefGrounder:
     def ground(self, brief: Brief) -> GroundedBrief:
         triz = self._lookup_triz(brief)
         rad = self._lookup_rad(brief)
-        augmented = self._build_augmented_goal(brief, triz, rad)
-        return GroundedBrief(augmented_goal=augmented, triz=triz, rad=rad)
+        calc = self._lookup_calc(brief)
+        augmented = self._build_augmented_goal(brief, triz, rad, calc)
+        return GroundedBrief(augmented_goal=augmented, triz=triz, rad=rad, calc=calc)
 
     # -- internals -----------------------------------------------------------
 
