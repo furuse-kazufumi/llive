@@ -138,6 +138,7 @@ def _call_perplexity_sonar(prompt: str) -> tuple[str, float]:
 
 
 BACKENDS = [
+    {"name": "llive_alone_no_llm", "fn": _call_llive_alone, "kind": "llive 単独 (rule-based, no LLM)"},
     {"name": "llive_qwen2.5:14b", "fn": _call_llive_qwen14b, "kind": "on-prem (via llive loop)"},
     {"name": "anthropic_haiku_4.5", "fn": _call_anthropic_haiku, "kind": "cloud (direct API)"},
     {"name": "perplexity_sonar", "fn": _call_perplexity_sonar, "kind": "cloud (direct API)"},
