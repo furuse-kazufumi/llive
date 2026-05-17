@@ -341,6 +341,16 @@ class BriefRunner:
         if not brief.success_criteria:
             assumptions_list.append("no explicit success_criteria — judgement deferred to caller")
 
+        perspective_summary_payload: dict[str, Any] | None = None
+        if perspective_summary is not None:
+            perspective_summary_payload = {
+                "support_score": perspective_summary.support_score,
+                "risk_score": perspective_summary.risk_score,
+                "divergence": perspective_summary.divergence,
+                "critical_concerns": list(perspective_summary.critical_concerns),
+                "consensus_recommendation": perspective_summary.consensus_recommendation,
+            }
+
         outcome = BriefResult(
             brief_id=brief.brief_id,
             status=status,
@@ -351,6 +361,8 @@ class BriefRunner:
             confidence=confidence,
             assumptions=tuple(assumptions_list),
             missing_evidence=tuple(missing_list),
+            perspectives=tuple(perspectives_payload),
+            perspective_summary=perspective_summary_payload,
         )
         ledger.append(
             "outcome",
