@@ -123,15 +123,24 @@ D:\llm\bin\llama-server.exe `
 
 ### 3.2 model 名の確認
 
-llama-server は **起動時の model ファイル名から model 名を自動命名** する.
-HTTP で確認:
+llama-server が公開する model 名は **GGUF 内部のメタデータ (`general.name`)
+が優先**され、必ずしも `.gguf` ファイル名と一致しない. 推測せず必ず
+`/v1/models` で取得:
 
 ```powershell
 curl http://localhost:8080/v1/models
-# → {"object":"list","data":[{"id":"llama-3.3-70b-instruct-Q4_K_M",...}]}
+# → {"object":"list","data":[{"id":"<実際の id>",...}]}
 ```
 
 この `id` の値が **`LLIVE_OPENAI_MODEL` に設定する値**.
+
+ファイル名と一致するとは限らない実例:
+
+- ファイル名: `llama-3.3-70b-instruct-Q4_K_M.gguf`
+- `id`: `Llama-3.3-70B-Instruct` (GGUF メタデータの `general.name` 由来)
+
+`--alias <name>` で明示的に固定する手もあるが、本手順では env で
+合わせる方針なので alias は不要 (3.1 表参照).
 
 ### 3.3 LAN 内別ホストで動かす場合
 
