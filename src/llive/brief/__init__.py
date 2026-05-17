@@ -123,6 +123,7 @@ __all__ = [
     "RedHatLens",
     "RoleBasedMultiTrack",
     "RolePerspective",
+    "StopCondition",
     "ToolHandler",
     "TraceGraph",
     "TrizCitation",
