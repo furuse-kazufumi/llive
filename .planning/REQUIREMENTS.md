@@ -755,7 +755,71 @@ OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔の数学
 * BriefLedger と連動 — `oka_essence_extracted` / `oka_notebook_appended` / `oka_strategy_switched` event
 * テスト群追加、トレーサビリティを COG-03 trace_graph に統合
 
+### OKA + BriefRunner 自動統合 (2026-05-17 続)
+
+* `BriefRunner(essence_extractor=, notebook=, strategy_orchestrator=)` で 3 components を opt-in
+* submit 開始時に CoreEssence 自動抽出 → `BriefResult.essence` + outcome event 複製
+* loop.process 失敗時に `failed_attempt` note を自動 append (next Brief で `related_to()` 再利用可)
+* tests/component/test_cog_fx_e2e.py に 11 因子 (9 COG + OKA-01/02/04 + MATH-02) 一括 E2E ハーネス追加
+
+---
+
+## v0.8-meta — VRB-FX (Verbalization Framework) 2026-05-17 追加
+
+**ユーザー指示 (2026-05-17 6 回目)**: 「Local LLM 研究開発向け言語化支援基盤 提案メモ」
+として、グロービス『MBA 言語化トレーニング』を Local LLM 研究開発基盤に写像した
+8 機能 + 中間表現 + 段階導入案を提示。「採用可否の判断は任せます」。
+
+**判定**: 既存資産で **大半カバー済み**。新規実装は 4 件のみ。
+
+### 既存実装との対応マッピング
+
+| VRB 提案機能 | 既存対応 | 状態 |
+|---|---|---|
+| 1. IntentSpec Builder | `Brief` (goal/constraints/success_criteria/...) | **Already implemented** |
+| 2. Prompt / Requirement Lint | 部分 (`GovernanceScorer.feasibility`)、曖昧語検出は未実装 | **VRB-02 新規** |
+| 3. Evidence Map | `TraceGraph.evidence_chain` (6 kind: triz/rad/calc/math/oka_essence/oka_note) | **Already implemented** |
+| 4. Premortem / Counterfactual Review | 部分 (`BlackHatLens` / `CriticLens`)、formal premortem は未実装 | **VRB-04 新規** |
+| 5. Eval Spec Editor | `Brief.success_criteria` あり、metrics registry / stop_conditions は未実装 | **VRB-05 新規** |
+| 6. Dual Spec Writer | 未実装 — Human / Model Contract / Eval Contract / Manifest / Note 切替 | **VRB-06 新規** |
+| 7. Lesson Capture / Decision Log | `ReflectiveNotebook` (insight / failed_attempt / reframing / ...) | **Already implemented** |
+| 8. Audience Switch / Granularity Switch | 未実装 (VRB-06 と統合可能) | **VRB-06 と統合** |
+
+### 新規要件 (4 件のみ)
+
+| FR | 名前 | 概要 | 優先度 |
+|---|---|---|---|
+| **VRB-02** | Prompt / Requirement Lint | Brief.goal / constraints / success_criteria を走査し、曖昧語 (高性能/堅牢/使いやすく)・評価不能語・比較軸不足・対象読者不明を検出 → `lint_findings` event | **HIGH (1st)** |
+| **VRB-04** | Premortem Generator | 採用前の Brief に「失敗シナリオ」を deterministic に生成 (BlackHat lens + 危険語 + 制約矛盾) → `premortem_generated` event。Approval Bus の payload に伝達 | MED |
+| **VRB-05** | Eval Spec Editor (Metrics Registry + Stop Conditions) | Brief に `metrics_registry` (name → unit → threshold) と `stop_conditions` を追加できる軽量レイヤ。後段で BriefResult との突合 | MED |
+| **VRB-06** | Dual Spec Writer (Audience Switch 込) | 同一 Brief を Human Brief / Model Prompt Contract / Eval Contract / Execution Manifest / Research Note の 5 出力モードで render | LOW |
+
+### 既に達成されている設計原則
+
+| VRB 原則 | 既存実装 |
+|---|---|
+| Traceability First | SEC-03 SHA-256 chain + COG-03 trace_graph + 全 `bind_ledger()` pattern |
+| Extensibility by Schema | dataclass(frozen) + JSON-friendly payload + ledger append-only |
+| Model-Agnostic Core | `LLMBackend` Protocol (ollama / anthropic / mock / future Mamba/RWKV) |
+| Human-in-the-Loop by Default | Approval Bus + HatPerspective.RED + ReflectiveNotebook |
+| Research Reproducibility | BriefLedger replay + deterministic lens/extractor/verifier |
+
+### VRB-02 PromptLint 最小プロト実装ノート (2026-05-17 続々)
+
+* `src/llive/brief/prompt_lint.py` — `PromptLinter` + `LintFinding`
+* deterministic lexical scan で 5 カテゴリ検出:
+  vague_term / unmeasurable_claim / missing_audience / missing_comparison / undefined_constraint
+* `bind_ledger()` で BriefLedger に attach → `lint_findings_recorded` event
+* COG-03 trace_graph evidence_chain に `kind="lint"` として統合
+* テスト追加、回帰ゼロ
+
+### 次に着手するなら
+
+1. **VRB-04 Premortem Generator** — BlackHatLens を拡張、failure scenarios を tabular 出力
+2. **VRB-05 Eval Spec Editor** — Brief に optional `metrics_registry` フィールド追加
+3. **VRB-06 Dual Spec Writer** — `BriefRenderer` (5 modes) を別モジュールで
+
 ---
 
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-17 — v0.7-vertical+OKA OKA-FX (Oka Kiyoshi Framework, 10 件、思考の質を最適化する数学 LLM 拡張)*
+*Last updated: 2026-05-17 — v0.8-meta VRB-FX (Verbalization Framework, 4 件、Local LLM 研究開発の思考・意思決定の構造化)*
