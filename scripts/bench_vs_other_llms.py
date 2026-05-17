@@ -65,11 +65,9 @@ BRIEFS = [
 
 
 BACKENDS = [
-    # NOTE: mock (rule-based) は coverage 計測対象から除外推奨
-    # (feedback_no_echo_baseline.md): Brief 本文の echo back で偽性能が出る。
-    # 品質指標として並べると mislead するため、quality bench からは外す。
-    # 必要なら次行を有効化:
-    # {"name": "mock", "spec": None},
+    # echo baseline: feedback_no_echo_baseline.md — Brief 本文 echo back の
+    # 偽性能。除外せず「下限基準線」として残置。LLM が echo を超えたかの判定材料。
+    {"name": "echo_baseline_mock", "spec": None},
     {"name": "ollama:qwen2.5:7b", "spec": "ollama:qwen2.5:7b"},
     {"name": "ollama:qwen2.5:14b", "spec": "ollama:qwen2.5:14b"},
 ]
