@@ -433,6 +433,35 @@ class BriefRunner:
                 "consensus_recommendation": perspective_summary.consensus_recommendation,
             }
 
+        # IND-04 — emit cross-layer hints. Consumers (llove TUI / llmesh
+        # visualizer / external agents) may pick these up to add value, but
+        # llive itself never depends on them being read.
+        emitter = AnnotationEmitter()
+        emitter.add("core", "brief_completed", value=True)
+        if essence is not None:
+            emitter.add(
+                "oka", "essence_card",
+                value={"summary": essence.essence_summary, "mystery": essence.mystery},
+                target_layer="llove",
+            )
+        if perspective_summary is not None:
+            emitter.add(
+                "cog", "consensus",
+                value=perspective_summary.consensus_recommendation,
+            )
+            if perspective_summary.risk_score >= 0.6:
+                emitter.add(
+                    "cog", "risk_alert",
+                    value={"risk_score": perspective_summary.risk_score},
+                    target_layer="llove",
+                )
+        if lint_report is not None and lint_report.findings:
+            emitter.add(
+                "vrb", "lint_findings_count",
+                value=len(lint_report.findings),
+                target_layer="llove",
+            )
+
         outcome = BriefResult(
             brief_id=brief.brief_id,
             status=status,
