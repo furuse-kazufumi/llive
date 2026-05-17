@@ -1,0 +1,194 @@
+{
+  "backends": [
+    {
+      "name": "llive_qwen2.5:14b",
+      "kind": "on-prem (via llive loop)"
+    },
+    {
+      "name": "anthropic_haiku_4.5",
+      "kind": "cloud (direct API)"
+    },
+    {
+      "name": "perplexity_sonar",
+      "kind": "cloud (direct API)"
+    }
+  ],
+  "briefs": [
+    "B1_math",
+    "B2_design",
+    "B3_spec"
+  ],
+  "grid": {
+    "llive_qwen2.5:14b": {
+      "B1_math": {
+        "ok": true,
+        "elapsed_s": 133.57,
+        "text": "この数式の等価性は直感的に理解できるが、(x+1)^2 展開すると x^2 + 2*x + 1 となることが確認できる。これは展開公式や二項定理の基本的な応用であり、代数学の基礎概念と一致している。",
+        "grade": {
+          "chars": 99,
+          "words": 8,
+          "expected_hit": [
+            "等価",
+            "一致"
+          ],
+          "coverage": 0.4,
+          "has_typo": false
+        }
+      },
+      "B2_design": {
+        "ok": true,
+        "elapsed_s": 73.366,
+        "text": "この質問は保存量と対称性の関係について探求しており、物理学における基本的な概念間の深遠なつながりを考察するものだ。特に、物理法則や現象において保存される量（エネルギー、運動量など）と、それらが守恒となるための対称性原理との関連は、ノーベル賞受賞者であるハートランド・ハーゲンらによって提唱された重要な物理学的概念である。",
+        "grade": {
+          "chars": 160,
+          "words": 1,
+          "expected_hit": [
+            "保存",
+            "対称"
+          ],
+          "coverage": 0.5,
+          "has_typo": false
+        }
+      },
+      "B3_spec": {
+        "ok": true,
+        "elapsed_s": 74.124,
+        "text": "この要件は非常に厳格で、p99 レイテンシを 100ms 未満に保ちながらデータロスをゼロにするという挑戦的な目標が設定されている。これは高可用性と低遅延の両立を目指しており、分散システムやキャッシュ stratagem、冗長なネットワーク設計など、いくつかの既知の概念と関連があるように思える。",
+        "grade": {
+          "chars": 148,
+          "words": 5,
+          "expected_hit": [
+            "レイテンシ",
+            "p99",
+            "データ",
+            "100ms",
+            "100"
+          ],
+          "coverage": 1.0,
+          "has_typo": false
+        }
+      }
+    },
+    "anthropic_haiku_4.5": {
+      "B1_math": {
+        "ok": true,
+        "elapsed_s": 1.641,
+        "text": "# 数式の等価性判断\n\n$(x+1)^2$ を展開すると：\n\n$(x+1)^2 = x^2 + 2x + 1$\n\n**結論：この2つの数式は完全に等価です。**",
+        "grade": {
+          "chars": 80,
+          "words": 12,
+          "expected_hit": [
+            "等価"
+          ],
+          "coverage": 0.2,
+          "has_typo": false
+        }
+      },
+      "B2_design": {
+        "ok": true,
+        "elapsed_s": 2.711,
+        "text": "# 保存量と対称性の関係\n\n**3行説明：**\n系の対称性と保存量は一対一に対応する（ネーターの定理）。時間並進対称性→エネルギー保存、空間並進対称性→運動量保存、回転対称性→角運動量保存など、基本的な保存則はすべて対称性から導かれる。\n\n**重要な物理学的観点：**\n対称性は保存則の本質的な原因であり、新しい対称性の発見は新しい保存量と物理法則を予言できるため、現代物理学（素粒子物理など）における最強の指導原理となっている。",
+        "grade": {
+          "chars": 215,
+          "words": 6,
+          "expected_hit": [
+            "保存",
+            "対称",
+            "ネーター"
+          ],
+          "coverage": 0.75,
+          "has_typo": false
+        }
+      },
+      "B3_spec": {
+        "ok": true,
+        "elapsed_s": 4.519,
+        "text": "# 低遅延・ゼロロス システムの3つの主要設計判断\n\n## 1. **永続化戦略：同期レプリケーション + Write-Ahead Log**\n\n```\nクライアント\n    ↓\n┌─────────────────────┐\n│ Write-Ahead Log     │  ← ディスクに同期書き込み\n│ (メイン)           │     (データロス防止)\n└──────┬──────────────┘\n       ↓ (ACK後)\n┌─────────────────────┐\n│ 複製レプリカ        │  ← 同期レプリケーション\n│ (レプリカ1,2,3)    │     (3個以上のコピー)\n└─────────────────────┘\n```\n\n**選定理由：**\n- ACK前にディスク永続化 → データロス 0 件\n- 同期レプリケーション → ノード故障時も安全\n- トレードオフ：レイテンシ増加を許容（バッチ最適化で補う）\n\n---\n\n## 2. **キャッシング層：マルチレベル + 予測プリロード**\n\n```\nL1キャッシュ      L2キャッシュ       永続層\n(インメモリ)     (Redis/Memcached)  (DB)\n  ↓ p50: 1ms      ↓ p50: 5ms        ",
+        "grade": {
+          "chars": 588,
+          "words": 70,
+          "expected_hit": [
+            "レイテンシ",
+            "データ"
+          ],
+          "coverage": 0.4,
+          "has_typo": false
+        }
+      }
+    },
+    "perplexity_sonar": {
+      "B1_math": {
+        "ok": true,
+        "elapsed_s": 2.533,
+        "text": "はい、\\((x+1)^2\\) は展開すると \\(x^2 + 2x + 1\\) になるため、両者は等価です。",
+        "grade": {
+          "chars": 53,
+          "words": 8,
+          "expected_hit": [
+            "等価"
+          ],
+          "coverage": 0.2,
+          "has_typo": false
+        }
+      },
+      "B2_design": {
+        "ok": true,
+        "elapsed_s": 2.439,
+        "text": "- **保存量**は、時間がたっても変化しない物理量（例：エネルギー、運動量、角運動量）です。  \n- **対称性**があると、その変換で物理法則が変わらず、ネーターの定理により対応する保存量が必ず現れます。  \n- 例：**時間並進対称性 → エネルギー保存**、**空間並進対称性 → 運動量保存**。  \n\n**重要な点**：保存則は「偶然」ではなく、**系の対称性から本質的に導かれる**ことです。",
+        "grade": {
+          "chars": 203,
+          "words": 11,
+          "expected_hit": [
+            "保存",
+            "対称",
+            "ネーター"
+          ],
+          "coverage": 0.75,
+          "has_typo": false
+        }
+      },
+      "B3_spec": {
+        "ok": true,
+        "elapsed_s": 5.325,
+        "text": "要件が **p99 レイテンシ < 100ms** かつ **データロス 0 件** なら、まず押さえるべき主要な設計判断は次の 3 つです。\n\n1. **同期/非同期の境界を決める**\n   - ユーザー要求のクリティカルパスでは、重い処理を避けて **100ms 以内に返せる同期処理のみ** に絞る。\n   - それ以外はキューに逃がして非同期化する。\n   - これで p99 を守りやすくなります。\n\n2. **データ永続化を強くする**\n   - **書き込みは複製 + 永続ログ + ACK 条件** を明確にする。\n   - 例: 1 台だけでなく複数ノードへレプリケートしてから成功応答する。\n   - 0 件ロス要件では、可用性よりも **整合性・耐障害性** を優先する判断が必要です。\n\n3. **遅延のばらつきを抑える**\n   - 平均ではなく **p95/p99 を悪化させる要因** を潰す。\n   - 具体的には、キャッシュ、コネクション再利用、バックプレッシャー、タイムアウト、リトライ制御、ホットパスの最適化を入れる。\n   - 特に「遅い 1%」を作る外部依存を減らすのが重要です。\n\n必要なら次に、\n- この要件に対する **具体的なアーキテクチャ案**\n- **RDB / Kafka / DynamoDB** など技術選定\n-",
+        "grade": {
+          "chars": 586,
+          "words": 68,
+          "expected_hit": [
+            "レイテンシ",
+            "p99",
+            "データ",
+            "100ms",
+            "100"
+          ],
+          "coverage": 1.0,
+          "has_typo": false
+        }
+      }
+    }
+  },
+  "summary": {
+    "llive_qwen2.5:14b": {
+      "ok_count": 3,
+      "mean_elapsed_s": 93.687,
+      "mean_coverage": 0.633,
+      "mean_chars": 135,
+      "any_typo": false
+    },
+    "anthropic_haiku_4.5": {
+      "ok_count": 3,
+      "mean_elapsed_s": 2.957,
+      "mean_coverage": 0.45,
+      "mean_chars": 294,
+      "any_typo": false
+    },
+    "perplexity_sonar": {
+      "ok_count": 3,
+      "mean_elapsed_s": 3.432,
+      "mean_coverage": 0.65,
+      "mean_chars": 280,
+      "any_typo": false
+    }
+  },
+  "notes": "Per feedback_llive_measurement_purity: llive 経由 (loop attach) vs cloud 直接 API の 2 系統分離。grade は deterministic post-check のみ (human judgement なし)。"
+}
