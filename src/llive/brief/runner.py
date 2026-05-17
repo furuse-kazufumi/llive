@@ -30,6 +30,7 @@ from llive.brief.grounding import BriefGrounder, GroundedBrief
 from llive.brief.ledger import BriefLedger, default_ledger_path
 from llive.brief.roles import MultiTrackSummary, RoleBasedMultiTrack
 from llive.brief.types import Brief, BriefResult, BriefStatus, brief_to_dict
+from llive.math.verifier import MathVerifier
 from llive.fullsense.loop import FullSenseLoop, FullSenseResult
 from llive.fullsense.types import ActionDecision, Stimulus
 
