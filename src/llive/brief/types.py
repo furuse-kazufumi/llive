@@ -127,6 +127,11 @@ class BriefResult:
     confidence: float = 0.5
     assumptions: tuple[str, ...] = ()
     missing_evidence: tuple[str, ...] = ()
+    # COG-04 + CREAT-04 — multi-track perspectives (lazy: empty unless runner
+    # was given a RoleBasedMultiTrack). Each tuple element is a JSON-friendly
+    # dict to keep BriefResult cheap to serialise into MCP responses.
+    perspectives: tuple[Mapping[str, Any], ...] = ()
+    perspective_summary: Mapping[str, Any] | None = None
 
 
 def brief_to_dict(brief: Brief) -> dict[str, Any]:
