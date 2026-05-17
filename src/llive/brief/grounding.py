@@ -322,6 +322,7 @@ class BriefGrounder:
         brief: Brief,
         triz: tuple[TrizCitation, ...],
         rad: tuple[RadCitation, ...],
+        calc: tuple[CalcCitation, ...] = (),
     ) -> str:
         sections: list[str] = [brief.goal]
         if triz:
@@ -341,5 +342,20 @@ class BriefGrounder:
                 if r.excerpt:
                     truncated = r.excerpt.strip().splitlines()[0][:240]
                     block.append(f"  > {truncated}")
+            sections.append("\n".join(block))
+        if calc:
+            block = ["", "[Inlined calculations (MATH-08)]"]
+            for c in calc:
+                if c.error is not None:
+                    block.append(f"- {c.expression} = ERROR: {c.error}")
+                else:
+                    fn_note = (
+                        f" [uses: {', '.join(c.used_functions)}]"
+                        if c.used_functions
+                        else ""
+                    )
+                    block.append(
+                        f"- {c.expression} = {c.value!r} (ops={c.operation_count}){fn_note}"
+                    )
             sections.append("\n".join(block))
         return "\n".join(sections)
