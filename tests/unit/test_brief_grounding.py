@@ -573,6 +573,28 @@ def test_triz_word_boundary_avoids_speedy_false_positive() -> None:
     assert 35 not in pids
 
 
+def test_grounder_skips_domain_words_as_unit_candidates() -> None:
+    """`1 email`, `30 pages` should not appear as error citations.
+
+    Surfaced by 2026-05-17-grounding-observation. Domain words are filtered
+    so the error-citation channel keeps signal for *genuinely* unknown units.
+    """
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(
+        brief_id="b1",
+        goal="Ship 5 days with 30 pages and 1 email per milestone",
+    )
+    grounded = grounder.ground(brief)
+    raws = {u.raw_text for u in grounded.units}
+    # time unit (days) survives as a successful citation
+    assert "5 days" in raws
+    days = next(u for u in grounded.units if u.raw_text == "5 days")
+    assert days.error is None
+    # domain words are filtered out entirely
+    assert "30 pages" not in raws
+    assert "1 email" not in raws
+
+
 def test_runner_records_constants_in_ledger(tmp_path: Path) -> None:
     grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
     runner = BriefRunner(
