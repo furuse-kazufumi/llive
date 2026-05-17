@@ -368,3 +368,10 @@ memory `feedback_benchmark_progressive_tokens` (xs/s/m/l/xl 5 段階) と
 
 - 2026-05-18 — v0.1 作成 (llama.cpp `llama-server` 経由、`LLIVE_OPENAI_MODEL`
   env 対応版 (commit 6a7f89f) 前提)
+- 2026-05-18 — v0.2 (実運用 review 反映):
+  - 3.1 `--n-gpu-layers` を `-1` → `99` (b8864 系の慣習) に訂正、
+    `--parallel <N>` 行を追加 (llive Pipeline `max_workers=4` 整合)
+  - 3.2 model 名は **GGUF 内 `general.name` メタデータ優先** で
+    ファイル名と一致するとは限らない旨を明示、実例付き
+  - 7 トラブルシュート 3 行追加 (404 model not found を補強 /
+    401 with --api-key / 401 with proxy が Bearer ヘッダを落とす / 並列詰まり)
