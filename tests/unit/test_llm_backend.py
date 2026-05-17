@@ -217,6 +217,10 @@ def test_subclass_can_override_generate() -> None:
 
             return GenerateResponse(text=f"stub::{request.prompt}", backend=self.name)
 
+    resp = _Stub().generate(GenerateRequest(prompt="hi"))
+    assert resp.text == "stub::hi"
+    assert resp.backend == "stub"
+
 
 # ---------------------------------------------------------------------------
 # OpenAIBackend default-model env override (LLIVE_OPENAI_MODEL)
