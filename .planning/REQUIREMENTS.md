@@ -675,7 +675,84 @@ Phase 11 (ORG-FX core) → Phase 12 (full independence)
 - v0.9 (Phase 9) CREAT: 5 total
 - v1.0-frame COG-FX: 4 + 10 因子マッピング
 - v2.0-core (Phase 11) ORG-FX: 8 total
-- Mapped to phases: 100 / 100 ✓
+- v0.7-vertical+OKA (Phase 10) OKA-FX: 10 total
+- Mapped to phases: 110 / 110 ✓
 
-*Requirements defined: 2026-05-13*
-*Last updated: 2026-05-17 — v2.0-core ORG-FX (Originality Framework, Qwen 依存からの離脱 5 段階)*
+---
+
+## v0.7-vertical+OKA — OKA-FX (Oka Kiyoshi Framework) 2026-05-17 追加
+
+**ユーザー指示 (2026-05-17 5 回目)**: 「岡潔の視点を踏まえた数学 LLM 進化提案」
+として、情緒・行き詰まり・文章化・国語力を数学 LLM に組み込む 4 仮説と最小
+アーキテクチャ + フェーズ別実装プランを提示。要件定義に追加するアイデア。
+
+**動機**: MATH-01〜MATH-08 が「LLM が数式を間違えない」軸 (defensive) なのに対し、
+OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔の数学観を実装仕様に
+変換することで、正答率中心主義から **insight / reframing / explanation** を
+同時最適化する系へ拡張する。MATH との関係:
+
+* **MATH** = 計算の正確さ (deterministic verifier, units, calculator)
+* **OKA** = 思考の質 (essence framing, strategy switching, reflective notebook, explanation)
+
+両者は補強関係 — MATH が「黒板の正しさ」、OKA が「数学者の思考プロセス」。
+
+### 中核仮説 → 設計マッピング
+
+| 仮説 | 出典 | 実装上の置換 |
+|---|---|---|
+| 情緒はヒューリスティクス | 「数学は情緒である」 | OKA-08 美的選好スコア (弱教師あり報酬) |
+| 行き詰まりはモード転換信号 | 「発見の前に一度行き詰まる」 | OKA-03 戦略切替 + 停滞検知 |
+| 文章化は補助記憶 | 「文章を書くことなしには思索を進められない」 | OKA-04 ReflectiveNotebook (推論ログ + 失敗記録) |
+| 国語力は抽象化基盤 | 「国語が数学を育む」 | OKA-05 再定式化コーパス + 言い換え訓練 |
+
+### 要件詳細
+
+| FR | 名前 | 概要 | 優先度 |
+|---|---|---|---|
+| **OKA-01** | **Problem Framing Layer** | 入力問題から「何が不思議か / 保存量 / 対称性」を自然言語で抽出。複数視点で核心を記述、解法候補の初期分布を整える | **HIGH (1st)** |
+| **OKA-02** | Core Essence Extractor | OKA-01 の中核 — 「核心メモ」(N 文以内) を deterministic mock + LLM で生成。Brief grounding に injectable | **HIGH (1st)** |
+| **OKA-03** | Strategy Orchestrator | 複数解法ファミリーを並列保持、停滞検知で切替 (記号計算 / 具体例 / 反例 / 図形 / コード) | **HIGH (2nd)** |
+| **OKA-04** | Reflective Notebook Memory | 中間式 / 失敗試行 / 気づき / 未解決疑問を JSON ノートで長期保持。同系列問題で再利用 | **HIGH (2nd)** |
+| **OKA-05** | Reformulation Corpus | 同一問題の言い換え / 比喩 / 図形化記述を集めた corpus、抽象化と転移性能向上 | MED |
+| **OKA-06** | Explanation Alignment Layer | 解答+「なぜその見方が自然か」を出力、納得感/美しさを人間評価で報酬化 | MED |
+| **OKA-07** | Insight Score 評価軸 | 解法の核心を短く本質的に言語化できたか — 評価フレームワーク | MED |
+| **OKA-08** | Aesthetic Preference Score | 数学者評価者の「美しい/冗長」選好を報酬として学習 | LOW |
+| **OKA-09** | Pedagogical Resonance Score | 学習者が説明を読んで納得できたか — 教育的評価 | LOW |
+| **OKA-10** | Notebook Utility Score | 途中ノートが別問題で再利用できたかの A/B 検証 | LOW |
+
+### 設計原則 (REQUIREMENTS にロックイン)
+
+1. **正答率中心主義からの離脱** — insight / reframing / explanation を同時最適化
+2. **複合系として扱う** — 解答生成器ではなく「問題理解器 / 戦略管理器 / 研究ノート器 / 説明器」の合成
+3. **失敗ログを捨てない** — 探索履歴として再利用 (OKA-04 + COG-08 来歴と整合)
+4. **数式 ↔ 自然言語 ↔ コード ↔ 図的記述の往復** — 単一表現に縛らない
+5. **主観的評価を弱教師ありの報酬信号として活用** — OKA-08 / OKA-09
+
+### llive 既存資産との接続
+
+- **COG-03 trace_graph** — OKA-04 ReflectiveNotebook はこの evidence_chain の上位層
+- **COG-08 来歴** — failure log は SEC-03 hash chain と同じ audit 性質
+- **MATH-02 MathVerifier** — OKA-03 戦略の中で「数式書き換え後の等価性」を即時検証
+- **CREAT-01 KJ法** + **CREAT-04 Six Hats** — OKA-01 Framing と相補
+- **FR-23〜27 TRIZ** — OKA-03 戦略切替時の「矛盾解消パターン」として再利用
+- **RAD `mathematics` / `metrology` / `physics`** — OKA-05 再定式化 corpus の源
+
+### フェーズマッピング
+
+| FR | Phase | Status | Priority |
+|---|---|---|---|
+| OKA-01/02 | Phase 10 (v0.7+OKA) | **Implemented (minimal prototype, 2026-05-17)** | HIGH |
+| OKA-03 | Phase 10 拡張 | **Implemented (minimal prototype, 2026-05-17)** | HIGH |
+| OKA-04 | Phase 10 拡張 | **Implemented (minimal prototype, 2026-05-17)** | HIGH |
+| OKA-05/06 | Phase 11 | Pending | MED |
+| OKA-07〜10 | Phase 12 (評価フレームワーク) | Pending | MED/LOW |
+
+### OKA-01〜04 最小プロトタイプ実装ノート (2026-05-17)
+
+* `src/llive/oka/essence.py` — `CoreEssenceExtractor` (deterministic heuristic + LLM Strategy 差し替え可能)
+* `src/llive/oka/notebook.py` — `ReflectiveNotebook` (JSON 永続、失敗記録、cross-Brief 再利用 API)
+* `src/llive/oka/orchestrator.py` — `StrategyOrchestrator` (戦略ファミリー登録、停滞検知で切替)
+* BriefLedger と連動 — `oka_essence_extracted` / `oka_notebook_appended` / `oka_strategy_switched` event
+* テスト群追加、トレーサビリティを COG-03 trace_graph に統合
+
+---
