@@ -33,6 +33,7 @@ from llive.math.units import (
     Quantity,
     UnitMismatchError,
     parse_unit,
+    unit_scale_factor,
 )
 from llive.math.verifier import (
     MathVerifier,
