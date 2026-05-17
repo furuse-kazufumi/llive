@@ -224,13 +224,14 @@ class TrackRegistry:
 
 
 def build_default_registry() -> TrackRegistry:
-    """標準 5 track + 予備 5 を登録した registry を作成."""
+    """標準 5 track + MATHEMATICAL + 予備 5 を登録した registry を作成."""
     r = TrackRegistry()
     r.register(EpistemicType.FACTUAL, factual_track)
     r.register(EpistemicType.EMPIRICAL, empirical_track)
     r.register(EpistemicType.NORMATIVE, normative_track)
     r.register(EpistemicType.INTERPRETIVE, interpretive_track)
     r.register(EpistemicType.PRAGMATIC, pragmatic_track)
+    r.register(EpistemicType.MATHEMATICAL, mathematical_track)
     for slot in (
         EpistemicType.RESERVED_1,
         EpistemicType.RESERVED_2,
