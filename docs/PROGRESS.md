@@ -6,6 +6,59 @@
 
 ---
 
+## 2026-05-17 (続々) — COG-04 + CREAT-04 統合実装 (Role × Hat multi-track)
+
+前回 PROGRESS で「COG-04 は CREAT-04 Six Hats と統合する設計上、次セッション
+送り」と保留していた件を、本セッションで完遂。
+
+### Done
+
+- **COG-04 (Role-based agents) + CREAT-04 (Six Hats Multi-track) 統合実装** —
+  `src/llive/brief/roles.py` 新規。10 視点を直交軸として 1 つの
+  `RoleBasedMultiTrack` に集約:
+  - **4 roles** (`RolePerspective`): architect / critic / executor / auditor
+  - **6 hats** (`HatPerspective`): white / red / black / yellow / green / blue
+  - `PerspectiveLens` Protocol で deterministic / LLM-as-judge / 並列 sub-Brief
+    に Strategy 差し替え可能
+  - `MultiTrackSummary` が support_score / risk_score / divergence /
+    critical_concerns / `consensus_recommendation` ("proceed"/"review"/"hold") を返す
+  - **scoring 専念、gating 行わず** (Governance / Approval Bus と同じ責務分離)
+- **BriefRunner / BriefResult 拡張** — opt-in `perspectives=` 引数、
+  `perspectives_observed` ledger event、`BriefResult.perspectives` (10 件 dict tuple) +
+  `BriefResult.perspective_summary` (集約 dict)、outcome event にも複製記録
+- **公開 API** — `llive.brief` から 10 lens class + `RoleBasedMultiTrack` /
+  `MultiTrackSummary` / `PerspectiveNote` / `PerspectiveLens` / 2 enum を export
+- **テスト 20 件追加** (`tests/unit/test_brief_roles.py`): PerspectiveNote 契約 / 10 lens
+  個別 / coordinator 集約 / runner 統合 — **1014 → 1034 PASS / 回帰ゼロ**
+
+### 10 因子 (COG-FX) の最終状態
+
+| # | 因子 | 状態 |
+|---|---|---|
+| 1 | 構造化 | 実装済 (Brief constraints + Salience) |
+| 2 | 再構成 | 実装済 (TRIZ FR-23〜27 + RAD grounding) |
+| 3 | 閉ループ | 実装済 (BriefRunner) |
+| 4 | 自己拡張 | 実装済 (RAD + tools + ledger) |
+| 5 | 不確実性 | 実装済 (FR-21 + COG-01) |
+| 6 | 探索 | 実装済 (EVO-* + CREAT-04 Six Hats 並列) |
+| 7 | 整合 | 実装済 (C-1 Approval + COG-02 Governance + EVO-04 Z3) |
+| 8 | 来歴 | 実装済 (BriefLedger + COG-03 TraceGraph + SEC-03) |
+| 9 | 多視点 | **実装済 (Multi-track A-1.5 + COG-04 + CREAT-04 ←本セッション)** |
+| 10 | 現実接続 | Phase 4 待ち (llmesh sensor bridge) |
+
+→ **10 因子のうち 9 因子が実装済 / 残 1 因子 (現実接続) のみ。**
+
+### 次セッション候補
+
+- 横断 metadata schema (factor / uncertainty / dependency) を各メモリ層に
+  migration (前回からの繰越)
+- MATH-02 Z3/Sympy 統合検証層 (差別化軸)
+- MATH-05 CODATA/NIST 物理定数辞書 (RAD metrology に append)
+- S2 CABT-01 HFAdapter forward hook prototype (torch 依存導入)
+- CREAT-01 KJ法ノード prototype (mock LLM)
+
+---
+
 ## 2026-05-17 (続) — COG-FX 4 件実装 (因子で足りない部分の開発)
 
 ユーザー指示「因子で足りない部分の開発も進めてください」を受け、Cognitive
