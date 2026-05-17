@@ -62,9 +62,6 @@ ingest = [
 llm = [
   "anthropic>=0.30",
 ]
-verify = [
-  "z3-solver>=4.13",
-]
 rust = [
   "maturin>=1.5",
 ]
