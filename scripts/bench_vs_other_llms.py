@@ -99,6 +99,23 @@ def _grade(rationale: str, expected: list[str], typos: list[str]) -> dict:
     }
 
 
+def _extract_llm_thought(result) -> str:
+    """Pull the actual LLM-produced text from stages, not the loop's fixed
+    rationale template. The Thought.text holds the inner monologue output."""
+    # Prefer plan.thought.text (already a Thought dataclass)
+    thought = getattr(result.plan, "thought", None)
+    if thought is not None:
+        text = getattr(thought, "text", None)
+        if text:
+            return str(text)
+    # Fallback to stages['thought'] (dict form after _to_jsonable)
+    stages = getattr(result, "stages", {}) or {}
+    th = stages.get("thought")
+    if isinstance(th, dict):
+        return str(th.get("text", "") or "")
+    return ""
+
+
 def _run_one(backend_name: str, backend_spec: str | None, brief: dict) -> dict:
     loop = _build_loop(backend_spec)
     stim = Stimulus(
@@ -112,12 +129,14 @@ def _run_one(backend_name: str, backend_spec: str | None, brief: dict) -> dict:
         result = loop.process(stim)
         elapsed = time.perf_counter() - t0
         plan = result.plan
+        thought_text = _extract_llm_thought(result)
         return {
             "ok": True,
             "elapsed_s": round(elapsed, 3),
             "decision": plan.decision.value,
             "rationale": plan.rationale,
-            "grade": _grade(plan.rationale or "", brief["expected_terms"], brief["typo_terms"]),
+            "thought_text": thought_text,
+            "grade": _grade(thought_text, brief["expected_terms"], brief["typo_terms"]),
         }
     except Exception as exc:
         return {
