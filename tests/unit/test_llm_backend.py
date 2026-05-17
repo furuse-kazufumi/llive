@@ -217,6 +217,75 @@ def test_subclass_can_override_generate() -> None:
 
             return GenerateResponse(text=f"stub::{request.prompt}", backend=self.name)
 
+
+# ---------------------------------------------------------------------------
+# OpenAIBackend default-model env override (LLIVE_OPENAI_MODEL)
+#
+# The OpenAI SDK is an optional dep, so tests stub ``sys.modules["openai"]``
+# with a MagicMock to bypass the ``import openai`` guard in __init__ — we are
+# only asserting attribute wiring, not actual HTTP behaviour.
+# ---------------------------------------------------------------------------
+
+
+def _install_fake_openai(monkeypatch: pytest.MonkeyPatch) -> mock.MagicMock:
+    import sys
+
+    fake_openai = mock.MagicMock()
+    monkeypatch.setitem(sys.modules, "openai", fake_openai)
+    return fake_openai
+
+
+def test_openai_backend_uses_llive_openai_model_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """LLIVE_OPENAI_MODEL env overrides DEFAULT_MODEL when no explicit arg."""
+    _install_fake_openai(monkeypatch)
+    monkeypatch.setenv("LLIVE_OPENAI_MODEL", "llama-3.3-70b-instruct")
+
+    from llive.llm import OpenAIBackend
+
+    backend = OpenAIBackend()
+    assert backend.model == "llama-3.3-70b-instruct"
+
+
+def test_openai_backend_explicit_model_wins_over_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Constructor arg has priority over LLIVE_OPENAI_MODEL env."""
+    _install_fake_openai(monkeypatch)
+    monkeypatch.setenv("LLIVE_OPENAI_MODEL", "from-env")
+
+    from llive.llm import OpenAIBackend
+
+    backend = OpenAIBackend(model="from-arg")
+    assert backend.model == "from-arg"
+
+
+def test_openai_backend_falls_back_to_default_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No env, no arg → DEFAULT_MODEL (gpt-4o-mini)."""
+    _install_fake_openai(monkeypatch)
+    monkeypatch.delenv("LLIVE_OPENAI_MODEL", raising=False)
+
+    from llive.llm import OpenAIBackend
+
+    backend = OpenAIBackend()
+    assert backend.model == OpenAIBackend.DEFAULT_MODEL
+
+
+def test_openai_backend_passes_base_url_env_to_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """OPENAI_BASE_URL env reaches openai.OpenAI(base_url=...) ctor."""
+    fake_openai = _install_fake_openai(monkeypatch)
+    monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:8080/v1")
+
+    from llive.llm import OpenAIBackend
+
+    OpenAIBackend()
+    fake_openai.OpenAI.assert_called_once_with(base_url="http://localhost:8080/v1")
+
     resp = _Stub().generate(GenerateRequest(prompt="hi"))
     assert resp.text == "stub::hi"
     assert resp.backend == "stub"
