@@ -272,6 +272,7 @@ class BriefRunner:
                 ledger_entries=ledger.entries_written,
                 error=repr(exc),
                 essence=essence.to_payload() if essence is not None else None,
+                lint_report=lint_report.to_payload() if lint_report is not None else None,
             )
 
         ledger.append("loop_completed", {"stages": _stages_to_jsonable(result.stages)})
