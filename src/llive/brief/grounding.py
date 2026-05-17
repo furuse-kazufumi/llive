@@ -363,7 +363,13 @@ class BriefGrounder:
                 if len(key) < 3:
                     # Too noisy (c, h, e, G — common natural-language words)
                     continue
-                if not re.search(rf"\b{re.escape(key)}\b", text):
+                # Try the alias as-is and with underscores swapped for spaces
+                # (so e.g. "elementary_charge" can match "elementary charge").
+                key_spaced = key.replace("_", " ")
+                pattern = rf"\b{re.escape(key)}\b"
+                if key_spaced != key:
+                    pattern = rf"(?:\b{re.escape(key)}\b|\b{re.escape(key_spaced)}\b)"
+                if not re.search(pattern, text):
                     continue
                 if const.name in seen_canonical:
                     break
