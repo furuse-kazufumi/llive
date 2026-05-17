@@ -445,6 +445,7 @@ class BriefRunner:
             perspectives=tuple(perspectives_payload),
             perspective_summary=perspective_summary_payload,
             essence=essence.to_payload() if essence is not None else None,
+            lint_report=lint_report.to_payload() if lint_report is not None else None,
         )
         ledger.append(
             "outcome",
