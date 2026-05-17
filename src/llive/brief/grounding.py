@@ -183,6 +183,7 @@ class GroundedBrief:
     rad: tuple[RadCitation, ...] = ()
     calc: tuple[CalcCitation, ...] = ()
     units: tuple[UnitCitation, ...] = ()
+    constants: tuple[ConstantCitation, ...] = ()
 
 
 @dataclass
