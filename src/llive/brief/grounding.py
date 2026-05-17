@@ -622,8 +622,13 @@ class BriefGrounder:
                 if u.error is not None:
                     block.append(f"- {u.raw_text} → UNKNOWN UNIT ({u.error})")
                 else:
+                    scale_note = (
+                        f", SI={u.si_value} (×{u.si_factor})"
+                        if u.si_factor != 1.0
+                        else ""
+                    )
                     block.append(
-                        f"- {u.raw_text} → value={u.value}, dimensions={u.dimensions}"
+                        f"- {u.raw_text} → value={u.value}, dimensions={u.dimensions}{scale_note}"
                     )
             sections.append("\n".join(block))
         if constants:
