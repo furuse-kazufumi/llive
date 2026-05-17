@@ -138,11 +138,10 @@ def _call_perplexity_sonar(prompt: str) -> tuple[str, float]:
 
 
 BACKENDS = [
-    # NOTE: llive_alone (rule-based) は coverage 計測対象から除外推奨
-    # (feedback_no_echo_baseline.md): Brief 本文の echo back で偽性能が出るため
-    # 品質指標としては誤解を招く。latency / リーク計測なら mock OK。
-    # 必要なら次行を有効化:
-    # {"name": "llive_alone_no_llm", "fn": _call_llive_alone, "kind": "llive 単独 (rule-based, no LLM)"},
+    # echo baseline: rule-based の coverage は Brief 本文の echo back 効果
+    # (feedback_no_echo_baseline.md)。除外せず「下限基準線」として残置。
+    # LLM の coverage > この baseline = echo を超えたシグナル。
+    {"name": "echo_baseline_no_llm", "fn": _call_llive_alone, "kind": "echo baseline (rule-based, no LLM)"},
     {"name": "llive_qwen2.5:14b", "fn": _call_llive_qwen14b, "kind": "on-prem (via llive loop)"},
     {"name": "anthropic_haiku_4.5", "fn": _call_anthropic_haiku, "kind": "cloud (direct API)"},
     {"name": "perplexity_sonar", "fn": _call_perplexity_sonar, "kind": "cloud (direct API)"},
