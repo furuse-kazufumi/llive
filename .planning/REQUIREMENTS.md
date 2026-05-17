@@ -684,16 +684,24 @@ Phase 11 (ORG-FX core) → Phase 12 (full independence)
 
 ---
 
-## v0.7-vertical+OKA — OKA-FX (Oka Kiyoshi Framework) 2026-05-17 追加
+## v0.7-vertical+OKA — OKA-FX (Framework inspired by Prof. Oka Kiyoshi) 2026-05-17 追加
 
-**ユーザー指示 (2026-05-17 5 回目)**: 「岡潔の視点を踏まえた数学 LLM 進化提案」
-として、情緒・行き詰まり・文章化・国語力を数学 LLM に組み込む 4 仮説と最小
-アーキテクチャ + フェーズ別実装プランを提示。要件定義に追加するアイデア。
+**経緯 (2026-05-17 5 回目)**: 「岡潔先生の視点に学ばせていただいた数学 LLM
+進化提案」として、情緒・行き詰まり・文章化・国語力という先生のお考えを
+**設計の 4 観点** として参照させていただき、最小アーキテクチャ + フェーズ
+別実装プランを記述した要件群。
+
+> ⚠️ **重要 (敬意の表明)**: 本 framework は、岡潔先生 (1901-1978、奈良女子大学
+> 名誉教授、文化勲章) のお考えそのものを実装したと主張するものではあり
+> ません。先生が遺された豊かな思索のうち、エンジニアリング言語として
+> 参照させていただける 4 観点に着目し、それを **触発源** としてモジュール
+> 設計に活かしたものです。先生の思想は本来、計算機実装には収まらない
+> 深さを持ちます。命名にはその敬意を込めています。
 
 **動機**: MATH-01〜MATH-08 が「LLM が数式を間違えない」軸 (defensive) なのに対し、
-OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔の数学観を実装仕様に
-変換することで、正答率中心主義から **insight / reframing / explanation** を
-同時最適化する系へ拡張する。MATH との関係:
+OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔先生のお考えに学ぶ
+ことで、正答率中心主義から **insight / reframing / explanation** を同時
+最適化する系へ拡張する。MATH との関係:
 
 * **MATH** = 計算の正確さ (deterministic verifier, units, calculator)
 * **OKA** = 思考の質 (essence framing, strategy switching, reflective notebook, explanation)
