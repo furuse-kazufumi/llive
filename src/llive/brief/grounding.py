@@ -84,6 +84,22 @@ _TRIZ_TRIGGERS: dict[str, int] = {
     "composition": 40,
 }
 
+# 否定文脈 — trigger が含まれていても、これらフレーズの一部として現れた
+# 場合は発火させない。2026-05-17-grounding-observation で
+# "the speed of light" が #35 (Parameter Changes) を誤発火していた対応。
+_TRIZ_NEGATIVE_CONTEXTS: dict[str, tuple[str, ...]] = {
+    "speed": ("speed of light", "lightspeed"),
+    "via":   ("via point", "via the api"),
+}
+
+# 単一文字 / 短い English trigger は word boundary を要求 (substring の
+# 偽陽性が多すぎる)。日本語語彙には word boundary は適用しない (CJK は
+# regex \b と相性が悪いため)。
+_WORD_BOUNDARY_TRIGGERS: frozenset[str] = frozenset({
+    "vs", "via", "ground", "speed", "quality", "static", "dynamic",
+    "idle", "compose", "composite", "knob",
+})
+
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9_぀-ゟ゠-ヿ一-鿿]+", re.UNICODE)
 
