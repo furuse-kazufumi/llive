@@ -250,7 +250,7 @@ class MathVerifier:
                         counterexample = {**{str(k): 1 for k in syms}, "diff": witness}
                     except (TypeError, ValueError):
                         counterexample = {}
-            return VerificationResult(
+            return self._record(VerificationResult(
                 kind="equivalence",
                 verdict=verdict,
                 solver="sympy",
@@ -259,9 +259,9 @@ class MathVerifier:
                 source_id=source_id if source_id is not None else self._source_id,
                 counterexample=counterexample,
                 elapsed_s=time.perf_counter() - t0,
-            )
+            ))
         except Exception as exc:  # parser / simplifier blew up
-            return VerificationResult(
+            return self._record(VerificationResult(
                 kind="equivalence",
                 verdict="error",
                 solver="sympy",
@@ -270,7 +270,7 @@ class MathVerifier:
                 source_id=source_id if source_id is not None else self._source_id,
                 elapsed_s=time.perf_counter() - t0,
                 error=repr(exc),
-            )
+            ))
 
     # -- implication ---------------------------------------------------------
 
