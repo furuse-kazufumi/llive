@@ -90,11 +90,38 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Run FullSenseLoop with debug=True (attach LLM prompt/response/timing trace to stages.thought.debug)",
     )
+    parser.add_argument(
+        "--backend",
+        default=None,
+        help=(
+            "LLM backend spec (e.g. 'ollama:qwen2.5:14b' or 'ollama:llama3.2'). "
+            "Required for fair benchmark comparison — without this the loop "
+            "falls back to a rule-based template (no LLM inference)."
+        ),
+    )
     args = parser.parse_args(argv)
 
     brief_text = load_brief(args.brief)
 
-    loop = FullSenseLoop(sandbox=True, debug=args.debug)
+    llm_backend = None
+    if args.backend:
+        # Inject an Ollama-backed LLM so _inner_monologue calls real inference.
+        # Keeps feedback_llive_measurement_purity (on-prem only) intact.
+        from llive.llm import OllamaBackend
+
+        if args.backend.startswith("ollama:"):
+            model = args.backend.split(":", 1)[1]
+            llm_backend = OllamaBackend(model=model, timeout=600.0)
+        else:
+            from llive.llm import resolve_backend
+            llm_backend = resolve_backend(args.backend)
+
+    loop = FullSenseLoop(
+        sandbox=True,
+        salience_threshold=0.0,  # never gate on length when running benchmarks
+        llm_backend=llm_backend,
+        debug=args.debug,
+    )
     stim = Stimulus(
         content=brief_text,
         source=args.source,
