@@ -6,6 +6,58 @@
 
 ---
 
+## 2026-05-17 (9 回目) — IND-FX 独立性原則 + IND-04 アノテーション機構
+
+LinkedIn フィードバック「llive/llove/llmesh が相互依存していると単体使用の価値が
+半減する」+「応答にアノテーションを用意すれば独立性を保ちながら組合せ効果も得られる」
++「邪魔にならない HTML 不可視風」を受け、設計原則の明文化 + 実装。
+
+### Done
+
+- **独立性監査** (`scripts/audit_independence.py`):
+  - AST で `import llove` / `import llmesh` を全 src/llive 走査
+  - 171 ファイル中 hard leak **0 件** / soft 0 件 = **clean**
+  - 結果: `docs/audits/independence-2026-05-17.md`
+- **IND-FX 設計原則を REQUIREMENTS に明文化**:
+  - IND-01 各層独立性 / IND-02 組合せ価値積み上げ / IND-03 監査の機械化
+- **IND-04 Annotation Channel 実装** (`src/llive/annotations.py`):
+  - `Annotation` (namespace/key/value/target_layer) — JSON-friendly 強制
+  - `AnnotationBundle` — immutable / `for_layer` / `by_namespace` / `get`
+  - `AnnotationEmitter` — mutable builder (emit-side 用)
+  - **`to_html_comments()` / `from_html_comments()` 双方向** — `<!-- llive:ns.key=val -->` 形式
+    で Markdown/HTML 出力に埋め込めば renderer で **不可視** = 邪魔にならない
+- **BriefRunner が自然な emit**:
+  - `core.brief_completed` (常時)
+  - `oka.essence_card` (essence 抽出時 → llove 向け)
+  - `cog.consensus` (perspectives 時 → 全 consumer 向け)
+  - `cog.risk_alert` (risk_score >= 0.6 → llove 向け)
+  - `vrb.lint_findings_count` (lint hit > 0 → llove 向け)
+- **DualSpecWriter が annotations 受け取り**: `render(brief, mode, annotations=...)` で
+  本体末尾に HTML コメント挿入。render mode に関わらず動作
+- **BriefResult.annotations** フィールド追加 (outcome event にも複製)
+- **memory**: `feedback_independence_principle.md` 追加、MEMORY.md にポインタ
+
+### テスト
+
+- `tests/unit/test_annotations.py` — 16 件 (contract / bundle / html roundtrip / runner emit / render embed / independence)
+- **1157 → 1173 PASS / 回帰ゼロ** (+16)
+
+### 達成された設計
+
+- llive 単体で全機能稼働 (audit で証明)
+- 連携機能は annotation 経由で hint, consumer 不在でも壊れない
+- アノテーションは HTML/Markdown renderer で不可視 = 既存出力を汚さない
+
+### 次セッション候補
+
+1. CABT-01 HFAdapter forward hook (torch 依存導入)
+2. OKA-05/08/09/10
+3. MATH-03/04/06/07
+4. CI に audit_independence.py を組み込む
+5. llove / llmesh 側に annotation consumer ヘルパー実装
+
+---
+
 ## 2026-05-17 (8 回目) — CREAT 系完結 (CREAT-02/03/05)
 
 ゴール継続「要件定義の残件を可能な限り進める」を受け、CREAT 系の残 3 件を完遂。
