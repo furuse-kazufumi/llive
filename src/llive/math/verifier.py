@@ -302,7 +302,7 @@ class MathVerifier:
             solver.add(z3.Not(concl_z3))
             result = solver.check()
             if result == z3.unsat:
-                return VerificationResult(
+                return self._record(VerificationResult(
                     kind="implication",
                     verdict="valid",
                     solver="z3",
@@ -310,10 +310,10 @@ class MathVerifier:
                     rationale="z3 proved ¬(P → C) unsat ⇒ implication holds",
                     source_id=source_id if source_id is not None else self._source_id,
                     elapsed_s=time.perf_counter() - t0,
-                )
+                ))
             if result == z3.sat:
                 model = solver.model()
-                return VerificationResult(
+                return self._record(VerificationResult(
                     kind="implication",
                     verdict="invalid",
                     solver="z3",
@@ -322,8 +322,8 @@ class MathVerifier:
                     source_id=source_id if source_id is not None else self._source_id,
                     counterexample=_model_to_dict(model),
                     elapsed_s=time.perf_counter() - t0,
-                )
-            return VerificationResult(
+                ))
+            return self._record(VerificationResult(
                 kind="implication",
                 verdict="error",
                 solver="z3",
@@ -331,9 +331,9 @@ class MathVerifier:
                 rationale=f"z3 returned {result}",
                 source_id=source_id if source_id is not None else self._source_id,
                 elapsed_s=time.perf_counter() - t0,
-            )
+            ))
         except Exception as exc:
-            return VerificationResult(
+            return self._record(VerificationResult(
                 kind="implication",
                 verdict="error",
                 solver="z3",
@@ -342,7 +342,7 @@ class MathVerifier:
                 source_id=source_id if source_id is not None else self._source_id,
                 elapsed_s=time.perf_counter() - t0,
                 error=repr(exc),
-            )
+            ))
 
     # -- satisfiability ------------------------------------------------------
 
