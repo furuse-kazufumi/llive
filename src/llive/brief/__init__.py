@@ -101,6 +101,8 @@ __all__ = [
     "MultiTrackSummary",
     "PerspectiveLens",
     "PerspectiveNote",
+    "PremortemGenerator",
+    "PremortemReport",
     "PromptLinter",
     "RadCitation",
     "RedHatLens",
