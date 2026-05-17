@@ -170,6 +170,14 @@ class FullSenseLoop:
         salience = self._salience_gate(stim)
         stages["salience"] = salience
         if not salience["pass"]:
+            # LLIVE-007 fix (2026-05-18): populate placeholder None values for
+            # downstream stages so A/B diff tooling can assume every key is
+            # present even on SILENT short-circuit cycles. Cost is one dict
+            # mutation; SILENT path stays semantically unchanged.
+            stages["curiosity"] = None
+            stages["thought"] = None
+            stages["ego_score"] = None
+            stages["altruism_score"] = None
             plan = ActionPlan(
                 decision=ActionDecision.SILENT,
                 rationale="below salience threshold",
