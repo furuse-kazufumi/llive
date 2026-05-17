@@ -139,6 +139,11 @@ class BriefResult:
     # VRB-02 — submit-time prompt lint report (only present when the runner
     # was given a PromptLinter). JSON-friendly via :meth:`LintReport.to_payload`.
     lint_report: Mapping[str, Any] | None = None
+    # IND-04 — cross-layer annotations. Hints emitted by llive components for
+    # downstream consumers (llove TUI / llmesh visualizer / agent). Each item
+    # is a JSON-friendly dict {namespace, key, value, target_layer}. Consumers
+    # are optional — annotations may be ignored without losing core behaviour.
+    annotations: tuple[Mapping[str, Any], ...] = ()
 
 
 def brief_to_dict(brief: Brief) -> dict[str, Any]:
