@@ -296,7 +296,7 @@ class BriefGrounder:
         principles = self._principles or load_principles()
         seen: dict[int, TrizCitation] = {}
         for trigger, pid in _TRIZ_TRIGGERS.items():
-            if trigger not in text:
+            if not _trigger_matches(trigger, text):
                 continue
             if pid in seen:
                 continue
