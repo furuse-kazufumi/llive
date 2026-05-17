@@ -156,6 +156,10 @@ class BriefRunner:
         self._essence_extractor = essence_extractor
         self._notebook = notebook
         self._strategy_orchestrator = strategy_orchestrator
+        # VRB-02 — opt-in PromptLinter. submit() runs it once on the input
+        # Brief and stores the report on BriefResult.lint_report; findings
+        # also fan out to the ledger via the linter's own bind_ledger pattern.
+        self._prompt_linter = prompt_linter
 
     # -- public --------------------------------------------------------------
 
