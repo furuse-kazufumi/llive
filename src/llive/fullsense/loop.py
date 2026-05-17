@@ -200,7 +200,10 @@ class FullSenseLoop:
         stages["thought"] = thought_stage
 
         # ④ Ego / Altruism Scorer
-        ego, alt = self._score_thought(thought)
+        # LLIVE-005 fix (2026-05-18): pass the Brief content so the scorer
+        # can react to keywords even when the LLM-generated thought.text is
+        # short. Stays backward-compatible (keyword-only argument).
+        ego, alt = self._score_thought(thought, brief_content=stim.content)
         stages["ego_score"] = ego
         stages["altruism_score"] = alt
 
