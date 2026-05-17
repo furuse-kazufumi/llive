@@ -175,3 +175,57 @@ def test_e2e_force_times_distance_is_energy() -> None:
     E = F * d
     assert E.value == pytest.approx(50.0)
     assert E.dimensions.matches(parse_unit("J"))
+
+
+# ---------------------------------------------------------------------------
+# SI prefix stripping (2026-05-17 grounding-observation 課題 1)
+# ---------------------------------------------------------------------------
+
+
+def test_parse_nm_is_meter_dimension() -> None:
+    """500 nm — nanometre, dimension = length."""
+    assert parse_unit("nm").matches(Dimensions(m=1))
+
+
+def test_parse_us_micro_is_seconds() -> None:
+    """μs / us — microseconds, dimension = time."""
+    assert parse_unit("μs").matches(Dimensions(s=1))
+    assert parse_unit("us").matches(Dimensions(s=1))
+
+
+def test_parse_kHz_is_frequency() -> None:
+    """kHz — kilohertz, dimension = 1/s."""
+    assert parse_unit("kHz").matches(Dimensions(s=-1))
+
+
+def test_parse_MeV_is_energy() -> None:
+    """MeV — million electron volts, but as a unit symbol resolves only the
+    SI base — V (volt). Note: 'eV' is not in our table yet; this test
+    intentionally documents how the prefix layer handles a prefix+volt
+    combination that does exist."""
+    assert parse_unit("MV").matches(parse_unit("V"))
+
+
+def test_parse_compound_with_prefix() -> None:
+    """'kg' is base (do NOT misread as kilo-g) — verified by composition test."""
+    # kg by itself = base mass dimension
+    assert parse_unit("kg").matches(Dimensions(kg=1))
+    # kHz / (km) — derived combo with prefixes
+    assert parse_unit("kHz").matches(Dimensions(s=-1))
+    assert parse_unit("km").matches(Dimensions(m=1))
+
+
+# ---------------------------------------------------------------------------
+# Time conventions (2026-05-17 grounding-observation 課題 2)
+# ---------------------------------------------------------------------------
+
+
+def test_parse_days_is_time_dimension() -> None:
+    """'5 days' should resolve to a time dimension, not UNKNOWN."""
+    assert parse_unit("days").matches(Dimensions(s=1))
+    assert parse_unit("day").matches(Dimensions(s=1))
+
+
+def test_parse_weeks_hours_min_year() -> None:
+    for word in ("week", "weeks", "hour", "hours", "min", "year", "years"):
+        assert parse_unit(word).matches(Dimensions(s=1)), word
