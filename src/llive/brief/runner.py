@@ -451,6 +451,8 @@ class BriefRunner:
                 "perspective_summary": dict(outcome.perspective_summary)
                 if outcome.perspective_summary is not None
                 else None,
+                # OKA-01/02 — auto-extracted essence mirrored for replay
+                "essence": dict(outcome.essence) if outcome.essence is not None else None,
             },
         )
         return outcome
