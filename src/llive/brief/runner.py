@@ -143,6 +143,17 @@ class BriefRunner:
         # property after constructing the runner; they invoke check_* directly
         # (typically inside tool handlers or grounder extensions).
         self._math_verifier = math_verifier
+        # OKA-01/02/03/04 — shared instances rebound per-Brief like MathVerifier.
+        # When the extractor is present, submit() auto-extracts CoreEssence from
+        # brief.goal at the start of the run (cheap deterministic call) so every
+        # Brief gets an audit-grade "what's the essence" snapshot without the
+        # caller wiring it manually. Notebook auto-records a failed_attempt note
+        # when the Brief ends in ERROR / REJECTED. Strategy orchestrator only
+        # gets ledger-rebound; activation is the caller's responsibility (the
+        # runner can't infer which strategy is appropriate).
+        self._essence_extractor = essence_extractor
+        self._notebook = notebook
+        self._strategy_orchestrator = strategy_orchestrator
 
     # -- public --------------------------------------------------------------
 
