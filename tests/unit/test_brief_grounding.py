@@ -532,6 +532,47 @@ def test_constant_citation_is_frozen() -> None:
         c.value = 1.0  # type: ignore[misc]
 
 
+def test_triz_speed_trigger_suppressed_by_speed_of_light() -> None:
+    """Regression: 'the speed of light' was firing #35 (Parameter Changes).
+
+    Surfaced by 2026-05-17-grounding-observation. The negative context
+    should keep the trigger quiet here.
+    """
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(
+        brief_id="b1",
+        goal="Compute the photon energy using the speed of light and the planck constant.",
+    )
+    grounded = grounder.ground(brief)
+    pids = {c.principle_id for c in grounded.triz}
+    # 'speed' alone would map to #35; here it must NOT fire because of the
+    # negative-context phrase 'speed of light'
+    assert 35 not in pids
+
+
+def test_triz_speed_still_fires_in_tradeoff_context() -> None:
+    """Sanity: 'speed' as a standalone trigger should still work outside
+    the negative-context phrase."""
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(
+        brief_id="b1",
+        goal="optimise speed in the data pipeline",
+    )
+    grounded = grounder.ground(brief)
+    pids = {c.principle_id for c in grounded.triz}
+    assert 35 in pids
+
+
+def test_triz_word_boundary_avoids_speedy_false_positive() -> None:
+    """Word-boundary should prevent 'speedy' from firing the 'speed' trigger."""
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(brief_id="b1", goal="ensure speedy delivery to the customer")
+    grounded = grounder.ground(brief)
+    pids = {c.principle_id for c in grounded.triz}
+    # 'speedy' contains 'speed' as substring but word-boundary blocks it
+    assert 35 not in pids
+
+
 def test_runner_records_constants_in_ledger(tmp_path: Path) -> None:
     grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
     runner = BriefRunner(
