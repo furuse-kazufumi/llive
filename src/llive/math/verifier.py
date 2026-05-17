@@ -199,8 +199,24 @@ class MathVerifier:
     backend= 引数を追加することで差し替え可能になる。
     """
 
-    def __init__(self, *, source_id: str = "") -> None:
+    def __init__(
+        self,
+        *,
+        source_id: str = "",
+        ledger: "BriefLedger | None" = None,
+    ) -> None:
         self._source_id = source_id
+        # Optional auto-record sink — when set, every check_* result is appended
+        # to the ledger as a ``math_verified`` event. This is the primary
+        # traceability hook for MATH-02: any LLM-produced math claim that goes
+        # through a Verifier with a ledger is preserved alongside the Brief's
+        # other audit chains (SEC-03 hash chain, COG-03 trace graph).
+        self._ledger = ledger
+
+    def _record(self, result: "VerificationResult") -> "VerificationResult":
+        if self._ledger is not None:
+            self._ledger.append("math_verified", result.to_payload())
+        return result
 
     # -- equivalence ---------------------------------------------------------
 
