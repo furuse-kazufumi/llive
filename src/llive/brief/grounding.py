@@ -171,6 +171,10 @@ class GroundingConfig:
     include_learned: bool = True
     max_calc: int = 5
     # MATH-08: 内蔵計算結果の上限。大きい数を扱う Brief で prompt が膨れないよう抑制。
+    max_units: int = 6
+    # MATH-01 minimal grounding: 「数値+単位」の citation 数上限。Brief 文中の
+    # 単位を 1 件ずつ Dimensions に焼き付ける。最小実装、次元演算チェックは
+    # 後段イテレーションで追加 (実装→課題発見→厚み増しの原則)。
 
 
 def _extract_keywords(text: str, *, max_terms: int = 8) -> list[str]:
