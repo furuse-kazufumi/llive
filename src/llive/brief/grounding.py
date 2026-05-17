@@ -309,6 +309,61 @@ class BriefGrounder:
             )
         return tuple(out)
 
+    def _lookup_units(self, brief: Brief) -> tuple[UnitCitation, ...]:
+        """MATH-01 minimal — recognise value+unit pairs in the Brief.
+
+        Each match is parsed via ``parse_unit``; unknown symbols are kept as
+        citations with ``error`` set so the auditor can see what was tried
+        (e.g. ``5 days`` will surface as an error citation, alerting the
+        operator that the parser doesn't yet know about that unit).
+
+        This is intentionally a **minimal** layer — dimensional arithmetic
+        checks across multiple quantities (``5 m/s + 3 s``) are deferred to
+        the next iteration once we collect real-world Brief samples and see
+        what shapes of mismatch actually need surfacing.
+        """
+        if self.config.max_units <= 0:
+            return ()
+        text = self._brief_text(brief)
+        seen: set[tuple[str, str]] = set()
+        out: list[UnitCitation] = []
+        for m in _QUANTITY_RE.finditer(text):
+            value_s, unit_text = m.group(1), m.group(2)
+            key = (value_s, unit_text)
+            if key in seen:
+                continue
+            seen.add(key)
+            raw = f"{value_s} {unit_text}"
+            try:
+                value = float(value_s)
+            except ValueError:
+                continue
+            try:
+                dims = parse_unit(unit_text)
+            except UnitMismatchError as e:
+                out.append(
+                    UnitCitation(
+                        raw_text=raw,
+                        value=value,
+                        unit_text=unit_text,
+                        dimensions="?",
+                        error=str(e),
+                    )
+                )
+            else:
+                out.append(
+                    UnitCitation(
+                        raw_text=raw,
+                        value=value,
+                        unit_text=unit_text,
+                        dimensions=str(dims),
+                        error=None,
+                    )
+                )
+            if len(out) >= self.config.max_units:
+                break
+        return tuple(out)
+
     def _lookup_calc(self, brief: Brief) -> tuple[CalcCitation, ...]:
         """MATH-08 — extract arithmetic expressions and evaluate deterministically.
 
