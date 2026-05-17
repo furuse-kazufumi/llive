@@ -132,7 +132,13 @@ class BriefLedger:
                 # MATH-02 — Sympy/Z3 deterministic check that backed the Brief's
                 # math claim. Recorded with verdict + solver so auditors can
                 # tell apart "equivalent under sympy" vs "z3-valid implication".
-                evidence.append({"kind": "math", **r.payload})
+                # ``payload["kind"]`` is equivalence/implication/satisfiability —
+                # preserve it as ``check_kind`` and use the evidence chain's own
+                # ``kind`` slot to tag this as a math-style citation.
+                entry = dict(r.payload)
+                entry["check_kind"] = entry.pop("kind", "")
+                entry["kind"] = "math"
+                evidence.append(entry)
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored"}:
