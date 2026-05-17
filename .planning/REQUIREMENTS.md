@@ -454,7 +454,7 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 
 | FR | Phase | Status | Priority |
 |---|---|---|---|
-| MATH-01 | Phase 10 | **Implemented + Brief grounding 配線済** (2026-05-17, internal: `src/llive/math/units.py` + `BriefGrounder._lookup_units` + `UnitCitation` ledger 記録, minimal scope: 個別 Quantity 識別まで、cross-quantity 次元演算チェックは次イテレーション) | **1st** |
+| MATH-01 | Phase 10 | **Implemented + Brief grounding 配線済** (2026-05-17, internal: `src/llive/math/units.py` + `BriefGrounder._lookup_units` + `UnitCitation` ledger 記録 + SI prefix (nm/μs/kHz...) + 時間慣用単位 (days/hours/min/year...) + ドメイン語フィルタ。cross-quantity 次元演算チェックは次イテレーション) | **1st** |
 | MATH-02 | Phase 10 | **Implemented** (2026-05-17) | **2nd** |
 
 **MATH-02 実装ノート (2026-05-17)**: `src/llive/math/verifier.py` に `MathVerifier`
