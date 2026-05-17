@@ -252,6 +252,64 @@ def parse_unit(text: str) -> Dimensions:
     return accum
 
 
+def unit_scale_factor(unit_text: str) -> float:
+    """Return the SI-base conversion factor for a unit text (MATH-06 minimal).
+
+    Example::
+
+        unit_scale_factor("days") -> 86400.0
+        unit_scale_factor("km")   -> 1000.0
+        unit_scale_factor("m")    -> 1.0
+        unit_scale_factor("kHz")  -> 1000.0
+
+    Unknown or composite expressions raise :class:`UnitMismatchError`. This
+    layer is **scalar-only** — composite units like ``m/s`` use scale 1.0
+    (both prefixes are SI base by default); when prefixed compounds appear
+    (``km/h``), the scale is the product of prefix scales on each term.
+    """
+    if unit_text is None or not unit_text.strip():
+        return 1.0
+    # Normalise like parse_unit does
+    normalised = re.sub(r"\s+", "", unit_text).replace("·", "*")
+    sign = 1
+    scale = 1.0
+    current = ""
+    for ch in normalised + "*":
+        if ch in ("*", "/"):
+            if current:
+                scale *= _term_scale(current) ** sign
+                current = ""
+            sign = 1 if ch == "*" else -1
+        else:
+            current += ch
+    return scale
+
+
+def _term_scale(term: str) -> float:
+    """Scale factor for one term, mirroring _term_dimensions."""
+    # Strip exponent: kg^2 → ('kg', 2)
+    if "^" in term:
+        sym, exp_s = term.split("^", 1)
+        try:
+            exp = int(exp_s)
+        except ValueError as e:
+            raise UnitMismatchError(f"bad exponent in unit term {term!r}") from e
+    else:
+        sym, exp = term, 1
+    # 1. Direct hit in scale tables
+    if sym in _TIME_SCALE:
+        return _TIME_SCALE[sym] ** exp
+    if sym in _MASS_SCALE:
+        return _MASS_SCALE[sym] ** exp
+    if sym in _DERIVED:
+        return 1.0 ** exp  # SI base-equivalent or dimensionless
+    # 2. Try SI prefix
+    for plen in (2, 1):
+        if len(sym) > plen and sym[:plen] in _SI_PREFIX_SCALE and sym[plen:] in _DERIVED:
+            return _SI_PREFIX_SCALE[sym[:plen]] ** exp
+    raise UnitMismatchError(f"unknown unit symbol {sym!r}")
+
+
 def _term_dimensions(term: str, sign: int) -> Dimensions:
     """Parse a single term like ``m^2`` or ``kg`` and apply sign as exponent multiplier.
 
