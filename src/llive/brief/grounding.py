@@ -339,6 +339,55 @@ class BriefGrounder:
             )
         return tuple(out)
 
+    def _lookup_constants(self, brief: Brief) -> tuple[ConstantCitation, ...]:
+        """MATH-05 minimal — recognise mentions of CODATA/NIST constants.
+
+        Strategy: walk every alias/name registered in :func:`list_constants`,
+        skip aliases shorter than 3 chars (those trigger far too many false
+        positives in natural language), and surface a citation when the
+        Brief text contains the alias as a whole word (case-insensitive).
+
+        Like the unit layer, this is **deliberately minimal** — we are
+        collecting which constants actually surface in real Briefs before
+        investing in a smarter NER pass.
+        """
+        if self.config.max_constants <= 0:
+            return ()
+        text = self._brief_text(brief).lower()
+        seen_canonical: set[str] = set()
+        out: list[ConstantCitation] = []
+        for const in list_constants():
+            candidates = (const.name, const.symbol) + tuple(const.aliases)
+            for alias in candidates:
+                key = alias.lower()
+                if len(key) < 3:
+                    # Too noisy (c, h, e, G — common natural-language words)
+                    continue
+                if not re.search(rf"\b{re.escape(key)}\b", text):
+                    continue
+                if const.name in seen_canonical:
+                    break
+                try:
+                    resolved = get_constant(alias)
+                except ConstantNotFoundError:
+                    break
+                seen_canonical.add(resolved.name)
+                out.append(
+                    ConstantCitation(
+                        matched_alias=alias,
+                        name=resolved.name,
+                        symbol=resolved.symbol,
+                        value=resolved.quantity.value,
+                        dimensions=str(resolved.quantity.dimensions),
+                        relative_uncertainty=resolved.relative_uncertainty,
+                        source=resolved.source,
+                    )
+                )
+                break
+            if len(out) >= self.config.max_constants:
+                break
+        return tuple(out)
+
     def _lookup_units(self, brief: Brief) -> tuple[UnitCitation, ...]:
         """MATH-01 minimal — recognise value+unit pairs in the Brief.
 
