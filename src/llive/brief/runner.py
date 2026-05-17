@@ -175,8 +175,23 @@ class BriefRunner:
         # constructed with (or no ledger at all).
         if self._math_verifier is not None:
             self._math_verifier.bind_ledger(ledger)
+        # OKA — rebind essence / notebook / orchestrator sinks the same way.
+        if self._essence_extractor is not None:
+            self._essence_extractor.bind_ledger(ledger)
+        if self._notebook is not None:
+            self._notebook.bind_ledger(ledger)
+        if self._strategy_orchestrator is not None:
+            self._strategy_orchestrator.bind_ledger(ledger)
 
         ledger.append("brief_submitted", {"brief": brief_to_dict(brief)})
+
+        # OKA-01/02 — auto-extract a core essence snapshot at the start of every
+        # Brief. Deterministic + cheap; ledger event is appended by the extractor.
+        essence: CoreEssence | None = None
+        if self._essence_extractor is not None:
+            essence = self._essence_extractor.extract(
+                brief.goal, source_id=brief.brief_id
+            )
 
         grounded: GroundedBrief | None = None
         if self._grounder is not None:
