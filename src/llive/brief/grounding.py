@@ -265,6 +265,49 @@ class BriefGrounder:
             )
         return tuple(out)
 
+    def _lookup_calc(self, brief: Brief) -> tuple[CalcCitation, ...]:
+        """MATH-08 — extract arithmetic expressions and evaluate deterministically.
+
+        LLM is never asked to compute the arithmetic; instead we evaluate
+        every expression locally and inject the result as grounded evidence.
+        Failures (zero division, malformed) are kept as citations with
+        ``error`` set so the auditor can see exactly what was rejected.
+        """
+        if self.config.max_calc <= 0:
+            return ()
+        text = self._brief_text(brief)
+        expressions = extract_expressions(text)
+        if not expressions:
+            return ()
+        calc = SafeCalculator()
+        out: list[CalcCitation] = []
+        for expr in expressions:
+            try:
+                r = calc.evaluate(expr)
+            except CalculationError as e:
+                out.append(
+                    CalcCitation(
+                        expression=expr,
+                        value=float("nan"),
+                        operation_count=0,
+                        used_functions=(),
+                        error=str(e),
+                    )
+                )
+            else:
+                out.append(
+                    CalcCitation(
+                        expression=r.expression,
+                        value=r.value,
+                        operation_count=r.operation_count,
+                        used_functions=r.used_functions,
+                        error=None,
+                    )
+                )
+            if len(out) >= self.config.max_calc:
+                break
+        return tuple(out)
+
     @staticmethod
     def _brief_text(brief: Brief) -> str:
         parts = [brief.goal]
