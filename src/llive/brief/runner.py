@@ -224,6 +224,36 @@ class BriefRunner:
                 },
             )
 
+        # COG-04 + CREAT-04 — multi-track perspectives. Runs after governance
+        # so it can see the same plan/decision but does not gate the flow.
+        perspective_summary: MultiTrackSummary | None = None
+        perspectives_payload: list[dict[str, Any]] = []
+        if self._perspectives is not None:
+            perspective_summary = self._perspectives.observe(
+                brief, result.plan.decision, result.plan
+            )
+            perspectives_payload = [
+                {
+                    "perspective_id": n.perspective_id,
+                    "axis": n.axis,
+                    "score": n.score,
+                    "observation": n.observation,
+                    "concerns": list(n.concerns),
+                }
+                for n in perspective_summary.notes
+            ]
+            ledger.append(
+                "perspectives_observed",
+                {
+                    "notes": perspectives_payload,
+                    "support_score": perspective_summary.support_score,
+                    "risk_score": perspective_summary.risk_score,
+                    "divergence": perspective_summary.divergence,
+                    "critical_concerns": list(perspective_summary.critical_concerns),
+                    "consensus_recommendation": perspective_summary.consensus_recommendation,
+                },
+            )
+
         # Step 4 — Approval Bus gate
         if (
             brief.approval_required
