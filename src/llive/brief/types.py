@@ -132,6 +132,10 @@ class BriefResult:
     # dict to keep BriefResult cheap to serialise into MCP responses.
     perspectives: tuple[Mapping[str, Any], ...] = ()
     perspective_summary: Mapping[str, Any] | None = None
+    # OKA-01 / OKA-02 — auto-extracted core essence (only present when the
+    # runner was given a CoreEssenceExtractor). Already in JSON-friendly form
+    # via :meth:`CoreEssence.to_payload`.
+    essence: Mapping[str, Any] | None = None
 
 
 def brief_to_dict(brief: Brief) -> dict[str, Any]:
