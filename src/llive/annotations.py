@@ -140,6 +140,57 @@ class AnnotationBundle:
             extra = tuple(other)
         return AnnotationBundle(items=self.items + extra)
 
+    def to_html_comments(self, *, prefix: str = "llive") -> str:
+        """Render the bundle as HTML/Markdown comments — invisible when rendered.
+
+        Designed for the "邪魔にならない" requirement (2026-05-17): embedding
+        these into a Markdown/HTML output yields zero visible artefacts in a
+        renderer (browser, Markdown viewer), yet a consumer that parses the
+        raw text can recover the annotations deterministically.
+
+        Format::
+
+            <!-- {prefix}:{namespace}.{key}={json_value} target={layer} -->
+
+        Multiple comments are joined with ``\\n``. Empty bundle returns ``""``.
+        """
+        import json
+        lines: list[str] = []
+        for a in self.items:
+            value_str = json.dumps(a.value, ensure_ascii=False, sort_keys=True)
+            target = f" target={a.target_layer}" if a.target_layer else ""
+            lines.append(
+                f"<!-- {prefix}:{a.namespace}.{a.key}={value_str}{target} -->"
+            )
+        return "\n".join(lines)
+
+    @classmethod
+    def from_html_comments(cls, text: str, *, prefix: str = "llive") -> "AnnotationBundle":
+        """Parse :meth:`to_html_comments` output back into a bundle.
+
+        Lines that don't match the expected format are skipped silently —
+        consumers shouldn't blow up on hand-edited Markdown.
+        """
+        import json
+        import re
+
+        pattern = re.compile(
+            r"<!--\s*"
+            + re.escape(prefix)
+            + r":([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)=(.+?)(?:\s+target=([A-Za-z0-9_]+))?\s*-->"
+        )
+        items: list[Annotation] = []
+        for m in pattern.finditer(text):
+            ns, key, raw_value, target = m.groups()
+            try:
+                value = json.loads(raw_value)
+            except json.JSONDecodeError:
+                continue
+            items.append(Annotation(
+                namespace=ns, key=key, value=value, target_layer=target,
+            ))
+        return cls(items=tuple(items))
+
 
 class AnnotationEmitter:
     """Mutable builder used inside emit-side components.
