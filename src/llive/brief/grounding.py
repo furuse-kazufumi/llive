@@ -494,16 +494,26 @@ class BriefGrounder:
                         value=value,
                         unit_text=unit_text,
                         dimensions="?",
+                        si_factor=1.0,
+                        si_value=value,
                         error=str(e),
                     )
                 )
             else:
+                # MATH-06 minimal: SI base factor — non-fatal if not in
+                # scale tables (composite units default to factor 1.0).
+                try:
+                    factor = unit_scale_factor(unit_text)
+                except UnitMismatchError:
+                    factor = 1.0
                 out.append(
                     UnitCitation(
                         raw_text=raw,
                         value=value,
                         unit_text=unit_text,
                         dimensions=str(dims),
+                        si_factor=factor,
+                        si_value=value * factor,
                         error=None,
                     )
                 )
