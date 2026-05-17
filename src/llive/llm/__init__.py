@@ -19,6 +19,13 @@ Default backend resolution (when no explicit choice is provided):
 3. ``$OPENAI_API_KEY`` is set → ``openai``.
 4. ``$OLLAMA_HOST`` is set → ``ollama``.
 5. Fallback: ``mock`` (deterministic, no network).
+
+Model-name env overrides (default-model selection without code changes):
+
+* ``$LLIVE_OPENAI_MODEL`` — overrides ``OpenAIBackend.DEFAULT_MODEL``.
+  Required when ``LLIVE_LLM_BACKEND=openai`` is used to target an
+  OpenAI-compatible server (LM Studio / vLLM / llama-server) whose actual
+  model name is not ``gpt-4o-mini``.
 """
 
 from llive.llm.backend import (
