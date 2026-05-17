@@ -21,6 +21,13 @@ from llive.math.calculator import (
     SafeCalculator,
     extract_expressions,
 )
+from llive.math.constants import (
+    ConstantNotFoundError,
+    ConstantsRegistry,
+    PhysicalConstant,
+    get_constant,
+    list_constants,
+)
 from llive.math.units import (
     Dimensions,
     Quantity,
@@ -35,12 +42,17 @@ from llive.math.verifier import (
 __all__ = [
     "CalculationError",
     "CalculationResult",
+    "ConstantNotFoundError",
+    "ConstantsRegistry",
     "Dimensions",
     "MathVerifier",
+    "PhysicalConstant",
     "Quantity",
     "SafeCalculator",
     "UnitMismatchError",
     "VerificationResult",
     "extract_expressions",
+    "get_constant",
+    "list_constants",
     "parse_unit",
 ]
