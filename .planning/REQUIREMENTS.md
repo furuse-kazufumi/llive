@@ -958,6 +958,38 @@ class Annotation:
 |---|---|---|---|
 | **ORG-09** | **License Audit Pipeline** | 使用 OSS LLM すべてのライセンス・配布権利・redistribution 範囲を機械監査。pyproject に license metadata 必須、CI で逸脱検出 | **HIGH** |
 | **ORG-10** | **Model Abstraction Boundary** | LLMBackend Protocol を「Qwen 固有挙動に依存しない」よう契約強化。tokenizer 差異・stop sequence 差異を吸収。Mistral / Llama / Gemma / 自前モデルへ即時 swap 可能 | **HIGH** |
+| **ORG-11** | **Rule-based → llive-native LLM 進化パス** | 現状の rule-based fallback (`Observation about X — novel territory` 等のテンプレ) を、段階的に「on-prem 想定の llive 独自 LLM」へ昇格させる経路 (下記参照) | **MED (長期)** |
+
+### ORG-11 Rule-based → llive-native LLM 5 段階進化
+
+**ユーザー指示 (2026-05-17)**: 「rule-based をいつか on-premise を想定した独自
+LLM みたいな形に出来るようにしたいです。」
+
+| Step | 名称 | 概要 | サイズ目安 |
+|---|---|---|---|
+| **R0** | Rule-based template (現状) | `FullSenseLoop` の LLM 無し時のテンプレ生成 | 0 params |
+| **R1** | Embedding-only LM | 1〜100M params の小型 embedding/classifier。decision 分類 / confidence 推定のみ | 1〜100M |
+| **R2** | Tiny generative LM | 100M〜1B params。OKA essence 抽出 / TRIZ 候補列挙の deterministic 強化 | 100M〜1B |
+| **R3** | Llive-distilled 7B | qwen2.5:14b → llive-7b 蒸留 (ORG-08)、教師 = OKA/COG/VRB の構造化出力 | 7B |
+| **R4** | Llive-native architecture | Transformer block 置換 / Mamba / RWKV (ORG-01, ORG-05)。完全独自 | 任意 |
+
+### ORG-11 設計原則
+
+1. **どの step でも上位互換** — R0 で動いていた Brief が R3 でも動く (LLMBackend Protocol 維持)
+2. **配布物の clean separation** — R3 以降は配布物に Qwen weights を含めない (ORG-09 license audit と整合)
+3. **rule-based を捨てない** — R4 でも rule-based fallback は残す (CI / 単体テスト / debug)
+4. **R1 で 1 度成果** — embedding-only でも 「LLM 不在時の decision 品質」を改善でき
+   る部分があるので、ここで一度商用リリース候補 (on-prem 完全独自 mini-llive)
+5. **R3 がメイン商用エディション** — qwen 由来であることは認めるが、配布物は llive 独自
+   = 商用契約障壁を最小化 (Stage C の本命)
+
+### ORG-11 評価指標
+
+- **R0 baseline coverage** = 0.567 (現状実測、`vs_cloud.json` の echo 効果込)
+- **R1 target**: coverage ≥0.50 / latency < 50ms / weight < 100 MB
+- **R2 target**: coverage ≥0.55 / latency < 200ms / weight < 1 GB
+- **R3 target**: coverage ≥0.60 / latency < 5 s / weight < 8 GB (cloud Haiku の 80% に到達)
+- **R4 target**: coverage ≥0.65 / 独自 architecture / 配布物完全 OSS
 
 ### 評価指標 (Qwen 依存度の計測)
 
