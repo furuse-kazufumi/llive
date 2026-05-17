@@ -790,9 +790,9 @@ OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔の数学
 | FR | 名前 | 概要 | 優先度 |
 |---|---|---|---|
 | **VRB-02** | Prompt / Requirement Lint | Brief.goal / constraints / success_criteria を走査し、曖昧語 (高性能/堅牢/使いやすく)・評価不能語・比較軸不足・対象読者不明を検出 → `lint_findings` event | **HIGH (1st)** |
-| **VRB-04** | Premortem Generator | 採用前の Brief に「失敗シナリオ」を deterministic に生成 (BlackHat lens + 危険語 + 制約矛盾) → `premortem_generated` event。Approval Bus の payload に伝達 | MED |
-| **VRB-05** | Eval Spec Editor (Metrics Registry + Stop Conditions) | Brief に `metrics_registry` (name → unit → threshold) と `stop_conditions` を追加できる軽量レイヤ。後段で BriefResult との突合 | MED |
-| **VRB-06** | Dual Spec Writer (Audience Switch 込) | 同一 Brief を Human Brief / Model Prompt Contract / Eval Contract / Execution Manifest / Research Note の 5 出力モードで render | LOW |
+| **VRB-04** | Premortem Generator | 採用前の Brief に「失敗シナリオ」を deterministic に生成 (BlackHat lens + 危険語 + 制約矛盾) → `premortem_generated` event。Approval Bus の payload に伝達 | MED → **Implemented (2026-05-17)** |
+| **VRB-05** | Eval Spec Editor (Metrics Registry + Stop Conditions) | Brief に `metrics_registry` (name → unit → threshold) と `stop_conditions` を追加できる軽量レイヤ。後段で BriefResult との突合 | MED → **Implemented (2026-05-17)** |
+| **VRB-06** | Dual Spec Writer (Audience Switch 込) | 同一 Brief を Human Brief / Model Prompt Contract / Eval Contract / Execution Manifest / Research Note の 5 出力モードで render | LOW → **Implemented (2026-05-17)** |
 
 ### 既に達成されている設計原則
 
