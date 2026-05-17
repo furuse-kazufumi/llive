@@ -90,6 +90,30 @@ def empirical_track(stim: Stimulus, plan: ActionPlan) -> ActionPlan:
     return _tag(plan, "empirical")
 
 
+def mathematical_track(stim: Stimulus, plan: ActionPlan) -> ActionPlan:
+    """MATHEMATICAL (MATH-07): 数学的命題。deterministic 検証可能であるべき。
+
+    FACTUAL より更に厳格 — 数式は Z3/Sympy で再検算できるはず、なので
+    confidence 閾値を 0.8 に上げ、rationale に math verification hint を
+    付加。MathVerifier との統合は別レイヤ ([[project_llive_math_vertical_2026_05_17]])
+    で行うが、track tag を残すことで「この出力は MATHEMATICAL track を
+    通った」と audit ledger 上で識別可能になる。
+    """
+    if plan.thought is not None:
+        if plan.thought.confidence < 0.8:
+            plan = ActionPlan(
+                decision=ActionDecision.SILENT,
+                rationale=(
+                    "MATHEMATICAL strict: confidence < 0.8, "
+                    "withholding until MathVerifier 検算可能性を確認"
+                ),
+                ego_score=plan.ego_score,
+                altruism_score=plan.altruism_score,
+                thought=plan.thought,
+            )
+    return _tag(plan, "mathematical")
+
+
 def normative_track(stim: Stimulus, plan: ActionPlan) -> ActionPlan:
     """NORMATIVE: 倫理判断。§F5 ethical を最優先、ego が高ければ SILENT へ降格."""
     # 自利己優位な思考は normative では却下
