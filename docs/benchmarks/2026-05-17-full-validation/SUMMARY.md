@@ -225,6 +225,40 @@ essence → KJ → mindmap → synectics → perspectives → structurize → ex
 
 ---
 
+## 9f. 他 LLM 比較 (`vs_other_llms.json`)
+
+3 backend × 3 Brief の on-prem 比較。Cloud API (Perplexity/Anthropic/Codex/Gemini)
+は credential 未復旧のため今回は除外 (honest disclosure)。
+
+| Backend | 平均 wall | 平均 coverage* | typo |
+|---|---|---|---|
+| mock (no LLM) | 0.0 s | 0.583 | 0 |
+| ollama qwen2.5:7b | 38.0 s | 0.167 | 0 |
+| ollama qwen2.5:14b | 75.6 s | 0.417 | 0 |
+
+\*coverage = Brief 中の expected_terms が thought_text に出現した割合 (deterministic 検査)
+
+### 質的観察 (実出力サンプル)
+
+| Backend | B1_math (等式判定) |
+|---|---|
+| mock | Brief 本文を echo back + "novel territory" テンプレ。**coverage 0.583 は echo の偽性能** |
+| qwen2.5:7b | **中国語で回答** (lang mismatch)。数学的には正しい (`平方和乘法分配律` 等) |
+| qwen2.5:14b | **日本語で正しく回答**、二項定理に言及、品質高 |
+
+### 重要発見
+
+1. **qwen2.5:7b の language drift**: 日本語 Brief に中国語で回答する事例あり。
+   on-prem 推奨モデルは **qwen2.5:14b 以上**に再確認 (前回 [[project_benchmark_2026_05_16]] の知見と一致)
+2. **typo 0 件**: 前回 llama3.2:3b で起きた `lllive` typo は qwen2.5 では再発せず
+3. **mock の偽性能**: coverage 0.583 は Brief 本文の echo back 効果、品質を保証していない (要 honest disclosure)
+4. **wall time scaling**: 7b → 14b で 2× (38s → 76s)、品質は coverage 0.17 → 0.42 で 2.5× 改善
+5. **Cloud 比較は未実施**: Perplexity/Anthropic key 復旧後に別 session で再戦予定
+
+→ 結論: **on-prem 推奨は qwen2.5:14b**、deterministic verifier (MathVerifier 等) と組み合わせれば品質ガード可能。
+
+---
+
 ## 10. 次の検証 (将来)
 
 1. **実 LLM ベンチ** — ollama qwen2.5:7b/14b を runner に attach した progressive 5 段ラダー
