@@ -322,6 +322,14 @@ def render_markdown(report: dict[str, Any]) -> str:
 
 
 def main() -> None:
+    import sys
+    # Windows console defaults to cp932 which can't render the ✓ marks in the
+    # Markdown summary. Reconfigure to utf-8 if available; harmless on POSIX.
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+        except Exception:
+            pass
     report = measure()
     out_dir = Path("docs/benchmarks")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -331,9 +339,12 @@ def main() -> None:
     md_path.write_text(render_markdown(report), encoding="utf-8")
     print(f"wrote {json_path}")
     print(f"wrote {md_path}")
-    # short summary to stdout
     print("\n--- summary ---")
-    print(render_markdown(report))
+    try:
+        print(render_markdown(report))
+    except UnicodeEncodeError:
+        # final fallback — strip the check marks
+        print(render_markdown(report).encode("ascii", errors="replace").decode("ascii"))
 
 
 if __name__ == "__main__":
