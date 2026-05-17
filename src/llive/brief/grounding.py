@@ -134,6 +134,24 @@ class CalcCitation:
 
 
 @dataclass(frozen=True)
+class ConstantCitation:
+    """One CODATA / NIST constant the Brief mentions (MATH-05 minimal grounding).
+
+    Recorded so the LLM consumes the grounded value (e.g. light speed =
+    2.99792458e8 m/s) rather than re-deriving it from memory and likely
+    getting the last few digits wrong.
+    """
+
+    matched_alias: str         # e.g. "planck"
+    name: str                  # canonical name, e.g. "planck_constant"
+    symbol: str
+    value: float
+    dimensions: str
+    relative_uncertainty: float
+    source: str
+
+
+@dataclass(frozen=True)
 class UnitCitation:
     """One value+unit pair recognised in a Brief (MATH-01 minimal grounding).
 
