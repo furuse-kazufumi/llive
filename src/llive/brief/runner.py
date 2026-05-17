@@ -231,6 +231,16 @@ class BriefRunner:
                         }
                         for r in grounded.rad
                     ],
+                    "calc": [
+                        {
+                            "expression": c.expression,
+                            "value": c.value,
+                            "operation_count": c.operation_count,
+                            "used_functions": list(c.used_functions),
+                            "error": c.error,
+                        }
+                        for c in grounded.calc
+                    ],
                     "augmented_goal_chars": len(grounded.augmented_goal),
                 },
             )
