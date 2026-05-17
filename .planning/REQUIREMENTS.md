@@ -817,6 +817,62 @@ OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔の数学
 * COG-03 trace_graph evidence_chain に `kind="lint"` として統合
 * テスト追加、回帰ゼロ
 
+---
+
+## IND-FX — Independence Principle (FullSense 設計原則、2026-05-17 追加)
+
+**ユーザー指示 (2026-05-17 8 回目末、LinkedIn フィードバック転載)**:
+> 「llive の記憶層が llove の交互データに依存し、llove がまた llmesh の接続能力に
+> 依存しているなら、その中の一つだけを使う価値は半減します。理想的なのは、各層が
+> 独立して価値を提供でき、組み合わせることで効果が積み上がる設計であり、全部
+> 揃えないと動かないという状況は避けるべきです。」
+
+これを設計原則として locked-in:
+
+### IND-01 各層独立性 (Independence)
+
+* **llive** は llove / llmesh に runtime 依存してはならない (single-package install で
+  全機能が動く)
+* **llove** は llive / llmesh に runtime 依存してはならない
+* **llmesh** は llive / llove に runtime 依存してはならない
+* 連携 (MCP / OPC-UA / sensor bridge / TUI bridge) は **optional dependency** として
+  `pyproject [project.optional-dependencies]` に隔離
+
+### IND-02 組合せ価値積み上げ (Additive Composition)
+
+* 各層単独 = ベースライン価値を提供
+* llive + llove = ベース + 視覚化 + IDE 統合価値
+* llive + llmesh = ベース + センサ / 製造現場価値
+* 3 つ揃い = フル価値 (ベース + 視覚化 + センサ)
+* どの組合せでも「壊れない / 機能消失しない」ことが必須
+
+### IND-03 監査の機械化
+
+* `scripts/audit_independence.py` で AST スキャン:
+  - hard import (`import llove`) → leak (exit 1)
+  - try/except ラップされた optional import → soft (exit 0)
+* 結果は `docs/audits/independence-YYYY-MM-DD.md` に出力
+* **2026-05-17 監査結果**: 171 ファイル中 hard leak 0 件 / soft 0 件 = clean
+* CI 候補 (将来 GHA で各 PR 時に走らせる)
+
+### 既存実装での担保
+
+* すべての llive component が **opt-in / Strategy 注入** で構築済み
+  (Grounder / Governance / Perspectives / MathVerifier / Essence / Notebook /
+  Orchestrator / PromptLinter — どれも None 可)
+* `bind_ledger()` パターンで ledger も optional
+* 連携機能 (mcp / vlm / torch / ingest) はすべて `[project.optional-dependencies]` で
+  隔離済み (pyproject.toml line 44〜)
+
+### 違反した場合の対応
+
+1. CI で audit_independence.py が exit 1 → ブロック
+2. 既存コードを try/except ImportError でラップ
+3. 機能本体は optional 化、デフォルトは ImportError fallback で機能停止のみ
+4. 単体テストで「optional 依存無しでもコアテストが通る」ことを確認
+
+---
+
 ### 次に着手するなら
 
 1. **VRB-04 Premortem Generator** — BlackHatLens を拡張、failure scenarios を tabular 出力
