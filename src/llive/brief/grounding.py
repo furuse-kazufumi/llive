@@ -103,6 +103,31 @@ _WORD_BOUNDARY_TRIGGERS: frozenset[str] = frozenset({
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9_぀-ゟ゠-ヿ一-鿿]+", re.UNICODE)
 
+
+def _trigger_matches(trigger: str, text_lower: str) -> bool:
+    """Return True if trigger applies to the (lower-cased) Brief text.
+
+    Two refinements on plain substring match (2026-05-17-grounding-observation):
+
+    1. **Word-boundary** for short / ambiguous English triggers (see
+       ``_WORD_BOUNDARY_TRIGGERS``) — prevents ``speedy`` from firing the
+       ``speed`` trigger.
+    2. **Negative context** — even when the trigger is present, suppress
+       firing if any phrase in ``_TRIZ_NEGATIVE_CONTEXTS[trigger]`` is also
+       present (e.g. ``speed of light``). Lets the ``speed`` trigger fire
+       on ``speed vs accuracy`` while staying quiet on
+       ``the speed of light``.
+    """
+    if trigger in _WORD_BOUNDARY_TRIGGERS:
+        if not re.search(rf"\b{re.escape(trigger)}\b", text_lower):
+            return False
+    elif trigger not in text_lower:
+        return False
+    for neg in _TRIZ_NEGATIVE_CONTEXTS.get(trigger, ()):
+        if neg in text_lower:
+            return False
+    return True
+
 # MATH-01 minimal: 数値 + 単位 を抽出 (例: "5 m/s", "9.81 m/s^2", "100 kg").
 # 偽陽性 (e.g. "5 days") は parse_unit で UnitMismatchError → citation.error
 # に格納する。完全に正しい NER ではなく「Brief 中の単位候補を漏らさず拾う」
