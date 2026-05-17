@@ -469,6 +469,8 @@ class BriefRunner:
                 else None,
                 # OKA-01/02 — auto-extracted essence mirrored for replay
                 "essence": dict(outcome.essence) if outcome.essence is not None else None,
+                # VRB-02 — submit-time prompt lint mirrored for replay
+                "lint_report": dict(outcome.lint_report) if outcome.lint_report is not None else None,
             },
         )
         return outcome
