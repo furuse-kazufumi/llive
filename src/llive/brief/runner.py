@@ -242,12 +242,22 @@ class BriefRunner:
             result: FullSenseResult = self._loop.process(stim)
         except Exception as exc:  # surface loop errors as terminal Brief state
             ledger.append("error", {"phase": "loop.process", "error": repr(exc)})
+            # OKA-04 — auto-write a failed_attempt note so the next Brief can
+            # find it via notebook.related_to() when re-attempting the same area.
+            if self._notebook is not None:
+                self._notebook.append(
+                    brief_id=brief.brief_id,
+                    kind="failed_attempt",
+                    body=f"loop.process raised on goal={brief.goal!r}: {exc!r}",
+                    tags=("loop_error",),
+                )
             return BriefResult(
                 brief_id=brief.brief_id,
                 status=BriefStatus.ERROR,
                 rationale="loop.process raised",
                 ledger_entries=ledger.entries_written,
                 error=repr(exc),
+                essence=essence.to_payload() if essence is not None else None,
             )
 
         ledger.append("loop_completed", {"stages": _stages_to_jsonable(result.stages)})
