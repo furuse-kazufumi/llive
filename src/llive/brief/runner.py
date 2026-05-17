@@ -429,6 +429,7 @@ class BriefRunner:
             missing_evidence=tuple(missing_list),
             perspectives=tuple(perspectives_payload),
             perspective_summary=perspective_summary_payload,
+            essence=essence.to_payload() if essence is not None else None,
         )
         ledger.append(
             "outcome",
