@@ -127,6 +127,8 @@ __all__ = [
     "PromptLinter",
     "RadCitation",
     "RedHatLens",
+    "RenderMode",
+    "RenderedBrief",
     "RoleBasedMultiTrack",
     "RolePerspective",
     "StopCondition",
