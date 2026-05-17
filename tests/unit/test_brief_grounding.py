@@ -460,3 +460,95 @@ def test_runner_records_units_in_ledger(tmp_path: Path) -> None:
     grav = next(p for p in units_payload if p["raw_text"] == "9.81 m/s^2")
     assert grav["error"] is None
     assert "m" in grav["dimensions"] and "s" in grav["dimensions"]
+
+
+# ---------------------------------------------------------------------------
+# MATH-05 — physical constants grounding
+# ---------------------------------------------------------------------------
+
+
+def test_grounder_grounds_planck_constant() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(
+        brief_id="b1",
+        goal="derive the photon energy using the planck constant and the elementary charge",
+    )
+    grounded = grounder.ground(brief)
+    names = {c.name for c in grounded.constants}
+    assert "planck_constant" in names
+    assert "elementary_charge" in names
+    planck = next(c for c in grounded.constants if c.name == "planck_constant")
+    assert planck.value == pytest.approx(6.62607015e-34)
+    assert "[Physical constants grounded (MATH-05)]" in grounded.augmented_goal
+
+
+def test_grounder_grounds_avogadro_and_boltzmann() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    brief = Brief(
+        brief_id="b1",
+        goal="compare avogadro and boltzmann derivations in CODATA terms",
+    )
+    grounded = grounder.ground(brief)
+    names = {c.name for c in grounded.constants}
+    assert "avogadro_constant" in names
+    assert "boltzmann_constant" in names
+
+
+def test_grounder_ignores_short_symbols_to_avoid_false_positives() -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    # "c" alone is the speed-of-light alias but length<3 → must be ignored to
+    # prevent every English word ending in 'c' from triggering a citation.
+    brief = Brief(brief_id="b1", goal="develop a c++ library that runs on h hardware")
+    grounded = grounder.ground(brief)
+    names = {c.name for c in grounded.constants}
+    # The bare 'c' must NOT surface; the longer alias would (but isn't in the text)
+    assert "speed_of_light_in_vacuum" not in names
+
+
+def test_grounder_respects_max_constants_cap() -> None:
+    grounder = BriefGrounder(
+        principles=_PRINCIPLE_INDEX,
+        config=GroundingConfig(max_constants=1),
+    )
+    brief = Brief(
+        brief_id="b1",
+        goal="references planck, boltzmann, avogadro, and gravitation",
+    )
+    grounded = grounder.ground(brief)
+    assert len(grounded.constants) <= 1
+
+
+def test_constant_citation_is_frozen() -> None:
+    c = ConstantCitation(
+        matched_alias="planck",
+        name="planck_constant",
+        symbol="h",
+        value=6.62607015e-34,
+        dimensions="m^2·kg·s^-1",
+        relative_uncertainty=0.0,
+        source="CODATA 2022",
+    )
+    with pytest.raises(Exception):
+        c.value = 1.0  # type: ignore[misc]
+
+
+def test_runner_records_constants_in_ledger(tmp_path: Path) -> None:
+    grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
+    runner = BriefRunner(
+        loop=FullSenseLoop(sandbox=True, salience_threshold=0.0),
+        grounder=grounder,
+    )
+    brief = Brief(
+        brief_id="const-1",
+        goal="use the planck constant when generating the photon-energy reply",
+        approval_required=False,
+        ledger_path=tmp_path / "const-1.jsonl",
+    )
+    runner.submit(brief)
+    records = list(BriefLedger(brief.ledger_path).read())  # type: ignore[arg-type]
+    grounding = next(r for r in records if r.event == "grounding_applied")
+    consts = grounding.payload["constants"]
+    assert any(p["name"] == "planck_constant" for p in consts)
+    planck = next(p for p in consts if p["name"] == "planck_constant")
+    assert planck["value"] == pytest.approx(6.62607015e-34)
+    assert planck["relative_uncertainty"] == 0.0
