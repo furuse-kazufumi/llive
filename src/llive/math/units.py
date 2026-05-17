@@ -221,7 +221,15 @@ def parse_unit(text: str) -> Dimensions:
 
 
 def _term_dimensions(term: str, sign: int) -> Dimensions:
-    """Parse a single term like ``m^2`` or ``kg`` and apply sign as exponent multiplier."""
+    """Parse a single term like ``m^2`` or ``kg`` and apply sign as exponent multiplier.
+
+    Falls back to SI-prefix stripping (e.g. ``nm`` → ``n`` + ``m``) when the
+    raw symbol is not directly registered, so ``nm`` / ``μs`` / ``kHz`` /
+    ``MeV`` etc. resolve to their base-unit dimension. The scale factor
+    associated with the prefix is intentionally **ignored** at this layer;
+    we only care about the dimension vector here (scale handling is
+    MATH-06's job).
+    """
     if "^" in term:
         sym, exp_s = term.split("^", 1)
         try:
@@ -230,6 +238,10 @@ def _term_dimensions(term: str, sign: int) -> Dimensions:
             raise UnitMismatchError(f"bad exponent in unit term {term!r}") from e
     else:
         sym, exp = term, 1
-    if sym not in _DERIVED:
-        raise UnitMismatchError(f"unknown unit symbol {sym!r}")
-    return _DERIVED[sym] ** (exp * sign)
+    if sym in _DERIVED:
+        return _DERIVED[sym] ** (exp * sign)
+    # Try stripping a SI prefix (longest-first so 'da' wins over 'd')
+    for plen in (2, 1):
+        if len(sym) > plen and sym[:plen] in _SI_PREFIXES and sym[plen:] in _DERIVED:
+            return _DERIVED[sym[plen:]] ** (exp * sign)
+    raise UnitMismatchError(f"unknown unit symbol {sym!r}")
