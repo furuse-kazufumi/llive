@@ -164,7 +164,68 @@ essence → KJ → mindmap → synectics → perspectives → structurize → ex
 
 ---
 
-## 9. 次の検証 (将来)
+## 9. 追加検証 (2026-05-17 後半)
+
+### 9a. 500-Brief soak test (`soak_500.json`)
+
+| 項目 | 値 |
+|---|---|
+| Brief 数 | 500 |
+| 全 completed | ✓ (500/500) |
+| Throughput | ~76 / s |
+| **Perf drift** (last 100 vs first 100 median) | **0.801** (むしろ高速化) |
+| tracemalloc baseline → end | 26 KB → 218 KB |
+| Leak per Brief | **393 B** (Notebook append 想定通り、line growth) |
+| Peak traced memory | < 220 KB |
+
+→ 500 件連続でも perf 維持、メモリは線形成長 (notebook append-only) のみ。
+
+### 9b. Ledger replay 一貫性 (`tests/unit/test_ledger_replay.py`)
+
+| テスト | 結果 |
+|---|---|
+| 同一 ledger を 2 回 trace_graph() → 結果一致 | ✓ |
+| 全 24 event 種類 → trace_graph 分類網羅 | ✓ |
+| 12 evidence kind すべて検出 | ✓ |
+| 9 decision event すべて検出 | ✓ |
+
+→ SIL (Synthetic Information Layer) replay 性が機械的に保証された。
+
+### 9c. Property-based fuzzing (`tests/property/test_brief_fuzz.py`)
+
+| プロパティ | examples | 結果 |
+|---|---|---|
+| Brief construction invariant | 80 | ✓ (crash 0) |
+| PromptLinter never crashes | 60 | ✓ (crash 0) |
+| PremortemGenerator never crashes | 60 | ✓ (crash 0) |
+| Annotation round-trip preserves value | 60 | ✓ (crash 0) |
+
+→ hypothesis でランダム入力 260 件全て invariant 維持。
+
+### 9d. 大入力 stress (`large_input.json`)
+
+| Profile | goal chars | constraints | criteria | Brief mean | Ledger / run |
+|---|---|---|---|---|---|
+| baseline | 50 | 2 | 1 | (sub-ms) | small |
+| medium | 490 | 10 | 5 | (~8 ms) | 18 KB |
+| large | 1989 | 50 | 20 | 9.2 ms | 51 KB |
+| xlarge | 4914 | 100 | 50 | 8.7 ms | 113 KB |
+| **huge** | **19539** | **200** | **100** | **12.6 ms** | 413 KB |
+
+→ 入力サイズ 400× でも wall time は ~2× のみ。**sub-linear scaling**。
+
+### 9e. 最終回帰
+
+| 項目 | 値 |
+|---|---|
+| 全テスト数 | **1270 件** (+8: ledger_replay 4 + fuzz 4) |
+| PASS | 1270 |
+| FAIL | 0 |
+| Wall time | 63.9 s |
+
+---
+
+## 10. 次の検証 (将来)
 
 1. **実 LLM ベンチ** — ollama qwen2.5:7b/14b を runner に attach した progressive 5 段ラダー
 2. **並列 BriefRunner** — multiprocessing で N=10 の同時 submit、bind_ledger 競合確認
