@@ -403,15 +403,20 @@ def test_grounder_recognises_known_units() -> None:
 
 
 def test_grounder_surfaces_unknown_units_as_errors() -> None:
+    """Genuine unknown unit symbols should remain as error citations so
+    operators can spot what to extend (the error-citation channel is the
+    discovery mechanism for the unit dictionary).
+    """
     grounder = BriefGrounder(principles=_PRINCIPLE_INDEX)
-    brief = Brief(brief_id="b1", goal="ship in 5 days with 2 pages each")
+    # 'furlong' is a real length unit that's intentionally NOT in our
+    # dictionary — it should surface as an error citation, not silently drop
+    brief = Brief(brief_id="b1", goal="estimate 3 furlong from the landmark")
     grounded = grounder.ground(brief)
-    # both matches should appear as errored citations (parser doesn't know
-    # "days" or "pages" yet) — kept so the auditor can spot the gap
-    raws = {u.raw_text for u in grounded.units}
-    assert "5 days" in raws or "2 pages" in raws
     errored = [u for u in grounded.units if u.error is not None]
-    assert errored, "unknown units should be kept as error citations, not silently dropped"
+    assert errored, (
+        "unknown units should be kept as error citations, not silently dropped"
+    )
+    assert any("furlong" in u.raw_text for u in errored)
 
 
 def test_grounder_respects_max_units_cap() -> None:
