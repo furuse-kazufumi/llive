@@ -871,6 +871,49 @@ OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔の数学
 3. 機能本体は optional 化、デフォルトは ImportError fallback で機能停止のみ
 4. 単体テストで「optional 依存無しでもコアテストが通る」ことを確認
 
+### IND-04 Annotation Channel — 独立性を保ったまま組合せ価値を出す
+
+**ユーザー提案 (2026-05-17 8 回目末)**: 「応答にアノテーションを用意すれば独立性を
+保ちながら組み合わせでの効果も得られるのでは？」
+
+**設計**: llive の全主要応答型 (`BriefResult`, `CoreEssence`, `LintReport`,
+`PremortemReport`, `EvalReport`, `MindMapTree`, `RequirementDraft`, etc.) に
+optional な `annotations: AnnotationBundle` フィールドを追加。各 component が
+**自然なヒントを emit** するだけで、消費側 (llove TUI / llmesh visualizer /
+別 agent) は任意で読み取って付加価値を提供する。
+
+#### Annotation 型
+
+```python
+@dataclass(frozen=True)
+class Annotation:
+    namespace: str          # "vrb" / "oka" / "cog" / "math" / "creat" / "core"
+    key: str                # "lint_score" / "essence_card" / "consensus" / ...
+    value: Any              # JSON-friendly
+    target_layer: str | None = None   # "llove" / "llmesh" / "any"
+```
+
+#### 設計原則
+
+1. **emit-side は consumer を知らない** — llive は「これは可視化可能だよ」とヒントを
+   出すだけ、llove が来なくても動作不変
+2. **consumer-side は emit を要求しない** — annotation 無しでも fall back で動く
+3. **namespace を必須にする** — `vrb.lint_score` と `oka.essence_card` が衝突しない
+4. **JSON-friendly のみ** — 直接 MCP / HTTP に流せる
+5. **bind_ledger() と同じ哲学** — optional / strategy / no coupling
+
+#### 期待される consumer
+
+- **llove TUI**: `core.renderable=true` を見て自動でカード表示
+- **llmesh visualizer**: `math.constant_used` を見て計装グラフに highlight
+- **別 agent (MCP 経由)**: `oka.failed_attempt_relevant=true` を見て過去ノート参照を提案
+- **CI / audit**: `cog.consensus=hold` を見て自動 block
+
+#### 実装フェーズ
+
+- v0.8-meta (本セッション): `Annotation` 型 + `BriefResult.annotations` + 4〜5 component の自然な emit
+- 後段: 残り応答型へ展開、consumer-side helper (llove 側で読み取る utility)
+
 ---
 
 ### 次に着手するなら
