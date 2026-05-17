@@ -465,7 +465,7 @@ propagation, (d) 公理体系の遵守 を llive 既存資産で克服する。P
 の `evidence_chain` に `kind="math"` (+ `check_kind`) として COG-03 と統合される。
 sympy>=1.12, z3-solver>=4.13 を required dependency に昇格。テスト 16 件追加
 (verifier 12 + traceability 4)、1034 → 1052 PASS / 回帰ゼロ。
-| MATH-05 | Phase 10 | **Implemented** (2026-05-17, internal: `src/llive/math/constants.py` CODATA 2022 + NIST、**未配線**: Brief grounding 統合は次イテレーション) | **3rd** |
+| MATH-05 | Phase 10 | **Implemented + Brief grounding 配線済** (2026-05-17, internal: `src/llive/math/constants.py` CODATA 2022 + NIST + `BriefGrounder._lookup_constants` + `ConstantCitation` ledger 記録, alias 長さ 3 以上 + underscore↔space 表記ゆれ吸収) | **3rd** |
 | MATH-08 | Phase 10 | **Implemented** (2026-05-17, internal: `src/llive/math/calculator.py` + Brief grounding 配線完成: `BriefGrounder._lookup_calc` + `CalcCitation` ledger 記録) | **4th (差別化)** |
 | MATH-03 | Phase 10 | Pending | MED |
 | MATH-04 | Phase 10 | Pending | MED |
