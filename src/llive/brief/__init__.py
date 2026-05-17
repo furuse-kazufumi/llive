@@ -44,6 +44,15 @@ from llive.brief.grounding import (
     RadCitation,
     TrizCitation,
 )
+from llive.brief.eval_spec import (
+    EvalEvaluator,
+    EvalReport,
+    EvalSpec,
+    Metric,
+    MetricResult,
+    MetricsRegistry,
+    StopCondition,
+)
 from llive.brief.premortem import (
     FailureScenario,
     PremortemGenerator,
