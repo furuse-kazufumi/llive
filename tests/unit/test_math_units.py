@@ -235,3 +235,41 @@ def test_parse_days_is_time_dimension() -> None:
 def test_parse_weeks_hours_min_year() -> None:
     for word in ("week", "weeks", "hour", "hours", "min", "year", "years"):
         assert parse_unit(word).matches(Dimensions(s=1)), word
+
+
+# ---------------------------------------------------------------------------
+# MATH-06 minimal — unit_scale_factor (SI base 換算)
+# ---------------------------------------------------------------------------
+
+
+def test_scale_base_units_are_one() -> None:
+    assert unit_scale_factor("m") == 1.0
+    assert unit_scale_factor("s") == 1.0
+    assert unit_scale_factor("kg") == 1.0
+
+
+def test_scale_si_prefix_conversion() -> None:
+    assert unit_scale_factor("km") == 1000.0
+    assert unit_scale_factor("nm") == pytest.approx(1e-9)
+    assert unit_scale_factor("kHz") == 1000.0
+
+
+def test_scale_time_convention() -> None:
+    assert unit_scale_factor("min") == 60.0
+    assert unit_scale_factor("hour") == 3600.0
+    assert unit_scale_factor("days") == 86400.0
+    assert unit_scale_factor("year") == pytest.approx(31557600.0)
+
+
+def test_scale_mass_g_is_milli_kg() -> None:
+    assert unit_scale_factor("g") == pytest.approx(1e-3)
+
+
+def test_scale_composite_with_prefix() -> None:
+    # km/h = 1000 m / 3600 s = ~0.2777 in SI (m/s)
+    assert unit_scale_factor("km/h") == pytest.approx(1000.0 / 3600.0)
+
+
+def test_scale_unknown_raises() -> None:
+    with pytest.raises(UnitMismatchError):
+        unit_scale_factor("furlong")
