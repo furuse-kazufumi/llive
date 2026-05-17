@@ -31,6 +31,9 @@ from llive.brief.ledger import BriefLedger, default_ledger_path
 from llive.brief.roles import MultiTrackSummary, RoleBasedMultiTrack
 from llive.brief.types import Brief, BriefResult, BriefStatus, brief_to_dict
 from llive.math.verifier import MathVerifier
+from llive.oka.essence import CoreEssence, CoreEssenceExtractor
+from llive.oka.notebook import ReflectiveNotebook
+from llive.oka.orchestrator import StrategyOrchestrator
 from llive.fullsense.loop import FullSenseLoop, FullSenseResult
 from llive.fullsense.types import ActionDecision, Stimulus
 
