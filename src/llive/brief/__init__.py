@@ -58,6 +58,11 @@ from llive.brief.premortem import (
     PremortemGenerator,
     PremortemReport,
 )
+from llive.brief.render import (
+    DualSpecWriter,
+    RenderMode,
+    RenderedBrief,
+)
 from llive.brief.prompt_lint import (
     LintFinding,
     LintReport,
