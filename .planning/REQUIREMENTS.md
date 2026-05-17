@@ -756,3 +756,6 @@ OKA-FX は「LLM が数学的に発見する」軸 (offensive)。岡潔の数学
 * テスト群追加、トレーサビリティを COG-03 trace_graph に統合
 
 ---
+
+*Requirements defined: 2026-05-13*
+*Last updated: 2026-05-17 — v0.7-vertical+OKA OKA-FX (Oka Kiyoshi Framework, 10 件、思考の質を最適化する数学 LLM 拡張)*
