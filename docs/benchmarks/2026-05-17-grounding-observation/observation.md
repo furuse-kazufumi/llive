@@ -36,7 +36,7 @@ MATH-01/05/08 + TRIZ の citation channel が実 Brief で何を surface する�
 - #24 Mediator / Intermediary (trigger: `via`)
 
 **Quantities recognised (MATH-01)**:
-- `500 nm` → value=500.0, dims=m
+- `500 nm` → value=500.0, dims=m, SI=5.000000000000001e-07 (×1e-09)
 
 **Physical constants grounded (MATH-05)**:
 - `speed_of_light` → c = 299792458.0 [m·s^-1] (CODATA 2022 (exact SI definition))
@@ -57,8 +57,8 @@ MATH-01/05/08 + TRIZ の citation channel が実 Brief で何を surface する�
 **Goal**: Ship the report in 5 days, then revisit in 2 weeks. Each chapter should be under 30 pages. Send 1 email per milestone.
 
 **Quantities recognised (MATH-01)**:
-- `5 days` → value=5.0, dims=s
-- `2 weeks` → value=2.0, dims=s
+- `5 days` → value=5.0, dims=s, SI=432000.0 (×86400.0)
+- `2 weeks` → value=2.0, dims=s, SI=1209600.0 (×604800.0)
 
 ## `mixed`
 

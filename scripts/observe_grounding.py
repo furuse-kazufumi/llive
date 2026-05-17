@@ -161,9 +161,15 @@ def _render_markdown(rows: list[dict]) -> str:
                         f"- `{u['raw_text']}` → UNKNOWN: {u['error']}"
                     )
                 else:
+                    si = u.get("si_factor", 1.0)
+                    si_note = (
+                        f", SI={u.get('si_value', u['value'])} (×{si})"
+                        if si != 1.0
+                        else ""
+                    )
                     lines.append(
                         f"- `{u['raw_text']}` → value={u['value']}, "
-                        f"dims={u['dimensions']}"
+                        f"dims={u['dimensions']}{si_note}"
                     )
             lines.append("")
         if r["constants"]:
