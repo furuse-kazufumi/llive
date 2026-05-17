@@ -274,6 +274,9 @@ per `feedback_llive_measurement_purity`: llive 経由 vs cloud 直接の **2 系
 
 1. **Cloud 圧勝** — Haiku / Sonar は ~3s で coverage 0.65、qwen2.5:14b (75s, 0.37) を **25× 高速 × 2× 品質** で凌駕
 2. **llive 単独 (rule-based)** の coverage 0.567 は Brief 本文の echo back 効果 (qwen より高いが偽性能、honest disclosure)
+   - 後日確定方針 (2026-05-17): rule-based / mock backend は **今後の quality bench から除外**
+     ([[feedback_no_echo_baseline]])。latency / リーク計測では mock を引き続き使用。
+     既存スクリプト (`bench_vs_cloud.py` / `bench_vs_other_llms.py`) はコメントアウト済
 3. **llive + qwen2.5:14b の不利**: gating / multi-track filter のオーバヘッド + on-prem モデル能力差 = cloud に大差
 4. **典型 B3_spec で llive_qwen 完璧** (coverage 1.0) — Brief が技術仕様で qwen の得意領域に当たった
 5. **typo 0 件** — qwen2.5 / Haiku / Sonar すべて `lllive` 等の安全圏
