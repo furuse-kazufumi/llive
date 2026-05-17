@@ -25,6 +25,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from llive.annotations import AnnotationBundle
     from llive.brief.eval_spec import EvalSpec
     from llive.brief.types import Brief
 
