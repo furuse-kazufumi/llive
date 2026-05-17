@@ -205,6 +205,10 @@ class GroundingConfig:
     # MATH-01 minimal grounding: 「数値+単位」の citation 数上限。Brief 文中の
     # 単位を 1 件ずつ Dimensions に焼き付ける。最小実装、次元演算チェックは
     # 後段イテレーションで追加 (実装→課題発見→厚み増しの原則)。
+    max_constants: int = 4
+    # MATH-05 minimal grounding: 物理定数 (CODATA/NIST) を Brief から検出し
+    # 値を grounded に注入する citation 数上限。短い symbol (c, h, e, G) は
+    # 偽陽性が多いので、長さ 3 文字以上の alias / name のみ match させる。
 
 
 def _extract_keywords(text: str, *, max_terms: int = 8) -> list[str]:
