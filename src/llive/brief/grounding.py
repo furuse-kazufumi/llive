@@ -260,13 +260,17 @@ class BriefGrounder:
         rad = self._lookup_rad(brief)
         calc = self._lookup_calc(brief)
         units = self._lookup_units(brief)
-        augmented = self._build_augmented_goal(brief, triz, rad, calc, units)
+        constants = self._lookup_constants(brief)
+        augmented = self._build_augmented_goal(
+            brief, triz, rad, calc, units, constants
+        )
         return GroundedBrief(
             augmented_goal=augmented,
             triz=triz,
             rad=rad,
             calc=calc,
             units=units,
+            constants=constants,
         )
 
     # -- internals -----------------------------------------------------------
