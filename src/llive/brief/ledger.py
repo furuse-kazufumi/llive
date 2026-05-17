@@ -128,6 +128,11 @@ class BriefLedger:
                     evidence.append({"kind": "rad", **c})
                 for c in p.get("calc", []) or []:
                     evidence.append({"kind": "calc", **c})
+            elif r.event == "math_verified":
+                # MATH-02 — Sympy/Z3 deterministic check that backed the Brief's
+                # math claim. Recorded with verdict + solver so auditors can
+                # tell apart "equivalent under sympy" vs "z3-valid implication".
+                evidence.append({"kind": "math", **r.payload})
             elif r.event in {"tool_invoked", "tool_rejected", "tool_failed"}:
                 tools.append({"event": r.event, **r.payload})
             elif r.event in {"decision", "approval_requested", "approval_resolved", "outcome", "governance_scored"}:
