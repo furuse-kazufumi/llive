@@ -115,6 +115,9 @@ class BriefRunner:
         governance_scorer: GovernanceScorer | None = None,
         perspectives: RoleBasedMultiTrack | None = None,
         math_verifier: MathVerifier | None = None,
+        essence_extractor: CoreEssenceExtractor | None = None,
+        notebook: ReflectiveNotebook | None = None,
+        strategy_orchestrator: StrategyOrchestrator | None = None,
     ) -> None:
         self._loop = loop
         self._approval_bus = approval_bus
