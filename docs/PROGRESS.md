@@ -6,6 +6,43 @@
 
 ---
 
+## 2026-05-17 (6 回目) — OKA+BriefRunner 自動統合 + VRB-FX 判定 + VRB-02 PromptLint
+
+ユーザー指示「Local LLM 研究開発向け 言語化支援基盤 提案メモ」(MBA 言語化トレーニング
+の写像) を受け、既存実装との対応をマッピング → 大半カバー済を確認。新規は 4 件のみ
+と判定し、最高優先度の VRB-02 PromptLint を最小プロトで実装。先に OKA+BriefRunner
+自動統合も完了。
+
+### Done
+
+- **OKA + BriefRunner 自動統合**:
+  - runner に `essence_extractor=` / `notebook=` / `strategy_orchestrator=` 3 引数 opt-in
+  - submit 開始時に CoreEssence 自動抽出 → `BriefResult.essence` + outcome event
+  - loop.process raise 時に `failed_attempt` note 自動 append (cross-Brief 再利用可)
+  - tests/unit/test_brief_runner_oka.py 5 件
+  - tests/component/test_cog_fx_e2e.py に 11 因子 E2E (9 COG + OKA-01/02/04 + MATH-02) 追加
+- **VRB-FX 判定 + 要件追加**:
+  - REQUIREMENTS.md に v0.8-meta VRB-FX セクション + 既存実装との対応マッピング表
+  - 新規実装が必要なのは VRB-02 / VRB-04 / VRB-05 / VRB-06 の 4 件のみと明示
+- **VRB-02 PromptLint**:
+  - `src/llive/brief/prompt_lint.py` — `PromptLinter` + 5 カテゴリ (vague/unmeasurable/audience/comparison/constraint)
+  - `bind_ledger()` → `lint_findings_recorded` event
+  - trace_graph evidence_chain に `kind="lint"` 統合
+  - tests/unit/test_prompt_lint.py — 11 件
+- **テスト 17 件追加** (runner-oka 5 + 11-factor 1 + prompt_lint 11):
+  - 1077 → 1094 PASS / 回帰ゼロ
+
+### 次セッション候補
+
+- VRB-04 Premortem Generator (BlackHatLens 拡張)
+- VRB-05 Eval Spec Editor (Brief に metrics_registry/stop_conditions)
+- VRB-06 Dual Spec Writer (5 mode render)
+- VRB-02 を BriefRunner 統合 (submit 開始時 auto-lint)
+- OKA-05 再定式化コーパス / OKA-06 Explanation Alignment
+- 横断 metadata schema migration (繰越)
+
+---
+
 ## 2026-05-17 (5 回目) — OKA-FX 着地 (岡潔の数学観 → 最小プロトタイプ)
 
 ユーザー指示「岡潔の視点を踏まえた数学 LLM 進化提案」を受け、OKA-FX 10 件を
