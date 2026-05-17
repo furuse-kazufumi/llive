@@ -131,6 +131,12 @@ class BriefRunner:
         # (4 roles + 6 hats). Like governance, perspectives never block —
         # the summary is surfaced for downstream operators / UI.
         self._perspectives = perspectives
+        # MATH-02 — shared MathVerifier whose ledger is rebound per-Brief in
+        # submit() so every math_verified event lands in the Brief's own
+        # audit trail. Callers reach the verifier via the ``math_verifier``
+        # property after constructing the runner; they invoke check_* directly
+        # (typically inside tool handlers or grounder extensions).
+        self._math_verifier = math_verifier
 
     # -- public --------------------------------------------------------------
 
