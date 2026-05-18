@@ -58,6 +58,12 @@ from llive.cognitive_mesh.idle_training import (  # COG-MESH-04
 from llive.cognitive_mesh.intervention import (  # COG-MESH-03 完成配線
     RiskInterventionAdapter,
 )
+from llive.cognitive_mesh.quarantined_memory import (  # COG-MESH-04 SEC-01/02
+    Ed25519Verifier,
+    QuarantineEntry,
+    QuarantinedMemory,
+    SignedPayload,
+)
 from llive.cognitive_mesh.mesh_5w1h import (  # COG-MESH-10
     ALL_CHANNELS,
     GRANULARITY_ORDER,
