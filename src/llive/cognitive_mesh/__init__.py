@@ -111,6 +111,7 @@ __all__ = [
     # Note: alphabetical (RUF022)、COG-MESH ID 別の整理は本ファイル
     # 中段の import 順を参照
     "ALL_CHANNELS",
+    "DEFAULT_LANGUAGES",
     "DEFAULT_THRESHOLD",
     "GRANULARITY_ORDER",
     "BriefDeque",
