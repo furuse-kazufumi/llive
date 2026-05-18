@@ -82,6 +82,41 @@ def risk_to_event(
     }
 
 
+def brief_result_to_event(
+    result: BriefResult,
+    *,
+    task_id: str = "",
+    node_id: str = "",
+    timestamp_iso: str | None = None,
+) -> dict[str, Any]:
+    """BriefResult → Timeline event dict (cog_brief_result).
+
+    Phase 6 で実 BriefRunner.submit() の post-hook から発行する想定。
+    本 skeleton では event_type schema を予約する目的のみ.
+
+    Args:
+        result: BriefRunner から返った BriefResult.
+        timestamp_iso: 既定 (None) は datetime.now().isoformat() を入れる.
+    """
+    from datetime import datetime as _dt
+    if timestamp_iso is None:
+        timestamp_iso = _dt.now().isoformat()
+    return {
+        "event_id": uuid.uuid4().hex,
+        "task_id": task_id,
+        "node_id": node_id,
+        "event_type": "cog_brief_result",
+        "timestamp_utc": timestamp_iso,
+        "metadata": {
+            "brief_id": result.brief_id,
+            "status": str(result.status.value if hasattr(result.status, "value") else result.status),
+            "rationale": result.rationale,
+            "confidence": float(result.confidence),
+            "ledger_entries": int(result.ledger_entries),
+        },
+    }
+
+
 def quarantine_to_event(
     entry: QuarantineEntry, *, task_id: str = "", node_id: str = ""
 ) -> dict[str, Any]:
