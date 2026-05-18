@@ -58,8 +58,16 @@ class RecallReport:
 
 @dataclass
 class TitleRecallPlanner:
-    """起承転結 + 伏線回収を管理する."""
+    """起承転結 + 伏線回収を管理する.
 
+    Attributes:
+        similarity_fn: 注入可能な (foreshadow_text, final_text) -> float ∈ [0, 1]
+            の callable。未指定なら従来の token match のみで採点。指定された
+            場合は token match との max を取って採点する (token で確実に
+            拾えるケースを潰さない fail-safe 設計)。
+    """
+
+    similarity_fn: Callable[[str, str], float] | None = None
     _foreshadows: dict[str, Foreshadow] = field(default_factory=dict)
 
     # ------------------------------------------------------------------
