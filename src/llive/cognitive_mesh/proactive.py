@@ -220,6 +220,143 @@ class ProactiveLoop:
         self.gift_value.commit(candidate, now=timestamp)
         return utterance
 
+    def tick_event(
+        self,
+        event: ProactiveEvent | None = None,
+        now: datetime | None = None,
+        listener_state: dict | None = None,
+    ) -> ProactiveUtterance | None:
+        """event モード tick — 外部イベント駆動で発話化.
+
+        ``event`` 引数で 1 件指定、もしくは ``event_source`` から最高 severity の
+        event を 1 件取り出して発話化する。 GiftValueEstimator + Quiet Hours の
+        通常 gate に乗る。
+
+        - Quiet Hours 中: None
+        - event も event_source も無い: NotImplementedError
+        - event_source が空列を返した: None (発話なし)
+        - severity が `event_severity_threshold` 未満: 抑制履歴に記録して None
+        """
+        if not self.can_speak_now(now=now):
+            return None
+        if event is None:
+            if self.event_source is None:
+                raise NotImplementedError(
+                    "ProactiveLoop.tick_event: event 引数も event_source も未設定"
+                )
+            events = list(self.event_source() or [])
+            if not events:
+                return None
+            # 最高 severity の event を選ぶ
+            events.sort(key=lambda e: -e.severity)
+            event = events[0]
+        timestamp = now or datetime.now()
+        # severity が低すぎる event は短絡抑制 (gift_value gate より前段)
+        if event.severity < self.event_severity_threshold:
+            self._suppressed.append(
+                SuppressedUtterance(
+                    content=event.note or event.topic,
+                    reason="event_severity_below_threshold",
+                    gift_value=0.0,
+                    timestamp=timestamp,
+                )
+            )
+            return None
+        candidate = self._format_event_utterance(event)
+        gv = self.gift_value.estimate(
+            candidate_utterance=candidate,
+            listener_state=listener_state,
+            now=now,
+        )
+        if not gv.should_speak:
+            self._suppressed.append(
+                SuppressedUtterance(
+                    content=candidate,
+                    reason="gift_value_below_threshold",
+                    gift_value=gv.aggregate,
+                    timestamp=timestamp,
+                )
+            )
+            return None
+        utterance = ProactiveUtterance(
+            content=candidate,
+            mode="event",
+            timestamp=timestamp,
+            gift_value=gv.aggregate,
+        )
+        self._utterances.append(utterance)
+        self.gift_value.commit(candidate, now=timestamp)
+        return utterance
+
+    def tick_consistency(
+        self,
+        violation: ConsistencyViolation | None = None,
+        now: datetime | None = None,
+        listener_state: dict | None = None,
+    ) -> ProactiveUtterance | None:
+        """consistency モード tick — 整合性違反を発話化.
+
+        ``violation`` 引数で 1 件指定、もしくは ``consistency_source`` から
+        最高 severity の違反を 1 件取り出して発話化する。
+
+        - Quiet Hours 中: None
+        - violation も consistency_source も無い: NotImplementedError
+        - consistency_source が空列を返した: None
+        """
+        if not self.can_speak_now(now=now):
+            return None
+        if violation is None:
+            if self.consistency_source is None:
+                raise NotImplementedError(
+                    "ProactiveLoop.tick_consistency: violation 引数も "
+                    "consistency_source も未設定"
+                )
+            violations = list(self.consistency_source() or [])
+            if not violations:
+                return None
+            violations.sort(key=lambda v: -v.severity)
+            violation = violations[0]
+        timestamp = now or datetime.now()
+        candidate = self._format_consistency_utterance(violation)
+        gv = self.gift_value.estimate(
+            candidate_utterance=candidate,
+            listener_state=listener_state,
+            now=now,
+        )
+        if not gv.should_speak:
+            self._suppressed.append(
+                SuppressedUtterance(
+                    content=candidate,
+                    reason="gift_value_below_threshold",
+                    gift_value=gv.aggregate,
+                    timestamp=timestamp,
+                )
+            )
+            return None
+        utterance = ProactiveUtterance(
+            content=candidate,
+            mode="consistency",
+            timestamp=timestamp,
+            gift_value=gv.aggregate,
+        )
+        self._utterances.append(utterance)
+        self.gift_value.commit(candidate, now=timestamp)
+        return utterance
+
+    @staticmethod
+    def _format_event_utterance(event: ProactiveEvent) -> str:
+        if event.note:
+            return f"[event:{event.topic}] {event.note}"
+        return f"[event:{event.topic}] 通知すべきイベントが発生しました (severity={event.severity:.2f})"
+
+    @staticmethod
+    def _format_consistency_utterance(violation: ConsistencyViolation) -> str:
+        evidence = f" — {violation.evidence}" if violation.evidence else ""
+        return (
+            f"[consistency] {violation.layer_a} と {violation.layer_b} の間で "
+            f"{violation.conflict_type} を検出しました{evidence}"
+        )
+
     def latest_utterances(self, n: int = 10) -> list[ProactiveUtterance]:
         return self._utterances[-n:]
 
