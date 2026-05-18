@@ -186,11 +186,130 @@ def main() -> int:
     print(f"  Unrecovered: {[f.tag for f in report.unrecovered]}")
 
     # ------------------------------------------------------------------
+    # 6. Mesh5W1H Annotator (M8.6)
+    # ------------------------------------------------------------------
+    _section("6. Mesh5W1H Annotator (COG-MESH-10 完成配線)")
+    annotator = Mesh5W1HAnnotator()
+    sample_text = "Why did Alice deploy today? Because the build was ready."
+    annotator.emit_from_text(sample_text)
+    annotator.emit_node(Mesh5W1HNode.WHEN, "iso", now.isoformat())
+    bundle = annotator.freeze()
+    print(f"  Text: {sample_text!r}")
+    print(f"  Annotations: {len(bundle.items)} 件")
+    for a in bundle.items:
+        print(f"    - {a.namespace}: {a.key}={a.value}")
+
+    # ------------------------------------------------------------------
+    # 7. Quarantined Memory + Ed25519 (M8.2)
+    # ------------------------------------------------------------------
+    _section("7. Quarantined Memory + Ed25519 (COG-MESH-04 SEC-01/02)")
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding, NoEncryption, PrivateFormat, PublicFormat,
+    )
+    priv = Ed25519PrivateKey.generate()
+    priv_raw = priv.private_bytes(
+        encoding=Encoding.Raw, format=PrivateFormat.Raw,
+        encryption_algorithm=NoEncryption(),
+    )
+    pub_raw = priv.public_key().public_bytes(
+        encoding=Encoding.Raw, format=PublicFormat.Raw,
+    )
+    verifier = Ed25519Verifier()
+    verifier.register("trusted-rss", pub_raw)
+    qmem = QuarantinedMemory(verifier=verifier)
+    sched_q = IdleTrainingScheduler(
+        quiet_hours=guard, idle_threshold_seconds=10, quarantine=qmem
+    )
+
+    def _signed_fetch() -> object:
+        return IdleTrainingScheduler.sign_payload(
+            {"title": "trusted news"}, "trusted-rss", priv_raw
+        )
+
+    sched_q.register(InfoSource(name="rss-trusted", fetch=_signed_fetch))
+    sched_q.register(InfoSource(name="rss-unsigned", fetch=lambda: {"title": "unsigned"}))
+    sched_q.tick(now=now)
+    # 連続 tick は cooldown で 1 件のみ通る — 別 tick 用に時刻を進める
+    from datetime import timedelta as _td
+    sched_q.tick(now=(now + _td(seconds=60)) if now else None)
+    print(f"  Quarantine: active={len(qmem.active_items())}, "
+          f"pending={len(qmem.pending())}")
+    for entry in qmem.iter_all():
+        signed = "signed" if entry.signer_id else "unsigned"
+        verified = "verified" if entry.verified else "unverified"
+        status = "active" if entry.promoted_at else ("pending" if entry.rejected_at is None else "rejected")
+        print(f"    - {entry.event_id} [{signed}/{verified}/{status}] "
+              f"signer={entry.signer_id} payload={entry.payload}")
+
+    # ------------------------------------------------------------------
+    # 8. Proactive event / consistency mode (M8.7)
+    # ------------------------------------------------------------------
+    _section("8. Proactive Event / Consistency Modes (COG-MESH-06 拡張)")
+    loop_ext = ProactiveLoop(
+        quiet_hours=guard,
+        mode="event",
+    )
+    event_obj = ProactiveEvent(
+        topic="build", note="ビルド成功 (signed by CI)", severity=0.9,
+    )
+    out_ev = loop_ext.tick_event(
+        event=event_obj, now=now, listener_state=listener_state
+    )
+    if out_ev is None:
+        print("  event tick: silent (quiet hours or low value)")
+    else:
+        print(f"  event tick fired: {out_ev.content!r}")
+
+    loop_cons = ProactiveLoop(quiet_hours=guard, mode="consistency")
+    violation = ConsistencyViolation(
+        layer_a="semantic", layer_b="episodic",
+        conflict_type="fact_mismatch",
+        evidence="semantic says 'on-prem only' but episodic logs cloud call",
+        severity=0.8,
+    )
+    listener_cons = dict(listener_state, current_topic="semantic")
+    out_cons = loop_cons.tick_consistency(
+        violation=violation, now=now, listener_state=listener_cons
+    )
+    if out_cons is None:
+        print("  consistency tick: silent")
+    else:
+        print(f"  consistency tick fired: {out_cons.content!r}")
+
+    # ------------------------------------------------------------------
+    # 9. BriefDeque ↔ BriefRunner Bridge (M8.3) — fake runner で動作確認
+    # ------------------------------------------------------------------
+    _section("9. BriefDeque ↔ BriefRunner Bridge (COG-MESH-08 完成配線)")
+    try:
+        from llive.brief.types import Brief, BriefResult, BriefStatus
+
+        class _DemoRunner:
+            """submit を観測する fake runner."""
+            def submit(self, brief):
+                return BriefResult(
+                    brief_id=brief.brief_id, status=BriefStatus.COMPLETED,
+                    rationale=f"demo processed: {brief.goal}",
+                )
+
+        bridge = BriefDequeRunnerBridge(runner=_DemoRunner())
+        bridge.enqueue(Brief(brief_id="demo-001", goal="run nightly bench"))
+        bridge.enqueue(Brief(brief_id="demo-002", goal="rotate keys"))
+        bridge.enqueue_front(Brief(brief_id="demo-urgent", goal="halt build"))
+        results = bridge.submit_all()
+        print(f"  Processed {len(results)} brief(s):")
+        for r in results:
+            print(f"    - {r.brief_id}: {r.status.value} ({r.rationale})")
+    except Exception as exc:  # noqa: BLE001 — demo は壊れない方が良い
+        print(f"  Bridge demo skipped: {exc}")
+
+    # ------------------------------------------------------------------
     # まとめ
     # ------------------------------------------------------------------
     _section("Summary")
     print("  See requirements_v0.8_cognitive_mesh.md for the architecture.")
-    print("  Phase 5 で全 sub-system を tick loop で常時駆動予定。")
+    print("  M8.2/3/4/5/6/7 本実装完了 (2026-05-19).")
+    print("  asciinema 録画推奨: Active (10:00) / Quiet (02:00) 切替で動きを確認.")
     return 0
 
 
