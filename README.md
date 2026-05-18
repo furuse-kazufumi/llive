@@ -152,6 +152,29 @@ pip install llmesh-llive[dev]       # 開発依存 (pytest / hypothesis / ruff)
 - [ロードマップ](docs/roadmap.md)
 - [変更履歴](CHANGELOG.md)
 
+### Non-Transformer track (2026-05-18 着手)
+
+GPU 無し PC で実用速度に到達することを最優先軸として、Transformer 以外
+の系列モデルを LLM backend として吸収する拡張性ファースト infra を導入:
+
+- [Non-Transformer ROADMAP](docs/non-transformer/ROADMAP.md) — 5 候補 (Mamba /
+  Jamba / 思考因子-Δ 橋渡し / Diffusion LM / RWKV-7) の 12 ヶ月戦略 + 30 日
+  アクション + 低スペック CPU only PC 性能目標
+- [候補比較行列](docs/non-transformer/COMPARISON.md) — 12 評価軸 × 5 候補
+- [RWKV-7 CPU クイックスタート](docs/non-transformer/rwkv-cpu-quickstart.md) —
+  GPU 無し PC で `rwkv.cpp` 経由 RWKV-7 World 1.5B/3B を立ち上げる手順
+
+実装は `llive.llm` 配下に skeleton を統合済:
+
+- `MambaBackend` / `RwkvBackend` / `JambaBackend` / `DiffusionBackend`
+  (全て `OpenAIBackend` に委譲する HTTP 透過 backend, env で実体差し替え可)
+- `llive.llm.stage_router.StageBackendRouter` — 6 stage 単位 backend 切替
+  (env `LLIVE_LLM_BACKEND_BY_STAGE`)
+- `llive.llm.factor_hook.ThoughtFactorDeltaHook` — 10 思考因子 → SSM Δ
+  橋渡しの protocol (Phase 5 PoC)
+- `llive.benchmark.low_spec.run_matrix` — CPU only PC primary 評価 harness
+  (xs/s default, m/l/xl は opt-in、cloud backend は明示的に refuse)
+
 ## ファミリー
 
 - **[llmesh](https://github.com/furuse-kazufumi/llmesh)** — マルチプロトコル LLM ゲートウェイ、産業 IoT 対応
