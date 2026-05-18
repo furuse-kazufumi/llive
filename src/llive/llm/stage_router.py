@@ -11,14 +11,24 @@ Example::
 
     $env:LLIVE_LLM_BACKEND_BY_STAGE = '{"salience":"mamba","monologue":"openai"}'
 
-Stage names recognised by the router (matching ``FullSenseLoop`` step ids):
+Stage names recognised by the router. These are the **logical** stage names
+used in env config (``LLIVE_LLM_BACKEND_BY_STAGE``) and articles. The
+current ``FullSenseLoop`` implementation exposes a subset of these in its
+``stages`` dict — the mapping is:
 
-* ``salience`` — Salience Gate
-* ``curiosity`` — Curiosity Drive
-* ``monologue`` — Inner Monologue
-* ``scorer`` — Ego/Altruism Scorer
-* ``action_plan`` — Action Plan
-* ``finalise`` — Finalise / Approval Bus + Ledger
+* ``salience``    → exposed as ``stages["salience"]``
+* ``curiosity``   → exposed as ``stages["curiosity"]``
+* ``monologue``   → exposed as ``stages["thought"]`` (Inner Monologue)
+* ``scorer``      → exposed as ``stages["ego_score"]`` + ``stages["altruism_score"]``
+* ``action_plan`` → currently internal (``_decide_action``); not in stages
+  dict yet. Phase 5 will surface it.
+* ``finalise``    → currently internal (``_finalise``); not in stages dict
+  yet. Phase 5 will surface it.
+
+So routing by ``action_plan`` / ``finalise`` is **possible at the env level
+today** (the router will resolve a backend), but ``FullSenseLoop`` does not
+yet dispatch on those stage names. Use them only as forward-compatible
+config until Phase 5 wires the dispatch.
 
 Unknown stage names fall through to the default backend (``LLIVE_LLM_BACKEND``
 env or :func:`resolve_backend` auto-detection).
