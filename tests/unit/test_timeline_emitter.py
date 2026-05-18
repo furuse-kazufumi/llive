@@ -159,6 +159,39 @@ def test_emitter_event_ids_are_unique() -> None:
     assert len(set(ids)) == 2  # 同じ utterance でも event_id は毎回新規
 
 
+def test_brief_result_to_event_shape() -> None:
+    result = BriefResult(
+        brief_id="b-001",
+        status=BriefStatus.COMPLETED,
+        rationale="done",
+        confidence=0.8,
+        ledger_entries=5,
+    )
+    ev = brief_result_to_event(
+        result, task_id="t1", node_id="n1",
+        timestamp_iso="2026-05-19T10:00:00+09:00",
+    )
+    assert ev["event_type"] == "cog_brief_result"
+    assert ev["task_id"] == "t1"
+    assert ev["timestamp_utc"] == "2026-05-19T10:00:00+09:00"
+    assert ev["metadata"]["brief_id"] == "b-001"
+    assert ev["metadata"]["status"] == "completed"
+    assert ev["metadata"]["rationale"] == "done"
+    assert ev["metadata"]["confidence"] == pytest.approx(0.8)
+    assert ev["metadata"]["ledger_entries"] == 5
+
+
+def test_emit_brief_result_buffers_and_sinks() -> None:
+    sink = InMemoryTimelineSink()
+    em = CognitiveMeshTimelineEmitter(sink=sink)
+    result = BriefResult(
+        brief_id="b-002", status=BriefStatus.COMPLETED, rationale="ok",
+    )
+    out = em.emit_brief_result(result)
+    assert out["event_type"] == "cog_brief_result"
+    assert sink.received[-1]["metadata"]["brief_id"] == "b-002"
+
+
 def test_emitter_schema_matches_llove_panel_expectations() -> None:
     """llove CogEntry.from_event() が読む 3 種 event_type を網羅."""
     em = CognitiveMeshTimelineEmitter()
