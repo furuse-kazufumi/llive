@@ -100,6 +100,7 @@ __all__ = [
     "BriefRef",
     "BriefTree",
     "CoherenceEvent",
+    "EmbeddingSimilarityFn",
     "Foreshadow",
     "GiftValue",
     "GiftValueEstimator",
