@@ -18,10 +18,14 @@ requirements_v0.8_cognitive_mesh.md §3 COG-MESH-03 の最小実装.
 
 from __future__ import annotations
 
+import logging
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
+
+_logger = logging.getLogger("llive.cognitive_mesh.tonic_risk")
 
 
 @dataclass
