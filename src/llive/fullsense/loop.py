@@ -163,6 +163,14 @@ class FullSenseLoop:
         # the router for a stage-specific backend before falling back to the
         # legacy resolution. Explicit `llm_backend=` still wins.
         self._stage_router = stage_router
+        # Optional ThoughtFactorDeltaHook (case C from non-transformer ROADMAP —
+        #思考因子 → SSM Δ 橋渡し). When set, the loop builds a
+        # ``FactorSnapshot`` from each stage's data and records the hook's
+        # delta in ``stages["thought"]["factor_delta"]``. Δ is **not yet
+        # applied** to the LLM backend (Phase 5 PoC will wire Mamba's
+        # transport='mamba_ssm' to consume it); this hook just exposes the
+        # signal for offline analysis and Annotation Channel logging.
+        self._factor_hook = factor_hook
         # debug=True attaches per-stage trace info to stages dict (LLM prompt,
         # raw response, wall time, backend name). Release-mode default (False)
         # has zero overhead — the trace dict is never built.
