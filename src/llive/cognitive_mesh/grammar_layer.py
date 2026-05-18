@@ -20,7 +20,29 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Protocol
+
+
+class GrammarChangeSink(Protocol):
+    """GrammarLayer の promote/reject イベント通知 sink.
+
+    Phase 7 で EVO-04/06/07 (Self-evolution) との配線用 hook。
+    本 sink を `GrammarLayer(change_sink=...)` に注入すると、各操作で
+    sink.on_promote(...) / sink.on_reject(...) が呼ばれる.
+    """
+
+    def on_propose(self, proposal: "ProposedChange") -> None: ...
+
+    def on_promote(
+        self, proposal: "ProposedChange", new_snapshot: "GrammarSnapshot"
+    ) -> None: ...
+
+    def on_reject(self, proposal: "ProposedChange") -> None: ...
+
+
+# 言語別 preset (jp/en/zh/ko) の bootstrap 用キー。Phase 7 で各言語の
+# 実用文法を取り込む際の anchor。
+DEFAULT_LANGUAGES: tuple[str, ...] = ("ja", "en", "zh", "ko")
 
 
 class GrammarChangeStatus(StrEnum):
