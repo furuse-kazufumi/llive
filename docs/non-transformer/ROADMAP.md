@@ -1,19 +1,55 @@
-# Non-Transformer llive Roadmap — Transformer 以外で llive を完成させる戦略 (draft v0.1)
+# Non-Transformer llive Roadmap — Transformer 以外で llive を完成させる戦略 (draft v0.2)
 
 > 2026-05-18 作成. ユーザー要望「Transformer 以外のアプローチで LLM として
 > llive を完成させたい」を受けて、12 ヶ月 + 30 日アクションプランを策定.
 >
+> v0.2 (同日追記): ユーザーから 2 制約追加
+> 1. **拡張性ファースト** — 戦略だけ立てない、まず全候補を skeleton で繋ぎ、
+>    性能担保後に最適化で必要機能に絞り込むスタイル
+> 2. **低スペック個人 PC で実用化** — そこに届けば普及力は最大化される
+>
 > 起点 docs: `D:/projects/fullsense/docs/architecture/triz-ssm-vs-transformer.md`
-> (TRIZ 検討、SSM vs Transformer 1 軸 + 40 原理マッピング).
 
 ## 0. ゴール宣言
 
-llive (FullSense 思考層) の **LLM backend を Transformer 以外で完成**させる.
+llive (FullSense 思考層) の **LLM backend を Transformer 以外で完成**させ、
+**低スペック個人 PC で実用速度に到達**させる.
 
 - **必須**: on-prem 完結、EAR + 中国規制下でも動く、Apache-2.0 系で配布可
 - **必達**: 256k+ token 長コンテキストを線形コストで処理
+- **必達 (追加 v0.2)**: 個人 PC (CPU only / 8-16GB RAM / GPU 任意) で
+  「実用速度」(= Brief 1 件あたり 30 秒以内) を達成
 - **望ましい**: llive 思考因子と LLM 内部状態が相互作用 (Transformer 不可能)
 - **回避**: cloud API 依存、独自ライセンス、地政学リスク高い model
+
+## 0.1 開発スタイル原則 (v0.2 で明文化)
+
+ユーザーの作業スタイルに合わせて以下を採用:
+
+1. **拡張性ファースト** — 5 候補すべての backend skeleton を先に繋ぐ.
+   性能・速度・コストは後段で最適化. 早期最適化は禁止.
+2. **段階的削ぎ落とし** — 全 candidate 実装 → bench → 必要機能だけ
+   生き残らせる. 削れる機能を削るのが最適化フェーズの主軸.
+3. **低スペック PC primary target** — ベンチ環境は「ユーザーの個人 PC」を
+   primary、GPU クラスタは secondary. memory `feedback_d_drive_preference`
+   と整合 (D ドライブ運用、C 故障時の復旧性確保).
+4. **honest disclosure 厳守** — 異常に良い結果が出たら必ず内訳を疑う
+   (memory `feedback_benchmark_honest_disclosure`).
+
+## 0.2 低スペック PC 性能目標 (測定対象)
+
+memory `feedback_benchmark_progressive_tokens` の xs/s/m/l/xl 5 段階に
+**低スペック PC 系列**を主軸として追加:
+
+| token size | 目標 latency (個人 PC, CPU only) | 目標 RAM 占有 |
+|---|---|---|
+| xs (~500 tok) | < 3 秒 | < 4 GB |
+| s (~2k tok) | < 8 秒 | < 6 GB |
+| m (~8k tok) | < 20 秒 | < 8 GB |
+| l (~32k tok) | < 60 秒 | < 10 GB |
+| xl (~128k tok) | < 180 秒 | < 14 GB |
+
+GPU 有り環境 (16GB VRAM 想定) は上記を 1/3〜1/5 で目指す.
 
 ---
 
