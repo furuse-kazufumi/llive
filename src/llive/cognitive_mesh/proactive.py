@@ -88,6 +88,12 @@ class ProactiveLoop:
     # 自律 tick (_on_timer) から呼ばれる listener_state プロバイダ.
     # 設定されていれば自動的に GiftValueEstimator に渡される。None なら無し。
     listener_state_source: Callable[[], dict] | None = None
+    # COG-MESH-06 event モード: 外部イベント列を返す callable.
+    # tick_event() / _on_timer (mode='event') がここから event を取る。
+    event_source: Callable[[], list[ProactiveEvent]] | None = None
+    # COG-MESH-06 consistency モード: 検出された整合性違反列を返す callable.
+    # 例えば 4 層メモリ間の矛盾を発話化する用途。
+    consistency_source: Callable[[], list[ConsistencyViolation]] | None = None
     _utterances: list[ProactiveUtterance] = field(default_factory=list)
     _suppressed: list[SuppressedUtterance] = field(default_factory=list)
     _timer: threading.Timer | None = field(default=None, init=False, repr=False)
