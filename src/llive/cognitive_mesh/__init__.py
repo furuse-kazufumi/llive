@@ -78,6 +78,8 @@ from llive.cognitive_mesh.multi_brief import (  # COG-MESH-01
     MultiBriefCoherenceManager,
 )
 from llive.cognitive_mesh.proactive import (  # COG-MESH-06
+    ConsistencyViolation,
+    ProactiveEvent,
     ProactiveLoop,
     ProactiveUtterance,
     SuppressedUtterance,
