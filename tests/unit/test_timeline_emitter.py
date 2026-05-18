@@ -10,9 +10,11 @@ import pytest
 
 from llive.cognitive_mesh.proactive import ProactiveUtterance
 from llive.cognitive_mesh.quarantined_memory import QuarantineEntry
+from llive.brief.types import BriefResult, BriefStatus
 from llive.cognitive_mesh.timeline_emitter import (
     CognitiveMeshTimelineEmitter,
     InMemoryTimelineSink,
+    brief_result_to_event,
     proactive_to_event,
     quarantine_to_event,
     risk_to_event,
