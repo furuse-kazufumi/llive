@@ -192,18 +192,22 @@ llmesh-suite メタパッケージへの **llive 追加** は Phase 4 完了時�
 
 ### Milestones (COG-MESH 側、Phase 5-7 にも前倒し配備)
 
-| 段 | COG-MESH | 何が出るか |
-|---|---|---|
-| **M8.0 Quiet Hours guard** (Phase 5 前倒し) | COG-MESH-07 | env `LLIVE_QUIET_HOURS_*` で能動行動の時刻 gate、fail-closed |
-| **M8.1 Proactive demo (timer)** (Phase 5) | COG-MESH-05/06 | 「勝手に話しかけてくる llive」最小 demo (`project_proactive_llive_demo` Phase 0) |
-| **M8.2 Idle ingest 1 source** (Phase 5) | COG-MESH-04 | RAD 差分を Quiet Hours 外で semantic に lift |
-| **M8.3 BriefDeque/Map** (Phase 5) | COG-MESH-08 | flat list 廃止、入れ替え + ブランチ対応 |
-| **M8.4 TitleRecall** (Phase 6) | COG-MESH-02 | 起承転結 + 伏線回収率採点 |
-| **M8.5 TonicRiskMonitor** (Phase 6) | COG-MESH-03 | 別スレッド常時 KYT、ApprovalBus 連動 |
-| **M8.6 Mesh5W1H + Granularity** (Phase 6) | COG-MESH-10 | Annotation namespace 拡張 |
-| **M8.7 Proactive event/curiosity モード** (Phase 6) | COG-MESH-06 | llmesh MQTT/OPC-UA event 駆動、4 層メモリ coverage 駆動 |
-| **M8.8 MultiBriefCoherenceManager** (Phase 7) | COG-MESH-01 | 複数 Brief 並列 + coherence_graph 本実装 |
-| **M8.9 GrammarLayer** (Phase 7) | COG-MESH-09 | 文法 evolution、ja/en/zh/ko 別レイヤ |
+| 段 | COG-MESH | 何が出るか | Skeleton | 本実装 |
+|---|---|---|---|---|
+| **M8.0 Quiet Hours guard** (Phase 5 前倒し) | COG-MESH-07 | env `LLIVE_QUIET_HOURS_*` で能動行動の時刻 gate、fail-closed | ✅ 2026-05-19 | ✅ (完了相当) |
+| **M8.1 Proactive demo (timer)** (Phase 5) | COG-MESH-05/06 | 「勝手に話しかけてくる llive」最小 demo (`project_proactive_llive_demo` Phase 0) | ✅ 2026-05-19 (統合 demo CLI 配備) | ⏳ asciinema 録画 + llove TUI 統合 |
+| **M8.2 Idle ingest 1 source** (Phase 5) | COG-MESH-04 | RAD 差分を Quiet Hours 外で semantic に lift | ✅ 2026-05-19 (round-robin) | ⏳ Quarantined Memory + Ed25519 統合 |
+| **M8.3 BriefDeque/Map** (Phase 5) | COG-MESH-08 | flat list 廃止、入れ替え + ブランチ対応 | ✅ 2026-05-19 | ⏳ 実 Brief / BriefRunner と接続 |
+| **M8.4 TitleRecall** (Phase 6) | COG-MESH-02 | 起承転結 + 伏線回収率採点 | ✅ 2026-05-19 | ⏳ semantic similarity (token match → embedding) |
+| **M8.5 TonicRiskMonitor** (Phase 6) | COG-MESH-03 | 別スレッド常時 KYT、ApprovalBus 連動 | ✅ 2026-05-19 (同期版) | ⏳ threading 化 + ApprovalBus.intervene 配線 |
+| **M8.6 Mesh5W1H + Granularity** (Phase 6) | COG-MESH-10 | Annotation namespace 拡張 | ✅ 2026-05-19 | ⏳ 実 Annotation Channel と統合 |
+| **M8.7 Proactive event/curiosity モード** (Phase 6) | COG-MESH-06 | llmesh MQTT/OPC-UA event 駆動、4 層メモリ coverage 駆動 | ⏳ timer のみ実装済 | ⏳ event / curiosity / consistency モード |
+| **M8.8 MultiBriefCoherenceManager** (Phase 7) | COG-MESH-01 | 複数 Brief 並列 + coherence_graph 本実装 | ✅ 2026-05-19 (簡易 dict) | ⏳ networkx + 実 Brief 統合 |
+| **M8.9 GrammarLayer** (Phase 7) | COG-MESH-09 | 文法 evolution、ja/en/zh/ko 別レイヤ | ✅ 2026-05-19 (skeleton) | ⏳ EVO-04/06/07 と接続、言語別 layer |
+
+**Skeleton 完了**: 10/10 milestones (M8.0-M8.6 + M8.8-M8.9 完了、M8.7 部分)。
+**本実装相当**: 1/10 (M8.0 QuietHoursGuard は requirements §3 仕様を完全
+カバー)。残り 9 件は Phase 5/6/7 本格化で完成予定。
 
 ### Milestones (CABT 側、Phase 8 本体)
 
