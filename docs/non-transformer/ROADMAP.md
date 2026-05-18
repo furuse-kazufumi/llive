@@ -17,8 +17,9 @@ llive (FullSense 思考層) の **LLM backend を Transformer 以外で完成**�
 
 - **必須**: on-prem 完結、EAR + 中国規制下でも動く、Apache-2.0 系で配布可
 - **必達**: 256k+ token 長コンテキストを線形コストで処理
-- **必達 (追加 v0.2)**: 個人 PC (CPU only / 8-16GB RAM / GPU 任意) で
-  「実用速度」(= Brief 1 件あたり 30 秒以内) を達成
+- **必達 (追加 v0.2)**: 個人 PC (**GPU 無し / CPU only** / 8-16GB RAM) で
+  「実用速度」(= Brief 1 件あたり 30 秒以内、xs/s payload) を達成.
+  GPU は **想定しない**. ベンチも GPU 環境を前提にしない
 - **望ましい**: llive 思考因子と LLM 内部状態が相互作用 (Transformer 不可能)
 - **回避**: cloud API 依存、独自ライセンス、地政学リスク高い model
 
