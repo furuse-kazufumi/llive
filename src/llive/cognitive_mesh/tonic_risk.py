@@ -114,3 +114,58 @@ class TonicRiskMonitor:
 
     def latest_alerts(self, n: int = 10) -> list[RiskAlert]:
         return self._alerts[-n:]
+
+    # ------------------------------------------------------------------
+    # 自律 tick (別 daemon thread、小脳的高速)
+    # ------------------------------------------------------------------
+
+    def start(self) -> None:
+        """別 daemon thread で常時 tick を開始する.
+
+        state_source を呼んで現在の state を取得 → tick(state) → alert
+        を `on_alert` callback で外向き emit。state_source 未設定では
+        起動できない (RuntimeError)。
+        """
+        if self.state_source is None:
+            raise RuntimeError(
+                "TonicRiskMonitor.start: state_source 未設定。"
+                "現在 state を返す callable を注入してください"
+            )
+        with self._lock:
+            if self._running:
+                raise RuntimeError("TonicRiskMonitor already started")
+            self._stopped.clear()
+            self._running = True
+            thread = threading.Thread(
+                target=self._loop,
+                daemon=True,
+                name="llive.tonic_risk",
+            )
+            self._thread = thread
+        thread.start()
+
+    def stop(self, timeout: float | None = 1.0) -> None:
+        """tick を停止する (idempotent)."""
+        with self._lock:
+            self._stopped.set()
+            self._running = False
+            thread = self._thread
+            self._thread = None
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=timeout)
+
+    @property
+    def is_running(self) -> bool:
+        return self._running
+
+    def _loop(self) -> None:
+        """別 thread のメインループ — 例外を握り潰して tick を絶やさない."""
+        while not self._stopped.is_set():
+            try:
+                state = self.state_source() if self.state_source else {}
+                self.tick(state=state)
+            except Exception:  # noqa: BLE001 — 常時 tick を止めない
+                _logger.exception("TonicRiskMonitor tick failed")
+            # Event.wait で stopped シグナルを受けたら即座に出る
+            if self._stopped.wait(timeout=self.tick_interval_seconds):
+                break
