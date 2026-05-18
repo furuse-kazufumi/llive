@@ -24,6 +24,15 @@ def _active_guard(monkeypatch: pytest.MonkeyPatch) -> QuietHoursGuard:
     return QuietHoursGuard()
 
 
+# GiftValueEstimator が should_speak を満たす listener_state を共通化
+_HIGH_VALUE_LISTENER = {
+    "current_topic": "build",  # candidate に含まれていれば +relevance
+    "risk_score": 0.8,
+    "focus_level": 0.3,
+    "in_quiet_hours": False,
+}
+
+
 # ---------------------------------------------------------------------------
 # event mode
 # ---------------------------------------------------------------------------
