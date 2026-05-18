@@ -61,4 +61,21 @@ class EmbeddingSimilarityFn:
         return sim
 
 
-__all__ = ["EmbeddingSimilarityFn"]
+def default_embedding_similarity() -> EmbeddingSimilarityFn:
+    """新しい MemoryEncoder を内包する EmbeddingSimilarityFn を返す factory.
+
+    CI 環境では sentence-transformers が無くても hash fallback で動くので
+    本 factory は常に動作する。実際の semantic similarity 品質は encoder
+    が ``is_real`` かに依存。
+
+    Example:
+        >>> from llive.cognitive_mesh.title_recall import TitleRecallPlanner
+        >>> planner = TitleRecallPlanner(similarity_fn=default_embedding_similarity())
+    """
+    from llive.memory.encoder import MemoryEncoder
+
+    encoder = MemoryEncoder()
+    return EmbeddingSimilarityFn(encoder=encoder)
+
+
+__all__ = ["EmbeddingSimilarityFn", "default_embedding_similarity"]
