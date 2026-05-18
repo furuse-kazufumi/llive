@@ -248,10 +248,15 @@ class ProactiveLoop:
         if self._stopped.is_set():
             return
         try:
+            listener_state = (
+                self.listener_state_source()
+                if self.listener_state_source is not None
+                else None
+            )
             if self.mode == "curiosity" and self.coverage_source is not None:
-                self.tick_curiosity()
+                self.tick_curiosity(listener_state=listener_state)
             elif self.mode == "timer" and self.stimulus_source is not None:
-                self.tick()
+                self.tick(listener_state=listener_state)
             else:
                 # mode が timer で stimulus_source 未設定 → サイレント skip
                 # (next tick で再評価、設定変更を受け入れる)
