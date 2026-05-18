@@ -6,6 +6,89 @@
 
 ---
 
+## 2026-05-19 (早朝) — v0.8 Cognitive Mesh 実装ラッシュ (COG-MESH-01〜10 全件)
+
+「朝 7 時まで自律的に改良し続けて」のセッション後半で要件 v0.8 を
+**全 10 件最小実装**まで進めた。要件提案 → 実装着地までを 1 セッションで
+完走できたのは feedback_response_timing (70 点運用) と memory に蓄積された
+設計指針の合わせ技。
+
+### 実装完了 (10/10 COG-MESH 要件、Phase 5/6/7 前倒し)
+
+| ID | 名称 | 機能 | Phase | テスト数 |
+|---|---|---|---|---|
+| COG-MESH-01 | MultiBriefCoherenceManager | 並列 Brief + coherence_graph | 7 前倒し | 11 |
+| COG-MESH-02 | TitleRecallPlanner | 起承転結 + 伏線回収採点 | 6 前倒し | 9 |
+| COG-MESH-03 | TonicRiskMonitor | 小脳的常時 KYT、cooldown + state snapshot | 6 前倒し | 10 |
+| COG-MESH-04 | IdleTrainingScheduler | Quiet Hours 外の ingest、round-robin | 5 | 12 |
+| COG-MESH-05 | GiftValueEstimator | 発話前 gate、4 因子 + 重み付き aggregate | 5 | 7 |
+| COG-MESH-06 | ProactiveLoop | timer mode tick、Quiet Hours + Gift gate 統合 | 5 | 9 |
+| COG-MESH-07 | QuietHoursGuard | fail-closed 時刻 gate、env LLIVE_QUIET_HOURS_* | 5 | 11 |
+| COG-MESH-08 | BriefDeque / BriefMap / BriefTree | STL 相当セッション保持 | 5 | 13 |
+| COG-MESH-09 | GrammarLayer (skeleton) | 言語別文法 snapshot + propose/promote | 7 | 8 |
+| COG-MESH-10 | Mesh5W1H + Granularity | Annotation namespace + 軽量グラフ | 6 前倒し | 17 |
+
+合計 **107 新規テスト**、**1379 PASS** (前回 1272、+107)、regress 無し。
+
+### Done この session (8 feat + 4 docs commit)
+
+1. `feat(requirements): v0.8 Cognitive Mesh / Proactive Loop / Quiet Hours 要件追加` (dcd2fdc) — 462 行 + .planning/REQUIREMENTS.md + architecture §8 + roadmap Phase 8
+2. `docs(glossary): v0.8 Cognitive Mesh 用語 13 件 + 略語 5 件追加`
+3. `test(cognitive_mesh): QuietHoursGuard 単体テスト雛形を先行配備` (importorskip)
+4. `docs(progress): 2026-05-18 (深夜) セッション — v0.8 Cognitive Mesh 追加を記録`
+5. `feat(cognitive_mesh): COG-MESH-07 QuietHoursGuard 最小実装 + COG-MESH-06 ProactiveLoop skeleton + demo CLI`
+6. `feat(cognitive_mesh): COG-MESH-05 GiftValueEstimator 完全実装 + ProactiveLoop tick 統合`
+7. `feat(cognitive_mesh): COG-MESH-08 BriefDeque / BriefMap / BriefTree 最小実装`
+8. `feat(cognitive_mesh): COG-MESH-04 IdleTraining + COG-MESH-10 Mesh5W1H 実装`
+9. `feat(cognitive_mesh): COG-MESH-02 TitleRecall + COG-MESH-03 TonicRiskMonitor 実装`
+10. `feat(cognitive_mesh): COG-MESH-01 MultiBriefCoherenceManager 実装`
+11. `feat(cognitive_mesh): COG-MESH-09 GrammarLayer skeleton — 全 10 件揃う`
+12. `feat(cognitive_mesh): demo CLI を統合版に拡張 (5 sub-system 連動)`
+13. `docs(glossary): COG-MESH 実装側用語 11 件追加`
+
+### 統合 demo (動きで魅せる、project_f25_demo_polish 整合)
+
+```
+py -3.11 -m llive.cognitive_mesh.demo
+```
+
+env で時刻固定 (`LLIVE_DEMO_FORCE_TIME`) し、Active (10:00) と
+Quiet (02:00) で 5 サブシステムの挙動が変わることを 1 画面で確認:
+
+| サブシステム | Active (10:00) | Quiet (02:00) |
+|---|---|---|
+| ProactiveLoop | 発話 (gift_value 0.73) | 抑制 ✓ |
+| IdleTrainingScheduler | ingest 実行 | no ingest ✓ |
+| TonicRiskMonitor | ALERT 発火 | ALERT 発火 ✓ (例外通過、正しい) |
+| TitleRecallPlanner | recall_rate 0.75 | recall_rate 0.75 (時刻独立) |
+
+### 設計指針 (実装ラッシュで再確認)
+
+- **倫理は architecture の一部** — ProactiveLoop / IdleTrainingScheduler は
+  QuietHoursGuard 必須依存、None で TypeError
+- **fail-closed in Quiet Hours** — TZ 欠落 / env 不完全で常に Quiet 扱い、
+  proactive / ingest は抑止
+- **例外通過カテゴリ** — risk_alert / audit_alert は Quiet Hours 中でも
+  通過 (要件 §3 COG-MESH-07)
+- **副作用分離** — Risk Alert の state_snapshot は dict copy、後の変更
+  と独立
+- **70 点で commit** — 1 ファイル数百行、最小 API、複雑な統合は Phase 5/6/7
+  の本実装で対応
+
+### 残作業
+
+- COG-MESH-01 を実 Brief / BriefRunner と接続 (Phase 7 本実装)
+- COG-MESH-03 を threading 化 / エッジ向け NPU 実装検討 (Phase 6)
+- COG-MESH-04 ingest を Quarantined Memory (SEC-01) + Ed25519 (SEC-02)
+  と統合 (Phase 6)
+- COG-MESH-06 ProactiveLoop に curiosity / event / consistency モード追加
+- COG-MESH-09 GrammarLayer を EVO-04/06/07 と接続 (Phase 7)
+- llove F25 連携経由で proactive utterance を TUI 表示
+- asciinema 録画 + LinkedIn / Qiita 公開素材化 (`feedback_articles_pause`
+  解除後)
+
+---
+
 ## 2026-05-18 (深夜) — v0.8 Cognitive Mesh / Proactive Loop 要件群追加
 
 ユーザ依頼「直近 memory に記憶した内容も llive の設計思想にリンクするので
