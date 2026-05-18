@@ -32,6 +32,9 @@ from llive.cognitive_mesh.brief_containers import (  # COG-MESH-08
     BriefRef,
     BriefTree,
 )
+from llive.cognitive_mesh.brief_runner_bridge import (  # COG-MESH-08 完成配線
+    BriefDequeRunnerBridge,
+)
 from llive.cognitive_mesh.embedding_similarity import (  # COG-MESH-02 拡張
     EmbeddingSimilarityFn,
 )
