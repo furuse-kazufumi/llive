@@ -161,7 +161,10 @@ def test_tick_consistency_picks_highest_severity_from_source(
         quiet_hours=_active_guard(monkeypatch),
         consistency_source=lambda: violations,
     )
-    out = loop.tick_consistency(now=datetime(2026, 5, 19, 10, 0, 0))
+    listener = dict(_HIGH_VALUE_LISTENER, current_topic="critical")
+    out = loop.tick_consistency(
+        now=datetime(2026, 5, 19, 10, 0, 0), listener_state=listener
+    )
     assert out is not None
     assert "critical" in out.content
 
