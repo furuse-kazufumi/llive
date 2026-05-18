@@ -423,8 +423,12 @@ class ProactiveLoop:
                 self.tick_curiosity(listener_state=listener_state)
             elif self.mode == "timer" and self.stimulus_source is not None:
                 self.tick(listener_state=listener_state)
+            elif self.mode == "event" and self.event_source is not None:
+                self.tick_event(listener_state=listener_state)
+            elif self.mode == "consistency" and self.consistency_source is not None:
+                self.tick_consistency(listener_state=listener_state)
             else:
-                # mode が timer で stimulus_source 未設定 → サイレント skip
+                # 必要な source が未設定 → サイレント skip
                 # (next tick で再評価、設定変更を受け入れる)
                 _logger.debug("ProactiveLoop._on_timer: nothing to tick (mode=%s)", self.mode)
         except Exception:  # noqa: BLE001 — 自律 tick を止めない
