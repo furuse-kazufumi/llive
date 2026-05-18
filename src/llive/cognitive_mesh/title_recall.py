@@ -19,10 +19,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 
-class RecallStatus(str, Enum):
+class RecallStatus(StrEnum):
     PENDING = "pending"
     RECOVERED = "recovered"
     MISSED = "missed"

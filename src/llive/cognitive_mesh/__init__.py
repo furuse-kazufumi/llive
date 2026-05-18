@@ -84,50 +84,42 @@ from llive.cognitive_mesh.tonic_risk import (  # COG-MESH-03
 )
 
 __all__ = [
-    # COG-MESH-01
-    "CoherenceEvent",
-    "MultiBriefCoherenceManager",
-    # COG-MESH-02
-    "Foreshadow",
-    "RecallReport",
-    "RecallStatus",
-    "TitleRecallPlanner",
-    # COG-MESH-03
-    "RiskAlert",
-    "RiskModel",
-    "TonicRiskMonitor",
-    # COG-MESH-04
-    "IdleTrainingScheduler",
-    "InfoSource",
-    "IngestEvent",
-    # COG-MESH-05
+    # Note: alphabetical (RUF022)、COG-MESH ID 別の整理は本ファイル
+    # 中段の import 順を参照
+    "ALL_CHANNELS",
     "DEFAULT_THRESHOLD",
-    "GiftValue",
-    "GiftValueEstimator",
-    # COG-MESH-09
-    "GrammarChangeStatus",
-    "GrammarLayer",
-    "GrammarSnapshot",
-    "ProposedChange",
-    "UsageEvidence",
-    # COG-MESH-06
-    "ProactiveLoop",
-    "ProactiveUtterance",
-    "SuppressedUtterance",
-    # COG-MESH-07
-    "QuietHoursGuard",
-    # COG-MESH-08
+    "GRANULARITY_ORDER",
     "BriefDeque",
     "BriefMap",
     "BriefRef",
     "BriefTree",
-    # COG-MESH-10
-    "ALL_CHANNELS",
-    "GRANULARITY_ORDER",
+    "CoherenceEvent",
+    "Foreshadow",
+    "GiftValue",
+    "GiftValueEstimator",
+    "GrammarChangeStatus",
+    "GrammarLayer",
+    "GrammarSnapshot",
     "Granularity",
+    "IdleTrainingScheduler",
+    "InfoSource",
+    "IngestEvent",
     "Mesh5W1HEdge",
     "Mesh5W1HGraph",
     "Mesh5W1HNode",
+    "MultiBriefCoherenceManager",
+    "ProactiveLoop",
+    "ProactiveUtterance",
+    "ProposedChange",
+    "QuietHoursGuard",
+    "RecallReport",
+    "RecallStatus",
+    "RiskAlert",
+    "RiskModel",
+    "SuppressedUtterance",
+    "TitleRecallPlanner",
+    "TonicRiskMonitor",
+    "UsageEvidence",
     "annotate_5w1h",
     "channel_name",
     "granularity_of",

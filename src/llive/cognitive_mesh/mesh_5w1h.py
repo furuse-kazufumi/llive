@@ -17,14 +17,14 @@ namespace と内部表現に明示する。
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 # ---------------------------------------------------------------------------
 # 列挙
 # ---------------------------------------------------------------------------
 
 
-class Mesh5W1HNode(str, Enum):
+class Mesh5W1HNode(StrEnum):
     """5W1H メッシュのノード."""
 
     WHO = "who"
@@ -35,7 +35,7 @@ class Mesh5W1HNode(str, Enum):
     HOW = "how"
 
 
-class Granularity(str, Enum):
+class Granularity(StrEnum):
     """言語化粒度階層 (低 → 高)."""
 
     WORD = "word"
