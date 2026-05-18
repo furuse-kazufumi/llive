@@ -15,7 +15,7 @@ import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from llive.cognitive_mesh.gift_value import GiftValueEstimator
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
@@ -23,6 +23,27 @@ from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
 _logger = logging.getLogger("llive.cognitive_mesh.proactive")
 
 Mode = Literal["timer", "event", "curiosity", "consistency"]
+
+
+@dataclass(frozen=True)
+class ProactiveEvent:
+    """外部イベント駆動 mode で発話のトリガになる構造体."""
+
+    topic: str
+    payload: Any = None
+    severity: float = 0.5  # 0..1
+    note: str = ""
+
+
+@dataclass(frozen=True)
+class ConsistencyViolation:
+    """consistency mode で発話のトリガになる整合性違反."""
+
+    layer_a: str
+    layer_b: str
+    conflict_type: str
+    evidence: str = ""
+    severity: float = 0.5
 
 
 @dataclass
