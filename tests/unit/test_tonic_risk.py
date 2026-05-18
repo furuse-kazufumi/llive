@@ -124,3 +124,80 @@ def test_latest_alerts_history() -> None:
     a2 = monitor.tick(state={"i": 2}, now=_at(10, 0, 1))
     history = monitor.latest_alerts(n=10)
     assert history == [a1, a2]
+
+
+# ---------------------------------------------------------------------------
+# 自律 tick (別 daemon thread)
+# ---------------------------------------------------------------------------
+
+
+def test_start_without_state_source_raises() -> None:
+    monitor = TonicRiskMonitor()
+    with pytest.raises(RuntimeError, match="state_source"):
+        monitor.start()
+
+
+def test_is_running_initially_false() -> None:
+    monitor = TonicRiskMonitor()
+    assert monitor.is_running is False
+
+
+def test_start_and_stop_lifecycle() -> None:
+    monitor = TonicRiskMonitor(
+        interrupt_threshold=0.9,
+        state_source=lambda: {"v": 0.1},
+        tick_interval_seconds=10.0,  # 長め (テストで thread 実行を待たない)
+    )
+    monitor.start()
+    try:
+        assert monitor.is_running is True
+    finally:
+        monitor.stop()
+    assert monitor.is_running is False
+
+
+def test_start_twice_raises() -> None:
+    monitor = TonicRiskMonitor(
+        interrupt_threshold=0.9,
+        state_source=lambda: {},
+        tick_interval_seconds=10.0,
+    )
+    monitor.start()
+    try:
+        with pytest.raises(RuntimeError, match="already started"):
+            monitor.start()
+    finally:
+        monitor.stop()
+
+
+def test_stop_is_idempotent() -> None:
+    monitor = TonicRiskMonitor()
+    monitor.stop()  # 未起動でも安全
+    monitor.stop()
+    assert monitor.is_running is False
+
+
+def test_autonomous_alert_fires_within_window() -> None:
+    """別 thread で start → 高スコア state を返す source → alert が記録される."""
+    import time
+
+    received: list[RiskAlert] = []
+    monitor = TonicRiskMonitor(
+        interrupt_threshold=0.7,
+        cooldown=timedelta(seconds=0),
+        on_alert=lambda a: received.append(a),
+        state_source=lambda: {"score": 0.95},
+        tick_interval_seconds=0.05,  # 50ms
+    )
+    monitor.register(
+        RiskModel(name="hot", score_fn=lambda s: float(s.get("score", 0.0)))
+    )
+    monitor.start()
+    try:
+        time.sleep(0.3)
+    finally:
+        monitor.stop()
+
+    assert len(received) >= 1
+    assert received[0].model_name == "hot"
+    assert received[0].score >= 0.7
