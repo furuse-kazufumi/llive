@@ -24,12 +24,25 @@ from __future__ import annotations
 import os
 from datetime import datetime
 
+from llive.approval.bus import ApprovalBus
+from llive.cognitive_mesh.brief_runner_bridge import BriefDequeRunnerBridge
 from llive.cognitive_mesh.gift_value import GiftValueEstimator
 from llive.cognitive_mesh.idle_training import (
     IdleTrainingScheduler,
     InfoSource,
 )
-from llive.cognitive_mesh.proactive import ProactiveLoop
+from llive.cognitive_mesh.intervention import RiskInterventionAdapter
+from llive.cognitive_mesh.mesh_5w1h import Mesh5W1HNode
+from llive.cognitive_mesh.mesh_annotator import Mesh5W1HAnnotator
+from llive.cognitive_mesh.proactive import (
+    ConsistencyViolation,
+    ProactiveEvent,
+    ProactiveLoop,
+)
+from llive.cognitive_mesh.quarantined_memory import (
+    Ed25519Verifier,
+    QuarantinedMemory,
+)
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
 from llive.cognitive_mesh.title_recall import TitleRecallPlanner
 from llive.cognitive_mesh.tonic_risk import RiskModel, TonicRiskMonitor
