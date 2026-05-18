@@ -191,6 +191,14 @@ class CognitiveMeshTimelineEmitter:
         self._emit(event)
         return event
 
+    def emit_brief_result(self, result: BriefResult) -> dict[str, Any]:
+        """BriefRunner.submit() 完了後に呼ぶ post-hook."""
+        event = brief_result_to_event(
+            result, task_id=self.task_id, node_id=self.node_id
+        )
+        self._emit(event)
+        return event
+
     def latest(self, n: int = 10) -> list[dict[str, Any]]:
         return self.buffer[-n:]
 
