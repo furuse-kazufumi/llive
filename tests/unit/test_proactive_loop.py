@@ -136,3 +136,66 @@ def test_start_and_stop_raise_not_implemented(monkeypatch: pytest.MonkeyPatch) -
         loop.start()
     with pytest.raises(NotImplementedError, match="Phase 5"):
         loop.stop()
+
+
+# ---------------------------------------------------------------------------
+# curiosity mode (COG-MESH-06, Phase 6 M8.7 prototype)
+# ---------------------------------------------------------------------------
+
+
+def test_tick_curiosity_without_coverage_source_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    with pytest.raises(NotImplementedError, match="coverage_source"):
+        loop.tick_curiosity(now=_at(10))
+
+
+def test_tick_curiosity_emits_when_layer_is_thin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guard = _make_guard(monkeypatch)
+    coverage = {"semantic": 0.9, "episodic": 0.2, "structural": 0.6, "parameter": 0.4}
+    loop = ProactiveLoop(
+        quiet_hours=guard,
+        coverage_source=lambda: coverage,
+        curiosity_threshold=0.5,
+    )
+    listener = {
+        "current_topic": "memory",
+        "risk_score": 0.8,
+        "focus_level": 0.3,
+        "in_quiet_hours": False,
+    }
+    utterance = loop.tick_curiosity(now=_at(10), listener_state=listener)
+    assert utterance is not None
+    assert utterance.mode == "curiosity"
+    # 最も薄い layer (episodic 0.2) が話題に
+    assert "episodic" in utterance.content
+    assert "0.20" in utterance.content
+
+
+def test_tick_curiosity_returns_none_when_all_layers_covered(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guard = _make_guard(monkeypatch)
+    coverage = {"semantic": 0.9, "episodic": 0.8, "structural": 0.7, "parameter": 0.95}
+    loop = ProactiveLoop(
+        quiet_hours=guard,
+        coverage_source=lambda: coverage,
+        curiosity_threshold=0.5,
+    )
+    assert loop.tick_curiosity(now=_at(10)) is None
+
+
+def test_tick_curiosity_blocked_in_quiet_hours(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(
+        quiet_hours=guard,
+        coverage_source=lambda: {"semantic": 0.1},
+    )
+    # Quiet Hours 02:00 → coverage が薄くても発話しない
+    assert loop.tick_curiosity(now=_at(2)) is None
