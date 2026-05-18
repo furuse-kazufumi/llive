@@ -60,8 +60,28 @@ from llive.cognitive_mesh.proactive import (  # COG-MESH-06
     SuppressedUtterance,
 )
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard  # COG-MESH-07
+from llive.cognitive_mesh.title_recall import (  # COG-MESH-02
+    Foreshadow,
+    RecallReport,
+    RecallStatus,
+    TitleRecallPlanner,
+)
+from llive.cognitive_mesh.tonic_risk import (  # COG-MESH-03
+    RiskAlert,
+    RiskModel,
+    TonicRiskMonitor,
+)
 
 __all__ = [
+    # COG-MESH-02
+    "Foreshadow",
+    "RecallReport",
+    "RecallStatus",
+    "TitleRecallPlanner",
+    # COG-MESH-03
+    "RiskAlert",
+    "RiskModel",
+    "TonicRiskMonitor",
     # COG-MESH-04
     "IdleTrainingScheduler",
     "InfoSource",
