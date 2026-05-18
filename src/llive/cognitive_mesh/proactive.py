@@ -123,6 +123,65 @@ class ProactiveLoop:
         self.gift_value.commit(candidate, now=timestamp)
         return utterance
 
+    def tick_curiosity(
+        self,
+        now: datetime | None = None,
+        listener_state: dict | None = None,
+    ) -> ProactiveUtterance | None:
+        """curiosity モード tick — coverage map が薄い memory layer に対する問いを発話化.
+
+        COG-MESH-06 mode='curiosity' の prototype。Phase 6 M8.7 で本格化。
+        本実装は最小: coverage_source から薄い layer を見つけ、固定テンプレで
+        質問文を生成 → GiftValueEstimator + Quiet Hours の通常 gate に乗せる。
+
+        - coverage_source 未設定: NotImplementedError
+        - 薄い layer 無し (全て >= curiosity_threshold): None
+        - Quiet Hours 中: None
+        """
+        if not self.can_speak_now(now=now):
+            return None
+        if self.coverage_source is None:
+            raise NotImplementedError(
+                "ProactiveLoop.tick_curiosity: coverage_source 未設定。"
+                "Phase 6 M8.7 で 4 層メモリの coverage map と接続予定"
+            )
+        coverage = self.coverage_source()
+        # 最も薄い layer を選ぶ
+        thin = [(layer, c) for layer, c in coverage.items() if c < self.curiosity_threshold]
+        if not thin:
+            return None
+        thin.sort(key=lambda pair: pair[1])
+        layer, cov = thin[0]
+        candidate = (
+            f"{layer} memory のカバレッジが {cov:.2f} と薄いようです。"
+            f"最近この領域に新しい知見はありましたか？"
+        )
+        gv = self.gift_value.estimate(
+            candidate_utterance=candidate,
+            listener_state=listener_state,
+            now=now,
+        )
+        timestamp = now or datetime.now()
+        if not gv.should_speak:
+            self._suppressed.append(
+                SuppressedUtterance(
+                    content=candidate,
+                    reason="gift_value_below_threshold",
+                    gift_value=gv.aggregate,
+                    timestamp=timestamp,
+                )
+            )
+            return None
+        utterance = ProactiveUtterance(
+            content=candidate,
+            mode="curiosity",
+            timestamp=timestamp,
+            gift_value=gv.aggregate,
+        )
+        self._utterances.append(utterance)
+        self.gift_value.commit(candidate, now=timestamp)
+        return utterance
+
     def latest_utterances(self, n: int = 10) -> list[ProactiveUtterance]:
         return self._utterances[-n:]
 
