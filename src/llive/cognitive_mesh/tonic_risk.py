@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: Apache-2.0
+"""COG-MESH-03 TonicRiskMonitor — 小脳的常時 KYT (危険予測).
+
+requirements_v0.8_cognitive_mesh.md §3 COG-MESH-03 の最小実装.
+
+ユーザ言語化「小脳のような高速応答系。危険予測 KYT を常時繰り返し、
+突然の事態に対応する」(user_cognitive_mesh_model §2) を architectural
+に反映。
+
+仕様:
+- 複数の RiskModel を register。各 model は score(state) -> float (0..1)
+- tick() で全 model を評価し、最大 score を返す
+- 閾値超のとき alert callback (intervention) を発火
+- 連続発火を防ぐ cooldown
+- threading は本実装では使わず同期版 (Phase 6 で別スレッド化、エッジ実装は
+  別チップ視野)
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any, Callable, Optional
+
+
+@dataclass
+class RiskModel:
+    """名前付きの risk 評価モデル."""
+
+    name: str
+    score_fn: Callable[[dict[str, Any]], float]
+    weight: float = 1.0
+
+
+@dataclass
+class RiskAlert:
+    """閾値超で発火するアラート."""
+
+    model_name: str
+    score: float
+    timestamp: datetime
+    state_snapshot: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class TonicRiskMonitor:
+    """常時動く危険予測モニタ (同期最小版)."""
+
+    interrupt_threshold: float = 0.7
+    cooldown: timedelta = timedelta(seconds=30)
+    on_alert: Optional[Callable[[RiskAlert], None]] = None
+    _models: dict[str, RiskModel] = field(default_factory=dict)
+    _alerts: list[RiskAlert] = field(default_factory=list)
+
+    def register(self, model: RiskModel) -> None:
+        if model.name in self._models:
+            raise ValueError(f"RiskModel '{model.name}' already registered")
+        self._models[model.name] = model
+
+    def models(self) -> list[RiskModel]:
+        return list(self._models.values())
+
+    def latest_scores(self, state: dict[str, Any]) -> dict[str, float]:
+        return {name: model.score_fn(state) for name, model in self._models.items()}
+
+    # ------------------------------------------------------------------
+    # tick
+    # ------------------------------------------------------------------
+
+    def tick(
+        self,
+        state: dict[str, Any],
+        now: Optional[datetime] = None,
+    ) -> Optional[RiskAlert]:
+        if now is None:
+            now = datetime.now()
+        # cooldown 中ならスキップ
+        if self._alerts:
+            last = self._alerts[-1].timestamp
+            if (now - last) < self.cooldown:
+                return None
+        # 各 model の重み付け score、最大を取る
+        best_name: Optional[str] = None
+        best_score = -1.0
+        for name, model in self._models.items():
+            raw = model.score_fn(state)
+            weighted = raw * model.weight
+            if weighted > best_score:
+                best_score = weighted
+                best_name = name
+        if best_name is None or best_score < self.interrupt_threshold:
+            return None
+        alert = RiskAlert(
+            model_name=best_name,
+            score=best_score,
+            timestamp=now,
+            state_snapshot=dict(state),
+        )
+        self._alerts.append(alert)
+        if self.on_alert is not None:
+            self.on_alert(alert)
+        return alert
+
+    def latest_alerts(self, n: int = 10) -> list[RiskAlert]:
+        return self._alerts[-n:]
