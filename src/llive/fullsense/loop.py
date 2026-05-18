@@ -214,6 +214,19 @@ class FullSenseLoop:
         }
         if thought_debug is not None:
             thought_stage["debug"] = thought_debug
+        # case C skeleton — thought-factor → SSM Δ bridge. Build a snapshot
+        # from currently observable stage data and ask the hook for a delta.
+        # The delta is *recorded* but not yet applied (Phase 5 will route it
+        # into Mamba's transport='mamba_ssm' kernel).
+        if self._factor_hook is not None:
+            snapshot = self._build_factor_snapshot(
+                stim=stim,
+                salience=salience,
+                curiosity=curiosity,
+                thought=thought,
+            )
+            thought_stage["factor_delta"] = float(self._factor_hook.delta_for(snapshot))
+            thought_stage["factor_snapshot"] = dict(snapshot.values)
         stages["thought"] = thought_stage
 
         # ④ Ego / Altruism Scorer
