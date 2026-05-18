@@ -197,10 +197,63 @@ class ProactiveLoop:
         """抑制された候補発話の履歴 (`cog.suppressed_utterance` Annotation 相当)."""
         return self._suppressed[-n:]
 
+    # ------------------------------------------------------------------
+    # 自律 tick (threading.Timer ベース、daemon)
+    # ------------------------------------------------------------------
+
     def start(self) -> None:
-        """周期 tick を開始 (Phase 5 で threading.Timer / asyncio.Task)."""
-        raise NotImplementedError("Phase 5: M8.1")
+        """周期 tick を開始する.
+
+        threading.Timer を daemon で起動し、tick_interval_seconds ごとに
+        現在の mode に応じた tick (timer/curiosity) を実行する。
+        既に起動中なら RuntimeError。
+        """
+        with self._lock:
+            if self._running:
+                raise RuntimeError("ProactiveLoop already started")
+            self._stopped.clear()
+            self._running = True
+        self._schedule_next()
 
     def stop(self) -> None:
-        """周期 tick を停止 (3 重停止の 1 つ)."""
-        raise NotImplementedError("Phase 5: M8.1")
+        """周期 tick を停止する (3 重停止の 1 つ)."""
+        with self._lock:
+            self._stopped.set()
+            self._running = False
+            timer = self._timer
+            self._timer = None
+        if timer is not None:
+            timer.cancel()
+
+    @property
+    def is_running(self) -> bool:
+        """周期 tick が走っているか."""
+        return self._running
+
+    def _schedule_next(self) -> None:
+        """次の tick を schedule (Quiet Hours / stopped を尊重)."""
+        if self._stopped.is_set():
+            return
+        timer = threading.Timer(self.tick_interval_seconds, self._on_timer)
+        timer.daemon = True
+        with self._lock:
+            self._timer = timer
+        timer.start()
+
+    def _on_timer(self) -> None:
+        """Timer firing handler — 例外を握り潰して次回 tick を絶やさない."""
+        if self._stopped.is_set():
+            return
+        try:
+            if self.mode == "curiosity" and self.coverage_source is not None:
+                self.tick_curiosity()
+            elif self.mode == "timer" and self.stimulus_source is not None:
+                self.tick()
+            else:
+                # mode が timer で stimulus_source 未設定 → サイレント skip
+                # (next tick で再評価、設定変更を受け入れる)
+                _logger.debug("ProactiveLoop._on_timer: nothing to tick (mode=%s)", self.mode)
+        except Exception:  # noqa: BLE001 — 自律 tick を止めない
+            _logger.exception("ProactiveLoop tick failed (mode=%s)", self.mode)
+        if not self._stopped.is_set():
+            self._schedule_next()
