@@ -475,28 +475,217 @@ class MambaBackend(LLMBackend):
                 "use transport='llama_cpp_server' (default) and a running "
                 "llama-server serving a Mamba GGUF model."
             )
-        # Force the model name onto the request so the underlying OpenAI
-        # transport sends the Mamba model id rather than its own default.
-        coerced = GenerateRequest(
-            prompt=request.prompt,
-            system=request.system,
-            max_tokens=request.max_tokens,
-            temperature=request.temperature,
-            stop=list(request.stop),
-            model=request.model or self.model,
-            images=list(request.images),
+        return _delegate_generate(self._inner, request, self.model, self.name)
+
+
+# ---------------------------------------------------------------------------
+# Helper: shared logic for "wrapper" backends that delegate to OpenAIBackend
+# ---------------------------------------------------------------------------
+
+
+def _delegate_generate(
+    inner: LLMBackend,
+    request: GenerateRequest,
+    fallback_model: str,
+    wrapper_name: str,
+) -> GenerateResponse:
+    """Send ``request`` via ``inner`` while preserving the wrapper's identity.
+
+    Used by MambaBackend / RwkvBackend / JambaBackend / DiffusionBackend so
+    their analytics tag isn't lost when the actual transport is OpenAI-
+    compatible HTTP. Forces the model name onto the request to override the
+    inner backend's own default.
+    """
+    coerced = GenerateRequest(
+        prompt=request.prompt,
+        system=request.system,
+        max_tokens=request.max_tokens,
+        temperature=request.temperature,
+        stop=list(request.stop),
+        model=request.model or fallback_model,
+        images=list(request.images),
+    )
+    resp = inner.generate(coerced)
+    return GenerateResponse(
+        text=resp.text,
+        finish_reason=resp.finish_reason,
+        backend=wrapper_name,
+        model=resp.model,
+        raw=dict(resp.raw, inner_backend=resp.backend),
+    )
+
+
+# ---------------------------------------------------------------------------
+# RWKV-7 backend (non-transformer case E in ROADMAP.md — CPU-first)
+# ---------------------------------------------------------------------------
+
+
+class RwkvBackend(LLMBackend):
+    """RWKV-7 backend — CPU-optimised non-transformer LLM (case E).
+
+    Transports:
+    * ``"rwkv_cpp_server"`` (default) — RWKV.cpp built with OpenAI-compatible
+      HTTP wrapper. Delegates to :class:`OpenAIBackend` so any
+      ``rwkv-cli`` / ``RWKV-Runner`` / custom server with /v1 endpoint works.
+    * ``"rwkv_py"`` (planned) — in-process via ``rwkv`` PyPI package. Streaming
+      friendly (each step is O(state_dim), not O(L)). Land alongside the
+      llove TUI 5-pane wiring.
+    """
+
+    name = "rwkv"
+    DEFAULT_MODEL = "rwkv-7-world-7b"
+    DEFAULT_TRANSPORT = "rwkv_cpp_server"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        base_url: str | None = None,
+        *,
+        transport: str | None = None,
+    ) -> None:
+        self.transport = (
+            transport
+            or os.environ.get("LLIVE_RWKV_TRANSPORT")
+            or self.DEFAULT_TRANSPORT
+        ).lower()
+        self.model = model or os.environ.get("LLIVE_RWKV_MODEL") or self.DEFAULT_MODEL
+        if self.transport == "rwkv_cpp_server":
+            self._inner: LLMBackend | None = OpenAIBackend(
+                model=self.model, base_url=base_url
+            )
+        elif self.transport == "rwkv_py":
+            self._inner = None
+        else:
+            raise ValueError(
+                f"unknown RwkvBackend transport: {self.transport!r}; "
+                "use 'rwkv_cpp_server' or 'rwkv_py'"
+            )
+
+    @property
+    def supports_vlm(self) -> bool:
+        return False
+
+    @property
+    def supports_coding(self) -> bool:
+        return True  # RWKV-7 coding variants exist
+
+    def generate(self, request: GenerateRequest) -> GenerateResponse:
+        if self._inner is None:
+            raise NotImplementedError(
+                "RwkvBackend transport='rwkv_py' is not implemented yet. "
+                "Use transport='rwkv_cpp_server' with a running RWKV.cpp HTTP server."
+            )
+        return _delegate_generate(self._inner, request, self.model, self.name)
+
+
+# ---------------------------------------------------------------------------
+# Jamba backend (non-transformer case B in ROADMAP.md — Mamba/Attention hybrid)
+# ---------------------------------------------------------------------------
+
+
+class JambaBackend(LLMBackend):
+    """AI21 Jamba hybrid backend (case B).
+
+    The hybrid is opaque to the caller — internally Jamba interleaves Mamba
+    blocks with Attention. We expose it as a single backend with the same
+    OpenAI-compatible transport so it slots into the existing run lifecycle.
+    Stage-wise routing (see :class:`StageBackendRouter`) is what actually
+    surfaces the hybrid character to the llive 6-stage loop.
+    """
+
+    name = "jamba"
+    DEFAULT_MODEL = "jamba-1.5-mini"
+    DEFAULT_TRANSPORT = "llama_cpp_server"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        base_url: str | None = None,
+        *,
+        transport: str | None = None,
+    ) -> None:
+        self.transport = (
+            transport
+            or os.environ.get("LLIVE_JAMBA_TRANSPORT")
+            or self.DEFAULT_TRANSPORT
+        ).lower()
+        self.model = model or os.environ.get("LLIVE_JAMBA_MODEL") or self.DEFAULT_MODEL
+        if self.transport == "llama_cpp_server":
+            self._inner: LLMBackend | None = OpenAIBackend(
+                model=self.model, base_url=base_url
+            )
+        else:
+            raise ValueError(
+                f"unknown JambaBackend transport: {self.transport!r}"
+            )
+
+    @property
+    def supports_vlm(self) -> bool:
+        return False  # Jamba-1.5 mini/large are text-only
+
+    @property
+    def supports_coding(self) -> bool:
+        return True
+
+    def generate(self, request: GenerateRequest) -> GenerateResponse:
+        assert self._inner is not None
+        return _delegate_generate(self._inner, request, self.model, self.name)
+
+
+# ---------------------------------------------------------------------------
+# Diffusion LM backend (non-transformer case D in ROADMAP.md — experimental)
+# ---------------------------------------------------------------------------
+
+
+class DiffusionBackend(LLMBackend):
+    """Diffusion LM backend (case D, experimental).
+
+    Targets Mercury / ELYZA-LLM-Diffusion / Dream-family servers that expose
+    an OpenAI-compatible /v1 endpoint. Native sampling parameters (num_steps,
+    schedule, refinement_rounds) are passed through via ``request.raw`` /
+    extra HTTP params once the upstream API stabilises; for now we keep the
+    surface minimal and degrade to a normal chat completion call.
+    """
+
+    name = "diffusion"
+    DEFAULT_MODEL = "elyza-llm-diffusion"
+    DEFAULT_TRANSPORT = "openai_compatible"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        base_url: str | None = None,
+        *,
+        transport: str | None = None,
+    ) -> None:
+        self.transport = (
+            transport
+            or os.environ.get("LLIVE_DIFFUSION_TRANSPORT")
+            or self.DEFAULT_TRANSPORT
+        ).lower()
+        self.model = (
+            model or os.environ.get("LLIVE_DIFFUSION_MODEL") or self.DEFAULT_MODEL
         )
-        resp = self._inner.generate(coerced)
-        # Rewrite the backend tag so downstream analytics see "mamba" not
-        # "openai" — important for the non-transformer benchmark separation
-        # in feedback_llive_measurement_purity / feedback_benchmark_progressive_tokens.
-        return GenerateResponse(
-            text=resp.text,
-            finish_reason=resp.finish_reason,
-            backend=self.name,
-            model=resp.model,
-            raw=dict(resp.raw, inner_backend=resp.backend),
-        )
+        if self.transport == "openai_compatible":
+            self._inner: LLMBackend | None = OpenAIBackend(
+                model=self.model, base_url=base_url
+            )
+        else:
+            raise ValueError(
+                f"unknown DiffusionBackend transport: {self.transport!r}"
+            )
+
+    @property
+    def supports_vlm(self) -> bool:
+        return False
+
+    @property
+    def supports_coding(self) -> bool:
+        return False  # text-first for now
+
+    def generate(self, request: GenerateRequest) -> GenerateResponse:
+        assert self._inner is not None
+        return _delegate_generate(self._inner, request, self.model, self.name)
 
 
 # ---------------------------------------------------------------------------
