@@ -77,6 +77,9 @@ from llive.cognitive_mesh.tonic_risk import (  # COG-MESH-03
 )
 
 __all__ = [
+    # COG-MESH-01
+    "CoherenceEvent",
+    "MultiBriefCoherenceManager",
     # COG-MESH-02
     "Foreshadow",
     "RecallReport",
