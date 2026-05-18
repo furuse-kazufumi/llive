@@ -27,6 +27,7 @@ from llive.fullsense.types import (
 
 if TYPE_CHECKING:
     from llive.llm import LLMBackend
+    from llive.llm.stage_router import StageBackendRouter
 
 
 class BackendConfigurationError(ValueError):
