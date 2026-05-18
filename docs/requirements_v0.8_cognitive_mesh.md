@@ -10,6 +10,20 @@
 
 ## 0. 経緯と本書の位置づけ
 
+> **書誌的注記**: 本書 (`docs/requirements_v0.8_cognitive_mesh.md`) は
+> `docs/requirements_v0.[1-7]*.md` シリーズの続巻として置く。GSD ワークフロー
+> 用の `.planning/REQUIREMENTS.md` には別途 **v0.8 CABT** (Cognitive-aware
+> Transformer Block 群) が定義されており、本書 (cognitive mesh) とは
+> **直交する別レイヤ**である:
+>
+> - `.planning/REQUIREMENTS.md` の v0.8 CABT = **Transformer ブロック内部**の
+>   attention / routing / token を認知的に拡張する低レイヤ
+> - 本書 v0.8 cognitive mesh = **FullSenseLoop の周囲**で並列 Brief / 能動発話 /
+>   Quiet Hours を扱う高レイヤ
+>
+> CABT と COG-MESH は補完関係。`.planning/REQUIREMENTS.md` 側にも本書要件を
+> `v0.8b COG-MESH 群` として転記する (本書 §11 参照)。
+
 2026-05-18 のセッションでユーザ自身が認知モデルを言語化し、また Claude Code /
 llive に対する **能動性 / 周期性 / 静音時間帯** の要望を一連で出した。出典:
 
