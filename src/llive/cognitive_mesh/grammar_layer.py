@@ -87,8 +87,13 @@ class GrammarLayer:
     """言語別の文法層を管理する skeleton.
 
     Phase 7 で本実装。本クラスは API を凍結し、内部は dict 簡易管理。
+
+    Attributes:
+        change_sink: M8.9 で導入された optional な sink. propose / promote /
+            reject の各イベントで通知される (EVO-04/06/07 配線用 hook).
     """
 
+    change_sink: GrammarChangeSink | None = None
     _versions: dict[str, dict[str, GrammarSnapshot]] = field(default_factory=dict)
     _proposals: list[ProposedChange] = field(default_factory=list)
 
