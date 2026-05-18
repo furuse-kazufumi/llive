@@ -191,15 +191,16 @@ def run_size(
 def run_matrix(
     backend_names: Iterable[str],
     *,
-    sizes: Iterable[str] = ("xs", "s", "m"),
+    sizes: Iterable[str] = CPU_SAFE_SIZES,
     max_tokens: int = 256,
     allow_cloud: bool = False,
 ) -> list[LowSpecRunResult]:
     """Run the progressive matrix across multiple backends.
 
-    Default sizes are xs/s/m — l and xl are opt-in because a single l cell can
-    take minutes on a low-spec PC. Run xl only after smaller cells confirm
-    the candidate is viable.
+    Default sizes are :data:`CPU_SAFE_SIZES` (xs/s) — anything bigger
+    (m, l, xl) is opt-in because m can lock a CPU-only PC for tens of
+    minutes and l/xl are essentially unreachable without a GPU. Run those
+    only when you've confirmed the smaller cells already pass.
     """
     results: list[LowSpecRunResult] = []
     for name in backend_names:
