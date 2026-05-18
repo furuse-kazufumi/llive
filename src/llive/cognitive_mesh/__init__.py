@@ -42,6 +42,10 @@ from llive.cognitive_mesh.idle_training import (  # COG-MESH-04
     InfoSource,
     IngestEvent,
 )
+from llive.cognitive_mesh.multi_brief import (  # COG-MESH-01
+    CoherenceEvent,
+    MultiBriefCoherenceManager,
+)
 from llive.cognitive_mesh.mesh_5w1h import (  # COG-MESH-10
     ALL_CHANNELS,
     GRANULARITY_ORDER,
