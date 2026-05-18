@@ -18,9 +18,10 @@ requirements_v0.8_cognitive_mesh.md §3 COG-MESH-03 の最小実装.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Optional
+from typing import Any
 
 
 @dataclass
@@ -48,7 +49,7 @@ class TonicRiskMonitor:
 
     interrupt_threshold: float = 0.7
     cooldown: timedelta = timedelta(seconds=30)
-    on_alert: Optional[Callable[[RiskAlert], None]] = None
+    on_alert: Callable[[RiskAlert], None] | None = None
     _models: dict[str, RiskModel] = field(default_factory=dict)
     _alerts: list[RiskAlert] = field(default_factory=list)
 
@@ -70,8 +71,8 @@ class TonicRiskMonitor:
     def tick(
         self,
         state: dict[str, Any],
-        now: Optional[datetime] = None,
-    ) -> Optional[RiskAlert]:
+        now: datetime | None = None,
+    ) -> RiskAlert | None:
         if now is None:
             now = datetime.now()
         # cooldown 中ならスキップ
@@ -80,7 +81,7 @@ class TonicRiskMonitor:
             if (now - last) < self.cooldown:
                 return None
         # 各 model の重み付け score、最大を取る
-        best_name: Optional[str] = None
+        best_name: str | None = None
         best_score = -1.0
         for name, model in self._models.items():
             raw = model.score_fn(state)

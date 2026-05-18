@@ -22,8 +22,7 @@ demo は Phase 5 M8.1 で完成予定。
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime
 
 from llive.cognitive_mesh.gift_value import GiftValueEstimator
 from llive.cognitive_mesh.idle_training import (
@@ -36,14 +35,14 @@ from llive.cognitive_mesh.title_recall import TitleRecallPlanner
 from llive.cognitive_mesh.tonic_risk import RiskModel, TonicRiskMonitor
 
 
-def _resolve_now(guard: QuietHoursGuard) -> Optional[datetime]:
+def _resolve_now(guard: QuietHoursGuard) -> datetime | None:
     forced = os.environ.get("LLIVE_DEMO_FORCE_TIME")
     if forced:
         try:
             return datetime.fromisoformat(forced)
         except ValueError:
             print(f"[warn] LLIVE_DEMO_FORCE_TIME parse failed: {forced!r}")
-    cfg = guard._config  # noqa: SLF001
+    cfg = guard._config
     if cfg.fail_closed:
         return None
     return datetime.now(cfg.tz)
@@ -60,11 +59,11 @@ def main() -> int:
     try:
         import sys
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001 — best-effort
+    except Exception:
         pass
 
     guard = QuietHoursGuard()
-    cfg = guard._config  # noqa: SLF001
+    cfg = guard._config
 
     print("=" * 60)
     print("llive Cognitive Mesh - Integrated Demo (COG-MESH-01..10)")
@@ -158,7 +157,7 @@ def main() -> int:
     planner.setup("deploy live", tag="deploy", weight=2.0)
     final_text = "Today we shipped: build success, test pass, but deploy was missed"
     report = planner.evaluate(final_text, now=now)
-    print(f"  Foreshadows set: build / test / deploy (weights 1/1/2)")
+    print("  Foreshadows set: build / test / deploy (weights 1/1/2)")
     print(f"  Final text: {final_text!r}")
     print(f"  recall_rate: {report.recall_rate:.2f}")
     print(f"  Unrecovered: {[f.tag for f in report.unrecovered]}")

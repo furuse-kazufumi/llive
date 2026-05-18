@@ -16,8 +16,9 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict, deque
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Iterator, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,7 @@ class BriefRef:
     payload: Any = None
 
     @staticmethod
-    def new(topic: str, payload: Any = None) -> "BriefRef":
+    def new(topic: str, payload: Any = None) -> BriefRef:
         return BriefRef(id=str(uuid.uuid4()), topic=topic, payload=payload)
 
 
@@ -54,10 +55,10 @@ class BriefDeque:
     def pop_back(self) -> BriefRef:
         return self._items.pop()
 
-    def peek_front(self) -> Optional[BriefRef]:
+    def peek_front(self) -> BriefRef | None:
         return self._items[0] if self._items else None
 
-    def peek_back(self) -> Optional[BriefRef]:
+    def peek_back(self) -> BriefRef | None:
         return self._items[-1] if self._items else None
 
     def __len__(self) -> int:
@@ -100,7 +101,7 @@ class BriefMap:
     def by_topic(self, topic: str) -> list[BriefRef]:
         return list(self._by_topic.get(topic, []))
 
-    def get(self, brief_id: str) -> Optional[BriefRef]:
+    def get(self, brief_id: str) -> BriefRef | None:
         return self._by_id.get(brief_id)
 
     def topics(self) -> list[str]:
@@ -116,7 +117,7 @@ class BriefMap:
 @dataclass
 class _TreeNode:
     brief: BriefRef
-    parent_id: Optional[str] = None
+    parent_id: str | None = None
     children: list[str] = field(default_factory=list)
 
 
@@ -165,7 +166,7 @@ class BriefTree:
         payloads = [c.payload for c in children]
         return BriefRef.new(topic=topic, payload={"merged_from": [c.id for c in children], "payloads": payloads, "parent_id": parent_id})
 
-    def get(self, brief_id: str) -> Optional[BriefRef]:
+    def get(self, brief_id: str) -> BriefRef | None:
         node = self._nodes.get(brief_id)
         return node.brief if node else None
 

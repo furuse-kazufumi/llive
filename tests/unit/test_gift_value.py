@@ -16,8 +16,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-import pytest
-
 from llive.cognitive_mesh.gift_value import (
     DEFAULT_THRESHOLD,
     GiftValue,

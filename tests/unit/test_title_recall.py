@@ -6,11 +6,9 @@ from __future__ import annotations
 import pytest
 
 from llive.cognitive_mesh.title_recall import (
-    Foreshadow,
     RecallStatus,
     TitleRecallPlanner,
 )
-
 
 # ---------------------------------------------------------------------------
 # 起 — setup

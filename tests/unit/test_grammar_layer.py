@@ -9,7 +9,6 @@ from llive.cognitive_mesh.grammar_layer import (
     GrammarChangeStatus,
     GrammarLayer,
     GrammarSnapshot,
-    ProposedChange,
     UsageEvidence,
 )
 

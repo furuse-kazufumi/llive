@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 from llive.cognitive_mesh.brief_containers import (
     BriefDeque,
@@ -122,7 +121,7 @@ class MultiBriefCoherenceManager:
     # tick — impact event を抽出
     # ------------------------------------------------------------------
 
-    def tick(self, now: Optional[datetime] = None) -> list[CoherenceEvent]:
+    def tick(self, now: datetime | None = None) -> list[CoherenceEvent]:
         if now is None:
             now = datetime.now()
         events: list[CoherenceEvent] = []

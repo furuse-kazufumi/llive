@@ -19,10 +19,8 @@ aggregate は重み付き平均、既定閾値 0.6。
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
-
 
 # 4 因子の既定重み (合計 1.0)
 DEFAULT_WEIGHTS: dict[str, float] = {
@@ -69,7 +67,7 @@ class GiftValueEstimator:
     def __init__(
         self,
         threshold: float = DEFAULT_THRESHOLD,
-        weights: Optional[dict[str, float]] = None,
+        weights: dict[str, float] | None = None,
         cooldown: timedelta = timedelta(minutes=30),
     ) -> None:
         self.threshold = threshold
@@ -80,8 +78,8 @@ class GiftValueEstimator:
     def estimate(
         self,
         candidate_utterance: str,
-        listener_state: Optional[dict] = None,
-        now: Optional[datetime] = None,
+        listener_state: dict | None = None,
+        now: datetime | None = None,
     ) -> GiftValue:
         listener_state = listener_state or {}
         if now is None:
@@ -104,7 +102,7 @@ class GiftValueEstimator:
             aggregate=aggregate,
         )
 
-    def commit(self, utterance: str, now: Optional[datetime] = None) -> None:
+    def commit(self, utterance: str, now: datetime | None = None) -> None:
         """発話を実際に行ったら履歴に記録 (次回 novelty 計算に使う)."""
         if now is None:
             now = datetime.now()

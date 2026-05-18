@@ -22,10 +22,9 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta, timezone
-from typing import Literal, Optional
+from datetime import UTC, datetime, timedelta, timezone
+from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-
 
 Category = Literal["proactive", "ingest", "risk_alert", "audit_alert"]
 
@@ -57,13 +56,13 @@ def _load_config() -> _Config:
     tz: ZoneInfo | timezone
     if tz_name is None:
         fail_closed = True
-        tz = timezone.utc  # placeholder、in_quiet_hours は fail_closed を見て決定
+        tz = UTC  # placeholder、in_quiet_hours は fail_closed を見て決定
     else:
         try:
             tz = ZoneInfo(tz_name)
         except ZoneInfoNotFoundError:
             fail_closed = True
-            tz = timezone.utc
+            tz = UTC
 
     if start_raw is None or end_raw is None:
         fail_closed = True
@@ -95,7 +94,7 @@ class QuietHoursGuard:
     # 基本判定
     # ------------------------------------------------------------------
 
-    def in_quiet_hours(self, now: Optional[datetime] = None) -> bool:
+    def in_quiet_hours(self, now: datetime | None = None) -> bool:
         cfg = self._config
         if not cfg.enabled:
             return False
@@ -119,7 +118,7 @@ class QuietHoursGuard:
     # allow() カテゴリ別 gate
     # ------------------------------------------------------------------
 
-    def allow(self, category: Category, now: Optional[datetime] = None) -> bool:
+    def allow(self, category: Category, now: datetime | None = None) -> bool:
         if category in _QUIET_HOURS_EXEMPT:
             return True
         return not self.in_quiet_hours(now=now)
@@ -128,7 +127,7 @@ class QuietHoursGuard:
     # next_active_window()
     # ------------------------------------------------------------------
 
-    def next_active_window(self, now: Optional[datetime] = None) -> tuple[datetime, datetime]:
+    def next_active_window(self, now: datetime | None = None) -> tuple[datetime, datetime]:
         """次の (active_start, active_end) を返す.
 
         - Quiet Hours 中: 次の END 時刻から次の START 時刻まで

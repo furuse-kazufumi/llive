@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class GrammarChangeStatus(str, Enum):
@@ -36,7 +36,7 @@ class GrammarSnapshot:
     language: str
     version: str  # 例: "grammar_v_2026_05"
     rules: dict[str, Any] = field(default_factory=dict)
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
 
 @dataclass
@@ -46,7 +46,7 @@ class UsageEvidence:
     pattern: str
     samples: list[str]
     confidence: float = 0.5
-    observed_at: Optional[datetime] = None
+    observed_at: datetime | None = None
 
 
 @dataclass
@@ -83,7 +83,7 @@ class GrammarLayer:
             )
         lang_map[snapshot.version] = snapshot
 
-    def get(self, language: str, version: str) -> Optional[GrammarSnapshot]:
+    def get(self, language: str, version: str) -> GrammarSnapshot | None:
         return self._versions.get(language, {}).get(version)
 
     def versions(self, language: str) -> list[str]:
@@ -116,7 +116,7 @@ class GrammarLayer:
         self._proposals.append(proposal)
         return proposal
 
-    def pending_proposals(self, language: Optional[str] = None) -> list[ProposedChange]:
+    def pending_proposals(self, language: str | None = None) -> list[ProposedChange]:
         items = [p for p in self._proposals if p.status == GrammarChangeStatus.PROPOSED]
         if language is not None:
             items = [p for p in items if p.language == language]

@@ -20,7 +20,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class RecallStatus(str, Enum):
@@ -37,8 +36,8 @@ class Foreshadow:
     tag: str  # 識別用タグ (例: "build-success", "user-name", ...)
     weight: float = 1.0  # 採点時の重み
     status: RecallStatus = RecallStatus.PENDING
-    set_at: Optional[datetime] = None
-    recovered_at: Optional[datetime] = None
+    set_at: datetime | None = None
+    recovered_at: datetime | None = None
 
 
 @dataclass
@@ -62,7 +61,7 @@ class TitleRecallPlanner:
     # 起 — 伏線設置
     # ------------------------------------------------------------------
 
-    def setup(self, text: str, tag: str, weight: float = 1.0, now: Optional[datetime] = None) -> Foreshadow:
+    def setup(self, text: str, tag: str, weight: float = 1.0, now: datetime | None = None) -> Foreshadow:
         if tag in self._foreshadows:
             raise ValueError(f"foreshadow with tag '{tag}' already set")
         if now is None:
@@ -87,7 +86,7 @@ class TitleRecallPlanner:
     # 結 — 採点
     # ------------------------------------------------------------------
 
-    def evaluate(self, final_text: str, now: Optional[datetime] = None) -> RecallReport:
+    def evaluate(self, final_text: str, now: datetime | None = None) -> RecallReport:
         if now is None:
             now = datetime.now()
         total_weight = 0.0

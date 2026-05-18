@@ -7,17 +7,14 @@ requirements_v0.8_cognitive_mesh.md §3 COG-MESH-04 の API 凍結。
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 import pytest
 
 from llive.cognitive_mesh.idle_training import (
     IdleTrainingScheduler,
     InfoSource,
-    IngestEvent,
 )
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
-
 
 JST = timezone(timedelta(hours=9))
 

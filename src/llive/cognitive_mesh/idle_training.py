@@ -21,9 +21,10 @@ requirements_v0.8_cognitive_mesh.md §3 COG-MESH-04 の最小実装。
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Optional
+from typing import Any
 
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
 
@@ -86,7 +87,7 @@ class IdleTrainingScheduler:
     def resume(self) -> None:
         self._paused = False
 
-    def should_ingest(self, now: Optional[datetime] = None) -> bool:
+    def should_ingest(self, now: datetime | None = None) -> bool:
         if self._paused:
             return False
         if not self.quiet_hours.allow("ingest", now=now):
@@ -106,7 +107,7 @@ class IdleTrainingScheduler:
     # tick
     # ------------------------------------------------------------------
 
-    def tick(self, now: Optional[datetime] = None) -> Optional[IngestEvent]:
+    def tick(self, now: datetime | None = None) -> IngestEvent | None:
         if not self.should_ingest(now=now):
             return None
         if now is None:

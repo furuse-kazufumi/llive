@@ -13,13 +13,11 @@ Phase 5 で full 実装する予定だが、現時点で凍結する API 契約:
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 import pytest
 
 from llive.cognitive_mesh.proactive import ProactiveLoop
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
-
 
 JST = timezone(timedelta(hours=9))
 

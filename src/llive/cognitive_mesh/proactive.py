@@ -10,13 +10,13 @@ NotImplementedError を投げる "ready-to-implement" 状態。
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Literal, Optional
+from typing import Literal
 
 from llive.cognitive_mesh.gift_value import GiftValueEstimator
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
-
 
 Mode = Literal["timer", "event", "curiosity", "consistency"]
 
@@ -50,10 +50,10 @@ class ProactiveLoop:
     """
 
     quiet_hours: QuietHoursGuard
-    gift_value: Optional[GiftValueEstimator] = None
+    gift_value: GiftValueEstimator | None = None
     tick_interval_seconds: float = 60.0
     mode: Mode = "timer"
-    stimulus_source: Optional[Callable[[], str]] = None
+    stimulus_source: Callable[[], str] | None = None
     _utterances: list[ProactiveUtterance] = field(default_factory=list)
     _suppressed: list[SuppressedUtterance] = field(default_factory=list)
 
@@ -66,15 +66,15 @@ class ProactiveLoop:
             # GiftValueEstimator を黙示的に与える (既定設定)
             self.gift_value = GiftValueEstimator()
 
-    def can_speak_now(self, now: Optional[datetime] = None) -> bool:
+    def can_speak_now(self, now: datetime | None = None) -> bool:
         """現在 Quiet Hours でないかつ category 'proactive' が許可されているか."""
         return self.quiet_hours.allow("proactive", now=now)
 
     def tick(
         self,
-        now: Optional[datetime] = None,
-        listener_state: Optional[dict] = None,
-    ) -> Optional[ProactiveUtterance]:
+        now: datetime | None = None,
+        listener_state: dict | None = None,
+    ) -> ProactiveUtterance | None:
         """1 tick 進める.
 
         - Quiet Hours 中なら None で即時抑止

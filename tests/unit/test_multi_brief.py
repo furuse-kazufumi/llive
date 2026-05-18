@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
 from llive.cognitive_mesh.brief_containers import BriefRef
