@@ -47,7 +47,11 @@ def test_tick_event_without_source_or_arg_raises(monkeypatch: pytest.MonkeyPatch
 def test_tick_event_with_arg_emits_utterance(monkeypatch: pytest.MonkeyPatch) -> None:
     loop = ProactiveLoop(quiet_hours=_active_guard(monkeypatch))
     event = ProactiveEvent(topic="build", note="ビルド完了", severity=0.9)
-    out = loop.tick_event(event=event, now=datetime(2026, 5, 19, 10, 0, 0))
+    out = loop.tick_event(
+        event=event,
+        now=datetime(2026, 5, 19, 10, 0, 0),
+        listener_state=_HIGH_VALUE_LISTENER,
+    )
     assert out is not None
     assert out.mode == "event"
     assert "build" in out.content
