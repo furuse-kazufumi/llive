@@ -183,9 +183,19 @@ class GrammarLayer:
         )
         self.add_snapshot(new_snapshot)
         proposal.status = GrammarChangeStatus.PROMOTED
+        if self.change_sink is not None:
+            try:
+                self.change_sink.on_promote(proposal, new_snapshot)
+            except Exception:  # noqa: BLE001
+                pass
         return new_snapshot
 
     def reject(self, proposal: ProposedChange) -> None:
         if proposal not in self._proposals:
             raise ValueError("proposal not tracked by this GrammarLayer")
         proposal.status = GrammarChangeStatus.REJECTED
+        if self.change_sink is not None:
+            try:
+                self.change_sink.on_reject(proposal)
+            except Exception:  # noqa: BLE001
+                pass
