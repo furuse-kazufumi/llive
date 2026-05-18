@@ -145,7 +145,10 @@ def main() -> int:
     # 4. Tonic Risk Monitor
     # ------------------------------------------------------------------
     _section("4. Tonic Risk Monitor (COG-MESH-03)")
-    monitor = TonicRiskMonitor(interrupt_threshold=0.7)
+    # ApprovalBus + RiskInterventionAdapter (M8.5) を配線
+    bus = ApprovalBus()
+    adapter = RiskInterventionAdapter(bus=bus)
+    monitor = TonicRiskMonitor(interrupt_threshold=0.7, on_alert=adapter)
     monitor.register(
         RiskModel(name="high_load", score_fn=lambda s: float(s.get("cpu_load", 0.0)))
     )
@@ -159,6 +162,13 @@ def main() -> int:
         print("  Result: no alert (below threshold or cooldown)")
     else:
         print(f"  ALERT: model={alert.model_name} score={alert.score:.2f}")
+        latest_req = adapter.latest_request()
+        if latest_req is not None:
+            print(
+                f"  -> ApprovalBus.intervene emitted: action={latest_req.action!r}, "
+                f"principal={latest_req.principal!r}"
+            )
+            print(f"     pending count = {len(bus.pending())}")
 
     # ------------------------------------------------------------------
     # 5. Title Recall Planner
