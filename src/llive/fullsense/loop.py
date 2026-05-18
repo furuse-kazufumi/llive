@@ -134,6 +134,7 @@ class FullSenseLoop:
         known_corpus: set[str] | None = None,
         sandbox: bool = True,
         llm_backend: LLMBackend | None = None,
+        stage_router: "StageBackendRouter | None" = None,
         debug: bool = False,
     ) -> None:
         if not sandbox:
@@ -155,6 +156,11 @@ class FullSenseLoop:
         # rule-based template path active. Explicit injection always wins over
         # env-driven resolution (see _resolve_backend_for_loop).
         self._llm_backend: LLMBackend | None = llm_backend
+        # Optional StageBackendRouter (case B Jamba hybrid from non-transformer
+        # ROADMAP). When set, `_resolve_backend_for_loop(stage=...)` will ask
+        # the router for a stage-specific backend before falling back to the
+        # legacy resolution. Explicit `llm_backend=` still wins.
+        self._stage_router = stage_router
         # debug=True attaches per-stage trace info to stages dict (LLM prompt,
         # raw response, wall time, backend name). Release-mode default (False)
         # has zero overhead — the trace dict is never built.
