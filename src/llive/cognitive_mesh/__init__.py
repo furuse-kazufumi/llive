@@ -26,6 +26,19 @@ Phase 7 で研究的 (01/09) を段階的に配備する。
 * `feedback_response_timing`
 """
 
+from llive.cognitive_mesh.gift_value import (  # COG-MESH-05
+    DEFAULT_THRESHOLD,
+    GiftValue,
+    GiftValueEstimator,
+)
+from llive.cognitive_mesh.proactive import ProactiveLoop, ProactiveUtterance  # COG-MESH-06
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard  # COG-MESH-07
 
-__all__ = ["QuietHoursGuard"]
+__all__ = [
+    "DEFAULT_THRESHOLD",
+    "GiftValue",
+    "GiftValueEstimator",
+    "ProactiveLoop",
+    "ProactiveUtterance",
+    "QuietHoursGuard",
+]
