@@ -352,20 +352,30 @@ class FullSenseLoop:
         text = (response.text or "").strip()
         return text or None
 
-    def _resolve_backend_for_loop(self) -> LLMBackend | None:
+    def _resolve_backend_for_loop(self, stage: str | None = None) -> LLMBackend | None:
         """On-prem-first backend resolver — see ``feedback_llive_measurement_purity``.
 
         Resolution order:
 
         1. Explicit ``llm_backend=`` kwarg passed to ``__init__`` (test injection,
            always honoured regardless of vendor).
-        2. ``$LLIVE_LLM_BACKEND`` env. ``mock`` or unset → template fallback.
+        2. **Stage-wise routing** (case B Jamba hybrid from non-transformer
+           ROADMAP): if ``stage`` is provided AND a ``StageBackendRouter`` was
+           injected at construction, ask the router. The router itself
+           falls back to ``get_default_backend()`` for unmapped stages, so
+           the env-driven path below still applies for the global default.
+        3. ``$LLIVE_LLM_BACKEND`` env. ``mock`` or unset → template fallback.
            ``ollama*`` is always allowed (on-prem). Other values
            (``anthropic`` / ``openai`` / ...) require ``LLIVE_ALLOW_CLOUD_BACKEND=1``
            to opt in; otherwise raise ``BackendConfigurationError``.
         """
         if self._llm_backend is not None:
             return self._llm_backend
+        if stage is not None and self._stage_router is not None:
+            mapping = self._stage_router.mapping
+            if stage.lower() in mapping:
+                return self._stage_router.for_stage(stage)
+            # Stage not explicitly mapped → fall through to env-driven default.
         name = os.environ.get("LLIVE_LLM_BACKEND", "").strip().lower()
         if not name or name == "mock":
             return None
