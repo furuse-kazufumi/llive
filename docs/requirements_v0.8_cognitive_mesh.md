@@ -428,7 +428,10 @@ STL 相当コンテナで設計する。
 
 次フェーズ (Phase 5/6/7 本実装):
 
-- [ ] M8.1 ProactiveLoop を llove F25 経由で TUI 表示、asciinema 録画
+- [/] M8.1 ProactiveLoop を llove F25 経由で TUI 表示、asciinema 録画 —
+      **llove 側 skeleton 配備済 (2026-05-19)** `views/llive/cognitive_mesh_panel.py` +
+      dispatch 拡張 (15 件テスト)。実 Timeline emit 配線 (llive ↔ llmesh
+      Timeline server) は次セッション、asciinema 録画は操作者待ち
 - [x] M8.2 IdleTraining ingest を Quarantined Memory (SEC-01) +
       Ed25519 (SEC-02) と統合 — **完了 2026-05-19** (quarantined_memory.py +
       idle_training.quarantine 注入対応、16 件テスト追加)
