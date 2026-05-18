@@ -128,6 +128,7 @@ __all__ = [
     "BriefRef",
     "BriefTree",
     "CoherenceEvent",
+    "CognitiveMeshTimelineEmitter",
     "ConsistencyViolation",
     "Ed25519Verifier",
     "EmbeddingSimilarityFn",
