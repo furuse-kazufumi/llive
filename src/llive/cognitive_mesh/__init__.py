@@ -70,6 +70,9 @@ from llive.cognitive_mesh.mesh_5w1h import (  # COG-MESH-10
     granularity_of,
     is_finer,
 )
+from llive.cognitive_mesh.mesh_annotator import (  # COG-MESH-10 完成配線
+    Mesh5W1HAnnotator,
+)
 from llive.cognitive_mesh.multi_brief import (  # COG-MESH-01
     CoherenceEvent,
     MultiBriefCoherenceManager,
