@@ -33,13 +33,13 @@
 - TonicRisk → ApprovalBus pending 数まで可視化
 - Quarantined Memory の signed/unsigned/verified ステータス並列表示
 
-### 残作業
+### 残作業 (continuation セッションで M8.8/M8.9 も完了)
 
 | Milestone | 内容 | 担当 |
 |---|---|---|
 | M8.1 | ProactiveLoop を llove F25 経由で TUI 表示 + asciinema 録画 | 操作者 + 別セッション |
-| M8.8 | MultiBriefCoherenceManager を networkx + 実 Brief 統合 | Phase 6 |
-| M8.9 | GrammarLayer を EVO-04/06/07 と接続、言語別 layer 設計 | Phase 7 |
+| ~~M8.8~~ | ~~MultiBriefCoherenceManager を networkx + 実 Brief 統合~~ | **完了 2026-05-19 (1448 → 1470 PASS)** |
+| ~~M8.9~~ | ~~GrammarLayer を EVO-04/06/07 と接続、言語別 layer 設計~~ | **完了 2026-05-19 (skeleton 配線まで)** |
 
 ### 次セッション候補
 
