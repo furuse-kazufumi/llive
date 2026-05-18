@@ -172,6 +172,7 @@ __all__ = [
     "UsageEvidence",
     "annotate_5w1h",
     "channel_name",
+    "default_embedding_similarity",
     "granularity_of",
     "is_finer",
     "proactive_to_event",
