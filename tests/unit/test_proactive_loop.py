@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: Apache-2.0
+"""Tests for ProactiveLoop skeleton (COG-MESH-06).
+
+Phase 5 で full 実装する予定だが、現時点で凍結する API 契約:
+
+1. QuietHoursGuard 必須依存 (None だと TypeError)
+2. can_speak_now() は QuietHoursGuard.allow('proactive') の薄ラッパ
+3. tick() は Quiet Hours 中なら None を返す (即時抑止)
+4. tick() は Active 中なら NotImplementedError を投げる (Phase 5 まで)
+5. latest_utterances(n) は空 list を返す (skeleton 状態)
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+import pytest
+
+from llive.cognitive_mesh.proactive import ProactiveLoop
+from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
+
+
+JST = timezone(timedelta(hours=9))
+
+
+def _at(hour: int) -> datetime:
+    return datetime(2026, 5, 18, hour, 0, tzinfo=JST)
+
+
+def _make_guard(monkeypatch: pytest.MonkeyPatch) -> QuietHoursGuard:
+    monkeypatch.setenv("LLIVE_TZ", "Asia/Tokyo")
+    monkeypatch.setenv("LLIVE_QUIET_HOURS_START", "22")
+    monkeypatch.setenv("LLIVE_QUIET_HOURS_END", "8")
+    monkeypatch.setenv("LLIVE_QUIET_HOURS_ENABLED", "1")
+    return QuietHoursGuard()
+
+
+def test_proactive_loop_requires_quiet_hours_guard() -> None:
+    """quiet_hours=None で構築すると TypeError (倫理は architecture の一部)."""
+    with pytest.raises(TypeError, match="QuietHoursGuard"):
+        ProactiveLoop(quiet_hours=None)  # type: ignore[arg-type]
+
+
+def test_can_speak_now_during_quiet_hours_returns_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    assert loop.can_speak_now(now=_at(2)) is False
+
+
+def test_can_speak_now_during_active_returns_true(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    assert loop.can_speak_now(now=_at(10)) is True
+
+
+def test_tick_during_quiet_hours_returns_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    # Quiet Hours 中は即時 None で抑止 (NotImplementedError 出ない)
+    assert loop.tick(now=_at(2)) is None
+
+
+def test_tick_during_active_raises_not_implemented(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Phase 5 まで tick は NotImplementedError を投げる契約."""
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    with pytest.raises(NotImplementedError, match="COG-MESH-06"):
+        loop.tick(now=_at(10))
+
+
+def test_latest_utterances_is_empty_in_skeleton(monkeypatch: pytest.MonkeyPatch) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    assert loop.latest_utterances(n=10) == []
+
+
+def test_start_and_stop_raise_not_implemented(monkeypatch: pytest.MonkeyPatch) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    with pytest.raises(NotImplementedError, match="Phase 5"):
+        loop.start()
+    with pytest.raises(NotImplementedError, match="Phase 5"):
+        loop.stop()
