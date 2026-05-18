@@ -45,6 +45,12 @@
 11. `feat(cognitive_mesh): COG-MESH-09 GrammarLayer skeleton — 全 10 件揃う`
 12. `feat(cognitive_mesh): demo CLI を統合版に拡張 (5 sub-system 連動)`
 13. `docs(glossary): COG-MESH 実装側用語 11 件追加`
+14. `docs(roadmap): Phase 8 マイルストーン状態を Skeleton 完了に更新` (M8.0-M8.9 の Skeleton/本実装 2 列表示)
+15. `docs(requirements): v0.8 §10 を進捗 checklist 化、Status を IMPLEMENTED-SKELETON へ`
+16. `docs(progress): 2026-05-19 早朝 — COG-MESH 全 10 件実装ラッシュ総括`
+17. `docs(readme): FullSense portal hub への参照を追加 + lldesign/lltrade を family に追加`
+18. `feat(scripts): cognitive_mesh demo 連続再生スクリプト (asciinema 録画用)` (`scripts/demo_cognitive_mesh.ps1`)
+19. `chore(cognitive_mesh): ruff check 完全パス (94 fixes + 8 unsafe-fixes)` (6921354) — Import sort / Unused / Optional→X|None / typing.Callable→collections.abc / StrEnum 移行 (UP042) / __all__ sort / 未使用変数削除。1379 PASS 維持、互換性影響なし
 
 ### 統合 demo (動きで魅せる、project_f25_demo_polish 整合)
 
