@@ -54,6 +54,12 @@ class ProactiveLoop:
     tick_interval_seconds: float = 60.0
     mode: Mode = "timer"
     stimulus_source: Callable[[], str] | None = None
+    # COG-MESH-06 curiosity モード: 4 層メモリの coverage map を返す callable.
+    # キー = memory layer name (semantic / episodic / structural / parameter)、
+    # 値 = カバレッジ (0..1, 1 が密)。低い layer に対する質問を発話化する。
+    coverage_source: Callable[[], dict[str, float]] | None = None
+    # curiosity モードの coverage 閾値 — これ以下なら「埋まっていない領域」
+    curiosity_threshold: float = 0.5
     _utterances: list[ProactiveUtterance] = field(default_factory=list)
     _suppressed: list[SuppressedUtterance] = field(default_factory=list)
 
