@@ -164,16 +164,21 @@ print(json.dumps(to_json(results), ensure_ascii=False, indent=2))
 
 ## 7. 案 A (Mamba 7B) を CPU only で試す場合の現実
 
-参考までに、Mamba 7B を CPU only で動かした場合の **想定値**
-(2026 早期の llama.cpp Mamba 対応版での実測ベース):
+参考までに、Mamba 7B を CPU only で動かした場合の **公開報告ベース想定値**
+(Reddit /r/LocalLLaMA / Hugging Face モデルカード / llama.cpp issue 等の
+報告から読み取った参考値、本リポジトリ側の実機ベンチは未取得):
 
 | サイズ | xs latency | s latency | 実用判定 |
 |---|---|---|---|
 | Codestral-Mamba 7B Q4 | ~30-60 秒 | ~3-5 分 | **非実用** |
 | Codestral-Mamba 7B Q3 | ~20-40 秒 | ~2-4 分 | △ |
 
-→ **GPU 無し環境で Mamba 7B はほぼ動かない**. RWKV 軽量モデルを優先する
-判断と整合.
+**注意 (honest disclosure)**: 上記は本リポジトリ側の実測ではない. 個別
+ハードウェアでは結果が大きくぶれるので、自分の PC で `llive.benchmark.low_spec.run_matrix`
+を回して xs/s を実測してから判断を確定してください.
+
+→ 公開情報を見る限り **GPU 無し環境で Mamba 7B はほぼ動かない**.
+RWKV 軽量モデルを優先する判断と整合.
 
 ---
 
