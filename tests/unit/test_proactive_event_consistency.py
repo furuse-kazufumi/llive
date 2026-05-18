@@ -86,7 +86,10 @@ def test_tick_event_picks_highest_severity_from_source(
         quiet_hours=_active_guard(monkeypatch),
         event_source=lambda: events,
     )
-    out = loop.tick_event(now=datetime(2026, 5, 19, 10, 0, 0))
+    listener = dict(_HIGH_VALUE_LISTENER, current_topic="high")
+    out = loop.tick_event(
+        now=datetime(2026, 5, 19, 10, 0, 0), listener_state=listener
+    )
     assert out is not None
     assert "high" in out.content
 
