@@ -409,6 +409,59 @@ rules dict + created_at。
 PROPOSED / PROMOTED / REJECTED。EVO-04/06/07 (自己進化) と Phase 7 で接続。
 - 実装: `llive.cognitive_mesh.grammar_layer.ProposedChange`
 
+### Risk Intervention Adapter
+`RiskAlert` を `ApprovalBus` への「介入要求」(action=`risk:intervene`) に
+変換する callable。`TonicRiskMonitor(on_alert=...)` に直接渡せる。
+M8.5 完成配線 (2026-05-19) で導入。
+- 実装: `llive.cognitive_mesh.intervention.RiskInterventionAdapter`
+- 関連: ApprovalBus / TonicRiskMonitor / RiskAlert
+
+### Embedding Similarity Fn
+`TitleRecallPlanner.similarity_fn` に注入できる cosine 類似度 callable。
+`MemoryEncoder` を使い、`[0, 1]` に clip、例外時 fail-closed (0.0)。
+M8.4 で導入。
+- 実装: `llive.cognitive_mesh.embedding_similarity.EmbeddingSimilarityFn`
+- 関連: TitleRecallPlanner / MemoryEncoder
+
+### BriefDeque Runner Bridge
+`BriefDeque` に積んだ Brief を `BriefRunner.submit()` に流す bridge。
+`enqueue` / `enqueue_front` / `submit_next` / `submit_all`。M8.3 で導入。
+- 実装: `llive.cognitive_mesh.brief_runner_bridge.BriefDequeRunnerBridge`
+- 関連: BriefDeque / BriefRunner
+
+### Mesh5W1H Annotator
+`annotate_5w1h(text)` の戻り値を `AnnotationEmitter` (`mesh.who` etc.)
+に流す adapter。target_layer 既定 `llove`。M8.6 で導入。
+- 実装: `llive.cognitive_mesh.mesh_annotator.Mesh5W1HAnnotator`
+- Annotation namespace: `mesh.who` / `mesh.what` / ... / `mesh.granularity`
+
+### Proactive Event
+`ProactiveLoop.tick_event()` で発話化される外部イベント。topic /
+payload / severity / note。M8.7 event モードで導入。
+- 実装: `llive.cognitive_mesh.proactive.ProactiveEvent`
+
+### Consistency Violation
+`ProactiveLoop.tick_consistency()` で発話化される整合性違反。layer_a /
+layer_b / conflict_type / evidence / severity。M8.7 consistency モードで導入。
+- 実装: `llive.cognitive_mesh.proactive.ConsistencyViolation`
+
+### Signed Payload
+ingest 用 payload + signer_id + Ed25519 署名。
+`Ed25519Verifier.verify()` で検証され、`QuarantinedMemory` の入口で
+auto-promote 判定に使われる。M8.2 SEC-02 で導入。
+- 実装: `llive.cognitive_mesh.quarantined_memory.SignedPayload`
+
+### Ed25519 Verifier
+`signer_id → 32 bytes 公開鍵` を保持し、`SignedPayload` を検証する。
+M8.2 SEC-02 で導入。
+- 実装: `llive.cognitive_mesh.quarantined_memory.Ed25519Verifier`
+
+### Quarantined Memory
+ingest payload の隔離 → 検証 → promote/reject のライフサイクル管理。
+M8.2 SEC-01 で導入。`IdleTrainingScheduler(quarantine=...)` で注入可。
+- 実装: `llive.cognitive_mesh.quarantined_memory.QuarantinedMemory`
+- 関連: SignedPayload / Ed25519Verifier / IdleTrainingScheduler
+
 ## 略語一覧
 
 | 略語 | 正式 |
