@@ -165,6 +165,7 @@ __all__ = [
     "RiskModel",
     "SignedPayload",
     "SuppressedUtterance",
+    "TimelineSink",
     "TitleRecallPlanner",
     "TonicRiskMonitor",
     "UsageEvidence",
@@ -172,4 +173,7 @@ __all__ = [
     "channel_name",
     "granularity_of",
     "is_finer",
+    "proactive_to_event",
+    "quarantine_to_event",
+    "risk_to_event",
 ]
