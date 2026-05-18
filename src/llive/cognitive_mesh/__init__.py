@@ -32,6 +32,9 @@ from llive.cognitive_mesh.brief_containers import (  # COG-MESH-08
     BriefRef,
     BriefTree,
 )
+from llive.cognitive_mesh.embedding_similarity import (  # COG-MESH-02 拡張
+    EmbeddingSimilarityFn,
+)
 from llive.cognitive_mesh.gift_value import (  # COG-MESH-05
     DEFAULT_THRESHOLD,
     GiftValue,
