@@ -387,6 +387,119 @@ class OllamaBackend(LLMBackend):
 
 
 # ---------------------------------------------------------------------------
+# Mamba / SSM backend (Phase 5 — non-transformer track)
+#
+# See docs/non-transformer/ROADMAP.md and COMPARISON.md for the rationale.
+# Skeleton-only: the actual SSM kernel is delegated to either:
+#   (a) llama.cpp >= b8864 + llama-server (OpenAI-compatible API path —
+#       in this case prefer LLIVE_LLM_BACKEND=openai with OPENAI_BASE_URL).
+#   (b) mamba-ssm Python package (in-process, requires CUDA).
+#
+# This class exists primarily as a *naming anchor* so callers can write
+# ``LLIVE_LLM_BACKEND=mamba`` declaratively and the resolver can pick the
+# right transport. The HTTP path is implemented now; the in-process path
+# (b) will land alongside the Phase 5 thought-factor→Δ bridge (case C in
+# ROADMAP.md).
+# ---------------------------------------------------------------------------
+
+
+class MambaBackend(LLMBackend):
+    """Mamba/SSM LLM backend — Phase 5 skeleton (case A from ROADMAP).
+
+    Transports (selected by ``transport`` arg or ``LLIVE_MAMBA_TRANSPORT`` env):
+
+    * ``"llama_cpp_server"`` (default) — point ``base_url`` at a running
+      ``llama-server`` instance serving a Mamba GGUF (e.g. Codestral-Mamba 7B).
+      Internally delegates to :class:`OpenAIBackend` so existing transport
+      code is reused; the only difference is the *name* (so audit logs +
+      analytics can distinguish a Mamba-backed run from a Transformer-backed
+      OpenAI-compatible run).
+    * ``"mamba_ssm"`` (planned, Phase 5) — in-process via mamba-ssm. Raises
+      ``NotImplementedError`` for now; the structure is documented so a
+      future PR can fill it in without changing the public surface.
+    """
+
+    name = "mamba"
+    DEFAULT_MODEL = "codestral-mamba"  # GGUF tag used by llama.cpp builds
+    DEFAULT_TRANSPORT = "llama_cpp_server"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        base_url: str | None = None,
+        *,
+        transport: str | None = None,
+    ) -> None:
+        self.transport = (
+            transport
+            or os.environ.get("LLIVE_MAMBA_TRANSPORT")
+            or self.DEFAULT_TRANSPORT
+        ).lower()
+        self.model = model or os.environ.get("LLIVE_MAMBA_MODEL") or self.DEFAULT_MODEL
+
+        if self.transport == "llama_cpp_server":
+            # Delegate to OpenAIBackend — llama-server speaks OpenAI-compatible
+            # HTTP, and Mamba GGUFs work via the same /v1/chat/completions
+            # path. Surface the inner backend so tests can mock through it.
+            self._inner: LLMBackend | None = OpenAIBackend(
+                model=self.model,
+                base_url=base_url,
+            )
+        elif self.transport == "mamba_ssm":
+            # In-process Mamba via mamba-ssm — Phase 5 (thought-factor→Δ
+            # bridge implementation). Deferred to keep the dependency optional.
+            self._inner = None
+        else:
+            raise ValueError(
+                f"unknown MambaBackend transport: {self.transport!r}; "
+                "use 'llama_cpp_server' or 'mamba_ssm'"
+            )
+
+    @property
+    def supports_vlm(self) -> bool:
+        # Pure Mamba LLMs today are text-only; VLM Mamba variants (Sigma etc.)
+        # will be exposed through dedicated subclasses in Phase 5.1.
+        return False
+
+    @property
+    def supports_coding(self) -> bool:
+        # Codestral-Mamba ships as a coding-specialised model — default True.
+        return True
+
+    def generate(self, request: GenerateRequest) -> GenerateResponse:
+        if self.transport == "mamba_ssm" or self._inner is None:
+            raise NotImplementedError(
+                "MambaBackend transport='mamba_ssm' is not implemented yet. "
+                "It lands with the Phase 5 thought-factor→Δ bridge "
+                "(see docs/non-transformer/ROADMAP.md case C). For now, "
+                "use transport='llama_cpp_server' (default) and a running "
+                "llama-server serving a Mamba GGUF model."
+            )
+        # Force the model name onto the request so the underlying OpenAI
+        # transport sends the Mamba model id rather than its own default.
+        coerced = GenerateRequest(
+            prompt=request.prompt,
+            system=request.system,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            stop=list(request.stop),
+            model=request.model or self.model,
+            images=list(request.images),
+        )
+        resp = self._inner.generate(coerced)
+        # Rewrite the backend tag so downstream analytics see "mamba" not
+        # "openai" — important for the non-transformer benchmark separation
+        # in feedback_llive_measurement_purity / feedback_benchmark_progressive_tokens.
+        return GenerateResponse(
+            text=resp.text,
+            finish_reason=resp.finish_reason,
+            backend=self.name,
+            model=resp.model,
+            raw=dict(resp.raw, inner_backend=resp.backend),
+        )
+
+
+# ---------------------------------------------------------------------------
 # Default backend resolution
 # ---------------------------------------------------------------------------
 
@@ -395,7 +508,7 @@ def resolve_backend(name: str | None = None) -> LLMBackend:
     """Return a backend by explicit name, env var, or auto-detected fallback.
 
     Order:
-        1. ``name`` arg (one of: mock / anthropic / openai / ollama).
+        1. ``name`` arg (one of: mock / anthropic / openai / ollama / mamba).
         2. ``$LLIVE_LLM_BACKEND`` env var.
         3. ``$ANTHROPIC_API_KEY`` set → anthropic.
         4. ``$OPENAI_API_KEY`` set → openai.
@@ -424,6 +537,8 @@ def resolve_backend(name: str | None = None) -> LLMBackend:
         return OpenAIBackend()
     if candidate == "ollama":
         return OllamaBackend()
+    if candidate == "mamba":
+        return MambaBackend()
     raise ValueError(f"unknown LLM backend: {candidate!r}")
 
 
