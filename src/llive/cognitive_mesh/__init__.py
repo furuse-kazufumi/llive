@@ -137,6 +137,8 @@ __all__ = [
     "ProactiveLoop",
     "ProactiveUtterance",
     "ProposedChange",
+    "QuarantineEntry",
+    "QuarantinedMemory",
     "QuietHoursGuard",
     "RecallReport",
     "RecallStatus",
