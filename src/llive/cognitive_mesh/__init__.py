@@ -101,6 +101,14 @@ from llive.cognitive_mesh.title_recall import (  # COG-MESH-02
     RecallStatus,
     TitleRecallPlanner,
 )
+from llive.cognitive_mesh.timeline_emitter import (  # M8.1 Timeline bridge
+    CognitiveMeshTimelineEmitter,
+    InMemoryTimelineSink,
+    TimelineSink,
+    proactive_to_event,
+    quarantine_to_event,
+    risk_to_event,
+)
 from llive.cognitive_mesh.tonic_risk import (  # COG-MESH-03
     RiskAlert,
     RiskModel,
