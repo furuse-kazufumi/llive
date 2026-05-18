@@ -56,11 +56,18 @@ def _section(title: str) -> None:
 
 
 def main() -> int:
+    # Windows cp932 でも動くよう、stdout を UTF-8 に強制
+    try:
+        import sys
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001 — best-effort
+        pass
+
     guard = QuietHoursGuard()
     cfg = guard._config  # noqa: SLF001
 
     print("=" * 60)
-    print("llive Cognitive Mesh — Integrated Demo (COG-MESH-01〜10)")
+    print("llive Cognitive Mesh - Integrated Demo (COG-MESH-01..10)")
     print("=" * 60)
 
     # ------------------------------------------------------------------
