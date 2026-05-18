@@ -147,8 +147,8 @@ class QuietHoursGuard:
         else:
             now = now.astimezone(cfg.tz)
         today = now.replace(minute=0, second=0, microsecond=0)
-        start_today = today.replace(hour=cfg.start_hour)
         end_today = today.replace(hour=cfg.end_hour)
+        _ = end_today  # active=end_today.. の計算下流で使うため保持
 
         if self.in_quiet_hours(now):
             # Active は次の END から次の START まで
