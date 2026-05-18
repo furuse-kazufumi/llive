@@ -411,18 +411,42 @@ STL 相当コンテナで設計する。
 
 ---
 
-## 10. 次アクション (本要件導入後の運用)
+## 10. 次アクション (本要件導入後の運用) — 進捗 checklist
 
-- `architecture.md` の章末に「v0.8 cognitive mesh 拡張ポイント」短セクションを追記
-- `roadmap.md` の Phase 5 / 6 / 7 マイルストーンに COG-MESH-XX を割り付け
-- `glossary.md` に Proactive / Quiet Hours / Gift Value / Foreshadow / Mesh5W1H 用語を追加
-- `tests/` 配下に COG-MESH-07 (QuietHoursGuard) の単体テスト雛形を先行配備
-  (実装より先、`feedback_response_timing` の 70 点で出す)
+要件導入後の運用 (2026-05-18 → 2026-05-19 早朝で達成):
+
+- [x] `architecture.md` の章末に「v0.8 cognitive mesh 拡張ポイント」短セクションを追記 — **§8 として配備済**
+- [x] `roadmap.md` の Phase 5 / 6 / 7 マイルストーンに COG-MESH-XX を割り付け — **Phase 8 として CABT と双子配備、Skeleton 完了状態反映済**
+- [x] `glossary.md` に Proactive / Quiet Hours / Gift Value / Foreshadow / Mesh5W1H 用語を追加 — **24 用語 + 5 略語追加済**
+- [x] `tests/` 配下に COG-MESH-07 (QuietHoursGuard) の単体テスト雛形を先行配備 — **11 シナリオで先行配備、その後本実装で全 PASS 化**
+
+追加で達成 (2026-05-19 早朝の実装ラッシュ):
+
+- [x] **COG-MESH-01〜10 全 10 件の最小実装** (107 新規テスト、1379 PASS、regress 無し)
+- [x] 統合 demo CLI (`py -3.11 -m llive.cognitive_mesh.demo` で 5 サブシステム連動)
+- [x] `__init__.py` で公開 API を整理 (`__all__` に 30+ シンボル)
+
+次フェーズ (Phase 5/6/7 本実装):
+
+- [ ] M8.1 ProactiveLoop を llove F25 経由で TUI 表示、asciinema 録画
+- [ ] M8.2 IdleTraining ingest を Quarantined Memory (SEC-01) +
+      Ed25519 (SEC-02) と統合
+- [ ] M8.3 BriefDeque/Map/Tree を実 Brief / BriefRunner と接続
+- [ ] M8.4 TitleRecall を semantic similarity (token match → embedding) で本実装
+- [ ] M8.5 TonicRiskMonitor を threading 化 + ApprovalBus.intervene 配線
+- [ ] M8.6 Mesh5W1H を実 Annotation Channel と統合
+- [ ] M8.7 ProactiveLoop に event / curiosity / consistency モード追加
+- [ ] M8.8 MultiBriefCoherenceManager を networkx + 実 Brief 統合
+- [ ] M8.9 GrammarLayer を EVO-04/06/07 と接続、言語別 layer 設計
 
 ---
 
-**Status:** **DRAFT — 2026-05-18, v0.8 として要件追加。Phase 5 着手前に
-レビューと優先順位確定が必要**
+**Status:** **IMPLEMENTED-SKELETON — 2026-05-19, v0.8 全 10 件の skeleton
+完了。Phase 5/6/7 で本実装フェーズに移行。**
+
+更新履歴:
+- 2026-05-18: 要件追加 (DRAFT)
+- 2026-05-19 早朝: COG-MESH-01〜10 全件 skeleton 完了 (IMPLEMENTED-SKELETON)
 
 ---
 
