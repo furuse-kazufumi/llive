@@ -445,18 +445,23 @@ STL 相当コンテナで設計する。
 - [x] M8.7 ProactiveLoop に event / curiosity / consistency モード追加
       — **完了 2026-05-19** (ProactiveEvent / ConsistencyViolation +
       tick_event / tick_consistency + _on_timer 分岐、12 件テスト)
-- [ ] M8.8 MultiBriefCoherenceManager を networkx + 実 Brief 統合
-- [ ] M8.9 GrammarLayer を EVO-04/06/07 と接続、言語別 layer 設計
+- [x] M8.8 MultiBriefCoherenceManager を networkx + 実 Brief 統合 —
+      **完了 2026-05-19** (自前 BFS / DFS / centrality で先行、networkx
+      は将来 swap 候補。`register_brief()` で実 Brief 統合、14 件テスト)
+- [x] M8.9 GrammarLayer を EVO-04/06/07 と接続、言語別 layer 設計 —
+      **完了 2026-05-19** (GrammarChangeSink Protocol + MultilingualGrammar
+      で ja/en/zh/ko 自動 bootstrap、8 件テスト。EVO への実配線は Phase 7)
 
 ---
 
-**Status:** **IMPLEMENTED-FULL — 2026-05-19, M8.2〜M8.7 本実装完了。
-残るは M8.1 (llove TUI 統合) と M8.8 (networkx 化) と M8.9 (GrammarLayer 接続)。**
+**Status:** **IMPLEMENTED-FULL — 2026-05-19, M8.2〜M8.9 本実装完了。
+残るは M8.1 (llove TUI 統合) のみ — llove F25 連携基盤待ち。**
 
 更新履歴:
 - 2026-05-18: 要件追加 (DRAFT)
 - 2026-05-19 早朝: COG-MESH-01〜10 全件 skeleton 完了 (IMPLEMENTED-SKELETON)
-- 2026-05-19 朝: M8.2〜M8.7 本実装完了 (IMPLEMENTED-FULL)、1393 → 1448 PASS
+- 2026-05-19 朝: M8.2〜M8.7 本実装完了、1393 → 1448 PASS
+- 2026-05-19 昼前: M8.8 + M8.9 本実装完了、1448 → 1470 PASS (IMPLEMENTED-FULL)
 
 ---
 
