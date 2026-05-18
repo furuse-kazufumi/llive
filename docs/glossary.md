@@ -462,6 +462,30 @@ M8.2 SEC-01 で導入。`IdleTrainingScheduler(quarantine=...)` で注入可。
 - 実装: `llive.cognitive_mesh.quarantined_memory.QuarantinedMemory`
 - 関連: SignedPayload / Ed25519Verifier / IdleTrainingScheduler
 
+### Multilingual Grammar
+ja / en / zh / ko の 4 言語で v_0 GrammarSnapshot を自動 bootstrap
+する GrammarLayer ファサード。M8.9 で導入。`propose` /
+`promote` / `reject` の短縮 helper、Phase 7 で EVO 接続予定。
+- 実装: `llive.cognitive_mesh.grammar_layer.MultilingualGrammar`
+- 既定言語定数: `DEFAULT_LANGUAGES = ("ja", "en", "zh", "ko")`
+
+### Grammar Change Sink
+GrammarLayer の `propose` / `promote` / `reject` を観測する Protocol。
+M8.9 で導入。Phase 7 で EVO-04/06/07 (Self-evolution) の change saga
+配線用 hook。例外は握り潰し本処理を止めない。
+- 実装: `llive.cognitive_mesh.grammar_layer.GrammarChangeSink`
+- リファレンス: `InMemoryGrammarChangeSink` (テスト / 監査用)
+
+### Multi-Brief Graph Analytics
+MultiBriefCoherenceManager の coherence_graph に対する解析 API。M8.8 で導入。
+- `shortest_path(src, dst) -> list[str] | None` — BFS で重み無視最短パス
+- `connected_components() -> list[set[str]]` — 無向連結成分 (DFS)
+- `centrality_scores() -> dict[str, float]` — 重み付き out-degree
+  (合計 1.0 正規化), networkx 化は将来 swap 候補
+- `top_central_briefs(k=3)` — centrality 上位 k 件
+- `register_brief(Brief)` / `get_brief(brief_id)` — 実 Brief 統合
+- 実装: `llive.cognitive_mesh.multi_brief.MultiBriefCoherenceManager`
+
 ## 略語一覧
 
 | 略語 | 正式 |
