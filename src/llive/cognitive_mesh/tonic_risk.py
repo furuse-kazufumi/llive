@@ -54,8 +54,14 @@ class TonicRiskMonitor:
     interrupt_threshold: float = 0.7
     cooldown: timedelta = timedelta(seconds=30)
     on_alert: Callable[[RiskAlert], None] | None = None
+    state_source: Callable[[], dict[str, Any]] | None = None
+    tick_interval_seconds: float = 0.5  # 既定 500ms (小脳的高速 tick)
     _models: dict[str, RiskModel] = field(default_factory=dict)
     _alerts: list[RiskAlert] = field(default_factory=list)
+    _thread: threading.Thread | None = field(default=None, init=False, repr=False)
+    _stopped: threading.Event = field(default_factory=threading.Event, init=False, repr=False)
+    _running: bool = field(default=False, init=False, repr=False)
+    _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
 
     def register(self, model: RiskModel) -> None:
         if model.name in self._models:
