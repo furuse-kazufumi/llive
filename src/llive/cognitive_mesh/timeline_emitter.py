@@ -220,6 +220,7 @@ __all__ = [
     "CognitiveMeshTimelineEmitter",
     "InMemoryTimelineSink",
     "TimelineSink",
+    "brief_result_to_event",
     "proactive_to_event",
     "quarantine_to_event",
     "risk_to_event",
