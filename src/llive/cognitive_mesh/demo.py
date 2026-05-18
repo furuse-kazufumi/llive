@@ -304,11 +304,43 @@ def main() -> int:
         print(f"  Bridge demo skipped: {exc}")
 
     # ------------------------------------------------------------------
+    # 10. Timeline emit bridge (M8.1 skeleton) — llive ↔ llmesh ↔ llove 契約
+    # ------------------------------------------------------------------
+    _section("10. Timeline Emit Bridge (M8.1 skeleton: llive → llmesh → llove)")
+    from llive.cognitive_mesh.timeline_emitter import (
+        CognitiveMeshTimelineEmitter,
+        InMemoryTimelineSink,
+    )
+    sink = InMemoryTimelineSink()
+    emitter = CognitiveMeshTimelineEmitter(sink=sink, task_id="demo", node_id="local")
+    # 各サブシステムの emit を Timeline event dict に変換
+    if utterance is not None:
+        emitter.emit_proactive(utterance)
+    if alert is not None:
+        emitter.emit_risk(alert)
+    for entry in qmem.iter_all():
+        emitter.emit_quarantine(entry)
+    print(f"  Emitted: {len(emitter.buffer)} event(s) to InMemoryTimelineSink")
+    print(f"  Sink received: {len(sink.received)} event(s) (schema = llove CogEntry 互換)")
+    for ev in emitter.buffer:
+        md = ev["metadata"]
+        # 各 event の最小サマリ (llove CogEntry.from_event() が読む key を覗き見)
+        et = ev["event_type"]
+        if et == "cog_proactive_utterance":
+            tail = f"mode={md['mode']!r} gv={md['gift_value']:.2f}"
+        elif et == "cog_risk_alert":
+            tail = f"model={md['model_name']!r} score={md['score']:.2f}"
+        else:
+            tail = f"signer={md.get('signer_id')!r} verified={md['verified']}"
+        print(f"    - {et}  {tail}")
+    print("  実 HTTP/MCP push 配線は Phase 6 (llive/clients/llmesh_timeline.py)")
+
+    # ------------------------------------------------------------------
     # まとめ
     # ------------------------------------------------------------------
     _section("Summary")
     print("  See requirements_v0.8_cognitive_mesh.md for the architecture.")
-    print("  M8.2/3/4/5/6/7 本実装完了 (2026-05-19).")
+    print("  M8.2/3/4/5/6/7/8/9 本実装完了 + M8.1 skeleton 配備済 (2026-05-19).")
     print("  asciinema 録画推奨: Active (10:00) / Quiet (02:00) 切替で動きを確認.")
     return 0
 
