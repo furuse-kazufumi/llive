@@ -134,7 +134,10 @@ def test_tick_consistency_with_arg_emits_utterance(
         evidence="A says 'red', B says 'blue'",
         severity=0.7,
     )
-    out = loop.tick_consistency(violation=v, now=datetime(2026, 5, 19, 10, 0, 0))
+    listener = dict(_HIGH_VALUE_LISTENER, current_topic="semantic")
+    out = loop.tick_consistency(
+        violation=v, now=datetime(2026, 5, 19, 10, 0, 0), listener_state=listener
+    )
     assert out is not None
     assert out.mode == "consistency"
     assert "semantic" in out.content
