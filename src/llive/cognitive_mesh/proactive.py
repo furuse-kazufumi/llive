@@ -154,7 +154,7 @@ class ProactiveLoop:
         layer, cov = thin[0]
         candidate = (
             f"{layer} memory のカバレッジが {cov:.2f} と薄いようです。"
-            f"最近この領域に新しい知見はありましたか？"
+            f"最近この領域に新しい知見はありましたか?"
         )
         gv = self.gift_value.estimate(
             candidate_utterance=candidate,
