@@ -37,6 +37,13 @@ from llive.cognitive_mesh.gift_value import (  # COG-MESH-05
     GiftValue,
     GiftValueEstimator,
 )
+from llive.cognitive_mesh.grammar_layer import (  # COG-MESH-09
+    GrammarChangeStatus,
+    GrammarLayer,
+    GrammarSnapshot,
+    ProposedChange,
+    UsageEvidence,
+)
 from llive.cognitive_mesh.idle_training import (  # COG-MESH-04
     IdleTrainingScheduler,
     InfoSource,
