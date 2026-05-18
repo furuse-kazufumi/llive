@@ -241,3 +241,57 @@ mindmap
       Bridge
       PubSub
 ```
+
+## 8. v0.8 拡張ポイント — Cognitive Mesh / Proactive Loop / Quiet Hours
+
+要件詳細: [`requirements_v0.8_cognitive_mesh.md`](requirements_v0.8_cognitive_mesh.md)
+(`.planning/REQUIREMENTS.md` v0.8b 群と相互参照、CABT とは直交)。
+
+本書既存の 8 層 / 7 セクションに対し、v0.8 では **FullSenseLoop の周囲**に
+以下のコンポーネントを追加する。Loop 内部 (推論パイプライン本体) は変えず、
+**周辺 trigger / gate / 並列容器** を増やす。
+
+```mermaid
+flowchart LR
+  subgraph proactive [v0.8 Proactive Layer]
+    PL[ProactiveLoop<br/>COG-MESH-06] -->|timer / event / curiosity / consistency| FSL[(FullSenseLoop<br/>既存)]
+    QH[QuietHoursGuard<br/>COG-MESH-07] -.gate.-> PL
+    GVE[GiftValueEstimator<br/>COG-MESH-05] -.gate.-> PL
+    IDLE[IdleTrainingScheduler<br/>COG-MESH-04] -->|stimulus| FSL
+    QH -.gate.-> IDLE
+  end
+  subgraph mesh [v0.8 Mesh Layer]
+    MBC[MultiBriefCoherenceManager<br/>COG-MESH-01] --> BD[BriefDeque / BriefMap<br/>COG-MESH-08]
+    TR[TitleRecallPlanner<br/>COG-MESH-02] -->|setup/closure| FSL
+    M5[Mesh5W1H + Granularity<br/>COG-MESH-10] -->|annotation namespace| FSL
+  end
+  subgraph safety [v0.8 Safety Layer]
+    TRM[TonicRiskMonitor<br/>COG-MESH-03] -.intervene.-> AB[ApprovalBus<br/>既存]
+    AB -.gate.-> FSL
+  end
+  subgraph evolve [v0.8 Evolution Layer]
+    GL[GrammarLayer<br/>COG-MESH-09] -.proposal.-> EVO[Self-evolution<br/>EVO-04/06/07 既存]
+  end
+  classDef new fill:#fef3c7,stroke:#f59e0b,color:#78350f;
+  class PL,QH,GVE,IDLE,MBC,BD,TR,M5,TRM,GL new;
+```
+
+| 拡張軸 | 既存層への接続 | 新規 namespace |
+|---|---|---|
+| Proactive (能動性) | L1 Interface (Facade) に proactive entry を追加、Bus PubSub に `proactive.*` channel | `cog.proactive`, `cog.suppressed_utterance` |
+| Mesh (並列性 + 物語性) | L4 Container (Composite) を Brief 単位で多重化、L7 Observability に recall_rate metric | `cog.cross_brief_impact`, `cog.foreshadow_*`, `mesh.{who,what,when,where,why,how}` |
+| Safety (常時 KYT) | L8 HITL (Command) に intervene を能動 emit | `cog.risk_alert` |
+| Evolution (文法層) | L6 Evolution (State + Saga) に GrammarSnapshot を State として登録 | `evo.grammar.*` |
+
+### 設計原則 (本章特有)
+
+- **倫理は architecture の一部**: `QuietHoursGuard` は `ProactiveLoop` の
+  必須依存。後付けの policy ではなく、コンストラクタで注入されないと起動失敗
+- **fail-closed in Quiet Hours**: 時刻取得 / TZ / env 設定欠落のいずれでも
+  自発行動は抑止側に倒す
+- **on-prem 完結**: 能動発話 content 生成は on-prem LLM 経由。cloud LLM 経由は
+  明示的 opt-in
+- **HITL ゲート維持**: 能動発話は ApprovalBus を迂回しない
+- **エッジ展開を意識**: `TonicRiskMonitor` は別チップ実装も視野
+  (`project_llmesh_neuro_long_term` と合流)
+
