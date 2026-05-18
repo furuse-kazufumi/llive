@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
+    from llive.brief.types import BriefResult
     from llive.cognitive_mesh.proactive import ProactiveUtterance
     from llive.cognitive_mesh.quarantined_memory import QuarantineEntry
     from llive.cognitive_mesh.tonic_risk import RiskAlert
