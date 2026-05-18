@@ -116,6 +116,7 @@ __all__ = [
     "BriefTree",
     "CoherenceEvent",
     "ConsistencyViolation",
+    "Ed25519Verifier",
     "EmbeddingSimilarityFn",
     "Foreshadow",
     "GiftValue",
