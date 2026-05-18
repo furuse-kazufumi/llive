@@ -145,6 +145,7 @@ __all__ = [
     "RiskAlert",
     "RiskInterventionAdapter",
     "RiskModel",
+    "SignedPayload",
     "SuppressedUtterance",
     "TitleRecallPlanner",
     "TonicRiskMonitor",
