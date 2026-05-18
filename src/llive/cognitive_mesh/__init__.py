@@ -44,9 +44,13 @@ from llive.cognitive_mesh.gift_value import (  # COG-MESH-05
     GiftValueEstimator,
 )
 from llive.cognitive_mesh.grammar_layer import (  # COG-MESH-09
+    DEFAULT_LANGUAGES,
+    GrammarChangeSink,
     GrammarChangeStatus,
     GrammarLayer,
     GrammarSnapshot,
+    InMemoryGrammarChangeSink,
+    MultilingualGrammar,
     ProposedChange,
     UsageEvidence,
 )
