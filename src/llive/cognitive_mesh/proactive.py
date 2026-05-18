@@ -10,6 +10,8 @@ NotImplementedError を投げる "ready-to-implement" 状態。
 
 from __future__ import annotations
 
+import logging
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -17,6 +19,8 @@ from typing import Literal
 
 from llive.cognitive_mesh.gift_value import GiftValueEstimator
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
+
+_logger = logging.getLogger("llive.cognitive_mesh.proactive")
 
 Mode = Literal["timer", "event", "curiosity", "consistency"]
 
