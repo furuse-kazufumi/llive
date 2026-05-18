@@ -380,6 +380,37 @@ class FullSenseLoop:
         text = (response.text or "").strip()
         return text or None
 
+    def _build_factor_snapshot(
+        self,
+        *,
+        stim: Stimulus,
+        salience: dict[str, Any],
+        curiosity: dict[str, Any],
+        thought: Thought,
+    ) -> "FactorSnapshot":
+        """Construct a FactorSnapshot from current stage data (case C skeleton).
+
+        Mapping (first pass — subject to refinement once factors get
+        explicit per-stage computations):
+
+        * ``exploration``   ← curiosity novelty score (0..1)
+        * ``uncertainty``   ← 1 - thought.confidence
+        * ``integrate``     ← 1.0 if thought.triz_principles else 0.5
+        * ``structurize``   ← min(1.0, 0.3 + 0.7 * stim.surprise) — surprise
+                              triggers structuring
+        * other 6 factors   ← 0.5 (neutral) — placeholders for future stages
+        """
+        # Lazy-import to keep top-level imports light when factor_hook is unused.
+        from llive.llm.factor_hook import FactorSnapshot
+
+        values: dict[str, float] = {
+            "exploration": float(curiosity.get("score", 0.0)),
+            "uncertainty": max(0.0, 1.0 - float(thought.confidence)),
+            "integrate": 1.0 if thought.triz_principles else 0.5,
+            "structurize": min(1.0, 0.3 + 0.7 * float(getattr(stim, "surprise", 0.0))),
+        }
+        return FactorSnapshot(values=values, stage="thought")
+
     def _resolve_backend_for_loop(self, stage: str | None = None) -> LLMBackend | None:
         """On-prem-first backend resolver — see ``feedback_llive_measurement_purity``.
 
