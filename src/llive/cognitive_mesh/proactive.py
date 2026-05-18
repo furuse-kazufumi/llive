@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Literal, Optional
 
+from llive.cognitive_mesh.gift_value import GiftValueEstimator
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard
 
 
@@ -27,47 +28,101 @@ class ProactiveUtterance:
     content: str
     mode: Mode
     timestamp: datetime
-    gift_value: float = 0.0  # COG-MESH-05 GiftValueEstimator の出力
+    gift_value: float = 0.0  # COG-MESH-05 GiftValueEstimator の aggregate
+
+
+@dataclass
+class SuppressedUtterance:
+    """発話 gate で抑制された候補発話 (cog.suppressed_utterance Annotation 相当)."""
+
+    content: str
+    reason: str  # "quiet_hours" / "gift_value_below_threshold" / "cooldown" 等
+    gift_value: float
+    timestamp: datetime
 
 
 @dataclass
 class ProactiveLoop:
     """FullSenseLoop を自発的に起動する周期/イベント駆動ループ.
 
-    Phase 5 で full 実装。今は Quiet Hours gate だけ接続。
+    Phase 5 で full 実装。現状は Quiet Hours gate + GiftValueEstimator
+    gate を備え、synthetic Stimulus 生成器を差し替えれば tick が回る。
     """
 
     quiet_hours: QuietHoursGuard
+    gift_value: Optional[GiftValueEstimator] = None
     tick_interval_seconds: float = 60.0
     mode: Mode = "timer"
+    stimulus_source: Optional[Callable[[], str]] = None
     _utterances: list[ProactiveUtterance] = field(default_factory=list)
+    _suppressed: list[SuppressedUtterance] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.quiet_hours is None:
             raise TypeError(
                 "ProactiveLoop requires a QuietHoursGuard (倫理は architecture の一部)"
             )
+        if self.gift_value is None:
+            # GiftValueEstimator を黙示的に与える (既定設定)
+            self.gift_value = GiftValueEstimator()
 
     def can_speak_now(self, now: Optional[datetime] = None) -> bool:
         """現在 Quiet Hours でないかつ category 'proactive' が許可されているか."""
         return self.quiet_hours.allow("proactive", now=now)
 
-    def tick(self, now: Optional[datetime] = None) -> Optional[ProactiveUtterance]:
-        """1 tick 進める。Phase 5 で実装予定。
+    def tick(
+        self,
+        now: Optional[datetime] = None,
+        listener_state: Optional[dict] = None,
+    ) -> Optional[ProactiveUtterance]:
+        """1 tick 進める.
 
-        - Quiet Hours 中なら何もしない (None を返す)
-        - timer mode: synthetic Stimulus を作成 → FullSenseLoop.process →
-          GiftValueEstimator → utterance を返す or 黙る
+        - Quiet Hours 中なら None で即時抑止
+        - stimulus_source 未設定なら NotImplementedError (timer 以外の mode)
+        - GiftValueEstimator で gate、閾値未満は抑制履歴に記録して None
+        - 閾値以上で ProactiveUtterance を作成、commit() で履歴に反映
         """
         if not self.can_speak_now(now=now):
             return None
-        raise NotImplementedError(
-            "ProactiveLoop.tick is COG-MESH-06 Phase 5 milestone — see "
-            "requirements_v0.8_cognitive_mesh.md M8.1 (Proactive demo timer)"
+        if self.stimulus_source is None:
+            raise NotImplementedError(
+                "ProactiveLoop.tick: stimulus_source 未設定。Phase 5 M8.1 で "
+                "synthetic Stimulus generator を注入する設計 (現時点は demo "
+                "目的で外部から渡す)"
+            )
+        candidate = self.stimulus_source()
+        gv = self.gift_value.estimate(
+            candidate_utterance=candidate,
+            listener_state=listener_state,
+            now=now,
         )
+        timestamp = now or datetime.now()
+        if not gv.should_speak:
+            self._suppressed.append(
+                SuppressedUtterance(
+                    content=candidate,
+                    reason="gift_value_below_threshold",
+                    gift_value=gv.aggregate,
+                    timestamp=timestamp,
+                )
+            )
+            return None
+        utterance = ProactiveUtterance(
+            content=candidate,
+            mode=self.mode,
+            timestamp=timestamp,
+            gift_value=gv.aggregate,
+        )
+        self._utterances.append(utterance)
+        self.gift_value.commit(candidate, now=timestamp)
+        return utterance
 
     def latest_utterances(self, n: int = 10) -> list[ProactiveUtterance]:
         return self._utterances[-n:]
+
+    def latest_suppressed(self, n: int = 10) -> list[SuppressedUtterance]:
+        """抑制された候補発話の履歴 (`cog.suppressed_utterance` Annotation 相当)."""
+        return self._suppressed[-n:]
 
     def start(self) -> None:
         """周期 tick を開始 (Phase 5 で threading.Timer / asyncio.Task)."""
