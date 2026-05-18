@@ -6,6 +6,42 @@
 
 ---
 
+## 2026-05-19 (昼前) — M8.8 + M8.9 本実装 (continuation セッション)
+
+朝の M8.2〜M8.7 着地に続き、同セッションで残りの自律実装可能タスク
+M8.8 / M8.9 を本実装。1448 → **1470 PASS** (+22)。
+
+| Milestone | 内容 | 新規 / 修正 | テスト |
+|---|---|---|---|
+| M8.8 | MultiBriefCoherenceManager graph analytics + 実 Brief 統合 | `multi_brief.py` 拡張: shortest_path / connected_components / centrality_scores / top_central_briefs / register_brief / get_brief | 14 |
+| M8.9 | GrammarLayer ↔ EVO 接続 + 言語別 layer | `grammar_layer.py` 拡張: GrammarChangeSink Protocol / change_sink 注入 / MultilingualGrammar (ja/en/zh/ko bootstrap) / InMemoryGrammarChangeSink | 8 |
+
+設計判断:
+
+- **networkx は将来 swap 候補に** — pyproject に依存追加せず、自前 BFS /
+  DFS / weighted out-degree centrality で先行。API シグネチャは networkx
+  と同等に保つ (`shortest_path(src, dst)`, `centrality_scores() -> dict`)
+- **GrammarChangeSink は Protocol** — 例外は握り潰して本処理を止めない
+  (Phase 7 で EVO-04/06/07 の change saga と配線予定)
+- **言語別 layer は preset (`DEFAULT_LANGUAGES`)** — `MultilingualGrammar`
+  は ja/en/zh/ko を v_0 で自動 bootstrap、未登録言語の propose は KeyError
+
+### 残作業 (継続)
+
+- **M8.1**: ProactiveLoop を llove F25 経由で TUI 表示 + asciinema 録画
+  (llove 側 + 操作者) — agent 単独で進められるのは llove F25 連携の
+  状態次第。次に探索する候補。
+
+### 検証
+
+```bash
+cd D:/projects/llive
+py -3.11 -m pytest tests/unit -q
+# 1470 passed
+```
+
+---
+
 ## 2026-05-19 (朝) — v0.8 Cognitive Mesh M8.2〜M8.7 本実装フェーズ完了
 
 朝の継続セッションで NEXT_SESSION Priority 1 の本実装を全件 (M8.2〜M8.7)
