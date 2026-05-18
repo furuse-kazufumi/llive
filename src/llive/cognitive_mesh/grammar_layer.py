@@ -199,3 +199,99 @@ class GrammarLayer:
                 self.change_sink.on_reject(proposal)
             except Exception:  # noqa: BLE001
                 pass
+
+
+@dataclass
+class MultilingualGrammar:
+    """言語別 (ja/en/zh/ko) preset を bootstrap する GrammarLayer ファサード.
+
+    M8.9 で導入。`DEFAULT_LANGUAGES` 全 4 言語で v0 snapshot を空 rules で
+    生成し、GrammarLayer を提供する。
+    Phase 7 で各言語の実用文法 (jp 学校文法 / en POS / zh 词法 / ko 형태소)
+    を取り込む際の anchor。
+
+    Attributes:
+        layer: 内包する GrammarLayer.
+        base_version: bootstrap 時の version 文字列 (既定 ``"v_0"``).
+        change_sink: GrammarLayer に渡す sink (Phase 7 で EVO 接続).
+    """
+
+    layer: GrammarLayer = field(default_factory=GrammarLayer)
+    base_version: str = "v_0"
+    change_sink: GrammarChangeSink | None = None
+    languages: tuple[str, ...] = DEFAULT_LANGUAGES
+
+    def __post_init__(self) -> None:
+        if self.change_sink is not None and self.layer.change_sink is None:
+            self.layer.change_sink = self.change_sink
+        for lang in self.languages:
+            if not self.layer.versions(lang):
+                self.layer.add_snapshot(
+                    GrammarSnapshot(
+                        language=lang,
+                        version=self.base_version,
+                        rules={},
+                        created_at=datetime.now(),
+                    )
+                )
+
+    def propose(
+        self, language: str, pattern: str, evidence: UsageEvidence
+    ) -> ProposedChange:
+        """言語に対する直近 version を base に proposal 作成 (短縮 helper)."""
+        if language not in self.languages:
+            raise KeyError(
+                f"language '{language}' not in bootstrap set {self.languages!r}"
+            )
+        versions = self.layer.versions(language)
+        if not versions:
+            raise RuntimeError(f"no snapshot for language '{language}'")
+        return self.layer.propose_change(
+            language=language,
+            base_version=versions[-1],
+            pattern=pattern,
+            evidence=evidence,
+        )
+
+    def promote(self, proposal: ProposedChange, new_version: str) -> GrammarSnapshot:
+        return self.layer.promote(proposal, new_version)
+
+    def reject(self, proposal: ProposedChange) -> None:
+        self.layer.reject(proposal)
+
+    def latest_version(self, language: str) -> str | None:
+        versions = self.layer.versions(language)
+        return versions[-1] if versions else None
+
+
+@dataclass
+class InMemoryGrammarChangeSink:
+    """テスト / 監査用の in-memory sink. 受け取った event を順番に保持."""
+
+    proposes: list[ProposedChange] = field(default_factory=list)
+    promotes: list[tuple[ProposedChange, GrammarSnapshot]] = field(default_factory=list)
+    rejects: list[ProposedChange] = field(default_factory=list)
+
+    def on_propose(self, proposal: ProposedChange) -> None:
+        self.proposes.append(proposal)
+
+    def on_promote(
+        self, proposal: ProposedChange, new_snapshot: GrammarSnapshot
+    ) -> None:
+        self.promotes.append((proposal, new_snapshot))
+
+    def on_reject(self, proposal: ProposedChange) -> None:
+        self.rejects.append(proposal)
+
+
+__all__ = [
+    "DEFAULT_LANGUAGES",
+    "GrammarChangeSink",
+    "GrammarChangeStatus",
+    "GrammarLayer",
+    "GrammarSnapshot",
+    "InMemoryGrammarChangeSink",
+    "MultilingualGrammar",
+    "ProposedChange",
+    "UsageEvidence",
+]
