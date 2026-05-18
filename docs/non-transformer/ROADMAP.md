@@ -303,3 +303,9 @@ Week 2 Engine 抽出+Core 軽量化 / Week 3 Research IDE+中国 LLM / Week 4
 
 - 2026-05-18 — draft v0.1 (ユーザーゴール「Transformer 以外で llive 完成」を
   受けて、5 案 deep dive + 12 ヶ月 + 30 日アクション + 3 軸並走戦略を策定)
+- 2026-05-18 — draft v0.2 (ユーザー追加制約 2 件反映):
+  * 0.1 開発スタイル原則を明文化 (拡張性ファースト / 段階的削ぎ落とし /
+    低スペック PC primary / honest disclosure)
+  * 0.2 低スペック PC 性能目標 (xs〜xl × CPU only latency + RAM 占有)
+  * §3 推奨戦略を低スペック PC primary に再優先化、軸 1 を案 E (RWKV-7) 最優先 +
+    案 A (Mamba) 並走に変更
