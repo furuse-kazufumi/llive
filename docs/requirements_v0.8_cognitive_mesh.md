@@ -423,3 +423,32 @@ STL 相当コンテナで設計する。
 
 **Status:** **DRAFT — 2026-05-18, v0.8 として要件追加。Phase 5 着手前に
 レビューと優先順位確定が必要**
+
+---
+
+## 11. CABT との対応・統合視点
+
+`.planning/REQUIREMENTS.md` v0.8 CABT (Cognitive-aware Transformer Block) と
+本書 (cognitive mesh) は **直交するレイヤ** であり、両者を組み合わせて
+初めて「人間の認知に並ぶ AI」が成立する想定。
+
+| 側面 | CABT (低レイヤ) | COG-MESH (高レイヤ) |
+|---|---|---|
+| 対象 | Transformer ブロック内部 (attention / routing / token) | FullSenseLoop の周囲 (Brief / 発話 / 時刻) |
+| 介入点 | forward pass の hook | Loop の tick / Stimulus 注入 / Annotation Channel |
+| 例 | CABT-04 Salience-gated Attention | COG-MESH-03 TonicRiskMonitor |
+| 例 | CABT-06 Approval-gated Decoding | COG-MESH-05 GiftValueEstimator |
+| 実装段階 | Phase 8 (S2-S6 段階で導入) | Phase 5 (骨格) → Phase 6/7 (拡張) |
+| 依存方向 | COG-MESH 6 から CABT 4 の surprise を参照する経路あり | 逆方向は基本不要 |
+
+統合ポイント (将来):
+
+- CABT-04 (Salience-gated Attention) の token-level surprise log は
+  COG-MESH-06 ProactiveLoop の curiosity mode で発話ネタとして再利用可能
+- CABT-06 (Approval-gated Decoding) の policy 違反 token sequence は
+  COG-MESH-03 TonicRiskMonitor の RiskModel として登録可能
+- CABT-07 (Memory-augmented Residual) の 4 層メモリ embedding は
+  COG-MESH-04 IdleTrainingScheduler の ingest-coverage 計算に直接使える
+
+> 結論: CABT と COG-MESH は分離して進める方が良い。両者の version 番号
+> 衝突は **意図的** で、「同じ v0.8 期に着手すべき双子の要件群」を示唆。
