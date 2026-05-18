@@ -315,7 +315,11 @@ class FullSenseLoop:
         prompt, raw response, finish reason, wall time, and (on failure) the
         exception text. Caller decides what to attach to stages.
         """
-        backend = self._resolve_backend_for_loop()
+        # _try_llm_backend is currently only used inside Inner Monologue,
+        # so we ask the stage router for the "monologue" route. Other stages
+        # (salience / curiosity / scorer) don't call LLMs yet; when they do,
+        # they should pass their own stage name here.
+        backend = self._resolve_backend_for_loop(stage="monologue")
         if backend is None:
             return None
         from llive.llm import GenerateRequest
