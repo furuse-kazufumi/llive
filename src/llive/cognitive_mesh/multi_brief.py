@@ -19,14 +19,19 @@ Phase 7 で networkx + 実 Brief 統合、本実装は軽量 dict ベース。
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from llive.cognitive_mesh.brief_containers import (
     BriefDeque,
     BriefMap,
     BriefRef,
 )
+
+if TYPE_CHECKING:
+    from llive.brief.types import Brief
 
 
 @dataclass(frozen=True)
