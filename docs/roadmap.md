@@ -180,6 +180,57 @@ llmesh-suite メタパッケージへの **llive 追加** は Phase 4 完了時�
 
 **Acceptance**: 16-task fan-out で P99 latency 改善 / CONC-04 が Rust 側で動作。
 
+## Phase 8: Cognitive Mesh / CABT 双子 (v0.8.x)
+
+**Goal**: v0.8 として **2 つの直交要件群** を並列に進める:
+
+- **CABT** (`.planning/REQUIREMENTS.md` v0.8 / CABT-01〜07) — Transformer
+  ブロック内部の認知的拡張 (低レイヤ)
+- **COG-MESH** (`docs/requirements_v0.8_cognitive_mesh.md` /
+  `.planning/REQUIREMENTS.md` v0.8b / COG-MESH-01〜10) — FullSenseLoop の
+  周囲の能動性 / 並列性 / 安全性 (高レイヤ)
+
+### Milestones (COG-MESH 側、Phase 5-7 にも前倒し配備)
+
+| 段 | COG-MESH | 何が出るか |
+|---|---|---|
+| **M8.0 Quiet Hours guard** (Phase 5 前倒し) | COG-MESH-07 | env `LLIVE_QUIET_HOURS_*` で能動行動の時刻 gate、fail-closed |
+| **M8.1 Proactive demo (timer)** (Phase 5) | COG-MESH-05/06 | 「勝手に話しかけてくる llive」最小 demo (`project_proactive_llive_demo` Phase 0) |
+| **M8.2 Idle ingest 1 source** (Phase 5) | COG-MESH-04 | RAD 差分を Quiet Hours 外で semantic に lift |
+| **M8.3 BriefDeque/Map** (Phase 5) | COG-MESH-08 | flat list 廃止、入れ替え + ブランチ対応 |
+| **M8.4 TitleRecall** (Phase 6) | COG-MESH-02 | 起承転結 + 伏線回収率採点 |
+| **M8.5 TonicRiskMonitor** (Phase 6) | COG-MESH-03 | 別スレッド常時 KYT、ApprovalBus 連動 |
+| **M8.6 Mesh5W1H + Granularity** (Phase 6) | COG-MESH-10 | Annotation namespace 拡張 |
+| **M8.7 Proactive event/curiosity モード** (Phase 6) | COG-MESH-06 | llmesh MQTT/OPC-UA event 駆動、4 層メモリ coverage 駆動 |
+| **M8.8 MultiBriefCoherenceManager** (Phase 7) | COG-MESH-01 | 複数 Brief 並列 + coherence_graph 本実装 |
+| **M8.9 GrammarLayer** (Phase 7) | COG-MESH-09 | 文法 evolution、ja/en/zh/ko 別レイヤ |
+
+### Milestones (CABT 側、Phase 8 本体)
+
+- **M8.A CABT-01 prototype** — attention に metadata column を hook
+- **M8.B CABT-03 + 04** — EpistemicType embedding + Salience gate
+- **M8.C CABT-02** — Stage-aware routing 試作 (Soft-MoE 風)
+- **M8.D CABT-05 + 06** — TRIZ-conditioned head + Approval-gated decoding
+- **M8.E CABT-07 統合** — 4 層メモリ residual fusion
+
+### Acceptance
+
+- COG-MESH-07 Quiet Hours: 単体テストで時刻偽装下に「能動発話呼び出し
+  → 抑止 → suppressed_utterance Annotation 記録」を確認
+- Proactive demo: asciinema 録画 + `project_f25_demo_polish` 整合チェック
+- CABT-04 surprise log: token-level surprise を COG-MESH-06 ProactiveLoop
+  curiosity mode で再利用できることを確認 (`requirements_v0.8_cognitive_mesh.md`
+  §11 統合視点)
+
+### バージョニング上の扱い
+
+- v0.8 主軸 SemVer (`0.8.x`) は **CABT + COG-MESH の同時収束**を待つ
+- 段階リリース時は build metadata で識別:
+  - `0.5.0+cogmesh-m8.0-m8.3` (Phase 5 + COG-MESH 前倒し分)
+  - `0.6.0+cogmesh-m8.4-m8.7` (Phase 6 + COG-MESH 中盤)
+  - `0.7.0+cogmesh-m8.8-m8.9` (Phase 7 + COG-MESH 終盤)
+  - `0.8.0` (CABT + COG-MESH 完全収束)
+
 ## バージョニング戦略
 
 - `0.0.x`: Phase 0 (完了), scaffolding
