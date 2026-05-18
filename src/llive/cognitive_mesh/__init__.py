@@ -37,6 +37,23 @@ from llive.cognitive_mesh.gift_value import (  # COG-MESH-05
     GiftValue,
     GiftValueEstimator,
 )
+from llive.cognitive_mesh.idle_training import (  # COG-MESH-04
+    IdleTrainingScheduler,
+    InfoSource,
+    IngestEvent,
+)
+from llive.cognitive_mesh.mesh_5w1h import (  # COG-MESH-10
+    ALL_CHANNELS,
+    GRANULARITY_ORDER,
+    Granularity,
+    Mesh5W1HEdge,
+    Mesh5W1HGraph,
+    Mesh5W1HNode,
+    annotate_5w1h,
+    channel_name,
+    granularity_of,
+    is_finer,
+)
 from llive.cognitive_mesh.proactive import (  # COG-MESH-06
     ProactiveLoop,
     ProactiveUtterance,
@@ -45,15 +62,34 @@ from llive.cognitive_mesh.proactive import (  # COG-MESH-06
 from llive.cognitive_mesh.quiet_hours import QuietHoursGuard  # COG-MESH-07
 
 __all__ = [
+    # COG-MESH-04
+    "IdleTrainingScheduler",
+    "InfoSource",
+    "IngestEvent",
+    # COG-MESH-05
+    "DEFAULT_THRESHOLD",
+    "GiftValue",
+    "GiftValueEstimator",
+    # COG-MESH-06
+    "ProactiveLoop",
+    "ProactiveUtterance",
+    "SuppressedUtterance",
+    # COG-MESH-07
+    "QuietHoursGuard",
+    # COG-MESH-08
     "BriefDeque",
     "BriefMap",
     "BriefRef",
     "BriefTree",
-    "DEFAULT_THRESHOLD",
-    "GiftValue",
-    "GiftValueEstimator",
-    "ProactiveLoop",
-    "ProactiveUtterance",
-    "SuppressedUtterance",
-    "QuietHoursGuard",
+    # COG-MESH-10
+    "ALL_CHANNELS",
+    "GRANULARITY_ORDER",
+    "Granularity",
+    "Mesh5W1HEdge",
+    "Mesh5W1HGraph",
+    "Mesh5W1HNode",
+    "annotate_5w1h",
+    "channel_name",
+    "granularity_of",
+    "is_finer",
 ]
