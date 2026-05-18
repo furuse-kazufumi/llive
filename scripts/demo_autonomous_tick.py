@@ -61,10 +61,19 @@ def main() -> int:
         proactive_count["n"] += 1
         return f"進捗 #{proactive_count['n']}: build 状況を共有します"
 
+    def listener_state() -> dict:
+        return {
+            "current_topic": "build",
+            "risk_score": 0.8,
+            "focus_level": 0.3,
+            "in_quiet_hours": False,
+        }
+
     loop = ProactiveLoop(
         quiet_hours=guard,
         tick_interval_seconds=tick_interval,
         stimulus_source=make_stimulus,
+        listener_state_source=listener_state,
     )
     loop.start()
 
