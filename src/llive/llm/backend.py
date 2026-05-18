@@ -728,6 +728,12 @@ def resolve_backend(name: str | None = None) -> LLMBackend:
         return OllamaBackend()
     if candidate == "mamba":
         return MambaBackend()
+    if candidate == "rwkv":
+        return RwkvBackend()
+    if candidate == "jamba":
+        return JambaBackend()
+    if candidate == "diffusion":
+        return DiffusionBackend()
     raise ValueError(f"unknown LLM backend: {candidate!r}")
 
 
