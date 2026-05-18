@@ -108,8 +108,18 @@ class TitleRecallPlanner:
         lower_final = final_text.lower()
         for fs in self._foreshadows.values():
             total_weight += fs.weight
-            score = self._token_match_score(fs.text, lower_final)
-            if score >= 0.5:
+            token_score = self._token_match_score(fs.text, lower_final)
+            if self.similarity_fn is not None:
+                try:
+                    sim_score = float(self.similarity_fn(fs.text, final_text))
+                except Exception:  # noqa: BLE001 — fail-closed to token only
+                    sim_score = 0.0
+                # clip to [0, 1] for safety
+                sim_score = max(0.0, min(1.0, sim_score))
+                score = max(token_score, sim_score)
+            else:
+                score = token_score
+            if score >= _RECOVERY_THRESHOLD:
                 fs.status = RecallStatus.RECOVERED
                 fs.recovered_at = now
                 recovered_weight += fs.weight * score
