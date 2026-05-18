@@ -264,20 +264,106 @@ ContainerSpec / SubBlockSpec / CandidateDiff の宣言形式。JSON Schema Draft
 学習なしで candidate 性能を予測する代替指標群（NAS 文脈）。llive では Static Verifier + Multi-precision Shadow Eval が代替。
 - 初出: requirements_v0.1
 
+## v0.8 Cognitive Mesh 用語 (2026-05-18 追加)
+
+### Proactive Loop
+`FullSenseLoop` を自発的に起動する周期/イベント駆動ループ。4 モード
+(timer / event / curiosity / consistency)。能動発話の出口。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-06
+- 関連: Quiet Hours / Gift Value / Default Mode Network
+
+### Quiet Hours
+時刻に基づいて能動発話・自律実装・周期トリガを抑止する時間帯。
+env `LLIVE_QUIET_HOURS_*` で設定。**fail-closed** (時刻取得失敗 / TZ 不明 /
+env 欠落のいずれでも抑止側に倒す)。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-07
+- 既定: JST 22:00 - 翌 08:00
+
+### Quiet Hours Guard
+Quiet Hours 判定を提供するクラス。`ProactiveLoop` / `IdleTrainingScheduler`
+の **必須依存** (コンストラクタで注入されないと起動失敗)。
+- 公開 API: `in_quiet_hours()`, `next_active_window()`, `allow(category)`
+
+### Gift Value
+能動発話の「プレゼントとしての価値」を 4 因子 (novelty / relevance /
+risk_avoidance / cost_to_listener) で見積もる発話前 gate の出力。
+低価値発話は **黙る**。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-05
+- 由来: 「プレゼンテーション = プレゼント」語源論 (user_cognitive_mesh_model §14)
+
+### Foreshadow / Title Recall
+起承転結の「起」段で立てた **伏線 Annotation**。`TitleRecallPlanner` が
+「結」段で recall_rate (0..1) を採点。プレゼン品質指標。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-02
+- Annotation namespace: `cog.foreshadow_set`, `cog.foreshadow_recovered`
+
+### Tonic Risk Monitor
+別スレッドで常時動く危険予測 (KYT 風)。閾値超で `ApprovalBus.intervene`
+を能動 emit。**小脳的常時 KYT** の architectural 反映。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-03
+- エッジ実装: 別チップ (NPU / MCU) も視野
+
+### Idle Training Scheduler
+Quiet Hours 外の空き時間に外部情報源 (RSS / arXiv / GitHub trending /
+RAD 差分) を ingest し、Quarantined Memory + Ed25519 経由で semantic
+memory へ lift。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-04
+- 安全境界: SEC-01/02 経由必須
+
+### Brief Deque / Brief Map / Brief Tree
+flat list ではなく **入れ替え可能 + ブランチ分岐対応** の STL 相当
+コンテナ群でセッションを保持。`MultiBriefCoherenceManager` の内部表現。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-08
+- 由来: ユーザ「STL コンテナ」言語化 (user_cognitive_mesh_model 追記)
+
+### Multi-Brief Coherence Manager
+複数 Brief を並列保持し、相互更新する coherence_graph (networkx)。
+Annotation Channel `cog.cross_brief_impact` を emit。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-01
+- 由来: ユーザ「頭の中に複数セッションが常にある状態」(認知モデル §11)
+
+### Grammar Layer
+固定埋め込みでなく **継続学習対象** としての文法層。時代変化を追跡
+(`grammar_v_2020`, `grammar_v_2026`)、自己進化 (EVO-04/06/07) と接続。
+言語別 (ja / en / zh / ko) に独立 layer。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-09
+
+### Mesh 5W1H
+思考の 5W1H メッシュ表現。ノード = Who / What / When / Where / Why / How。
+Annotation Channel namespace `mesh.{who,what,...}` に対応。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-10
+- 由来: ユーザ「思考が 5W1H メッシュ状に繋がる」(認知モデル §12)
+
+### Granularity Hierarchy (言語化粒度階層)
+内部表現で並走する 6 階層: word < phrase < clause < sentence < paragraph
+< topic。各粒度で異なる更新コストとブランチ確率を持つ。
+- 初出: requirements_v0.8_cognitive_mesh / COG-MESH-10
+- 由来: ユーザ「単語 / 句 / 文節 / 文 / 段 / 主題」(認知モデル 追記 22:55)
+
+### Default Mode Network (DMN)
+人間の脳が idle 時に自発的に activate する神経回路。llive の能動発話
+モードは DMN 相当の architectural 写像。
+- 出典: feedback_brain_like_trigger_periodic / feedback_proactive_llm_speech
+- 関連: ProactiveLoop curiosity mode
+
 ## 略語一覧
 
 | 略語 | 正式 |
 |---|---|
 | BC | BlockContainer |
 | BWT | Backward Transfer |
+| CABT | Cognitive-aware Transformer Block (v0.8 低レイヤ要件群) |
 | CL | Continual Learning |
+| COG-MESH | Cognitive Mesh (v0.8b 高レイヤ要件群) |
 | CQRS | Command Query Responsibility Segregation |
+| DMN | Default Mode Network |
 | EDA | Event-Driven Architecture |
 | ES | Event Sourcing |
 | FR | Functional Requirement |
 | FWT | Forward Transfer |
 | HITL | Human-In-The-Loop |
 | IFR | Ideal Final Result (TRIZ) |
+| KYT | 危険予測 (Kiken Yochi Training) |
 | LoRA | Low-Rank Adaptation |
 | MoE | Mixture of Experts |
 | NAS | Neural Architecture Search |
@@ -289,3 +375,4 @@ ContainerSpec / SubBlockSpec / CandidateDiff の宣言形式。JSON Schema Draft
 | SPC | Statistical Process Control |
 | SWR | Sharp-Wave Ripple (海馬の replay 信号) |
 | TUI | Text User Interface |
+| TZ | Time Zone |
