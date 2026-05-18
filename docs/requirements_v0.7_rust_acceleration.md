@@ -302,9 +302,23 @@ CI で両方走らせ、bit-exact (許容差 < 1e-6) を保証。Rust 化のリ�
 - **z3.rs** — Z3 SMT solver の安全な Rust ラッパー、PyO3 経由で Python から使える。RUST-11 で採用。
 - **candle (HuggingFace, 2026)** — Rust ML フレームワーク、CPU/CUDA/Metal 対応。将来の v1.x 以降で torch 代替候補。
 - **rust-numpy** — `ndarray ⇄ numpy.ndarray` zero-copy 変換、PyO3 公式。RUST-01〜04 の基盤。
+- **zerostack (gi-dellav/zerostack, 2026)** — 純 Rust 製・Unix 哲学のコーディング
+  特化 AI agent。アイドル ~8MB、bubblewrap サンドボックス、doom-loop detection、
+  git worktree 分離。**llive とは直接競合ではなく補完関係** (zerostack =
+  コード操作専用、llive = 認知 OS 汎用)。学べる側面:
+  - single-binary 配布 — llive `[rust]` extra に CLI bundle する案
+  - **doom-loop detection** — `TonicRiskMonitor` (COG-MESH-03) の標準
+    `DoomLoopDetector` RiskModel として転用検討
+  - bubblewrap 設計 — `Quarantined Memory` (SEC-01) の OS sandbox 抽象に
+    反映 (Linux: bubblewrap / Windows: Sandbox / macOS: sandbox-exec)
+  - マルチプロバイダ抽象 — llive `LLMBackend` (Mock / Anthropic / OpenAI /
+    Ollama) と同型構造、コーディング特化 prompt template (RAD-C-1.2) を
+    増やせば対応領域が部分的に重なる
+  - 詳細メモ: `~/.claude/.../memory/reference_zerostack.md`
 
 ---
 
 *Drafted: 2026-05-13*
+*Updated: 2026-05-19 — zerostack 参考実装を §関連実装 に追記*
 *Phase 5 から段階的に着手、Phase 4 完了 + Phase 3 EVO 安定後の措置*
 *llove F18 と整合的、`specs/rust_ffi/` で互換性 spec を共有*
