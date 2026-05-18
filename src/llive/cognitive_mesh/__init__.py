@@ -37,6 +37,7 @@ from llive.cognitive_mesh.brief_runner_bridge import (  # COG-MESH-08 完成配�
 )
 from llive.cognitive_mesh.embedding_similarity import (  # COG-MESH-02 拡張
     EmbeddingSimilarityFn,
+    default_embedding_similarity,
 )
 from llive.cognitive_mesh.gift_value import (  # COG-MESH-05
     DEFAULT_THRESHOLD,
