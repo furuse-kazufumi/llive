@@ -67,20 +67,68 @@ def test_tick_during_quiet_hours_returns_none(
     assert loop.tick(now=_at(2)) is None
 
 
-def test_tick_during_active_raises_not_implemented(
+def test_tick_without_stimulus_source_raises(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Phase 5 まで tick は NotImplementedError を投げる契約."""
+    """stimulus_source 未設定なら tick は NotImplementedError."""
     guard = _make_guard(monkeypatch)
     loop = ProactiveLoop(quiet_hours=guard)
-    with pytest.raises(NotImplementedError, match="COG-MESH-06"):
+    with pytest.raises(NotImplementedError, match="stimulus_source"):
         loop.tick(now=_at(10))
 
 
-def test_latest_utterances_is_empty_in_skeleton(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_tick_with_high_gift_value_returns_utterance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GiftValue が閾値を超えれば ProactiveUtterance を返し履歴に記録."""
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(
+        quiet_hours=guard,
+        stimulus_source=lambda: "重要な進捗報告: build が完了しました",
+    )
+    listener = {
+        "current_topic": "build",
+        "risk_score": 0.8,
+        "focus_level": 0.3,
+        "in_quiet_hours": False,
+    }
+    utterance = loop.tick(now=_at(10), listener_state=listener)
+    assert utterance is not None
+    assert utterance.content.startswith("重要な")
+    assert utterance.mode == "timer"
+    assert utterance.gift_value >= 0.6
+    assert loop.latest_utterances(n=5)[-1] is utterance
+    assert loop.latest_suppressed(n=5) == []
+
+
+def test_tick_with_low_gift_value_returns_none_and_records_suppression(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GiftValue が閾値未満なら抑制履歴に記録、tick は None を返す."""
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(
+        quiet_hours=guard,
+        stimulus_source=lambda: "雑談 (関連無し)",
+    )
+    # current_topic 不一致 + Quiet Hours 中 (=cost 0.9 で aggregate 大幅下落)
+    listener = {
+        "current_topic": "build",
+        "risk_score": 0.2,
+        "focus_level": 0.5,
+        "in_quiet_hours": True,
+    }
+    utterance = loop.tick(now=_at(10), listener_state=listener)
+    assert utterance is None
+    suppressed = loop.latest_suppressed(n=5)
+    assert len(suppressed) == 1
+    assert suppressed[0].reason == "gift_value_below_threshold"
+
+
+def test_latest_utterances_is_empty_initially(monkeypatch: pytest.MonkeyPatch) -> None:
     guard = _make_guard(monkeypatch)
     loop = ProactiveLoop(quiet_hours=guard)
     assert loop.latest_utterances(n=10) == []
+    assert loop.latest_suppressed(n=10) == []
 
 
 def test_start_and_stop_raise_not_implemented(monkeypatch: pytest.MonkeyPatch) -> None:
