@@ -429,24 +429,34 @@ STL 相当コンテナで設計する。
 次フェーズ (Phase 5/6/7 本実装):
 
 - [ ] M8.1 ProactiveLoop を llove F25 経由で TUI 表示、asciinema 録画
-- [ ] M8.2 IdleTraining ingest を Quarantined Memory (SEC-01) +
-      Ed25519 (SEC-02) と統合
-- [ ] M8.3 BriefDeque/Map/Tree を実 Brief / BriefRunner と接続
-- [ ] M8.4 TitleRecall を semantic similarity (token match → embedding) で本実装
-- [ ] M8.5 TonicRiskMonitor を threading 化 + ApprovalBus.intervene 配線
-- [ ] M8.6 Mesh5W1H を実 Annotation Channel と統合
-- [ ] M8.7 ProactiveLoop に event / curiosity / consistency モード追加
+- [x] M8.2 IdleTraining ingest を Quarantined Memory (SEC-01) +
+      Ed25519 (SEC-02) と統合 — **完了 2026-05-19** (quarantined_memory.py +
+      idle_training.quarantine 注入対応、16 件テスト追加)
+- [x] M8.3 BriefDeque/Map/Tree を実 Brief / BriefRunner と接続 — **完了 2026-05-19**
+      (brief_runner_bridge.BriefDequeRunnerBridge、6 件テスト)
+- [x] M8.4 TitleRecall を semantic similarity (token match → embedding) で本実装
+      — **完了 2026-05-19** (embedding_similarity.EmbeddingSimilarityFn +
+      TitleRecallPlanner.similarity_fn 注入、9 件テスト)
+- [x] M8.5 TonicRiskMonitor を threading 化 + ApprovalBus.intervene 配線
+      — **完了 2026-05-19** (threading 化は 0878f81 で先行、
+      intervention.RiskInterventionAdapter で配線、5 件テスト)
+- [x] M8.6 Mesh5W1H を実 Annotation Channel と統合 — **完了 2026-05-19**
+      (mesh_annotator.Mesh5W1HAnnotator、7 件テスト)
+- [x] M8.7 ProactiveLoop に event / curiosity / consistency モード追加
+      — **完了 2026-05-19** (ProactiveEvent / ConsistencyViolation +
+      tick_event / tick_consistency + _on_timer 分岐、12 件テスト)
 - [ ] M8.8 MultiBriefCoherenceManager を networkx + 実 Brief 統合
 - [ ] M8.9 GrammarLayer を EVO-04/06/07 と接続、言語別 layer 設計
 
 ---
 
-**Status:** **IMPLEMENTED-SKELETON — 2026-05-19, v0.8 全 10 件の skeleton
-完了。Phase 5/6/7 で本実装フェーズに移行。**
+**Status:** **IMPLEMENTED-FULL — 2026-05-19, M8.2〜M8.7 本実装完了。
+残るは M8.1 (llove TUI 統合) と M8.8 (networkx 化) と M8.9 (GrammarLayer 接続)。**
 
 更新履歴:
 - 2026-05-18: 要件追加 (DRAFT)
 - 2026-05-19 早朝: COG-MESH-01〜10 全件 skeleton 完了 (IMPLEMENTED-SKELETON)
+- 2026-05-19 朝: M8.2〜M8.7 本実装完了 (IMPLEMENTED-FULL)、1393 → 1448 PASS
 
 ---
 
