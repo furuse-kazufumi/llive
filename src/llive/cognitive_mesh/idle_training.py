@@ -142,10 +142,35 @@ class IdleTrainingScheduler:
         ranked.sort(key=lambda pair: pair[0])
         src = ranked[0][1]
         payload = src.fetch()
+        # Quarantined Memory 統合 (SEC-01) — 注入時は隔離経路を通す.
+        if self.quarantine is not None:
+            entry = self.quarantine.quarantine(payload, now=now)
+            self._quarantine_entries.append(entry)
         event = IngestEvent(source_name=src.name, payload=payload, timestamp=now)
         self._events.append(event)
         self._last_ingest[src.name] = now
         return event
+
+    def latest_quarantine_entries(self, n: int = 10) -> list[QuarantineEntry]:
+        """直近の Quarantine entry 群を返す (quarantine 注入時のみ非空)."""
+        return self._quarantine_entries[-n:]
+
+    @staticmethod
+    def sign_payload(
+        payload: Any,
+        signer_id: str,
+        private_key_bytes: bytes,
+    ) -> SignedPayload:
+        """テスト / 信頼 source 側で署名付き payload を作るヘルパ.
+
+        ``payload`` は ``str(payload).encode()`` で canonical 化される
+        (QuarantinedMemory.Ed25519Verifier.verify と対称な実装).
+        """
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+        priv = Ed25519PrivateKey.from_private_bytes(private_key_bytes)
+        signature = priv.sign(str(payload).encode("utf-8"))
+        return SignedPayload(payload=payload, signer_id=signer_id, signature=signature)
 
     def latest_events(self, n: int = 10) -> list[IngestEvent]:
         return self._events[-n:]
