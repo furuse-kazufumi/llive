@@ -54,13 +54,22 @@ class IngestEvent:
 
 @dataclass
 class IdleTrainingScheduler:
-    """Quiet Hours 外の空き時間に外部情報を ingest する."""
+    """Quiet Hours 外の空き時間に外部情報を ingest する.
+
+    Attributes:
+        quarantine: optional ``QuarantinedMemory`` — 注入時は ingest payload を
+            自動的に隔離 → 検証 (verifier が登録されていれば) → promote の
+            ライフサイクルに乗せる. backward compat: 未注入なら従来通り
+            直接 ``_events`` に積むだけ.
+    """
 
     quiet_hours: QuietHoursGuard
     idle_threshold_seconds: int = 60
+    quarantine: QuarantinedMemory | None = None
     _sources: dict[str, InfoSource] = field(default_factory=dict)
     _last_ingest: dict[str, datetime] = field(default_factory=dict)
     _events: list[IngestEvent] = field(default_factory=list)
+    _quarantine_entries: list[QuarantineEntry] = field(default_factory=list)
     _paused: bool = False
 
     def __post_init__(self) -> None:
