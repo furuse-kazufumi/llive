@@ -303,7 +303,7 @@ llive + llama-server (localhost / 社内 LAN) は **データが社外に出な�
 
 | 用途 | 推奨 model | サイズ | 備考 |
 |---|---|---|---|
-| 標準 (英語) | `llama-3.3-70b-instruct-Q4_K_M.gguf` | 40 GB | GPU 推奨, llive 既存ベンチで主力 |
+| 標準 (英語) | `llama-3.3-70b-instruct-Q4_K_M.gguf` | 40 GB | GPU 推奨, OSS LLM の標準的選択肢 (本リポジトリ既存ベンチは llama3.2:3b / qwen2.5:7b / qwen2.5:14b ベース、別途要検証) |
 | 軽量 (CPU で動く) | `llama-3.1-8b-instruct-Q4_K_M.gguf` | 4.7 GB | 品質下限 |
 | 中文強い | `qwen2.5-32b-instruct-Q4_K_M.gguf` | 18 GB | 多言語 / 中文ベンチで強い |
 | コーディング | `qwen2.5-coder-32b-instruct-Q4_K_M.gguf` | 18 GB | コード生成 / レビュー |
