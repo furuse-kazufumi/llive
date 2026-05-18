@@ -346,6 +346,69 @@ Annotation Channel namespace `mesh.{who,what,...}` に対応。
 - 出典: feedback_brain_like_trigger_periodic / feedback_proactive_llm_speech
 - 関連: ProactiveLoop curiosity mode
 
+### Suppressed Utterance
+`ProactiveLoop.tick()` で gift value 閾値未満 / cooldown 等を理由に
+**抑制された候補発話** の記録。`cog.suppressed_utterance` Annotation
+Channel に emit する想定。
+- 実装: `llive.cognitive_mesh.proactive.SuppressedUtterance`
+- 初出: COG-MESH-06 実装 (2026-05-19)
+
+### Recall Report
+`TitleRecallPlanner.evaluate()` の戻り値。`recall_rate` (0..1) と
+unrecovered 一覧を含む。プレゼン品質指標。
+- 実装: `llive.cognitive_mesh.title_recall.RecallReport`
+- 関連: Foreshadow / RecallStatus
+
+### Recall Status
+Foreshadow の状態列挙: PENDING / RECOVERED / MISSED。
+- 実装: `llive.cognitive_mesh.title_recall.RecallStatus`
+
+### Risk Model
+名前付きの危険度評価モデル。`score_fn(state) -> float (0..1)` と weight
+を持ち、`TonicRiskMonitor` に登録される。
+- 実装: `llive.cognitive_mesh.tonic_risk.RiskModel`
+- 関連: TonicRiskMonitor / RiskAlert
+
+### Risk Alert
+`TonicRiskMonitor.tick()` で閾値超のとき emit されるアラート。state の
+snapshot を copy で保持し、副作用を分離する。Quiet Hours 中でも例外的に
+通過するカテゴリ。
+- 実装: `llive.cognitive_mesh.tonic_risk.RiskAlert`
+- Annotation namespace: `cog.risk_alert`
+
+### Ingest Event
+`IdleTrainingScheduler.tick()` で外部情報源から取り込まれた 1 回分の
+記録。source_name / payload / timestamp。
+- 実装: `llive.cognitive_mesh.idle_training.IngestEvent`
+- 関連: InfoSource / IdleTrainingScheduler
+
+### Info Source
+`IdleTrainingScheduler` に登録する外部情報源。name + fetch callable +
+per-source cooldown。
+- 実装: `llive.cognitive_mesh.idle_training.InfoSource`
+
+### Coherence Event
+`MultiBriefCoherenceManager.tick()` で出力される cross-brief 相互参照の
+イベント。`cog.cross_brief_impact` Annotation Channel namespace と
+対応。
+- 実装: `llive.cognitive_mesh.multi_brief.CoherenceEvent`
+
+### Grammar Snapshot
+ある言語 × 時点での文法状態 (immutable)。version 文字列 +
+rules dict + created_at。
+- 実装: `llive.cognitive_mesh.grammar_layer.GrammarSnapshot`
+- 例: `grammar_v_2020`, `grammar_v_2026_05`
+
+### Usage Evidence
+新しい用法観測の証拠 (pattern + samples + confidence)。
+`GrammarLayer.propose_change()` に渡す。
+- 実装: `llive.cognitive_mesh.grammar_layer.UsageEvidence`
+
+### Proposed Change (Grammar)
+`GrammarLayer.propose_change()` で生成される文法変更提案。状態は
+PROPOSED / PROMOTED / REJECTED。EVO-04/06/07 (自己進化) と Phase 7 で接続。
+- 実装: `llive.cognitive_mesh.grammar_layer.ProposedChange`
+
 ## 略語一覧
 
 | 略語 | 正式 |
