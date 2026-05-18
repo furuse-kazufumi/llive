@@ -39,14 +39,21 @@ SIZE_CHARS: dict[str, int] = {
     "xl": 512_000,  # ≈ 128k tok
 }
 
-# §0.2 targets (latency seconds, RAM MB) for low-spec CPU-only PC.
+# §0.2 (v0.2-2) targets for **GPU-less** low-spec personal PC, CPU only.
+# Loosened from the v0.2-1 GPU-assumed numbers because the primary user
+# deployment env has no GPU. xs/s = short-term, m = long-term, l/xl =
+# measurement-paused until GPU becomes available.
 TARGETS: dict[str, tuple[float, int]] = {
-    "xs": (3.0,    4_000),
-    "s":  (8.0,    6_000),
-    "m":  (20.0,   8_000),
-    "l":  (60.0,  10_000),
-    "xl": (180.0, 14_000),
+    "xs": (5.0,    4_000),
+    "s":  (15.0,   6_000),
+    "m":  (45.0,   8_000),    # long-term target only
+    "l":  (180.0, 10_000),    # measurement paused on CPU-only PC
+    "xl": (600.0, 14_000),    # measurement paused on CPU-only PC
 }
+
+# Sizes considered safe to run on a CPU-only PC without locking it up for
+# tens of minutes. Anything beyond this is opt-in.
+CPU_SAFE_SIZES: tuple[str, ...] = ("xs", "s")
 
 # Backends that DO call out to a paid cloud LLM service — refused unless
 # allow_cloud=True. Local OpenAI-compatible servers (llama-server / vLLM /
