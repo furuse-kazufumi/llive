@@ -37,20 +37,27 @@ llive (FullSense 思考層) の **LLM backend を Transformer 以外で完成**�
 4. **honest disclosure 厳守** — 異常に良い結果が出たら必ず内訳を疑う
    (memory `feedback_benchmark_honest_disclosure`).
 
-## 0.2 低スペック PC 性能目標 (測定対象)
+## 0.2 低スペック PC (GPU 無し) 性能目標 (測定対象)
 
-memory `feedback_benchmark_progressive_tokens` の xs/s/m/l/xl 5 段階に
-**低スペック PC 系列**を主軸として追加:
+ユーザー primary 環境 = **GPU 無しの個人 PC**. memory
+`feedback_benchmark_progressive_tokens` の xs/s/m/l/xl 5 段階のうち、
+**xs / s に焦点**を当てて短期目標とする. m 以上は **長期目標** (= 軽量
+モデル + Rust 化 + stage-wise routing で初めて届く領域).
 
-| token size | 目標 latency (個人 PC, CPU only) | 目標 RAM 占有 |
-|---|---|---|
-| xs (~500 tok) | < 3 秒 | < 4 GB |
-| s (~2k tok) | < 8 秒 | < 6 GB |
-| m (~8k tok) | < 20 秒 | < 8 GB |
-| l (~32k tok) | < 60 秒 | < 10 GB |
-| xl (~128k tok) | < 180 秒 | < 14 GB |
+| token size | 短期目標 latency (CPU only) | 短期目標 RAM 占有 | 達成可能性 |
+|---|---|---|---|
+| xs (~500 tok) | < 5 秒 | < 4 GB | ◎ (RWKV 0.4B-1.5B で達成可能) |
+| s (~2k tok) | < 15 秒 | < 6 GB | ○ (RWKV 1.5B-3B 想定) |
+| m (~8k tok) | < 45 秒 | < 8 GB | △ (RWKV 7B Q4 想定、長期) |
+| l (~32k tok) | < 180 秒 | < 10 GB | ✗ 短期測定対象外 |
+| xl (~128k tok) | 測定保留 | 測定保留 | ✗ 短期測定対象外 |
 
-GPU 有り環境 (16GB VRAM 想定) は上記を 1/3〜1/5 で目指す.
+→ **xs/s が primary 評価軸**. m を「将来到達したい線」として並列追跡.
+l/xl は GPU 環境が利用可能になってから測定 (それまで pause).
+
+GPU が無い → 案 A (Mamba 7B) は **CPU 上で実用速度に達しない可能性が
+高い**ことが事前検証で示唆されており、短期では **案 E (RWKV-7 軽量サイズ)
+が唯一の現実解**. このため §3 推奨戦略でも軸 1 を RWKV 最優先に置く.
 
 ---
 
