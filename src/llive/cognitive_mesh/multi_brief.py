@@ -147,3 +147,109 @@ class MultiBriefCoherenceManager:
 
     def latest_events(self, n: int = 10) -> list[CoherenceEvent]:
         return self._events[-n:]
+
+    # ------------------------------------------------------------------
+    # M8.8 — graph analytics (自前 BFS / centrality / SCC, networkx 化候補)
+    # ------------------------------------------------------------------
+
+    def shortest_path(self, src_id: str, dst_id: str) -> list[str] | None:
+        """coherence edge を辿る最短パス (重み無視 BFS).
+
+        Returns:
+            ノード列 [src, ..., dst] または到達不能なら None.
+        """
+        if src_id not in self._map or dst_id not in self._map:
+            return None
+        if src_id == dst_id:
+            return [src_id]
+        # adjacency: src -> [(dst, weight)]
+        adj: dict[str, list[str]] = {}
+        for (s, d) in self._coherence:
+            adj.setdefault(s, []).append(d)
+        visited = {src_id}
+        prev: dict[str, str] = {}
+        q: deque[str] = deque([src_id])
+        while q:
+            cur = q.popleft()
+            for nxt in adj.get(cur, []):
+                if nxt in visited:
+                    continue
+                visited.add(nxt)
+                prev[nxt] = cur
+                if nxt == dst_id:
+                    # 逆順に辿って path 復元
+                    path = [dst_id]
+                    while path[-1] != src_id:
+                        path.append(prev[path[-1]])
+                    path.reverse()
+                    return path
+                q.append(nxt)
+        return None
+
+    def connected_components(self) -> list[set[str]]:
+        """coherence edge の無向連結成分 (frozen も含む全 attached brief)."""
+        nodes = set(self._map._by_id.keys())  # noqa: SLF001 — internal map
+        undirected: dict[str, set[str]] = {n: set() for n in nodes}
+        for (s, d) in self._coherence:
+            if s in undirected and d in undirected:
+                undirected[s].add(d)
+                undirected[d].add(s)
+        visited: set[str] = set()
+        components: list[set[str]] = []
+        for n in nodes:
+            if n in visited:
+                continue
+            comp: set[str] = set()
+            stack = [n]
+            while stack:
+                x = stack.pop()
+                if x in visited:
+                    continue
+                visited.add(x)
+                comp.add(x)
+                stack.extend(undirected[x] - visited)
+            components.append(comp)
+        return components
+
+    def centrality_scores(self) -> dict[str, float]:
+        """各 brief の単純重み付き out-degree centrality (合計 1.0 正規化).
+
+        実 PageRank 化は networkx 移行時に。本実装は十分軽量な近似:
+        score[node] = sum(weight for out-edge) / total_weight
+        """
+        out_sum: dict[str, float] = {}
+        total = 0.0
+        for (s, _d), w in self._coherence.items():
+            out_sum[s] = out_sum.get(s, 0.0) + w
+            total += w
+        if total == 0.0:
+            return {b: 0.0 for b in self._map._by_id.keys()}  # noqa: SLF001
+        return {b: out_sum.get(b, 0.0) / total for b in self._map._by_id.keys()}  # noqa: SLF001
+
+    def top_central_briefs(self, k: int = 3) -> list[tuple[str, float]]:
+        """centrality_scores 上位 k 件 (id, score). 同点は id 昇順で安定化."""
+        scores = self.centrality_scores()
+        ranked = sorted(scores.items(), key=lambda pair: (-pair[1], pair[0]))
+        return ranked[:k]
+
+    # ------------------------------------------------------------------
+    # M8.8 — 実 Brief との統合
+    # ------------------------------------------------------------------
+
+    def register_brief(self, brief: Brief) -> BriefRef:
+        """実 Brief を受け取り、BriefRef にラップして attach.
+
+        Returns:
+            attach 済の BriefRef (id=brief.brief_id, topic=brief.goal,
+            payload=brief).
+        """
+        ref = BriefRef(id=brief.brief_id, topic=brief.goal, payload=brief)
+        self.attach(ref)
+        return ref
+
+    def get_brief(self, brief_id: str) -> Brief | None:
+        """register_brief() で登録された Brief 本体を取り出す."""
+        ref = self._map.get(brief_id)
+        if ref is None:
+            return None
+        return ref.payload  # type: ignore[no-any-return]
