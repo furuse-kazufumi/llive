@@ -104,6 +104,12 @@ __all__ = [
     "DEFAULT_THRESHOLD",
     "GiftValue",
     "GiftValueEstimator",
+    # COG-MESH-09
+    "GrammarChangeStatus",
+    "GrammarLayer",
+    "GrammarSnapshot",
+    "ProposedChange",
+    "UsageEvidence",
     # COG-MESH-06
     "ProactiveLoop",
     "ProactiveUtterance",
