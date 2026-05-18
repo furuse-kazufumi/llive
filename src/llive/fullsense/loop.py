@@ -137,6 +137,7 @@ class FullSenseLoop:
         sandbox: bool = True,
         llm_backend: LLMBackend | None = None,
         stage_router: "StageBackendRouter | None" = None,
+        factor_hook: "ThoughtFactorDeltaHook | None" = None,
         debug: bool = False,
     ) -> None:
         if not sandbox:
