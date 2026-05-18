@@ -17,9 +17,14 @@ requirements_v0.8_cognitive_mesh.md §3 COG-MESH-02 の最小実装。
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
+
+# 採点しきい値: similarity ベース。token match のみだったとき 0.5 で運用
+# していたので継続する (回帰回避)。
+_RECOVERY_THRESHOLD = 0.5
 
 
 class RecallStatus(StrEnum):
