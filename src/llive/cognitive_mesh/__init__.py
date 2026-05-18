@@ -99,6 +99,7 @@ __all__ = [
     "DEFAULT_THRESHOLD",
     "GRANULARITY_ORDER",
     "BriefDeque",
+    "BriefDequeRunnerBridge",
     "BriefMap",
     "BriefRef",
     "BriefTree",
