@@ -64,6 +64,9 @@ class ProactiveLoop:
     coverage_source: Callable[[], dict[str, float]] | None = None
     # curiosity モードの coverage 閾値 — これ以下なら「埋まっていない領域」
     curiosity_threshold: float = 0.5
+    # 自律 tick (_on_timer) から呼ばれる listener_state プロバイダ.
+    # 設定されていれば自動的に GiftValueEstimator に渡される。None なら無し。
+    listener_state_source: Callable[[], dict] | None = None
     _utterances: list[ProactiveUtterance] = field(default_factory=list)
     _suppressed: list[SuppressedUtterance] = field(default_factory=list)
     _timer: threading.Timer | None = field(default=None, init=False, repr=False)
