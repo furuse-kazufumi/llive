@@ -66,6 +66,10 @@ class ProactiveLoop:
     curiosity_threshold: float = 0.5
     _utterances: list[ProactiveUtterance] = field(default_factory=list)
     _suppressed: list[SuppressedUtterance] = field(default_factory=list)
+    _timer: threading.Timer | None = field(default=None, init=False, repr=False)
+    _stopped: threading.Event = field(default_factory=threading.Event, init=False, repr=False)
+    _running: bool = field(default=False, init=False, repr=False)
+    _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
 
     def __post_init__(self) -> None:
         if self.quiet_hours is None:
