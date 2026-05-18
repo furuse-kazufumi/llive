@@ -266,15 +266,35 @@ flowchart LR
     M5[Mesh5W1H + Granularity<br/>COG-MESH-10] -->|annotation namespace| FSL
   end
   subgraph safety [v0.8 Safety Layer]
-    TRM[TonicRiskMonitor<br/>COG-MESH-03] -.intervene.-> AB[ApprovalBus<br/>既存]
+    TRM[TonicRiskMonitor<br/>COG-MESH-03] -.on_alert.-> RIA[RiskInterventionAdapter<br/>M8.5]
+    RIA -.intervene.-> AB[ApprovalBus<br/>既存]
     AB -.gate.-> FSL
+    IDLE -.payload.-> QM[QuarantinedMemory<br/>M8.2]
+    QM -.signed/verified.-> FSL
   end
   subgraph evolve [v0.8 Evolution Layer]
     GL[GrammarLayer<br/>COG-MESH-09] -.proposal.-> EVO[Self-evolution<br/>EVO-04/06/07 既存]
   end
   classDef new fill:#fef3c7,stroke:#f59e0b,color:#78350f;
-  class PL,QH,GVE,IDLE,MBC,BD,TR,M5,TRM,GL new;
+  class PL,QH,GVE,IDLE,MBC,BD,TR,M5,TRM,GL,RIA,QM new;
 ```
+
+### M8.x 完成配線 (2026-05-19)
+
+skeleton (2026-05-19 早朝) から本実装 (2026-05-19 朝) への移行で
+以下の adapter が新規追加された。元の 10 core 要件は変えず、
+"接続のみ" を担う薄い層として配備:
+
+| Milestone | adapter | 接続先 | 関連要件 |
+|---|---|---|---|
+| M8.2 | `QuarantinedMemory` + `Ed25519Verifier` + `SignedPayload` | `IdleTrainingScheduler.quarantine` 注入 | COG-MESH-04 + SEC-01/02 |
+| M8.3 | `BriefDequeRunnerBridge` | `BriefDeque` ↔ `BriefRunner.submit()` | COG-MESH-08 |
+| M8.4 | `EmbeddingSimilarityFn` | `TitleRecallPlanner.similarity_fn` 注入 | COG-MESH-02 |
+| M8.5 | `RiskInterventionAdapter` | `TonicRiskMonitor.on_alert` → `ApprovalBus.request(action="risk:intervene")` | COG-MESH-03 |
+| M8.6 | `Mesh5W1HAnnotator` | `annotate_5w1h()` → `AnnotationEmitter` (`mesh.*`) | COG-MESH-10 |
+| M8.7 | `ProactiveEvent` / `ConsistencyViolation` + `tick_event` / `tick_consistency` | ProactiveLoop の新 mode | COG-MESH-06 |
+
+全 adapter は **backward compatible** (注入しなければ従来挙動).
 
 | 拡張軸 | 既存層への接続 | 新規 namespace |
 |---|---|---|
