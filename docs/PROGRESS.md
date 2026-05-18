@@ -26,11 +26,13 @@ M8.8 / M8.9 を本実装。1448 → **1470 PASS** (+22)。
 - **言語別 layer は preset (`DEFAULT_LANGUAGES`)** — `MultilingualGrammar`
   は ja/en/zh/ko を v_0 で自動 bootstrap、未登録言語の propose は KeyError
 
-### 残作業 (継続)
+### 残作業 (継続) → 一部 着手
 
-- **M8.1**: ProactiveLoop を llove F25 経由で TUI 表示 + asciinema 録画
-  (llove 側 + 操作者) — agent 単独で進められるのは llove F25 連携の
-  状態次第。次に探索する候補。
+- **M8.1 skeleton**: llove 側 `views/llive/cognitive_mesh_panel.py` で
+  `CognitiveMeshPanel + dispatch 配線 + 15 件テスト` を配備
+  (llove 側 commit b4e9059)。実 Timeline emit 配線
+  (llive cognitive_mesh の各 emit を llmesh Timeline server に push) と
+  asciinema 録画は次セッション。
 
 ### 検証
 
