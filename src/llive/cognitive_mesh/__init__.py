@@ -118,6 +118,7 @@ __all__ = [
     "IdleTrainingScheduler",
     "InfoSource",
     "IngestEvent",
+    "Mesh5W1HAnnotator",
     "Mesh5W1HEdge",
     "Mesh5W1HGraph",
     "Mesh5W1HNode",
