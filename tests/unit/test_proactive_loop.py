@@ -129,13 +129,79 @@ def test_latest_utterances_is_empty_initially(monkeypatch: pytest.MonkeyPatch) -
     assert loop.latest_suppressed(n=10) == []
 
 
-def test_start_and_stop_raise_not_implemented(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_is_running_initially_false(monkeypatch: pytest.MonkeyPatch) -> None:
     guard = _make_guard(monkeypatch)
     loop = ProactiveLoop(quiet_hours=guard)
-    with pytest.raises(NotImplementedError, match="Phase 5"):
-        loop.start()
-    with pytest.raises(NotImplementedError, match="Phase 5"):
+    assert loop.is_running is False
+
+
+def test_start_sets_running(monkeypatch: pytest.MonkeyPatch) -> None:
+    """start() で is_running が True に、stop() で False に."""
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(
+        quiet_hours=guard,
+        tick_interval_seconds=10.0,  # 長め (テストでは timer 実行を待たない)
+        stimulus_source=lambda: "test",
+    )
+    loop.start()
+    try:
+        assert loop.is_running is True
+    finally:
         loop.stop()
+    assert loop.is_running is False
+
+
+def test_start_twice_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard, tick_interval_seconds=10.0)
+    loop.start()
+    try:
+        with pytest.raises(RuntimeError, match="already started"):
+            loop.start()
+    finally:
+        loop.stop()
+
+
+def test_stop_when_not_started_is_safe(monkeypatch: pytest.MonkeyPatch) -> None:
+    """未起動状態で stop() を呼んでもエラーにならない (idempotent)."""
+    guard = _make_guard(monkeypatch)
+    loop = ProactiveLoop(quiet_hours=guard)
+    loop.stop()  # raise しないこと
+    loop.stop()  # 2 回呼んでも OK
+    assert loop.is_running is False
+
+
+def test_autonomous_tick_fires_within_window(monkeypatch: pytest.MonkeyPatch) -> None:
+    """短周期で start()→ utterance が記録される (実機 timer 検証)."""
+    import time
+
+    # Quiet Hours 無効化 (常に Active)
+    monkeypatch.setenv("LLIVE_TZ", "Asia/Tokyo")
+    monkeypatch.setenv("LLIVE_QUIET_HOURS_ENABLED", "0")
+    guard = QuietHoursGuard()
+
+    call_count = {"n": 0}
+
+    def stimulus() -> str:
+        call_count["n"] += 1
+        return f"important topic update #{call_count['n']}"
+
+    loop = ProactiveLoop(
+        quiet_hours=guard,
+        tick_interval_seconds=0.05,  # 50ms
+        stimulus_source=stimulus,
+    )
+    loop.start()
+    try:
+        time.sleep(0.3)  # 6 tick 程度
+    finally:
+        loop.stop()
+
+    # 少なくとも 1 回は stimulus が呼ばれている
+    assert call_count["n"] >= 1
+    # 発話 or 抑制履歴のどちらかに残っているはず
+    total = len(loop.latest_utterances(n=50)) + len(loop.latest_suppressed(n=50))
+    assert total >= 1
 
 
 # ---------------------------------------------------------------------------
