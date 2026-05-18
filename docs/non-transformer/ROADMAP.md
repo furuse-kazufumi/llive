@@ -180,23 +180,26 @@ GPU 有り環境 (16GB VRAM 想定) は上記を 1/3〜1/5 で目指す.
 
 ---
 
-## 3. 推奨戦略 — 3 軸並走
+## 3. 推奨戦略 — 3 軸並走 (低スペック PC primary)
 
 memory `project_llive_dev_style` (第二の脳型スパイラル) +
-`feedback_session_marathon` を踏まえると、単一案に賭けず **3 軸並走**が筋:
+`feedback_session_marathon` + 「拡張性ファースト + 低スペック PC primary」
+の v0.2 制約を踏まえると、単一案に賭けず **3 軸並走**が筋. ただし
+**低スペック PC 性能目標 (§0.2)** を最優先評価軸とする.
 
-### 軸 1: 短期実用化 (案 A + E)
-- 1-3 ヶ月で Mamba + RWKV を OpenAI 互換 backend として動かす
-- 既存 LLIVE_OPENAI_MODEL 経路で改修ゼロ運用
-- progressive matrix で実測、honest disclosure
+### 軸 1: 低スペック PC 実用化 (案 E + A)
+- **案 E (RWKV-7) を最優先** — CPU only 環境で xs/s 領域 (§0.2 表) を満たす唯一の現実解
+- 案 A (Pure Mamba 7B Q4) — 並走で動かし、GPU 有り環境のベースライン
+- 1-3 ヶ月で個人 PC bench (`benchmark/low_spec.py`) を整備、§0.2 表を埋める
 
-### 軸 2: 中期差別化 (案 B)
-- 4-6 ヶ月で Jamba hybrid + stage-wise backend infra
+### 軸 2: 中期差別化 (案 B + stage-wise)
+- 4-6 ヶ月で Jamba hybrid + stage-wise backend infra (`StageBackendRouter`)
 - llive 6 stage と Mamba/Attention 層を直結
 - license clear 後に商用品質まで上げる
+- stage ごとに **軽い backend ↔ 重い backend を動的選択**で低スペック PC でも動作
 
 ### 軸 3: 長期論文化 (案 C)
-- 7-12 ヶ月で思考因子-Δ 橋渡し PoC
+- 7-12 ヶ月で思考因子-Δ 橋渡し PoC (`ThoughtFactorDeltaHook`)
 - 精密工学会 + 認知科学系学会で論文
 - mcp-3d v4 とセットで「精密計測 × 認知 × LLM 内部状態」3 軸論文
 
