@@ -6,6 +6,64 @@
 
 ---
 
+## 2026-05-18 (深夜) — v0.8 Cognitive Mesh / Proactive Loop 要件群追加
+
+ユーザ依頼「直近 memory に記憶した内容も llive の設計思想にリンクするので
+要件定義に追記しておいて」を受け、2026-05-18 の認知モデル / 能動性 /
+周期トリガ / 静音時間帯の memory 群を **architecture-level 要件** として
+固定。FullSense 哲学「責任所在を architecture level に持ち込む」の延長。
+
+### Done — 1 commit (dcd2fdc) + 後続 2 commit
+
+- **`docs/requirements_v0.8_cognitive_mesh.md`** 新規 (462 行) — COG-MESH-01〜10:
+  - 01 MultiBriefCoherenceManager (並列 Brief + coherence_graph)
+  - 02 TitleRecallPlanner (起承転結 + 伏線回収採点)
+  - 03 TonicRiskMonitor (小脳的常時 KYT、別スレッド + エッジ NPU 視野)
+  - 04 IdleTrainingScheduler (Quiet Hours 外の自発 ingest)
+  - 05 GiftValueEstimator (発話前の価値見積もり gate)
+  - 06 ProactiveLoop (timer/event/curiosity/consistency 4 モード)
+  - 07 QuietHoursGuard (fail-closed、env LLIVE_QUIET_HOURS_*)
+  - 08 BriefDeque/Map/Tree (STL 相当のセッション保持)
+  - 09 GrammarLayer (時代変化を追う継続学習対象)
+  - 10 Mesh5W1H + Granularity Hierarchy
+- **`.planning/REQUIREMENTS.md`** v0.8b COG-MESH 群を追記 (CABT v0.8 と並列)
+- **`docs/architecture.md` §8** v0.8 拡張ポイント (Proactive / Mesh /
+  Safety / Evolution Layer の Mermaid + 接続表)
+- **`docs/roadmap.md` Phase 8** CABT + COG-MESH 双子マイルストーン
+- **`docs/glossary.md`** に 13 用語 + 5 略語追加
+- **`tests/unit/test_quiet_hours_guard.py`** QuietHoursGuard 単体テスト
+  雛形 11 シナリオ (importorskip で実装着地まで skip)
+
+### 出典 memory (2026-05-18 一連)
+
+- `user_cognitive_mesh_model` / `feedback_brain_like_trigger_periodic` /
+  `feedback_proactive_llm_speech` / `feedback_quiet_hours` /
+  `project_proactive_llive_demo` / `feedback_response_timing`
+
+### 設計指針 (本セッションで確立)
+
+- **倫理は architecture の一部** (Quiet Hours は ProactiveLoop の必須依存)
+- **fail-closed in Quiet Hours**
+- **on-prem 完結** + **HITL ゲート維持** + **エッジ展開を意識**
+- **完璧主義を architectural にも抑制** (70 点で commit、test 先行配備)
+
+### Test status
+
+- `tests/unit/`: **1272 PASS + 1 SKIP** (QuietHoursGuard 雛形)
+- regress 無し
+
+### 次
+
+- Phase 5 で M8.0 (QuietHoursGuard 実装、雛形テストを green に転換) から着手
+- `project_proactive_llive_demo` Phase 0 を Phase 5 内で demo 化
+- llove F25 連携経由で TUI 表示まで
+
+関連: portal 側 `Phase 0.4 — Reference hubs + drift 防止構造の整備` で
+COG-MESH 要件を portal hub から発見可能化 (本 commit と同セッション、
+portal 9 commit)。
+
+---
+
 ## 2026-05-17 (9 回目) — IND-FX 独立性原則 + IND-04 アノテーション機構
 
 LinkedIn フィードバック「llive/llove/llmesh が相互依存していると単体使用の価値が
