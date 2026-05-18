@@ -6,6 +6,49 @@
 
 ---
 
+## 2026-05-19 (朝) — v0.8 Cognitive Mesh M8.2〜M8.7 本実装フェーズ完了
+
+朝の継続セッションで NEXT_SESSION Priority 1 の本実装を全件 (M8.2〜M8.7)
+完了。1393 → **1448 PASS** (+55)。skeleton から「実 adapter 配線」へ昇格。
+
+### 完了マイルストーン
+
+| Milestone | 内容 | 新規 adapter / 修正 | テスト数 |
+|---|---|---|---|
+| M8.2 | Idle ingest → Quarantined Memory + Ed25519 統合 | `quarantined_memory.py` (SignedPayload / Ed25519Verifier / QuarantinedMemory) + `idle_training.quarantine` 注入 | 16 |
+| M8.3 | BriefDeque ↔ BriefRunner 接続 | `brief_runner_bridge.BriefDequeRunnerBridge` | 6 |
+| M8.4 | TitleRecall semantic similarity | `embedding_similarity.EmbeddingSimilarityFn` + `TitleRecallPlanner.similarity_fn` 注入 (token match との max を採点) | 9 |
+| M8.5 | ApprovalBus.intervene 配線 (threading は先行完了) | `intervention.RiskInterventionAdapter` (TonicRiskMonitor.on_alert callable) | 5 |
+| M8.6 | Mesh5W1H ↔ Annotation Channel 統合 | `mesh_annotator.Mesh5W1HAnnotator` (mesh.who/.../mesh.granularity emit) | 7 |
+| M8.7 | Proactive event / consistency モード | `ProactiveEvent` / `ConsistencyViolation` + `tick_event` / `tick_consistency` + `_on_timer` 分岐 | 12 |
+
+設計上の共通点:
+- すべて backward compatible: 注入しなければ従来挙動
+- fail-closed: adapter 経路の例外は token / pending / silent に縮退
+
+### 統合 demo 拡張
+
+`py -3.11 -m llive.cognitive_mesh.demo` が 5 → **9 セクション**に拡大:
+- Active (10:00 JST) で全 adapter が稼働 / Quiet (02:00 JST) で能動系が黙る
+- TonicRisk → ApprovalBus pending 数まで可視化
+- Quarantined Memory の signed/unsigned/verified ステータス並列表示
+
+### 残作業
+
+| Milestone | 内容 | 担当 |
+|---|---|---|
+| M8.1 | ProactiveLoop を llove F25 経由で TUI 表示 + asciinema 録画 | 操作者 + 別セッション |
+| M8.8 | MultiBriefCoherenceManager を networkx + 実 Brief 統合 | Phase 6 |
+| M8.9 | GrammarLayer を EVO-04/06/07 と接続、言語別 layer 設計 | Phase 7 |
+
+### 次セッション候補
+
+- 操作者: Anthropic / Gemini / OpenAI credential 復旧 → bench 再実行
+- 操作者: asciinema 録画 (Active / Quiet 切替) → 普及 PR
+- agent: M8.8 (networkx 化) と M8.9 (GrammarLayer 接続) の本実装
+
+---
+
 ## 2026-05-19 (早朝) — v0.8 Cognitive Mesh 実装ラッシュ (COG-MESH-01〜10 全件)
 
 「朝 7 時まで自律的に改良し続けて」のセッション後半で要件 v0.8 を
