@@ -141,6 +141,11 @@ class GrammarLayer:
             evidence=evidence,
         )
         self._proposals.append(proposal)
+        if self.change_sink is not None:
+            try:
+                self.change_sink.on_propose(proposal)
+            except Exception:  # noqa: BLE001 — sink 失敗は本処理を止めない
+                pass
         return proposal
 
     def pending_proposals(self, language: str | None = None) -> list[ProposedChange]:
