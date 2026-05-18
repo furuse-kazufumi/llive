@@ -126,6 +126,7 @@ __all__ = [
     "Mesh5W1HGraph",
     "Mesh5W1HNode",
     "MultiBriefCoherenceManager",
+    "ProactiveEvent",
     "ProactiveLoop",
     "ProactiveUtterance",
     "ProposedChange",
