@@ -181,6 +181,18 @@ GPU 無し PC で実用速度に到達することを最優先軸として、Tra
 - **[llove](https://github.com/furuse-kazufumi/llove)** — TUI dashboard、可視化と HITL
 - **[llmesh-suite](https://github.com/furuse-kazufumi/llmesh-suite)** — llmesh + llove のメタパッケージ
 - **llive** — 自己進化型モジュラー記憶 LLM 基盤（本リポジトリ）
+- **[lldesign](https://github.com/furuse-kazufumi/lldesign)** / **[lltrade](https://github.com/furuse-kazufumi/lltrade)** — 設計 / 取引研究 (alpha)
+
+## FullSense Portal hubs (drift 防止)
+
+家族プロダクト横断の真実ソースは FullSense portal 配下の hub ページ。
+llive 単独で多くを語っているが、公式 install snippet / 推奨モデル / ベンチ
+運用ルール / Spec の単一情報源は portal:
+
+- [Spec hub](https://furuse-kazufumi.github.io/fullsense/spec/) — FullSense Eternal Spec v1.1 + 要件定義 8 本 (v0.1〜v0.8 cognitive mesh)
+- [Benchmark Policy](https://furuse-kazufumi.github.io/fullsense/benchmarks/policy/) — 系列 A/B/C/D + xs/s/m/l/xl progressive curve + honest disclosure
+- [Recommended models](https://furuse-kazufumi.github.io/fullsense/recommended-models/) — 用途別推奨 on-prem モデル + llama3.2:3b 非推奨根拠
+- [Comparison](https://furuse-kazufumi.github.io/fullsense/comparison) — vs Claude Code / Perplexity / Codex / Gemini (honest disclosure 付き)
 
 ## ライセンス
 
