@@ -1059,5 +1059,74 @@ LLM みたいな形に出来るようにしたいです。」
 
 ---
 
+---
+
+## v0.8b — Cognitive Mesh / Proactive Loop / Quiet Hours (COG-MESH 群) (2026-05-18 追加)
+
+**動機:** ユーザが自身の認知モデルを言語化 — **主セッション + 複数並列 +
+5W1H メッシュ + 起承転結 + 伏線回収 + 小脳的 KYT + STL コンテナ的セッション
+保持 + 6 階層の言語化粒度 + 時代変化する文法層** — し、加えて Claude Code /
+llive への **能動性 / 周期トリガ / 就寝時間帯の沈黙** の要望が一連で出た
+(2026-05-18 一連メモ)。これらは個別 feedback に閉じず、FullSense 哲学
+「責任所在を architecture level に持ち込む」の延長として **llive 設計思想の
+中核要件** に固定する。CABT (v0.8) と直交する高レイヤ群として v0.8b に
+配置する。
+
+詳細仕様: [`docs/requirements_v0.8_cognitive_mesh.md`](../docs/requirements_v0.8_cognitive_mesh.md)
+
+### COG-MESH 要件一覧
+
+| ID | 名称 | 説明 | 既存 FR / 出典 memory | 関連先行研究タグ |
+|---|---|---|---|---|
+| **COG-MESH-01** | **MultiBriefCoherenceManager** | 複数 Brief を並列保持し、相互更新する coherence_graph。Annotation Channel `cog.cross_brief_impact` を emit | Loop / Brief Runner / `user_cognitive_mesh_model` | multi_agent_dialogue / coherence_graph |
+| **COG-MESH-02** | **TitleRecallPlanner** | 起承転結の「起」段で立てた伏線 Annotation を Channel に積み、「結」段で recall_rate を採点。プレゼン品質指標 | Annotation / `user_cognitive_mesh_model` | narrative_structure / foreshadowing / plot_recall |
+| **COG-MESH-03** | **TonicRiskMonitor** | 別スレッドで常時動く危険予測 (KYT 風)。閾値超で ApprovalBus.intervene を能動発火、エッジでは別チップ実装も視野 | ApprovalBus / SEC / `user_cognitive_mesh_model` | safety_monitor / cerebellum_model / kyt_industrial |
+| **COG-MESH-04** | **IdleTrainingScheduler** | Quiet Hours 外の空き時間に RSS / arXiv / GitHub trending / RAD 差分を ingest し semantic に lift。Quarantined Memory + Ed25519 経由 | SEC-01/02 / `feedback_brain_like_trigger_periodic` | curiosity_driven_learning / dmn / background_rehearsal |
+| **COG-MESH-05** | **GiftValueEstimator** | 能動発話前に「プレゼントとしての価値」(novelty / relevance / risk_avoidance / cost_to_listener) を見積もり、低価値は黙る。発話前 gate | Loop / Approval Bus / `user_cognitive_mesh_model` (§14) | value_alignment / utility_estimation / silence_policy |
+| **COG-MESH-06** | **ProactiveLoop** | FullSenseLoop を自発的に起動する周期/イベント駆動ループ。4 モード (timer / event / curiosity / consistency) を統合 | Loop / `feedback_proactive_llm_speech` / `feedback_brain_like_trigger_periodic` | default_mode_network / active_inference / proactive_dialogue |
+| **COG-MESH-07** | **QuietHoursGuard** | 時刻に基づいて能動行動を抑止するガード。env `LLIVE_QUIET_HOURS_*` で設定、fail-closed (時刻取得失敗時は抑止側に倒す) | 全 proactive 系の必須依存 / `feedback_quiet_hours` | circadian_policy / quiet_time_ai_ethics |
+| **COG-MESH-08** | **BriefDeque / BriefMap / BriefTree** | flat list ではなく入れ替え可能 + ブランチ分岐対応の STL 相当コンテナでセッション保持。MultiBriefCoherenceManager の内部表現 | Brief Runner / `user_cognitive_mesh_model` (追記 22:55) | session_branching / deque_map / version_tree |
+| **COG-MESH-09** | **GrammarLayer** | 固定埋め込みでなく継続学習対象としての文法層。時代変化を追跡、自己進化 (EVO-04/06/07) と接続 | structural memory / EVO / `user_cognitive_mesh_model` (追記 23:00) | grammar_evolution / continual_grammar_learning / multilingual_grammar |
+| **COG-MESH-10** | **Mesh5W1H + Granularity Hierarchy** | 5W1H メッシュ表現 (mesh.who / mesh.what / ...) と 6 階層の言語化粒度 (word/phrase/clause/sentence/paragraph/topic) を Annotation namespace と内部表現に明示 | Annotation / `user_cognitive_mesh_model` (§12, 追記 22:55) | semantic_role_labeling / discourse_hierarchy / granularity_aware_lm |
+
+### CABT との関係
+
+| 側面 | CABT (v0.8 低レイヤ) | COG-MESH (v0.8b 高レイヤ) |
+|---|---|---|
+| 対象 | Transformer ブロック内部 | FullSenseLoop の周囲 |
+| 介入点 | forward pass の hook | Loop の tick / Stimulus 注入 / Annotation Channel |
+| 例 | CABT-04 Salience-gated Attention | COG-MESH-03 TonicRiskMonitor |
+| 例 | CABT-06 Approval-gated Decoding | COG-MESH-05 GiftValueEstimator |
+| 実装段階 | Phase 8 (S2-S6 段階で導入) | Phase 5 (骨格) → Phase 6/7 (拡張) |
+
+CABT と COG-MESH は **意図的に同じ v0.8 期** で並列に進める「双子の要件群」。
+
+### 段階導入計画
+
+| Phase | 含める COG-MESH | 何が出るか |
+|---|---|---|
+| **Phase 5 (v0.5.0)** | 07 (Quiet Hours) / 05 (Gift Value) / 06 (Proactive timer) / 04 (Idle 1 source) / 08 (Brief Deque/Map 最小) | 「勝手に話しかけてくる llive」demo (`project_proactive_llive_demo` Phase 0) |
+| **Phase 5.x** | 06 (demo 化) | asciinema 録画 → LinkedIn / Qiita PR 素材 (`project_f25_demo_polish` 整合) |
+| **Phase 6** | 02 (TitleRecall) / 03 (TonicRisk 3 model) / 10 (Mesh5W1H) / 06 (event/curiosity モード) | プレゼン / KYT / 5W1H メッシュ表現の Annotation 拡張 |
+| **Phase 7** | 01 (MultiBrief 本実装) / 09 (Grammar) / エッジ展開 | 複数セッション並列、文法 evolution、`project_llmesh_neuro_long_term` 合流 |
+
+### 安全 / 倫理境界
+
+- Quiet Hours fail-closed: 時刻取得失敗 / TZ 不明 / 設定欠落のいずれでも、
+  自発行動は **抑止側に倒す**。違反は信頼破壊。
+- 「話しかけすぎ」: GiftValueEstimator + cooldown + 同一発話 hash chain
+- prompt injection 増幅: IdleTrainingScheduler の ingest 経路は
+  Quarantined Memory (SEC-01) + Ed25519 (SEC-02) を必ず経由
+- 「停止できない」状態: `/rotate clear` / Stop hook clear / ProactiveLoop.stop()
+  の 3 重停止を担保
+- 完璧主義抑制: `feedback_response_timing` を design 工程にも適用、
+  70 点で commit
+
+### マッピング更新 (本セクションで増えるもの)
+
+- v0.8b (Phase 5-7) COG-MESH: 10 total (Phase 5: 5 件, Phase 6: 4 件, Phase 7: 2 件 — 一部は段階拡張で複数 Phase に跨る)
+
+---
+
 *Requirements defined: 2026-05-13*
-*Last updated: 2026-05-17 — ORG-09/10 (Qwen 商用障壁解消) + VLM-FX (VLM 将来要件 10 件、ユーザー専門領域 画像処理/三次元計測)*
+*Last updated: 2026-05-18 — COG-MESH 群 (v0.8b, 10 件) 追加。詳細仕様は `docs/requirements_v0.8_cognitive_mesh.md` を参照*
