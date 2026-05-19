@@ -73,6 +73,42 @@ candidate hot spots (project_llive_rust_acceleration.md より既知, 本セッ�
 
 ---
 
+### A-5. ユーザー追加方針 (2026-05-20)
+
+ユーザー追加指示:
+
+1. 「コア部分のデータの持ち方とかコンテナを変えてみたり, デザインパターンを
+   拡張してみたりして, 出来るだけ自動的に最適な構造に収束する感じが理想的」
+2. 「脳のシナプス構造のような重みづけが変化するような感じがいい」
+
+これを受けて方針確定:
+
+#### B-0 設計 — `SynapticSelector` (Hebbian-style strategy selection)
+
+`src/llive/perf/synaptic_selector.py` を新規作成:
+
+- `StrategyVariant(name, impl, weight, n_calls, avg_latency_ms)` — 各候補
+- `SynapticSelector(variants, learning_rate, exploration_rate)`:
+  - `choose()` — 重み付き確率 + ε-greedy で variant を選択
+  - `record_result(variant, latency_ms)` — Hebbian 更新で重みを増減
+  - `converge()` — 最終的に最高重み variant を返す
+- 結果として「使われる経路 (LTP, long-term potentiation)」が強化され,
+  「使われない経路 (LTD)」は弱化される.
+
+これは TRIZ 内蔵 (FR-23〜27) の self-evolution と整合 — 「設計判断自体を
+RL 化する」拡張. 既存 `perf/optimizer.py` (§E2 bounded modification) の上に
+collection / pattern 選択の自動収束層を載せる.
+
+### A-6. baseline 計測結果
+
+- **pytest unit 全件**: `1517 passed in 64.85s` (前回 1518 件確認の中
+  1 件は integration 側に分類, この計測では unit のみ)
+  - 1 件あたり平均 42.7ms
+- **HEAD**: `17e63bb` (optimize/core-2026-05-20 branch 始点)
+- **環境**: Windows 11 / Python 3.11.x / `py -3.11 -m pytest`
+
+---
+
 ## Phase B: 実験ループ
 
 実験は 1 試行 = 1 サブセクションで記録. テンプレ:
