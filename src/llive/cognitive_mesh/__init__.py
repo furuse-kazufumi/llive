@@ -102,10 +102,15 @@ from llive.cognitive_mesh.title_recall import (  # COG-MESH-02
     RecallStatus,
     TitleRecallPlanner,
 )
-from llive.cognitive_mesh.http_sink import (  # M8.1 HTTP sink skeleton
+from llive.cognitive_mesh.http_sink import (  # M8.1 HTTP sink + production
+    ENV_TIMELINE_BATCH_SIZE,
+    ENV_TIMELINE_RETRIES,
+    ENV_TIMELINE_TOKEN,
     ENV_TIMELINE_URL,
     HttpTimelineSink,
+    ProductionHttpTimelineSink,
     http_sink_from_env,
+    production_http_sink_from_env,
 )
 from llive.cognitive_mesh.timeline_emitter import (  # M8.1 Timeline bridge
     CognitiveMeshTimelineEmitter,
