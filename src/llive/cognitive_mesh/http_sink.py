@@ -1,15 +1,18 @@
 # SPDX-License-Identifier: Apache-2.0
-"""COG-MESH M8.1 — HTTP TimelineSink skeleton.
+"""COG-MESH M8.1 — HTTP TimelineSink (skeleton + production).
 
 `TimelineSink` Protocol の HTTP 実装。stdlib `urllib.request` ベースで
 依存ゼロ。`llive.observability.llove_bridge._post_to_llmesh` と同じ
 endpoint 仕様 (`POST {url}/timeline/ingest` JSON body) に揃える.
 
+2 段提供:
+- ``HttpTimelineSink`` — 1 event 1 POST、retry / auth なしの skeleton.
+- ``ProductionHttpTimelineSink`` — bearer auth + exponential backoff
+  retry + batch (1 event 1 POST だが内部 batch buffer で逐次 push).
+
 設計:
 - best-effort: HTTP 失敗時は silent (sink Protocol 上 push は戻り値なし).
-- URL は constructor 引数 or env `LLIVE_LLMESH_TIMELINE_URL` から解決.
-- Phase 6 で実 production wire 込み。本 skeleton は contract verification
-  と shape 確認まで.
+- URL は constructor 引数 or env から解決.
 """
 
 from __future__ import annotations
@@ -17,9 +20,10 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 _logger = logging.getLogger("llive.cognitive_mesh.http_sink")
@@ -29,6 +33,9 @@ _INGEST_PATH = "/timeline/ingest"
 
 # env 変数 (llove_bridge と命名揃え)
 ENV_TIMELINE_URL = "LLIVE_LLMESH_TIMELINE_URL"
+ENV_TIMELINE_TOKEN = "LLIVE_LLMESH_TIMELINE_TOKEN"
+ENV_TIMELINE_RETRIES = "LLIVE_LLMESH_TIMELINE_RETRIES"
+ENV_TIMELINE_BATCH_SIZE = "LLIVE_LLMESH_TIMELINE_BATCH_SIZE"
 
 
 @dataclass
