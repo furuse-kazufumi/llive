@@ -246,9 +246,103 @@ llgrow は **AI が AI 自身の普及を進める** 仕組みなので、特に
 - [[feedback-publication-channels]] — GitHub Pages / Mintlify / Claude Artifacts
 - [[project-f25-demo-polish]] — 動きで魅せる + 採用ファネル先頭
 
+## リスク抽出 (RISK-FX) — 2026-05-19 追記
+
+llgrow 着手にあたって明示的に track すべきリスク群. 個々に
+**mitigation (緩和策)** + **owner (誰が責任を持つか)** を割り付ける.
+
+### A. 法的リスク
+
+| ID | リスク | 影響 | mitigation | owner |
+|---|---|---|---|---|
+| LEG-01 | FullSense 同名商標を他社が先取り | ブランド剥奪、訴訟可能性 | 商標出願 (5 万円 / 1 区分) を 3 ヶ月以内に | user |
+| LEG-02 | 利用する AI モデルのライセンス違反 (商用不可モデルを商用利用) | 訴訟 / 配信停止 | モデル選定時に必ず license tier 確認 (Apache 2.0 / MIT / 商用 OK のもののみ) | agent |
+| LEG-03 | 生成物が他者著作物と類似 (画像 / コード) | 削除要請 / 賠償 | AI 生成画像は SHA256 → reverse image search 自動check | agent |
+| LEG-04 | sponsor 情報 (個人情報) の管理ミス | 個人情報保護法違反 | sponsor 情報は llive ledger に暗号化保存 + 退会即削除 | agent |
+| LEG-05 | 景表法 (誇大広告) | 行政指導 | "world's first" 等の誇大表現を style-guard で禁止 | agent |
+| LEG-06 | 金商法 / 投資勧誘規制 (lltrade 関連で投資助言とみなされる) | 業務停止 | lltrade 関連 content には自動 disclaimer 付与 | agent |
+
+### B. 技術リスク
+
+| ID | リスク | 影響 | mitigation | owner |
+|---|---|---|---|---|
+| TECH-01 | AI 生成物の品質劣化 (drift) | 投稿の質低下 → 視聴者離反 | GROW-06 A/B + 人間 spot-check (週次) | agent |
+| TECH-02 | 外部 API 価格変動 / 廃止 (OpenAI / Together 等) | 自動化停止 | on-prem fallback を必須に (degrade gracefully) | agent |
+| TECH-03 | GPU 故障 / 火災 / 自宅サーバ事故 | データ喪失 / 開発停止 | UPS + 火災検知器 + 定期バックアップ to クラウド | user |
+| TECH-04 | データ喪失 (誤削除 / RAID 故障) | コンテンツ資産喪失 | D ドライブ → クラウド (Backblaze / B2) 毎日 sync | user |
+| TECH-05 | 依存パッケージの脆弱性 | RCE / 認証バイパス | dependabot + sca 自動 scan (raptor 連携) | agent |
+| TECH-06 | supply chain attack (PyPI / npm typosquatting) | malicious code 実行 | requirements を pin + checksum verify | agent |
+
+### C. ビジネスリスク
+
+| ID | リスク | 影響 | mitigation | owner |
+|---|---|---|---|---|
+| BIZ-01 | 大手 (Google / Anthropic / OpenAI) による FullSense 概念模倣 | 認知シェア奪取 | Honest disclosure + 先行 prior art を Qiita 等で大量蓄積 | agent |
+| BIZ-02 | 収益化失敗 (予想通り伸びない) | 投資回収不能 | Phase α-γ で月次 KPI 評価 → 撤退判断点を明示 | user |
+| BIZ-03 | BTO 投資後の用途消滅 | sunk cost | 副用途 (動画編集 / 画像生成 / ゲーム) でも価値ある選定 | user |
+| BIZ-04 | スポンサー減退 / 主要 sponsor 離脱 | 月収減 | sponsor を 5+ に分散、依存度 30% 上限 | agent |
+| BIZ-05 | 競合プロダクト (Open WebUI / LibreChat / Anything LLM) の台頭 | 差別化喪失 | on-prem + Approval Bus + HITL の 3 軸を継続強化 | agent |
+
+### D. 健康・心理リスク
+
+| ID | リスク | 影響 | mitigation | owner |
+|---|---|---|---|---|
+| HEALTH-01 | 自動化が user を疲弊させる (承認疲れ) | バーンアウト | GROW-10 で承認頻度上限・緊急性スコアで batch 化 | agent |
+| HEALTH-02 | AI 過信で事実誤認を見逃す | 信用失墜 | 重要 content は出典 URL 必須化 (style-guard 強制) | agent |
+| HEALTH-03 | quiet hours 違反で深夜投稿が user に通知される | 睡眠不足 | QuietHoursGuard を ApprovalBus の通知側にも適用 | agent |
+| HEALTH-04 | コメント返信プレッシャー | 心理負荷 | GROW-04 で「急がない」を default style guide に | agent |
+| HEALTH-05 | 1 人開発の孤立感 | モチベ低下 | Discord / GitHub Discussion で community 形成 | user |
+
+### E. レピュテーションリスク
+
+| ID | リスク | 影響 | mitigation | owner |
+|---|---|---|---|---|
+| REP-01 | AI 生成物の差別的表現 / hate speech | 炎上 / アカウント停止 | toxicity classifier を style-guard pipeline に組込 | agent |
+| REP-02 | AI 自動コメント返信の失礼 / 誤情報 | 個別関係悪化 | 承認前に「AI 下書き」と明示 + 人間最終承認必須 | agent |
+| REP-03 | "中身がない AI 量産" 批判 | ブランド毀損 | honest disclosure + 質的差別化 (商用級コード / 実測値) | agent |
+| REP-04 | Honest disclosure 不足で「騙してる」批判 | 信用失墜 | 全 AI 生成物に "AI-assisted" footer 強制 | agent |
+| REP-05 | 大手企業の不利な比較で炎上 | 訴訟 / 影響力低下 | 比較は公開資料・ベンチのみ、感情的表現禁止 | agent |
+
+### F. セキュリティリスク
+
+| ID | リスク | 影響 | mitigation | owner |
+|---|---|---|---|---|
+| SEC-01 | credential 漏洩 (env / .env / config) | API 不正利用 | settings*.json 移行済、git-secrets で commit 前 scan | agent |
+| SEC-02 | GitHub repo 履歴の secret | 永続的漏洩 | bfg-repo-cleaner で履歴 rewrite + key rotation | user |
+| SEC-03 | 自動 push の意図せぬ漏洩 | privacy 侵害 | push 直前に ApprovalBus 承認 + 内容 review | agent |
+| SEC-04 | ProductionHttpTimelineSink の token 漏洩 | バックエンド乗っ取り | env 経由のみ、log には mask、rotation 90 日毎 | agent |
+| SEC-05 | 自宅サーバの外部公開 → 攻撃面 | RCE / DDoS | VPN 必須、外部公開しない、Tailscale 等の zero-trust | user |
+
+### G. 機会損失リスク
+
+| ID | リスク | 影響 | mitigation | owner |
+|---|---|---|---|---|
+| OPP-01 | 商標を取らず放置 → 他社先取り | LEG-01 と同じ | 6 ヶ月以内に出願 | user |
+| OPP-02 | 環境投資せず時間で失う (時給換算で cloud 課金が割高に) | 累積コスト | Phase 1 で 1 ヶ月使って判断 → 即 BTO | user |
+| OPP-03 | コンテンツ更新止まる → 認知拡大止まる | 機会逸失 | GROW-03 scheduler で minimum cadence 維持 | agent |
+| OPP-04 | 業界 trend (MCP / Agentic / on-prem) に乗り遅れる | 差別化消失 | RAD で trend 監視、四半期 trend review | agent |
+
+### リスク管理プロセス
+
+1. **monthly risk review** (毎月 1 回、~30 分): 上記 table を見て status
+   更新. mitigation が effective か / 新リスク追加か.
+2. **incident log**: 発生したリスクは `docs/incidents/YYYY-MM-DD.md` に
+   ポストモーテムで記録. [[feedback-benchmark-honest-disclosure]] と同じ精神.
+3. **撤退判断点**:
+   - BIZ-02 (収益化失敗): Phase β 終了時に月収 ¥10,000 未満なら llgrow
+     を pause、戦略見直し
+   - HEALTH-01 (バーンアウト): 連続 2 週間で承認待ちが 50 件超積もったら
+     llgrow 全停止
+   - LEG-01 (商標先取り): 出願済名称の場合は即時 rebrand 検討
+4. **絶対遵守ライン**:
+   - 健康 (quiet hours / 承認頻度上限) は絶対に技術的に強制
+   - HITL ApprovalBus を迂回する自動化を許可しない
+   - honest disclosure を取り下げる pressure に屈しない
+
 ## Status
 
 - 2026-05-19: 要件追加 (DRAFT) — 本書
+- 2026-05-19: リスク抽出 (RISK-FX A-G) 追記
 - (今後) Phase α 着手宣言
 - (今後) llgrow 独立リポ化
 - (今後) PyPI 公開
