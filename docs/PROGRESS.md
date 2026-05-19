@@ -26,26 +26,29 @@ M8.8 / M8.9 を本実装。1448 → **1470 PASS** (+22)。
 - **言語別 layer は preset (`DEFAULT_LANGUAGES`)** — `MultilingualGrammar`
   は ja/en/zh/ko を v_0 で自動 bootstrap、未登録言語の propose は KeyError
 
-### 残作業 (継続) → **M8.1 両側 skeleton 完了**
+### 残作業 (継続) → **M8.1 production wire + LoveApp 統合 完了**
 
-llive 側:
+llive 側 (本セッション最終):
 - `cognitive_mesh/timeline_emitter.py` — emit → event dict 変換 +
-  InMemoryTimelineSink (10 テスト + 2 件 brief_result 拡張)
-- `cognitive_mesh/http_sink.py` — TimelineSink Protocol の HTTP 実装
-  (urllib stdlib ベース、9 件テスト、env LLIVE_LLMESH_TIMELINE_URL)
-- `tests/integration/test_cognitive_mesh_e2e.py` — M8.1〜M8.9 chain
-  E2E test 1 件
+  InMemoryTimelineSink (10 + 2 brief_result + 10 contract test)
+- `cognitive_mesh/http_sink.py`:
+  - HttpTimelineSink (skeleton, 9 テスト)
+  - **ProductionHttpTimelineSink** (auth + retry + batch, 12 テスト)
+- `tests/integration/test_cognitive_mesh_e2e.py` — chain E2E
 
-llove 側 (commit b4e9059, e1ee0c2):
-- `views/llive/cognitive_mesh_panel.py` — `CognitiveMeshPanel` +
-  dispatch 配線 (15 テスト)
-- `demo/cog_mesh_demo.py` — stand-alone Textual demo App (5 テスト)
-  - 実行: `py -3.11 -m llove.demo.cog_mesh_demo`
-  - asciinema 録画候補
+llove 側 (本セッション最終):
+- `views/llive/cognitive_mesh_panel.py` — CognitiveMeshPanel + dispatch
+  配線 (15 テスト)
+- `demo/cog_mesh_demo.py` — stand-alone Textual demo (5 テスト)
+- **`llove/app.py` 統合** — LoveApp に CognitiveMeshPanel を
+  env-gated attach (LLOVE_ENABLE_COG_MESH=1, 5 テスト)
 
-llive 1506 PASS / llove 791 PASS. 残作業:
-- 実 production HTTP push wire (auth / retry / batch) は Phase 6
-- asciinema 録画は操作者作業
+llive **1518 PASS** / llove **796 PASS** / llmesh **46 PASS**.
+
+残作業 = **operator 作業のみ**:
+- env 設定 (URL / Bearer / retries / batch / LLOVE_ENABLE_COG_MESH)
+- asciinema 録画 (llive demo / llove demo / LoveApp+env の 3 本)
+- 実 llmesh production 起動
 
 ### 検証
 
