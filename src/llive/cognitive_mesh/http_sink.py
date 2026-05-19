@@ -102,8 +102,154 @@ def http_sink_from_env(
     return HttpTimelineSink(url=url, timeout=timeout, node_id=node_id)
 
 
+# ---------------------------------------------------------------------------
+# ProductionHttpTimelineSink — auth / retry / batch (Phase 6 wire 用)
+# ---------------------------------------------------------------------------
+
+
+def _exp_backoff_seconds(attempt: int, base: float = 0.1, cap: float = 5.0) -> float:
+    """attempt=0..N で 0.1s, 0.2s, 0.4s, ... と倍々 (cap で 5s 上限)."""
+    return min(cap, base * (2 ** attempt))
+
+
+@dataclass
+class ProductionHttpTimelineSink:
+    """auth header + exponential backoff retry + batch buffer 付き HTTP sink.
+
+    Attributes:
+        url: llmesh ベース URL.
+        timeout: 1 POST タイムアウト秒.
+        node_id: ``X-Node-Id`` ヘッダ既定値.
+        auth_token: Bearer auth 用 (None なら header を付けない).
+        retries: 失敗時の最大リトライ回数 (1 回失敗で +1, 既定 3).
+        batch_size: flush() で 1 度に push する event 数の上限. 0 なら
+            push() の度に即時 POST (batch 無効).
+        success_count: 成功 push 累計.
+        failure_count: 失敗 push 累計 (リトライ全て failed のときカウント).
+        retry_count: 実際に backoff を挟んでリトライした回数.
+        _buffer: batch_size > 0 のときの未送信 buffer.
+        _sleep: time.sleep を差し替え可能にする (テスト用).
+    """
+
+    url: str
+    timeout: float = 5.0
+    node_id: str = ""
+    auth_token: str | None = None
+    retries: int = 3
+    batch_size: int = 0
+    success_count: int = 0
+    failure_count: int = 0
+    retry_count: int = 0
+    _buffer: list[dict[str, Any]] = field(default_factory=list)
+    _sleep: Any = field(default=time.sleep, repr=False)
+
+    def push(self, event: dict[str, Any]) -> None:
+        if self.batch_size > 0:
+            self._buffer.append(event)
+            if len(self._buffer) >= self.batch_size:
+                self.flush()
+            return
+        # batch 無効: 即時送信
+        self._post_with_retry(event)
+
+    def flush(self) -> None:
+        """buffer に貯まった event を順次 POST. 例外で残りを止めない."""
+        pending = list(self._buffer)
+        self._buffer.clear()
+        for event in pending:
+            self._post_with_retry(event)
+
+    def _build_request(self, event: dict[str, Any]) -> urllib.request.Request:
+        full_url = self.url.rstrip("/") + _INGEST_PATH
+        body = json.dumps(event).encode("utf-8")
+        headers = {
+            "Content-Type": "application/json",
+            "X-Node-Id": self.node_id or event.get("node_id", ""),
+        }
+        if self.auth_token:
+            headers["Authorization"] = f"Bearer {self.auth_token}"
+        return urllib.request.Request(full_url, data=body, method="POST", headers=headers)
+
+    def _post_with_retry(self, event: dict[str, Any]) -> None:
+        for attempt in range(self.retries + 1):
+            req = self._build_request(event)
+            try:
+                with urllib.request.urlopen(  # nosec B310 — operator URL
+                    req, timeout=self.timeout
+                ) as resp:
+                    if 200 <= int(resp.status) < 300:
+                        self.success_count += 1
+                        return
+                    # non-2xx — retry 対象 (5xx だけにしたいが API spec 未確定)
+                    _logger.debug(
+                        "ProductionHttpTimelineSink: non-2xx (%s), attempt=%d",
+                        resp.status, attempt,
+                    )
+            except (urllib.error.URLError, TimeoutError, OSError) as exc:
+                _logger.debug(
+                    "ProductionHttpTimelineSink: POST failed: %s, attempt=%d",
+                    exc, attempt,
+                )
+            # backoff (最終 attempt の後は sleep しない)
+            if attempt < self.retries:
+                self.retry_count += 1
+                self._sleep(_exp_backoff_seconds(attempt))
+        # 全 attempt 失敗
+        self.failure_count += 1
+
+
+def production_http_sink_from_env(
+    *,
+    timeout: float = 5.0,
+    node_id: str = "",
+    sleep_fn: Any = None,
+) -> ProductionHttpTimelineSink | None:
+    """env から URL / token / retries / batch_size を解決して生成.
+
+    Returns:
+        URL 未設定なら ``None``. それ以外は ProductionHttpTimelineSink.
+
+    env:
+        - ``LLIVE_LLMESH_TIMELINE_URL`` — base URL (必須)
+        - ``LLIVE_LLMESH_TIMELINE_TOKEN`` — Bearer auth (任意)
+        - ``LLIVE_LLMESH_TIMELINE_RETRIES`` — 既定 3
+        - ``LLIVE_LLMESH_TIMELINE_BATCH_SIZE`` — 既定 0 (batch 無効)
+    """
+    url = os.environ.get(ENV_TIMELINE_URL, "").strip()
+    if not url:
+        return None
+    token = os.environ.get(ENV_TIMELINE_TOKEN, "").strip() or None
+    retries_raw = os.environ.get(ENV_TIMELINE_RETRIES, "3").strip()
+    batch_raw = os.environ.get(ENV_TIMELINE_BATCH_SIZE, "0").strip()
+    try:
+        retries = max(0, int(retries_raw))
+    except ValueError:
+        retries = 3
+    try:
+        batch_size = max(0, int(batch_raw))
+    except ValueError:
+        batch_size = 0
+    kwargs: dict[str, Any] = {}
+    if sleep_fn is not None:
+        kwargs["_sleep"] = sleep_fn
+    return ProductionHttpTimelineSink(
+        url=url,
+        timeout=timeout,
+        node_id=node_id,
+        auth_token=token,
+        retries=retries,
+        batch_size=batch_size,
+        **kwargs,
+    )
+
+
 __all__ = [
+    "ENV_TIMELINE_BATCH_SIZE",
+    "ENV_TIMELINE_RETRIES",
+    "ENV_TIMELINE_TOKEN",
     "ENV_TIMELINE_URL",
     "HttpTimelineSink",
+    "ProductionHttpTimelineSink",
     "http_sink_from_env",
+    "production_http_sink_from_env",
 ]
