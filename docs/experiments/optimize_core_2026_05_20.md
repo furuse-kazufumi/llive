@@ -127,4 +127,78 @@ collection / pattern 選択の自動収束層を載せる.
 - **学び**: 副次的に分かったこと
 ```
 
-(以降, 実験ごとに追記)
+### B-0. SynapticSelector 基盤実装
+
+- **仮説**: 「データ構造 / pattern / impl を複数候補で並べ Hebbian 更新で
+  最良に自動収束させる」 selector があれば, 個別 hot path の最適化判断を
+  自動化できる.
+- **変更内容** (commit `392aa40` + auto: backups):
+  - `src/llive/perf/synaptic_selector.py` 新規 — `StrategyVariant` +
+    `SynapticSelector`. ε-greedy + weighted softmax で選択, Hebbian-style
+    報酬 ((mean_latency - measured) / mean_latency) で重み更新, bounded
+    modification (min/max clip), thread-safe (RLock).
+  - `tests/unit/test_perf_synaptic_selector.py` 19 件 — construction
+    validation / choose / converge / Hebbian convergence (slow が劣後) /
+    EWMA / bounds / history cap / thread safety smoke.
+- **計測**:
+  - before: SynapticSelector 自体は新規なので before なし.
+  - llive test 件数: 1518 → 1537 (+19 = 本 test) 緑.
+  - selector の overhead: 単独計測未実施 (後段で確認).
+- **回帰確認**: `py -3.11 -m pytest tests/unit tests/integration -q`
+  → **1537 passed in 60.64s** (回帰なし).
+- **採否**: **採用** (基盤として branch に確定保留. main マージは収束後).
+- **学び**: dataclass + threading.RLock + EWMA + softmax を素直に組合せれば
+  100 行で動く. test 設計で「fast > medium 厳格」は exploration 不足で揺れ,
+  「slow が劣後」のみが固い順序関係.
+
+### B-1. demo: top-K 抽出問題で自動収束を観察
+
+- **仮説**: 上位 K 抽出 hot path で `full_sort` / `partial_sort_heap` /
+  `heapq.nlargest` の 3 variant を SynapticSelector に載せると, `heapq`
+  系が最良に収束する (アルゴリズム的に正しい).
+- **変更内容**: `scripts/demo_synaptic_selector.py` 新規.
+- **計測** (`py -3.11 scripts/demo_synaptic_selector.py --n 5000 --k 10 --iters 200`):
+
+  | variant | weight (final) | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | heapq_nlargest | **100.000 (max)** | 170 | 0.112 |
+  | partial_sort_heap | 1.440 | 18 | 0.237 |
+  | full_sort | 0.377 | 12 | 0.555 |
+
+  - 200 iter / 全体経過 0.52 秒.
+  - 収束結果: `heapq_nlargest` (順序的にも latency 最良).
+  - exploration_rate=0.15 で full_sort も 12 回呼ばれて mean 更新は維持.
+- **回帰確認**: demo は production code を touch しない. 全 test 緑のまま.
+- **採否**: **採用** (demo script として確定. 本機能を実 hot path に
+  注入する experiment B-N は別途).
+- **学び**:
+  - データサイズ・K の比で「最良」は動的に変わるはず → 別実験でデータ
+    分布を変える検証が候補.
+  - **weight 1.0 → 100.0 までの "急成長"** は learning_rate=0.10 で 200 iter
+    で達成. もう少し学習率を下げれば 1000 iter 級でゆるやかに成長する.
+  - exploration_rate を 0 にすると一極集中して他 variant の latency 観測が
+    止まる. 産業実用では **exploration を常に 5-10% 残す** のが安全.
+
+### B-2 候補 (次の試行)
+
+| # | hot path | 候補 variants |
+|---|---|---|
+| B-2 | jsonschema 検証 | jsonschema (pure) / fastjsonschema / 内製 light validator |
+| B-3 | TRIZ matrix lookup | linear / dict / `functools.lru_cache` / perfect hash |
+| B-4 | edge weight decay | per-row loop / list comprehension / numpy 強制 ベクトル化 |
+| B-5 | Bayesian surprise cosine | 純 Python / numpy / scipy.spatial.distance |
+| B-6 | audit JSONL sink | sync open+write / buffered file / async batch |
+
+各候補は独立に SynapticSelector を 1 つ用意 → 候補注入 → run → 採否.
+
+---
+
+## 後で main にマージする決め事
+
+- 「**SynapticSelector 基盤 (B-0)**」と「**demo script (B-1)**」は production
+  code を touch せず, かつ test が全部緑なので, **本 branch のまま PR 候補**.
+- B-2 以降の実 hot path 適用は, 1 つずつ A/B benchmark の改善幅を確認し
+  **5% 以上改善** + **回帰なし** の場合のみ採用 (`[[project-llive-rust-acceleration]]`
+  の 5× ゲートをゆるめた相対ゲート).
+- selector overhead 自体 (μs 以下のはず) を別実験で確認してから, p99
+  latency が浮かないことを示す.
