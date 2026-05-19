@@ -148,6 +148,7 @@ __all__ = [
     "GrammarLayer",
     "GrammarSnapshot",
     "Granularity",
+    "HttpTimelineSink",
     "IdleTrainingScheduler",
     "InMemoryGrammarChangeSink",
     "InMemoryTimelineSink",
