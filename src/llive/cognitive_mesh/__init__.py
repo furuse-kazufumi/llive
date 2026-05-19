@@ -171,6 +171,7 @@ __all__ = [
     "ProactiveEvent",
     "ProactiveLoop",
     "ProactiveUtterance",
+    "ProductionHttpTimelineSink",
     "ProposedChange",
     "QuarantineEntry",
     "QuarantinedMemory",
