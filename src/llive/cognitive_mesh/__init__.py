@@ -194,6 +194,7 @@ __all__ = [
     "granularity_of",
     "http_sink_from_env",
     "is_finer",
+    "production_http_sink_from_env",
     "proactive_to_event",
     "quarantine_to_event",
     "risk_to_event",
