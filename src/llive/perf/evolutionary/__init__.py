@@ -25,6 +25,12 @@ from llive.perf.evolutionary.fitness import (
     rosenbrock_fitness,
     sphere_fitness,
 )
+from llive.perf.evolutionary.fitness_llm import (
+    LLM_GENOME_BOUNDS,
+    LLM_GENOME_LABELS,
+    LlmFitnessConfig,
+    llm_fitness_factory,
+)
 from llive.perf.evolutionary.fitness_ucb import (
     UCB_GENOME_BOUNDS,
     UCB_GENOME_LABELS,
