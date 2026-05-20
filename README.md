@@ -147,10 +147,22 @@ pip install llmesh-llive[dev]       # 開発依存 (pytest / hypothesis / ruff)
 - [要件定義 v0.5 (spatial memory)](docs/requirements_v0.5_spatial_memory.md)
 - [要件定義 v0.6 (concurrency)](docs/requirements_v0.6_concurrency.md)
 - [要件定義 v0.7 (Rust acceleration)](docs/requirements_v0.7_rust_acceleration.md)
+- [要件定義 v0.8 (COG-MESH cognitive mesh)](docs/requirements_v0.8_cognitive_mesh.md) — IMPLEMENTED-FULL (M8.1-9 2026-05-19)
+- [要件定義 v0.9 (llgrow Growth Automation)](docs/requirements_v0.9_growth_automation.md)
+- [**要件定義 v0.A (外部 LLM ランタイム追従)**](docs/requirements_v0.A_external_runtime_tracking.md) — llama.cpp / GGUF / sampler 月次追従ルール (2026-05-21 追加)
+- [**要件定義 v0.B (進化型最適化レイヤ)**](docs/requirements_v0.B_evolutionary_optimization.md) — Genome / GA / 5 backend 進化 (2026-05-21 追加, IMPLEMENTED-FULL EV-01〜09)
+- [llama.cpp 互換性 matrix SSoT](docs/spec/llamacpp_compat_matrix.md) — v0.A の月次レビュー source of truth
 - [**FullSense Eternal Specification v1.0**](docs/fullsense_spec_eternal.md) — 自律常駐認知の永続要件定義 (substrate independent, millennial invariants, ethical minima, mortality protocol, superhuman scope, differentiation analysis)
 - [FullSense 命名リスク調査](docs/fullsense_naming_research.md)
 - [ロードマップ](docs/roadmap.md)
 - [変更履歴](CHANGELOG.md)
+
+### Experiments (2026-05-20 / 21)
+
+- [B-0〜B-9 収束型最適化実験](docs/experiments/optimize_core_2026_05_20.md) — SynapticSelector + UCB1 + 実 production 注入
+- [v0.B 進化型最適化実装記](docs/experiments/evolutionary_v0_B_2026_05_21.md) — Phase 1-4 全件カバー + Demo 4 種実走
+- [low_spec bench mock 実走](docs/experiments/low_spec_mock_2026_05_21.md) — bench 経路の生死 + JSON shape 確定
+- [PR ドラフト changelog](docs/pr_drafts/optimize_core_2026_05_20_changelog.md) — optimize/core → main 3 PR 推奨案
 
 ### Non-Transformer track (2026-05-18 着手)
 
