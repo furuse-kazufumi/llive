@@ -122,6 +122,7 @@ __all__ = [
     "derive_sub_seed",
     "fitness_accepts_seed",
     "llm_fitness_factory",
+    "mock_variant_fitness_factory",
     "rosenbrock_fitness",
     "serial_scheduler",
     "sphere_fitness",
