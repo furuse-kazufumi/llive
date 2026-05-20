@@ -176,6 +176,14 @@ class EvolutionLoop:
                 _log_generation(stats)
             if config.out_dir is not None and stats.generation % max(1, config.checkpoint_every) == 0:
                 _write_generation(config.out_dir, stats, population)
+            # Phase 0.10: 世代終了 hook (lineage 自動書き出し等)
+            if self.on_generation_end is not None:
+                try:
+                    self.on_generation_end(population, stats)
+                except Exception as exc:  # noqa: BLE001
+                    # hook の失敗で run 全体を止めない
+                    if config.log_progress:
+                        print(f"[gen {stats.generation:03d}] on_generation_end hook failed: {exc}")
 
             # 3. 停滞検出
             if stats.best_score > best_so_far + 1e-12:
