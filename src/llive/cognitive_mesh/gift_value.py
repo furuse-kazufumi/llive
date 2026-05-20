@@ -19,6 +19,7 @@ aggregate は重み付き平均、既定閾値 0.6。
 from __future__ import annotations
 
 import hashlib
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
