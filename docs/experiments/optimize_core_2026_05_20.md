@@ -241,17 +241,100 @@ collection / pattern 選択の自動収束層を載せる.
        実行できる
      - 効果見込み: 2-5 倍高速化 (norm 計算スキップ分)
 
-### B-3 以降の候補 (次の試行)
+### B-4. edge weight decay の variants 自動収束 — **selector の限界を発見**
+
+- **仮説**: edge graph の bulk decay は N (要素数) に依存して最良 variant が
+  動的に変わるはず. 小 N では Python の listcomp / loop が numpy overhead
+  を下回り, 大 N では numpy 圧勝.
+- **変更内容** (commit pending):
+  - `src/llive/perf/variants/decay_variants.py` 新規 (5 variants:
+    py_loop / py_listcomp / py_map / np_inplace / np_einsum)
+  - `tests/unit/test_perf_decay_variants.py` 15 件 (parity / zero rate /
+    identity rate / input non-mutation guarantee)
+  - `scripts/demo_synaptic_decay.py` 新規 (N=100/10000/100000 で自動収束)
+- **計測** (`py -3.11 scripts/demo_synaptic_decay.py --n <N> --iters <I>`):
+
+  **N=100, iters=300:**
+
+  | variant | weight | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | np_inplace | **100.000 (max)** | 247 | 0.00144 |
+  | np_einsum | 1.237 | 18 | 0.00515 |
+  | py_listcomp | 1.120 | 9 | 0.00657 |
+  | py_loop | 1.014 | 6 | 0.00801 |
+  | py_map | 0.789 | 20 | 0.00963 |
+
+  → 期待通り `np_inplace` が圧勝 (最速).
+
+  **N=10000, iters=300:**
+
+  | variant | weight | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | np_einsum | **100.000 (max)** | 252 | 0.01000 |
+  | np_inplace | 6.396 | 21 | 0.00962 |
+  | py_listcomp | 0.821 | 7 | 0.60953 |
+  | py_loop | 0.617 | 6 | 0.79307 |
+  | py_map | 0.259 | 14 | 0.82440 |
+
+  → **問題**: 実は `np_inplace` (0.00962ms) の方が `np_einsum` (0.01000ms)
+  より速いが, weight は `np_einsum` が 100 (max) に収束.
+
+  **N=100000, iters=200:**
+
+  | variant | weight | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | np_einsum | **100.000 (max)** | 160 | 0.23480 |
+  | np_inplace | 3.345 | 15 | 0.19746 |
+  | py_listcomp | 0.831 | 7 | 5.91169 |
+  | py_loop | 0.620 | 6 | 8.31332 |
+  | py_map | 0.260 | 12 | 9.32972 |
+
+  → 同じ問題: `np_inplace` (0.19746ms) が `np_einsum` (0.23480ms) より
+  17% 速いのに収束は `np_einsum`.
+
+- **回帰確認**: llive 1547 → **1562 緑** (+15 = decay parity test).
+- **採否**: **採用** (variants + demo を branch 確定). production 注入は
+  避けるべき判断. なぜなら次の honest disclosure が示すように selector の
+  早期収束 bias を含むため.
+
+- **学び (honest disclosure)**:
+  1. **小 N (=100) では SynapticSelector は正しく np_inplace に収束**.
+  2. **中〜大 N (10000+) では一極集中 dynamics により実は遅い variant
+     (np_einsum) に収束する病理現象が発生**:
+     - 序盤に偶然 np_einsum が greedy 経路に乗ると重みが伸びる
+     - softmax で更に偏り np_inplace は exploration round (15%) でしか
+       呼ばれず重みが伸びない
+     - 結果: avg_latency_ms 上は np_inplace が真の最良なのに converge は
+       np_einsum
+
+  この弱点は **本セッションで最も価値ある発見**. SynapticSelector を
+  production に注入する前に, 以下のいずれかが必要:
+
+  - **対策案 A**: ε-greedy ではなく UCB (Upper Confidence Bound) ベース
+    に切替. 試行回数が少ない variant に exploration bonus.
+  - **対策案 B**: exploration_rate を時間 annealing せず一定で長期保持.
+  - **対策案 C**: 重み更新の reward を「他 variant の avg_latency_ms
+    との相対値」に変更 (現状は全 active 平均との差).
+  - **対策案 D**: 一定 round ごとに全 variant を確認 round で強制実行.
+
+  これは [[feedback-benchmark-honest-disclosure]] の精神そのもの: **「異常に
+  良い結果が出たら必ず内訳を疑う」** = ここでは「収束結果が最良と言い切る
+  前に avg_latency_ms と比較し直す」.
+
+### B-5 候補: SynapticSelector の改良 (UCB 化 or 確認 round)
+
+B-4 で発見した「真の最良に収束しない」病理を直す. v2 SynapticSelector を
+別 module ないし backward-compatible flag で実装する案.
+
+### B-6 以降の候補
 
 | # | hot path | 候補 variants | 状態 |
 |---|---|---|---|
-| B-3 | TRIZ matrix lookup | linear / dict / `functools.lru_cache` | 既に dict.get O(1) で差分薄, deprioritized |
-| B-4 | edge weight decay | per-row loop / list comprehension / numpy 強制 ベクトル化 | 候補 |
-| B-5 | container choice (top-N 抽出, sliding window 等) | list / deque / heapq | 候補 |
-| B-6 | audit JSONL sink | sync open+write / buffered file / async batch | 候補 |
-| B-7 | jsonschema 検証 | jsonschema (pure) / fastjsonschema / 内製 light | 外部依存追加要, 保留 |
+| B-6 | container choice (sliding window) | list / deque | 候補 |
+| B-7 | audit JSONL sink | sync / buffered / async batch | 候補 |
+| B-8 | jsonschema 検証 | jsonschema (pure) / fastjsonschema / 内製 light | 外部依存追加要, 保留 |
 
-各候補は独立に SynapticSelector を 1 つ用意 → 候補注入 → run → 採否.
+各候補は独立に SynapticSelector (or 改良版 v2) を用意 → 候補注入 → run → 採否.
 
 ---
 
