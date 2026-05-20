@@ -252,3 +252,192 @@ class SynapticSelector(Generic[T]):
         """選択履歴 (最新 `_history_cap` 件)."""
         with self._lock:
             return list(self._history)
+
+
+# ===========================================================================
+# UCBSynapticSelector — Upper Confidence Bound 版
+# ===========================================================================
+#
+# Phase B-4 で発見した SynapticSelector の早期収束 bias (一度 greedy 経路
+# に乗った variant が softmax で固定化され, 真の最良 variant が exploration
+# round でしか呼ばれず重みが伸びない) を解消する代替実装.
+#
+# UCB1 (Auer 2002) の formula:
+#
+#     UCB(i) = mean_reward(i) + c * sqrt(ln(total_calls) / n_calls(i))
+#
+# - mean_reward(i) = variant i の累積平均報酬 (latency を normalize した正値)
+# - total_calls = 全 variant の総呼び出し回数
+# - n_calls(i) = variant i の呼び出し回数
+# - c = exploration constant (典型 sqrt(2))
+#
+# 試行回数が少ない variant ほど exploration bonus が大きくなり, 必ず一定
+# 回数 探訪される. これにより SynapticSelector の早期収束 bias を構造的に
+# 解消できる. trade-off は短期で greedy 収束しない (本当に safe な選択を
+# 強制する).
+# ===========================================================================
+
+
+@dataclass
+class UCBSynapticSelector(Generic[T]):
+    """UCB1-based strategy selector. SynapticSelector と同じ API を持つ.
+
+    Args:
+        variants: 候補. 空禁止. 名前重複禁止.
+        exploration_c: UCB の探索係数. 典型 sqrt(2) ~ 1.414. 大きいと
+            exploration 重視, 小さいと exploit 重視. デフォルト sqrt(2).
+        rng: tie-breaker 用. choose() が UCB 同値だった場合のランダム選択.
+        latency_window: 各 variant の reward 計算に使う最新 latency の
+            FIFO 長. デフォルト 64. 短いと最近性を重視, 長いと安定.
+    """
+
+    variants: list[StrategyVariant[T]]
+    exploration_c: float = math.sqrt(2.0)
+    rng: random.Random = field(default_factory=random.Random)
+    latency_window: int = 64
+    _lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
+    _history: list[SelectionRecord] = field(default_factory=list, repr=False)
+    _history_cap: int = 1024
+    _latencies: dict[str, list[float]] = field(default_factory=dict, repr=False)
+
+    def __post_init__(self) -> None:
+        if not self.variants:
+            raise ValueError("UCBSynapticSelector requires at least one variant")
+        names = [v.name for v in self.variants]
+        if len(names) != len(set(names)):
+            raise ValueError(f"duplicate variant names: {names}")
+        if self.exploration_c < 0.0:
+            raise ValueError("exploration_c must be >= 0.0")
+        if self.latency_window < 1:
+            raise ValueError("latency_window must be >= 1")
+        for v in self.variants:
+            self._latencies.setdefault(v.name, [])
+
+    # ------------------------------------------------------------------ choose
+
+    def choose(self) -> StrategyVariant[T]:
+        """UCB スコア最大の variant を返す (未試行は最優先)."""
+        with self._lock:
+            # 未試行 variant は常に最優先 (UCB の bound が +∞)
+            unseen = [v for v in self.variants if v.n_calls == 0]
+            if unseen:
+                return self.rng.choice(unseen)
+            total = sum(v.n_calls for v in self.variants)
+            log_total = math.log(total) if total > 0 else 0.0
+            scores = [self._ucb_score(v, log_total) for v in self.variants]
+            max_score = max(scores)
+            # 同値 tie は random choice
+            ties = [v for v, s in zip(self.variants, scores) if s >= max_score - 1e-12]
+            return self.rng.choice(ties)
+
+    def _ucb_score(self, variant: StrategyVariant[T], log_total: float) -> float:
+        """UCB1 スコア計算. latency 短いほど reward 大."""
+        n = max(variant.n_calls, 1)
+        rewards = self._compute_rewards()  # name -> [0, 1] normalized
+        mean_r = rewards.get(variant.name, 0.0)
+        bonus = self.exploration_c * math.sqrt(log_total / n)
+        return mean_r + bonus
+
+    def _compute_rewards(self) -> dict[str, float]:
+        """全 variant の reward (latency を [0, 1] に reverse-normalize) を計算."""
+        all_lats: list[float] = []
+        for ls in self._latencies.values():
+            all_lats.extend(ls)
+        if not all_lats:
+            return {v.name: 0.0 for v in self.variants}
+        min_l = min(all_lats)
+        max_l = max(all_lats)
+        span = max_l - min_l
+        rewards: dict[str, float] = {}
+        for name, ls in self._latencies.items():
+            if not ls:
+                rewards[name] = 0.0
+                continue
+            mean_l = sum(ls) / len(ls)
+            if span <= 0.0:
+                rewards[name] = 1.0
+            else:
+                # 短い latency ほど reward 1, 長い latency ほど 0
+                rewards[name] = (max_l - mean_l) / span
+        return rewards
+
+    def converge(self) -> StrategyVariant[T]:
+        """最高 reward (= 最速 mean latency) の variant を返す.
+
+        UCB の exploration bonus を除いた純粋な観測平均で選ぶ. 試行未済
+        variant がある場合は呼ぶ前に十分な round を実行されることを期待.
+        """
+        with self._lock:
+            rewards = self._compute_rewards()
+            return max(self.variants, key=lambda v: rewards.get(v.name, 0.0))
+
+    # ------------------------------------------------------------------ update
+
+    def record_result(self, variant: StrategyVariant[T], latency_ms: float) -> SelectionRecord:
+        if latency_ms < 0.0:
+            raise ValueError("latency_ms must be >= 0.0")
+        with self._lock:
+            if variant.n_calls == 0:
+                variant.avg_latency_ms = latency_ms
+            else:
+                # EWMA 風 (alpha=0.30) で平均更新 (snapshot 表示用)
+                variant.avg_latency_ms = 0.30 * latency_ms + 0.70 * variant.avg_latency_ms
+            variant.last_latency_ms = latency_ms
+            variant.n_calls += 1
+
+            ls = self._latencies.setdefault(variant.name, [])
+            ls.append(latency_ms)
+            if len(ls) > self.latency_window:
+                del ls[: len(ls) - self.latency_window]
+
+            # weight は「reward * 100」で表示 (UCB では純評価値, 序列用)
+            rewards = self._compute_rewards()
+            variant.weight = max(0.01, rewards.get(variant.name, 0.0) * 100.0)
+
+            record = SelectionRecord(
+                variant_name=variant.name,
+                latency_ms=latency_ms,
+                weight_before=0.0,  # UCB ではこの 2 fields は意味薄
+                weight_after=variant.weight,
+                timestamp_s=time.time(),
+            )
+            self._history.append(record)
+            if len(self._history) > self._history_cap:
+                del self._history[: len(self._history) - self._history_cap]
+            return record
+
+    # ------------------------------------------------------------------ call
+
+    def call(self, *args, **kwargs):
+        variant = self.choose()
+        impl = variant.impl
+        if not callable(impl):
+            raise TypeError(f"variant {variant.name!r} impl is not callable")
+        t0 = time.perf_counter()
+        try:
+            result = impl(*args, **kwargs)
+        finally:
+            elapsed_ms = (time.perf_counter() - t0) * 1000.0
+            self.record_result(variant, elapsed_ms)
+        return result
+
+    # ------------------------------------------------------------------ inspect
+
+    def snapshot(self) -> list[dict]:
+        with self._lock:
+            rewards = self._compute_rewards()
+            return [
+                {
+                    "name": v.name,
+                    "weight": v.weight,
+                    "n_calls": v.n_calls,
+                    "avg_latency_ms": v.avg_latency_ms,
+                    "last_latency_ms": v.last_latency_ms,
+                    "reward": rewards.get(v.name, 0.0),
+                }
+                for v in self.variants
+            ]
+
+    def history(self) -> list[SelectionRecord]:
+        with self._lock:
+            return list(self._history)
