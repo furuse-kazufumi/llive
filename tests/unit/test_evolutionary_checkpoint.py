@@ -42,12 +42,14 @@ def test_checkpoint_writes_snapshot_per_generation(tmp_path: Path) -> None:
 
 def test_checkpoint_every_2_writes_every_other_gen(tmp_path: Path) -> None:
     pop = Population.random(
-        bounds=GenomeBounds(lower=(-1.0,), upper=(1.0,)), size=4, seed=0,
+        bounds=GenomeBounds(lower=(-1.0, -1.0, -1.0), upper=(1.0, 1.0, 1.0)),
+        size=15, seed=0,  # 多様性枯渇を避けるため集団 size 拡大
     )
     loop = EvolutionLoop(fitness_fn=sphere_fitness)
     config = EvolutionConfig(
         max_generations=4,
         patience=10,
+        diversity_floor=0.0,  # diversity 枯渇停止を無効化
         log_progress=False,
         out_dir=tmp_path / "run",
         checkpoint_every=2,
