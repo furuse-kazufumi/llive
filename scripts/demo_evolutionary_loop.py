@@ -64,6 +64,19 @@ def _build_problem(name: str) -> tuple[GenomeBounds, callable, tuple[str, ...]]:
             ucb_fitness_factory(UcbFitnessConfig(iters=120, n_variants=3, seed=0)),
             UCB_GENOME_LABELS,
         )
+    if name == "backend_select":
+        # 5 backend × sampler × quant の Genome を進化させる Phase 4 mock PoC
+        return (
+            LLM_GENOME_BOUNDS,
+            llm_fitness_factory(
+                LlmFitnessConfig(
+                    prompts=("Reply OK", "What is 2+2?"),
+                    n_stability_samples=2,
+                    danger_prompts=(),
+                )
+            ),
+            LLM_GENOME_LABELS,
+        )
     raise ValueError(f"unknown problem: {name}")
 
 
