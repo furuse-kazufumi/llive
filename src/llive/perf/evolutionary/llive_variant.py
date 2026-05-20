@@ -103,6 +103,16 @@ _BACKEND_NAMES = ("mock", "openai", "anthropic", "mamba", "rwkv")
 _KV_QUANT_NAMES = ("f16", "q8_0", "q4_0")
 
 
+# v0.C は 19 dim を 5 chromosome に分ける. SegmentCrossover に渡す.
+LIVE_VARIANT_SEGMENTS: tuple[tuple[int, int], ...] = (
+    (0, 10),    # 思考因子 weight (10 dim)
+    (10, 13),   # memory tier (3 dim)
+    (13, 14),   # backend (1 dim)
+    (14, 17),   # sampler (3 dim)
+    (17, 19),   # proactive (2 dim)
+)
+
+
 # -------------------- Config dataclass --------------------
 
 
