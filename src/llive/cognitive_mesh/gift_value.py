@@ -106,9 +106,15 @@ class GiftValueEstimator:
         )
 
     def commit(self, utterance: str, now: datetime | None = None) -> None:
-        """発話を実際に行ったら履歴に記録 (次回 novelty 計算に使う)."""
+        """発話を実際に行ったら履歴に記録 (次回 novelty 計算に使う).
+
+        cooldown を 2 倍以上超過した entry は自動 evict する (sliding window).
+        """
         if now is None:
             now = datetime.now()
+        evict_threshold = self.cooldown * 2
+        while self._history and (now - self._history[0].timestamp) > evict_threshold:
+            self._history.popleft()
         self._history.append(
             _UtteranceHistoryEntry(hash=self._hash(utterance), timestamp=now)
         )
