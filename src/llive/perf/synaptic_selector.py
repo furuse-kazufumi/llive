@@ -47,6 +47,7 @@ __all__ = [
     "StrategyVariant",
     "SelectionRecord",
     "SynapticSelector",
+    "UCBSynapticSelector",
 ]
 
 
