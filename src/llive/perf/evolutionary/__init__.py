@@ -99,6 +99,7 @@ __all__ = [
     "call_fitness_with_seed",
     "derive_sub_seed",
     "fitness_accepts_seed",
+    "llm_fitness_factory",
     "rosenbrock_fitness",
     "serial_scheduler",
     "sphere_fitness",
