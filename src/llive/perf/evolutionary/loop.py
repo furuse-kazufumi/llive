@@ -265,4 +265,31 @@ def _write_generation(out_dir: Path, stats: PopulationStats, population: Populat
     snap_path.write_text(json.dumps(population.to_dict(), ensure_ascii=False), encoding="utf-8")
 
 
+def _resume_from_snapshot(path: Path | str) -> Population | None:
+    """snapshot JSON (Population.to_dict()) から Population を復元.
+
+    ``path`` がファイルなら直接読む. ディレクトリなら ``snapshot_gen_*.json``
+    の最新を選ぶ.
+
+    Returns
+    -------
+    Population | None
+        復元できなければ None.
+    """
+    p = Path(path)
+    if not p.exists():
+        return None
+    if p.is_dir():
+        # 最新世代の snapshot を探す
+        candidates = sorted(p.glob("snapshot_gen_*.json"))
+        if not candidates:
+            return None
+        p = candidates[-1]
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return Population.from_dict(data)
+
+
 __all__ = ["EvolutionConfig", "EvolutionLoop", "EvolutionResult"]
