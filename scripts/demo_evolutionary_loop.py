@@ -84,6 +84,14 @@ def _build_problem(name: str) -> tuple[GenomeBounds, callable, tuple[str, ...]]:
             ),
             LLM_GENOME_LABELS,
         )
+    if name == "llive_variant":
+        # v0.C: 1 llive = 1 個体. 19 dim genome (思考因子 10 + memory 3 +
+        # backend 1 + sampler 3 + proactive 2). mock fitness で 8 軸合成.
+        return (
+            LIVE_VARIANT_GENOME_BOUNDS,
+            mock_variant_fitness_factory(),
+            LIVE_VARIANT_GENOME_LABELS,
+        )
     raise ValueError(f"unknown problem: {name}")
 
 
