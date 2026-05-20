@@ -389,11 +389,52 @@ collection / pattern 選択の自動収束層を載せる.
        場合, demo / 軽量探索向け.
      - UCB: 真の最良判定を確実にしたい場合, production 注入用.
 
-### B-6 以降の候補
+### B-6. sliding window container 自動収束 — deque が圧勝
+
+- **仮説**: 「先頭 pop + 末尾 push を N 回」という古典的 sliding window
+  操作で `list.pop(0)` (O(N)) と `list[1:]+[x]` (O(N) copy) と
+  `collections.deque(maxlen=N)` (O(1)) を比較. 理論的には deque 圧勝.
+- **変更内容**:
+  - `src/llive/perf/variants/sliding_window_variants.py` 新規 (3 variants)
+  - `tests/unit/test_perf_sliding_window_variants.py` 8 件 (parity)
+  - `scripts/demo_synaptic_sliding_window.py` 新規 (UCB 版)
+- **計測**:
+
+  **maxlen=100, pushes=5000, iters=100:** converged_to = **deque**
+
+  | variant | reward | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | deque | 0.9919 | 55 | 0.17309 |
+  | list_popzero | 0.9047 | 38 | 0.43242 |
+  | list_slice | 0.2347 | 7 | 2.59791 |
+
+  **maxlen=1000, pushes=10000, iters=50:** converged_to = **deque**
+
+  | variant | reward | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | deque | 0.9982 | 24 | 0.32391 |
+  | list_popzero | 0.9646 | 22 | 1.77255 |
+  | list_slice | 0.0957 | 4 | 38.69049 |
+
+  maxlen 増大に伴い list_slice の劣化が激しい (3x → 119x). deque は
+  常に最速で安定.
+
+- **回帰確認**: llive 1577 → **1585 緑** (+8 = sliding window parity).
+- **採否**: **採用** (variants + demo を branch 確定). 教科書的な
+  「データ構造選択の自動収束」例.
+- **学び**:
+  1. 古典的な計算量差 (O(N) vs O(1)) は UCB で 50-100 iter で明確に
+     判別される. exploration round の試行回数差が UCB の効率性を示す
+     (deque 55 vs list_slice 7).
+  2. list_slice は maxlen=1000 で 38ms 程度かかる. これは「Python の
+     list 操作は気軽に使うと毎回 O(N) で痛い」典型例.
+  3. production への適用候補: memory tier で「recent N events」を保持
+     する箇所. 既存実装が list ベースなら deque 移行で 2-5x 高速化見込み.
+
+### B-7 以降の候補
 
 | # | hot path | 候補 variants | 状態 |
 |---|---|---|---|
-| B-6 | container choice (sliding window) | list / deque | 候補 |
 | B-7 | audit JSONL sink | sync / buffered / async batch | 候補 |
 | B-8 | jsonschema 検証 | jsonschema (pure) / fastjsonschema / 内製 light | 外部依存追加要, 保留 |
 | B-9 | UCB を実 production hot path に注入 | (memory tier の cosine 等) | 採用ゲート: 5% 改善 + 全 test 緑 |
