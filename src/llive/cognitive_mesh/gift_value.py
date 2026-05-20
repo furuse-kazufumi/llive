@@ -74,7 +74,9 @@ class GiftValueEstimator:
         self.threshold = threshold
         self.weights = weights or DEFAULT_WEIGHTS
         self.cooldown = cooldown
-        self._history: list[_UtteranceHistoryEntry] = []
+        # B-9-b sliding-window deque: 古い entry を commit 時に popleft で
+        # 自動 evict し、_compute_novelty の走査範囲を cooldown 内に抑える.
+        self._history: deque[_UtteranceHistoryEntry] = deque()
 
     def estimate(
         self,
