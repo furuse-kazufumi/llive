@@ -41,6 +41,16 @@ from llive.perf.evolutionary.fitness_ucb import (
     UcbFitnessConfig,
     ucb_fitness_factory,
 )
+from llive.perf.evolutionary.llive_variant import (
+    LIVE_VARIANT_GENOME_BOUNDS,
+    LIVE_VARIANT_GENOME_LABELS,
+    LIVE_VARIANT_SEGMENTS,
+    LlivVariantBuilder,
+    LlivVariantConfig,
+    MockVariantFitnessConfig,
+    SegmentedScheduler,
+    mock_variant_fitness_factory,
+)
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.loop import (
