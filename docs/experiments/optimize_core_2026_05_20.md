@@ -450,3 +450,63 @@ collection / pattern 選択の自動収束層を載せる.
   の 5× ゲートをゆるめた相対ゲート).
 - selector overhead 自体 (μs 以下のはず) を別実験で確認してから, p99
   latency が浮かないことを示す.
+
+---
+
+## Phase B-9: 実 production hot path への注入 (2026-05-20 夜)
+
+### B-9-a: `SurpriseGate` / `BayesianSurpriseGate.compute_surprise`
+
+**問題**: B-2 で `numpy_normalized` (pre-L2 normalized 入力) が全次元
+(16/128/768) 圧勝したが, 実 production の `SurpriseGate.compute_surprise`
+は呼ばれる毎に `memory_embeddings` 全件を `_l2_normalize` で再正規化
+していた. `SemanticMemory.write()` が既に L2 normalized 済み vector を
+`_entries[i].embedding` に保存しているため (semantic.py:97), 完全に
+冗長な O(M*D) 計算が write のたびに走っていた.
+
+**変更**:
+
+- `SurpriseGate.compute_surprise(..., *, assume_normalized: bool = False)`
+  を追加. `True` のとき memory 側の `_l2_normalize` を skip.
+- `BayesianSurpriseGate.compute_surprise` にも同じ kwarg. Rust path は
+  内部で normalized 前提なので影響ゼロ.
+- callsite (`container/subblocks/builtin.py` の `MemoryWriteBlock`) で
+  `assume_normalized=True` を指定. `SemanticMemory.all_embeddings()`
+  返値は L2 normalized 済なので semantically 等価.
+
+**結果**:
+- 公開 API: kwarg default False で完全後方互換, 既存呼び出し不変.
+- 単体 test 44/44 + 全 1585/1585 緑.
+- 効果: B-2 の 16dim cosine baseline (40us) → numpy_normalized で 0.5x
+  程度の baseline がある実コードに反映される ことを 1 編集で達成.
+
+### B-9-b: `GiftValueEstimator._history` を deque 化
+
+**問題**: COG-MESH-05 `GiftValueEstimator` は `estimate()` の度に
+`_compute_novelty` で `_history: list` を線形走査. `commit()` は
+append しか行わず, 長時間運用すると _history が無限増殖して走査が
+O(W) ではなく O(history_total) になる.
+
+**変更**:
+
+- `_history: list[_UtteranceHistoryEntry]` → `deque[_UtteranceHistoryEntry]`.
+- `commit()` で `cooldown * 2` を超過した entry を頭から `popleft` で
+  自動 evict (sliding window). cooldown 倍率は誤差マージンを兼ねる.
+- `_compute_novelty` は走査ロジック不変 (短い deque を走査).
+
+**結果**:
+- B-6 で `list_slice` が deque より 119x 遅化することを確認済みなので,
+  long-run で同じ pathology に陥る可能性のあった hot path を予防的に
+  deque 化.
+- 単体 test 32/32 + 全 1585/1585 緑.
+
+### B-9 採用ゲート
+
+| 項目 | 状態 |
+|---|---|
+| 5% 改善 (B-2 ベースで cosine 0.5x) | 達成 (B-2 で測定済, 注入は同型) |
+| 全 test 緑 | 1585 PASS |
+| selector overhead | 該当なし (selector を本 hot path に挟まず, 直接最適化を適用) |
+| 後方互換 | OK (kwarg default False / 公開 API 不変) |
+
+採用 → branch `optimize/core-2026-05-20` に commit 済.
