@@ -21,6 +21,7 @@ from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.mutation import ChainedMutation, GaussianMutation
 from llive.perf.evolutionary.population import Population, PopulationStats
+from llive.perf.evolutionary.seeds import call_fitness_with_seed, fitness_accepts_seed
 from llive.perf.evolutionary.selection import (
     ElitismSelection,
     TournamentSelection,
@@ -36,8 +37,19 @@ SchedulerFn = Callable[[Fitness, Iterable[Individual]], list[FitnessReport]]
 def _serial_scheduler(
     fitness_fn: Fitness, individuals: Iterable[Individual]
 ) -> list[FitnessReport]:
-    """Phase 2 default. シリアルに fitness を評価."""
-    return [fitness_fn(ind.genome) for ind in individuals]
+    """Phase 2 default. シリアルに fitness を評価.
+
+    Phase 3.5: fitness_fn が 2 引数 shape (genome, seed) を受け入れるなら
+    individual ごとに deterministic な sub_seed を派生して渡す.
+    """
+    inds = list(individuals)
+    if fitness_accepts_seed(fitness_fn):
+        # parent_seed は呼び出し元 (EvolutionLoop) が個別世代の seed を
+        # population から取得して渡す方が綺麗だが, scheduler 単独利用でも
+        # 動くように個体ごとに parent_seed=0 baseline を使う.
+        # 真の再現性は EvolutionLoop が seed_aware_scheduler を作る経路で.
+        return [call_fitness_with_seed(fitness_fn, ind, parent_seed=0) for ind in inds]
+    return [fitness_fn(ind.genome) for ind in inds]
 
 
 @dataclass
