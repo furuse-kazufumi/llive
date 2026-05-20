@@ -54,13 +54,26 @@ def _serial_scheduler(
 
 @dataclass
 class EvolutionConfig:
-    """1 run の設定."""
+    """1 run の設定.
+
+    大規模集団 + 長時間運用 (ユーザー要望 2026-05-21) のため:
+    - ``max_wallclock_seconds`` で時間予算
+    - ``checkpoint_every`` で 1 世代単位の snapshot 書出し
+    - ``resume_from`` で snapshot からの再開
+    """
 
     max_generations: int = 50
     patience: int = 10  # best fitness 停滞検出 (生成数)
     diversity_floor: float = 1e-6  # これ以下なら多様性枯渇で停止
     out_dir: Path | None = None  # JSONL 出力先 (None なら無出力)
     log_progress: bool = True
+    # 大規模集団対応 (v0.C 追加, 後方互換 default = 無効)
+    max_wallclock_seconds: float | None = None
+    """時間予算. None なら無制限. 超過で safely 停止."""
+    checkpoint_every: int = 1
+    """N 世代ごとに snapshot を書く (out_dir が設定されているとき)."""
+    resume_from: Path | None = None
+    """snapshot_gen_NNNN.json から再開. out_dir/snapshot_gen_*.json を想定."""
 
 
 @dataclass
