@@ -321,10 +321,73 @@ collection / pattern 選択の自動収束層を載せる.
   良い結果が出たら必ず内訳を疑う」** = ここでは「収束結果が最良と言い切る
   前に avg_latency_ms と比較し直す」.
 
-### B-5 候補: SynapticSelector の改良 (UCB 化 or 確認 round)
+### B-5. UCBSynapticSelector を実装 — B-4 病理が完全解消
 
-B-4 で発見した「真の最良に収束しない」病理を直す. v2 SynapticSelector を
-別 module ないし backward-compatible flag で実装する案.
+- **仮説**: B-4 の早期収束 bias は ε-greedy の構造的欠陥. UCB1
+  (Auer 2002) の `mean_reward + c * sqrt(ln(total) / n)` ベースに切替えれば
+  試行回数が少ない variant に exploration bonus が付き, 真の最良に収束する.
+- **変更内容** (commit pending):
+  - `src/llive/perf/synaptic_selector.py` に `UCBSynapticSelector` クラス追加
+    (既存 `SynapticSelector` と同形 API, backward compatible).
+    - `choose()`: 未試行は最優先, それ以外は UCB1 max を選ぶ.
+    - `_compute_rewards()`: 全 variant の latency_window 内平均を [0, 1] に
+      reverse-normalize (短い latency → 高 reward).
+    - `record_result()`: latency を FIFO window (default 64) で保持し
+      reward を再計算.
+  - `tests/unit/test_perf_ucb_synaptic_selector.py` 15 件 (construction
+    validation / 未試行最優先 / 真の最良収束 / exploration 分布 /
+    snapshot reward / latency_window / thread safety).
+  - `scripts/demo_synaptic_decay_ucb.py` 新規 (B-4 と同じ decay variants
+    を UCB で run).
+- **計測** (UCB demo, B-4 と同条件):
+
+  **N=100, iters=500:** converged_to = **np_inplace** ✓
+
+  | variant | reward | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | np_inplace | 0.9723 | 227 | 0.00196 |
+  | np_einsum | 0.8069 | 78 | 0.00644 |
+  | py_listcomp | 0.7764 | 68 | 0.00768 |
+  | py_loop | 0.7529 | 66 | 0.00780 |
+  | py_map | 0.6455 | 61 | 0.01061 |
+
+  **N=10000, iters=500:** converged_to = **np_inplace** ✓ (B-4 では誤って np_einsum)
+
+  | variant | reward | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | np_inplace | 0.9977 | 212 | 0.00765 |
+  | np_einsum | 0.9927 | 204 | 0.01200 |
+  | py_listcomp | 0.6739 | 39 | 0.56547 |
+  | py_loop | 0.5105 | 24 | 0.88291 |
+  | py_map | 0.4614 | 21 | 0.84398 |
+
+  **N=100000, iters=300:** converged_to = **np_inplace** ✓ (B-4 では誤って np_einsum)
+
+  | variant | reward | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | np_inplace | 0.9863 | 135 | 0.22785 |
+  | np_einsum | 0.9845 | 133 | 0.25047 |
+  | py_listcomp | 0.3977 | 15 | 6.16804 |
+  | py_loop | 0.1446 | 9 | 8.02684 |
+  | py_map | 0.0651 | 8 | 9.05241 |
+
+- **回帰確認**: llive 1562 → **1577 緑** (+15 = UCB test). 既存
+  SynapticSelector test 19 件もそのまま緑 (backward compat 維持).
+- **採否**: **採用** (UCBSynapticSelector を branch 確定).
+  **production への注入推奨は本 UCB 版**. ε-greedy 版は demo / 軽量用途のみ.
+
+- **学び**:
+  1. UCB は np_inplace と np_einsum を 212 vs 204 とほぼ均等に試行し
+     公平比較した上で僅差で np_inplace を選んだ → **真の最良判定**.
+  2. py_系 (loop/listcomp/map) は早期に低 reward と判明し試行回数を
+     15-39 に絞った → **探索効率も良い**.
+  3. UCB は exploration bonus が時間とともに減衰 (`sqrt(ln t / n)` の
+     `1/sqrt(n)` 項) するので, 長期的には自然と greedy 化する. ε-greedy
+     のように exploration_rate を手動 tuning しなくても良い.
+  4. Hebbian-style の SynapticSelector と UCB は **棲み分け**:
+     - ε-greedy (Hebbian): 短期で greedy 寄りに動く. 候補が明確に差がある
+       場合, demo / 軽量探索向け.
+     - UCB: 真の最良判定を確実にしたい場合, production 注入用.
 
 ### B-6 以降の候補
 
@@ -333,8 +396,7 @@ B-4 で発見した「真の最良に収束しない」病理を直す. v2 Synap
 | B-6 | container choice (sliding window) | list / deque | 候補 |
 | B-7 | audit JSONL sink | sync / buffered / async batch | 候補 |
 | B-8 | jsonschema 検証 | jsonschema (pure) / fastjsonschema / 内製 light | 外部依存追加要, 保留 |
-
-各候補は独立に SynapticSelector (or 改良版 v2) を用意 → 候補注入 → run → 採否.
+| B-9 | UCB を実 production hot path に注入 | (memory tier の cosine 等) | 採用ゲート: 5% 改善 + 全 test 緑 |
 
 ---
 
