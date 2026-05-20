@@ -18,7 +18,11 @@
 * :func:`sphere_fitness`, :func:`rosenbrock_fitness`, :func:`ucb_fitness_factory`
 """
 
-from llive.perf.evolutionary.crossover import BlendCrossover, UniformCrossover
+from llive.perf.evolutionary.crossover import (
+    BlendCrossover,
+    SegmentCrossover,
+    UniformCrossover,
+)
 from llive.perf.evolutionary.fitness import (
     Fitness,
     FitnessFn,
