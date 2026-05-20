@@ -137,4 +137,6 @@ __all__ = [
     "serial_scheduler",
     "sphere_fitness",
     "ucb_fitness_factory",
+    "write_lineage_mermaid_file",
+    "write_winners_jsonl",
 ]
