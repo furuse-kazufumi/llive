@@ -179,15 +179,77 @@ collection / pattern 選択の自動収束層を載せる.
   - exploration_rate を 0 にすると一極集中して他 variant の latency 観測が
     止まる. 産業実用では **exploration を常に 5-10% 残す** のが安全.
 
-### B-2 候補 (次の試行)
+### B-2. cosine 類似度の variants 自動収束
 
-| # | hot path | 候補 variants |
-|---|---|---|
-| B-2 | jsonschema 検証 | jsonschema (pure) / fastjsonschema / 内製 light validator |
-| B-3 | TRIZ matrix lookup | linear / dict / `functools.lru_cache` / perfect hash |
-| B-4 | edge weight decay | per-row loop / list comprehension / numpy 強制 ベクトル化 |
-| B-5 | Bayesian surprise cosine | 純 Python / numpy / scipy.spatial.distance |
-| B-6 | audit JSONL sink | sync open+write / buffered file / async batch |
+- **仮説**: cosine 類似度は llive memory tier の多用 hot path. 4 つの
+  implementation (pure_python / numpy_dot / numpy_einsum / numpy_normalized)
+  を SynapticSelector に load すれば, **ベクトル次元に応じて最良候補が
+  自動選択** されるはず. 特に「事前 L2 normalize 済み input なら norm 計算を
+  スキップできる numpy_normalized が支配的」になることを予測.
+- **変更内容** (commit pending):
+  - `src/llive/perf/variants/__init__.py` 新規 (variants パッケージ宣言)
+  - `src/llive/perf/variants/cosine_variants.py` 新規 (4 variants + ALL_VARIANTS)
+  - `tests/unit/test_perf_cosine_variants.py` 新規 (parity 10 件: 各 dim で
+    pure_python / numpy_dot / numpy_einsum が ε 以内, normalize 前提下で
+    numpy_normalized も一致)
+  - `scripts/demo_synaptic_cosine.py` 新規 (3 次元 16/128/768 で自動収束)
+- **計測** (`py -3.11 scripts/demo_synaptic_cosine.py --dim <D> --iters 500`):
+
+  **dim=16:**
+
+  | variant | weight | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | numpy_normalized | **100.000 (max)** | 420 | 0.00139 |
+  | numpy_dot | 1.343 | 29 | 0.00626 |
+  | pure_python | 0.785 | 22 | 0.00764 |
+  | numpy_einsum | 0.386 | 29 | 0.00887 |
+
+  **dim=128:**
+
+  | variant | weight | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | numpy_normalized | **100.000 (max)** | 421 | 0.00153 |
+  | numpy_dot | 6.440 | 29 | 0.00523 |
+  | numpy_einsum | 3.374 | 30 | 0.00980 |
+  | pure_python | 0.028 | 20 | 0.04759 |
+
+  **dim=768:**
+
+  | variant | weight | n_calls | avg_latency_ms |
+  |---|---:|---:|---:|
+  | numpy_normalized | **100.000 (max)** | 421 | 0.00277 |
+  | numpy_dot | 11.644 | 28 | 0.00548 |
+  | numpy_einsum | 11.137 | 31 | 0.01314 |
+  | pure_python | 0.010 | 20 | 0.26979 |
+
+  全 3 次元で `numpy_normalized` (pre-normalize) が収束.
+- **回帰確認**: parity test 10 件全緑. demo は production code を touch
+  しないので既存 test 影響なし.
+- **採否**: **採用** (variants + demo を branch に確定). production 注入は
+  別 B として後段で判断.
+- **学び (重要)**:
+  1. **pre-L2-normalize caching** が最大の自由度. cosine の 50-80% を
+     norm 計算が占めている.
+  2. **小次元 (dim=16) では pure_python が numpy と拮抗** (0.764us vs
+     0.626us). 既存実装は numpy 固定なので, 極小次元では微妙に損している
+     可能性. 数百〜千次元の embedding ではこの問題は無い.
+  3. **dim=128 以降では pure_python は完全に劣化** (30-90 倍). 次元増大
+     とともに numpy vectorization の advantage が指数的に出る.
+  4. **production 提案** (次の実 hot path 適用 B 候補):
+     - `memory/surprise.py` の `_l2_normalize` 結果を memory tier の
+       embedding cache に保持 → cosine 計算は `numpy_normalized` 経路で
+       実行できる
+     - 効果見込み: 2-5 倍高速化 (norm 計算スキップ分)
+
+### B-3 以降の候補 (次の試行)
+
+| # | hot path | 候補 variants | 状態 |
+|---|---|---|---|
+| B-3 | TRIZ matrix lookup | linear / dict / `functools.lru_cache` | 既に dict.get O(1) で差分薄, deprioritized |
+| B-4 | edge weight decay | per-row loop / list comprehension / numpy 強制 ベクトル化 | 候補 |
+| B-5 | container choice (top-N 抽出, sliding window 等) | list / deque / heapq | 候補 |
+| B-6 | audit JSONL sink | sync open+write / buffered file / async batch | 候補 |
+| B-7 | jsonschema 検証 | jsonschema (pure) / fastjsonschema / 内製 light | 外部依存追加要, 保留 |
 
 各候補は独立に SynapticSelector を 1 つ用意 → 候補注入 → run → 採否.
 
