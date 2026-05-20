@@ -41,6 +41,13 @@ from llive.perf.evolutionary.fitness_ucb import (
     UcbFitnessConfig,
     ucb_fitness_factory,
 )
+from llive.perf.evolutionary.lineage import (
+    Winner,
+    load_winners_jsonl,
+    render_lineage_mermaid,
+    write_lineage_mermaid_file,
+    write_winners_jsonl,
+)
 from llive.perf.evolutionary.llive_variant import (
     LIVE_VARIANT_GENOME_BOUNDS,
     LIVE_VARIANT_GENOME_LABELS,
