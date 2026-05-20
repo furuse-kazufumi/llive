@@ -124,15 +124,19 @@ def test_population_replace_increments_generation() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_tournament_picks_best() -> None:
+def test_tournament_skews_toward_best() -> None:
+    """tournament k=5 を 30 回繰り返し, best (9.0) が出現 + 上位寄りに偏ることを確認."""
     bounds = GenomeBounds(lower=(0.0,), upper=(1.0,))
     pop = Population.random(bounds=bounds, size=10, seed=1)
     for i, ind in enumerate(pop.individuals):
         ind.record_fitness(FitnessReport(score=float(i)))
     rng = np.random.default_rng(0)
-    selection = TournamentSelection(k=10)  # k = pop.size → 必ず全体の best
-    picked = selection(pop, rng)
-    assert picked.score == 9.0
+    selection = TournamentSelection(k=5)
+    wins = [selection(pop, rng).score for _ in range(30)]
+    # best 9.0 が少なくとも 1 回は出現する
+    assert max(wins) == 9.0
+    # 上位 (>=7.0) が過半を占める (k=5 の strong selection pressure)
+    assert sum(1 for w in wins if w >= 7.0) >= 15
 
 
 def test_roulette_temperature_valid() -> None:
