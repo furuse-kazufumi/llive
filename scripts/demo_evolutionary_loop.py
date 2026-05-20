@@ -82,7 +82,11 @@ def _build_problem(name: str) -> tuple[GenomeBounds, callable, tuple[str, ...]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--problem", default="sphere", choices=["sphere", "rosenbrock", "ucb_hparam"])
+    parser.add_argument(
+        "--problem",
+        default="sphere",
+        choices=["sphere", "rosenbrock", "ucb_hparam", "backend_select"],
+    )
     parser.add_argument("--size", type=int, default=30, help="population size")
     parser.add_argument("--gens", type=int, default=40, help="max generations")
     parser.add_argument("--seed", type=int, default=42)
