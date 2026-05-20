@@ -105,6 +105,9 @@ class EvolutionLoop:
 
     callable をすべて injection できるので, UCB selector 連携 / 実 LLM fitness /
     並列 scheduler のいずれも plug-in 可能.
+
+    Phase 0.10 追加: ``on_generation_end`` hook で世代終了時に任意の処理を
+    走らせる. lineage の winners.jsonl 自動 append 等に使う.
     """
 
     fitness_fn: Fitness
@@ -115,6 +118,13 @@ class EvolutionLoop:
     )
     elitism: ElitismSelection = field(default_factory=lambda: ElitismSelection(top_n=2))
     scheduler: SchedulerFn = _serial_scheduler
+    on_generation_end: Callable[[Population, PopulationStats], None] | None = None
+    """世代終了 (評価 + 統計後) に呼ばれる任意 hook. None なら no-op.
+
+    例: ``on_generation_end=lambda pop, stats:
+    write_winners_jsonl("out/winners.jsonl", pop, top_n=3)`` で世代ごとに
+    上位 3 体を JSONL に追記できる.
+    """
 
     # -- main loop ---------------------------------------------------------
 
