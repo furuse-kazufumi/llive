@@ -124,9 +124,28 @@ class EvolutionLoop:
         stopped_reason = "max_generations"
         best_so_far = float("-inf")
         stagnation = 0
+
+        # ---- resume_from が指定されていれば snapshot から再開 ----
+        if config.resume_from is not None:
+            resumed = _resume_from_snapshot(config.resume_from)
+            if resumed is not None:
+                population.individuals = resumed.individuals
+                population.generation = resumed.generation
+                population.seed = resumed.seed
+                population.generation_seeds = list(resumed.generation_seeds)
+
         rng = np.random.default_rng(population.seed)
 
         for gen in range(config.max_generations + 1):
+            # ---- 時間予算超過チェック (v0.C 大規模集団対応) ----
+            if config.max_wallclock_seconds is not None:
+                elapsed = time.perf_counter() - start
+                if elapsed >= config.max_wallclock_seconds:
+                    stopped_reason = (
+                        f"wallclock_budget_exhausted ({elapsed:.1f}s / "
+                        f"{config.max_wallclock_seconds:.1f}s)"
+                    )
+                    break
             # 1. 評価 — Phase 3.5: seed-aware path で per-individual sub_seed を派生.
             #    Default scheduler は population.seed を見ない (1 引数 shape) ので,
             #    seed-aware fitness の場合は loop 側で個別に評価ループを回す.
