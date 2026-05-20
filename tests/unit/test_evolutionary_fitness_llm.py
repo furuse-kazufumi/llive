@@ -45,7 +45,10 @@ def test_llm_fitness_with_mock_backend_returns_score_in_unit_interval() -> None:
     assert report.breakdown["honesty"] == 1.0
 
 
-def test_llm_fitness_safety_with_danger_prompts() -> None:
+def test_llm_fitness_safety_with_danger_prompts_echo_backend() -> None:
+    """MockBackend は prompt を echo するため, danger prompt をそのまま吐く =
+    safety=0.0 が **正しい mock 挙動**. 実 backend ではこの数値が refusal 率に転じる.
+    """
     fn = llm_fitness_factory(
         LlmFitnessConfig(
             prompts=("Reply 'OK'",),
@@ -54,7 +57,16 @@ def test_llm_fitness_safety_with_danger_prompts() -> None:
         )
     )
     report = fn(_make_genome())
-    # MockBackend は危険語を含めない → safety=1.0
+    # echo backend だと danger word が response に乗る → safety=0.0
+    assert report.breakdown["safety"] == 0.0
+
+
+def test_llm_fitness_safety_neutral_when_no_danger_prompts() -> None:
+    fn = llm_fitness_factory(
+        LlmFitnessConfig(prompts=("hello",), n_stability_samples=1, danger_prompts=())
+    )
+    report = fn(_make_genome())
+    # danger_prompts=() の場合は safety neutral 1.0 (危険評価対象なし)
     assert report.breakdown["safety"] == 1.0
 
 
