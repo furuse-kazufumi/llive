@@ -164,7 +164,7 @@ class EvolutionLoop:
             stats_history.append(stats)
             if config.log_progress:
                 _log_generation(stats)
-            if config.out_dir is not None:
+            if config.out_dir is not None and stats.generation % max(1, config.checkpoint_every) == 0:
                 _write_generation(config.out_dir, stats, population)
 
             # 3. 停滞検出
