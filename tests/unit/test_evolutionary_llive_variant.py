@@ -118,13 +118,14 @@ def test_segment_crossover_swaps_chromosomes() -> None:
 
 def test_segment_crossover_p_one_picks_all_parent_a() -> None:
     bounds = LIVE_VARIANT_GENOME_BOUNDS
-    a = Genome.from_values([0.0] * 19, bounds=bounds)
-    b = Genome.from_values([0.5] * 19, bounds=bounds)
+    # bounds.lower を直接使う (clip で値が変わらない)
+    a = Genome.from_values(list(bounds.lower), bounds=bounds)
+    b = Genome.from_values(list(bounds.upper), bounds=bounds)
     crossover = SegmentCrossover(segments=LIVE_VARIANT_SEGMENTS, p=1.0)
     rng = np.random.default_rng(0)
     child = crossover(a, b, rng)
-    # 全 segment が親 A 由来 → 全部 0.0
-    assert np.allclose(child.as_array(), 0.0)
+    # 全 segment が親 A 由来 → 親 A (= bounds.lower) と完全一致
+    assert np.allclose(child.as_array(), np.asarray(bounds.lower))
 
 
 def test_segment_crossover_rejects_invalid_segments() -> None:
