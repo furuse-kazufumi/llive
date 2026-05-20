@@ -112,6 +112,18 @@ def main() -> int:
     )
     parser.add_argument("--workers", type=int, default=0, help="0 で auto (cpu_count)")
     parser.add_argument("--out", type=Path, default=None, help="JSONL 出力先 dir")
+    parser.add_argument(
+        "--resume-from",
+        type=Path,
+        default=None,
+        help="snapshot_gen_*.json または dir から再開 (v0.C checkpoint/resume)",
+    )
+    parser.add_argument(
+        "--max-wallclock",
+        type=float,
+        default=None,
+        help="時間予算 (秒). 超過で safely 停止",
+    )
     args = parser.parse_args()
 
     bounds, fitness_fn, labels = _build_problem(args.problem)
