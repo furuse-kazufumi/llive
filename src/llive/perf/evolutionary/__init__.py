@@ -50,6 +50,11 @@ from llive.perf.evolutionary.scheduler import (
     MultiprocessingScheduler,
     serial_scheduler,
 )
+from llive.perf.evolutionary.seeds import (
+    call_fitness_with_seed,
+    derive_sub_seed,
+    fitness_accepts_seed,
+)
 from llive.perf.evolutionary.selection import (
     ElitismSelection,
     RouletteSelection,
