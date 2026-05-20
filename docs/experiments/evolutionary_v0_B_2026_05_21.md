@@ -180,3 +180,110 @@ v0.A の `runtime_metadata` を `FitnessReport.runtime_metadata` に必須注入
   - [[feedback-benchmark-progressive-tokens]]
   - [[project-llive-core-optimization-2026-05-20]]
   - 比喩元: ROS 歩行進化 (NEAT, ES, CMA-ES)
+
+---
+
+## Phase 3.5 + 4 追記 (2026-05-21 夜 marathon)
+
+### Phase 3.5: per-individual sub-seed 派生
+
+実装: `src/llive/perf/evolutionary/seeds.py` + `tests/unit/test_evolutionary_seeds.py` (8 件).
+
+**派生関数**:
+
+```python
+def derive_sub_seed(parent_seed: int, individual_id: str) -> int:
+    payload = parent_seed.to_bytes(8, "big") + individual_id.encode("utf-8")
+    return int.from_bytes(hashlib.sha256(payload).digest()[:4], "big") & 0x7FFFFFFF
+```
+
+**dispatch 仕組み**: `fitness_accepts_seed(fn)` で `inspect.signature` を見て
+2 引数 (genome, seed) shape を受け入れるか自動判定. 既存 1 引数 fitness は
+変更せず, seed-aware fitness のみに sub_seed を渡す.
+
+**EvolutionLoop 連携**: `serial_scheduler` の場合は `population.seed` から
+個体毎に sub_seed を派生して fitness に渡す. 並列 scheduler でも将来同様に
+拡張予定.
+
+**観察**: 再現性が必要な確率的 fitness (stochastic LLM 評価) でも,
+同 `(parent_seed, individual_id)` なら同 score が出る. これにより
+**MultiprocessingScheduler でも再現可能な進化軌跡** が取れる.
+
+### Phase 4: 5 軸 fitness mock (`fitness_llm.py`)
+
+実装: `src/llive/perf/evolutionary/fitness_llm.py` + `tests/unit/test_evolutionary_fitness_llm.py` (7 件).
+
+**Genome レイアウト**:
+
+```python
+LLM_GENOME_BOUNDS = GenomeBounds(
+    lower=(0.0,   0.0, 0.5, 0.0, 0.0),
+    upper=(4.99, 1.5, 1.0, 2.99, 2.99),
+)
+LLM_GENOME_LABELS = (
+    "backend_id",        # 0=mock 1=openai 2=anthropic 3=mamba 4=rwkv
+    "temperature",
+    "top_p",
+    "kv_quant_id",       # 0=f16 1=q8_0 2=q4_0
+    "model_quant_id",    # 0=q4_k_m 1=q5_k_m 2=q8_0
+)
+```
+
+**5 軸合成**:
+
+| 軸 | 計算 (mock) | 実 backend で何になるか |
+|---|---|---|
+| latency | per-call elapsed_ms 平均 | 同じ (実時間) |
+| quality | `min(1, len(text)/80)` heuristic | judge model による semantic score |
+| stability | output 長 variance の inverse | judge score の variance inverse + edit distance |
+| safety | danger prompt の echo 不在率 | refusal classifier の出力 |
+| honesty | MockBackend なら 1.0 | self-report vs 観測の一致率 |
+
+合成は weighted sum, default 均等 0.2 × 5.
+
+**honest disclosure 必須**: `runtime_metadata` (v0.A の 6 SHA) を必ず同梱.
+mock では `"unknown"` 固定 → publish gate でブロック.
+
+### backend_select PoC (`test_evolutionary_backend_select.py`)
+
+GA で **backend 選択そのものを進化** させる PoC を 2 件 test:
+
+```python
+def test_backend_select_ga_runs_three_generations() -> None:
+    pop = Population.random(bounds=LLM_GENOME_BOUNDS, size=8, seed=0, labels=LLM_GENOME_LABELS)
+    fitness_fn = llm_fitness_factory(LlmFitnessConfig(prompts=("Reply OK",), ...))
+    loop = EvolutionLoop(fitness_fn=fitness_fn, ...)
+    config = EvolutionConfig(max_generations=3, patience=10, log_progress=False)
+    result = loop.run(pop, config)
+    # 各個体に fitness 記録 + best_individual が bounds 内
+```
+
+実走 (`demo_evolutionary_loop.py --problem backend_select`):
+
+```
+[gen 000] best=0.8425 mean=0.8425 std=0.0000 diversity=2.6657 seed=0
+[gen 006] best=0.8425 mean=0.8425 std=0.0000 diversity=1.4941 seed=1431490509
+```
+
+全個体が MockBackend に解決されるため score 一定 (期待通り). 実 backend を
+立ち上げると初めて backend 選択の優劣が出る. ROS 歩行進化で言うと
+**「歩いてないロボット 5 体を同じトラックに並べた」段階**.
+
+### 合算 数値
+
+- v0.B Phase 1-4 全体: 22 + 4 + 8 + 7 + 2 = **43 新規 test**
+- llive 全件: 1518 → **1634 PASS** (+116)
+- demo 4 problem (sphere / rosenbrock / ucb_hparam / backend_select) すべて
+  実走確認
+- low_spec bench mock 実走 (`demo_low_spec_mock.py`) で bench 経路の生死確認
+
+### 教訓 (Phase 3.5 + 4 追加 2 つ)
+
+5. **fitness の引数 shape を inspect で自動判定** すると, 既存 fitness を
+   touch せず新 shape を導入できる. 後方互換性の確保で **既存 22 test が
+   緑のまま** 新 8 test が加わった.
+
+6. **mock baseline がしっかりしていないと honest disclosure が崩れる**.
+   MockBackend を 5 軸 fitness に組み込んで, runtime_metadata = "unknown"
+   で publish gate がブロックする構造にしたことで, mock 数値が公開ベンチに
+   混入する事故を構造的に防げる.
