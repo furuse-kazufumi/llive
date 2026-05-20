@@ -27,12 +27,23 @@ class SurpriseGate:
         self,
         new_embedding: np.ndarray,
         memory_embeddings: np.ndarray | None,
+        *,
+        assume_normalized: bool = False,
     ) -> float:
-        """Return surprise ∈ [0, 1]. If no memory yet, returns 1.0 (always write)."""
+        """Return surprise ∈ [0, 1]. If no memory yet, returns 1.0 (always write).
+
+        ``assume_normalized=True`` を指定すると ``memory_embeddings`` が既に L2
+        normalize 済みであると見なし、再 normalize を skip する (B-9-a 最適化).
+        ``SemanticMemory.all_embeddings()`` は normalize 済 matrix を返すため
+        callsite (`MemoryWriteBlock`) では True を指定して良い.
+        """
         if memory_embeddings is None or memory_embeddings.size == 0:
             return 1.0
         new = _l2_normalize(np.atleast_2d(new_embedding))
-        mem = _l2_normalize(np.atleast_2d(memory_embeddings))
+        if assume_normalized:
+            mem = np.atleast_2d(memory_embeddings)
+        else:
+            mem = _l2_normalize(np.atleast_2d(memory_embeddings))
         sims = (new @ mem.T).flatten()  # (M,)
         max_sim = float(sims.max()) if sims.size else -1.0
         # cosine sim in [-1, 1] → distance in [0, 2]; clamp to [0, 1]
