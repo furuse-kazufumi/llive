@@ -379,6 +379,7 @@ __all__ = [
     "DEFAULT_VARIANT_WEIGHTS",
     "LIVE_VARIANT_GENOME_BOUNDS",
     "LIVE_VARIANT_GENOME_LABELS",
+    "LIVE_VARIANT_SEGMENTS",
     "LlivVariantBuilder",
     "LlivVariantConfig",
     "MEMORY_TIER_LABELS",
