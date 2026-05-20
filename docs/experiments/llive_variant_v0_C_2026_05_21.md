@@ -217,3 +217,69 @@ diversity が **8.28** を維持. `UniformCrossover(p=0.5)` だと dim 単位で
   - [[user-cognitive-mesh-model]] (10 思考因子の起源)
   - [[feedback-quiet-hours]] (SegmentedScheduler の grace_sec と相性)
   - [[feedback-marathon-lessons]] (mock baseline 重要性, ここでも適用)
+
+---
+
+## 追記: checkpoint / resume / 時間予算の実 file I/O 動作確認 (2026-05-21 夕方)
+
+### Run 1 — checkpoint 書出し
+
+```
+py -3.11 scripts/demo_evolutionary_loop.py --problem llive_variant \
+    --size 20 --gens 5 --seed 99 --out out/llive_variant_resume_test
+```
+
+出力:
+- `snapshot_gen_0000.json` 〜 `snapshot_gen_0005.json` (6 件)
+- `generations.jsonl` (1 行 = 1 世代)
+- best_score: 0.7261, final_diversity: 7.73
+
+### Run 2 — resume 引き継ぎ
+
+```
+py -3.11 scripts/demo_evolutionary_loop.py --problem llive_variant \
+    --size 20 --gens 4 --seed 999 \
+    --resume-from out/llive_variant_resume_test \
+    --out out/llive_variant_resume_test2
+```
+
+観察:
+- Run 1 の最新 snapshot (gen 5) を自動 load
+- 開始 gen が **6** (Run 1 から継続)
+- `--seed 999` (Run 1 の seed 99 と無関係) で渡しても **snapshot の seed が
+  上書き** される
+- 4 世代追加で gen 9 で終了, best_score: **0.7466** (Run 1 の 0.7261 から改善)
+
+→ 「セッション切れで Run 1 が停止」「次セッションで Run 2 を resume」が
+実 file I/O で機能することを確認.
+
+### Run 3 — 時間予算
+
+```
+py -3.11 scripts/demo_evolutionary_loop.py --problem llive_variant \
+    --size 50 --gens 100 --seed 7 --max-wallclock 0.5
+```
+
+観察:
+- `--gens 100` を指定したが
+- `--max-wallclock 0.5` (0.5 秒) で **54 世代** 回って停止
+- `stopped_reason: wallclock_budget_exhausted (0.5s / 0.5s)`
+- best_score: 0.8073 (50 体 × 54 世代 = 2700 評価)
+
+→ 時間予算の safely 停止が機能. 大規模集団 + 長時間 evol で safe な停止
+ポイントを保証できる.
+
+### 実 LlivKernel 評価への展望
+
+mock 評価では 1 世代 ≈ 0.01s. 実 LlivKernel (Phase 2) では 1 体評価 5 分を
+仮定すると:
+
+| 集団 size | 世代 | 評価数 | 想定時間 |
+|---|---|---|---|
+| 30 | 30 | 900 | 75 時間 (~3 日) |
+| 50 | 30 | 1500 | 125 時間 (~5 日) |
+| 100 | 50 | 5000 | 417 時間 (~17 日) |
+
+`--max-wallclock 3600` (1 時間) + `--out out/...` + 翌日 `--resume-from`
+ループで, セッション 1 回 1 時間 × 数十回 で日数オーダーの進化が回せる.
+これが「**完全に同時でなくても**」のユーザー指示への直接的な応答.

@@ -157,6 +157,8 @@ def main() -> int:
         diversity_floor=1e-6,
         out_dir=args.out,
         log_progress=True,
+        resume_from=args.resume_from,
+        max_wallclock_seconds=args.max_wallclock,
     )
     print(
         f"[demo_evolutionary_loop] problem={args.problem} size={args.size} "
