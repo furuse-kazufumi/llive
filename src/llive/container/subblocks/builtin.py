@@ -158,7 +158,11 @@ class MemoryWriteBlock:
         embedding = backends.encoder.encode(content)
         sem = backends.ensure_semantic()
         existing = sem.all_embeddings()
-        surprise = backends.surprise.compute_surprise(embedding, existing)
+        # SemanticMemory.all_embeddings() returns L2-normalized rows; skip the
+        # redundant re-normalize inside the gate (B-9-a optimization).
+        surprise = backends.surprise.compute_surprise(
+            embedding, existing, assume_normalized=True
+        )
         state.surprise = float(surprise)
         gated = self.policy != "surprise_gated" or backends.surprise.should_write(surprise)
         if not gated:
