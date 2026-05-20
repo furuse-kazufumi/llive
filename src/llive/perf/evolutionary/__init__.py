@@ -5,27 +5,85 @@
 回して hyperparameter を進化させる. 既存 UCBSynapticSelector (収束型) と
 直交し, 個体内 variant 選択は UCB, 個体間競争は GA に分担できる.
 
-主要シンボル (Phase 1 公開):
+主要シンボル:
 
-* :class:`Genome` — 実数ベクトル + bounds
-* :class:`Individual` — Genome + history + fitness
-* :class:`Population` — Individual の集団 + 世代管理 + RNG seed
-* :class:`FitnessReport` — 評価結果 (score + breakdown + runtime metadata)
-
-Phase 2 で追加予定:
-
-* :class:`Selection`, :class:`Crossover`, :class:`Mutation`
-* :class:`EvolutionLoop`
+* :class:`Genome`, :class:`GenomeBounds`
+* :class:`Individual`, :class:`FitnessReport`
+* :class:`Population`, :class:`PopulationStats`
+* :class:`TournamentSelection`, :class:`RouletteSelection`, :class:`ElitismSelection`
+* :class:`UniformCrossover`, :class:`BlendCrossover`
+* :class:`GaussianMutation`, :class:`ResetMutation`, :class:`ChainedMutation`
+* :class:`EvolutionLoop`, :class:`EvolutionConfig`, :class:`EvolutionResult`
+* :class:`MultiprocessingScheduler`, :class:`AsyncioScheduler`, :func:`serial_scheduler`
+* :func:`sphere_fitness`, :func:`rosenbrock_fitness`, :func:`ucb_fitness_factory`
 """
 
+from llive.perf.evolutionary.crossover import BlendCrossover, UniformCrossover
+from llive.perf.evolutionary.fitness import (
+    Fitness,
+    FitnessFn,
+    rosenbrock_fitness,
+    sphere_fitness,
+)
+from llive.perf.evolutionary.fitness_ucb import (
+    UCB_GENOME_BOUNDS,
+    UCB_GENOME_LABELS,
+    UcbFitnessConfig,
+    ucb_fitness_factory,
+)
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import FitnessReport, Individual
-from llive.perf.evolutionary.population import Population
+from llive.perf.evolutionary.loop import (
+    EvolutionConfig,
+    EvolutionLoop,
+    EvolutionResult,
+)
+from llive.perf.evolutionary.mutation import (
+    ChainedMutation,
+    GaussianMutation,
+    ResetMutation,
+)
+from llive.perf.evolutionary.population import Population, PopulationStats
+from llive.perf.evolutionary.scheduler import (
+    AsyncFitness,
+    AsyncioScheduler,
+    MultiprocessingScheduler,
+    serial_scheduler,
+)
+from llive.perf.evolutionary.selection import (
+    ElitismSelection,
+    RouletteSelection,
+    TournamentSelection,
+)
 
 __all__ = [
+    "AsyncFitness",
+    "AsyncioScheduler",
+    "BlendCrossover",
+    "ChainedMutation",
+    "ElitismSelection",
+    "EvolutionConfig",
+    "EvolutionLoop",
+    "EvolutionResult",
+    "Fitness",
+    "FitnessFn",
     "FitnessReport",
+    "GaussianMutation",
     "Genome",
     "GenomeBounds",
     "Individual",
+    "MultiprocessingScheduler",
     "Population",
+    "PopulationStats",
+    "ResetMutation",
+    "RouletteSelection",
+    "TournamentSelection",
+    "UCB_GENOME_BOUNDS",
+    "UCB_GENOME_LABELS",
+    "UcbFitnessConfig",
+    "UniformCrossover",
+    "rosenbrock_fitness",
+    "serial_scheduler",
+    "sphere_fitness",
+    "ucb_fitness_factory",
 ]
