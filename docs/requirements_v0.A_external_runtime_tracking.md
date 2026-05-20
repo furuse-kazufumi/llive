@@ -90,10 +90,11 @@ bench 結果と Honest Disclosure 報告には **stable SHA を必ず明記**
 # llama-server (新 SHA) を別 terminal で起動
 ./llama-server -m model.gguf --port 8080
 
-# llive 側 smoke
-$env:LLIVE_OPENAI_BASE_URL = "http://localhost:8080/v1"
+# llive 側 smoke (env 名は OpenAI SDK の慣例に合わせる)
+$env:OPENAI_BASE_URL = "http://localhost:8080/v1"
+$env:OPENAI_API_KEY = "dummy-for-llamacpp"   # llama-server は任意の dummy で OK
 $env:LLIVE_OPENAI_MODEL = "qwen2.5-coder-7b-instruct-q4_k_m"  # 任意
-py -3.11 -m pytest tests/contract/test_llamacpp_smoke.py -q
+py -3.11 -m pytest tests/contract/test_llamacpp_smoke.py -v
 ```
 
 `tests/contract/test_llamacpp_smoke.py` (要新規) は以下を最小カバー:
