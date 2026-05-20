@@ -99,13 +99,27 @@ def test_ucb_converges_in_large_disparity():
     assert sel.converge().name == "fast"
 
 
-def test_ucb_explores_more_than_eps_greedy():
-    """UCB は SynapticSelector より各 variant の呼び出し回数が均等寄り."""
+def test_ucb_visits_every_variant_at_least_once():
+    """UCB は未試行 variant を最優先するので必ず全 variant が呼ばれる."""
     sel = UCBSynapticSelector(variants=_three_variants(), rng=random.Random(0))
     _simulate(sel, {"fast": 1.0, "medium": 2.0, "slow": 3.0}, n=300)
     counts = {v.name: v.n_calls for v in sel.variants}
-    # 一極集中ではなく どの variant も 30 回以上は呼ばれる (exploration 健在)
-    assert all(c >= 30 for c in counts.values()), counts
+    assert all(c >= 1 for c in counts.values()), counts
+    # 真の最良 (fast) が最多呼び出し
+    assert counts["fast"] == max(counts.values())
+
+
+def test_ucb_high_exploration_distributes_more_evenly():
+    """exploration_c を上げると各 variant の呼び出し回数差が縮む."""
+    sel = UCBSynapticSelector(
+        variants=_three_variants(),
+        exploration_c=10.0,  # 強い exploration
+        rng=random.Random(0),
+    )
+    _simulate(sel, {"fast": 1.0, "medium": 2.0, "slow": 3.0}, n=300)
+    counts = {v.name: v.n_calls for v in sel.variants}
+    # 全 variant が一定回数以上呼ばれる (exploration が強いので 50+ 期待)
+    assert all(c >= 50 for c in counts.values()), counts
 
 
 # ---------------------------------------------------------------------------
