@@ -100,7 +100,7 @@ def main() -> int:
     parser.add_argument(
         "--problem",
         default="sphere",
-        choices=["sphere", "rosenbrock", "ucb_hparam", "backend_select"],
+        choices=["sphere", "rosenbrock", "ucb_hparam", "backend_select", "llive_variant"],
     )
     parser.add_argument("--size", type=int, default=30, help="population size")
     parser.add_argument("--gens", type=int, default=40, help="max generations")
