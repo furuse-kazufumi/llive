@@ -155,6 +155,23 @@ def _compute_surprise_py(
     return float(max(0.0, min(1.0, 1.0 - max_sim)))
 
 
+def _persona_dissimilarity_py(
+    a_ids: list[int], b_ids: list[int], a_aff: list[float], b_aff: list[float]
+) -> float:
+    """Pure-Python fallback. Mirrors persona.py:persona_dissimilarity numerically."""
+    sa = set(a_ids)
+    sb = set(b_ids)
+    union = sa | sb
+    if not union:
+        return 0.0
+    jaccard = len(sa & sb) / len(union)
+    sum_sq = sum((a - b) ** 2 for a, b in zip(a_aff, b_aff, strict=True))
+    l2 = math.sqrt(sum_sq)
+    n = len(a_aff)
+    l2_norm = min(1.0, l2 / math.sqrt(n))
+    return 0.5 * (1.0 - jaccard) + 0.5 * l2_norm
+
+
 def _jaccard_py(a: list[int], b: list[int]) -> float:
     if not a and not b:
         return 1.0
