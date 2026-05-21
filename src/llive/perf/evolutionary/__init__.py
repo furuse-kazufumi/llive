@@ -118,6 +118,7 @@ __all__ = [
     "PopulationStats",
     "ResetMutation",
     "RouletteSelection",
+    "SelfAdaptiveGaussianMutation",
     "TournamentSelection",
     "LIVE_VARIANT_GENOME_BOUNDS",
     "LIVE_VARIANT_GENOME_LABELS",
