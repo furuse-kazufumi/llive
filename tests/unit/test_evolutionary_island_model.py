@@ -192,8 +192,10 @@ def test_migrate_star_topology() -> None:
     rng = np.random.default_rng(0)
     sizes_before = model.island_sizes()
     model.migrate(rng)
-    # 中心 (idx 0) は 2 つの neighbor (1, 2) に送る = 各 1 個ずつ + 各
-    # neighbor から 1 個受ける (size 2)
-    # → 中心 island は 4 - 2 + 2 = 4
-    assert model.island_sizes()[0] == sizes_before[0]
+    # 中心 (idx 0) は 2 neighbor に各 1 ずつ送る (排出 2) + 周辺 2 island から
+    # 各 2 ずつ受ける (流入 4) → 中心 = 4 - 2 + 4 = 6.
+    # 周辺 1 / 2 は中心に 2 送って中心から 1 受ける → 4 - 2 + 1 = 3.
+    assert model.island_sizes()[0] == sizes_before[0] - 2 + 4
+    assert model.island_sizes()[1] == sizes_before[1] - 2 + 1
+    assert model.island_sizes()[2] == sizes_before[2] - 2 + 1
     assert model.total_size() == sum(sizes_before)
