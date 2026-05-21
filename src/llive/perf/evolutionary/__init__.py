@@ -135,6 +135,12 @@ from llive.perf.evolutionary.self_adaptive import (
     initial_sigma_values,
     pack_self_adaptive_bounds,
 )
+from llive.perf.evolutionary.speciation import (
+    SpeciatedTournamentSelection,
+    Speciation,
+    SpeciationLayer,
+    Species,
+)
 from llive.perf.evolutionary.subprocess_scheduler import (
     VariantSubprocessError,
     VariantSubprocessScheduler,
