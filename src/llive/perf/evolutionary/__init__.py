@@ -259,6 +259,7 @@ __all__ = [
     "make_meta_variant_mutation",
     "make_self_adaptive_variant_mutation",
     "mock_variant_fitness_factory",
+    "non_dominated_sort",
     "pack_meta_strategy_bounds",
     "pack_self_adaptive_bounds",
     "persona_dissimilarity",
