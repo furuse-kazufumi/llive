@@ -65,7 +65,16 @@ class MetaMutation:
         n_strategies = len(self.strategies)
         clipped_id = max(0, min(n_strategies - 1, int(round(genome.values[idx]))))
         strategy = self.strategies[clipped_id]
-        return strategy(genome, rng)
+        # 内部 strategy が strategy_dim を書き換えないよう値を保存 → 復元
+        preserved_strategy_value = float(genome.values[idx])
+        mutated = strategy(genome, rng)
+        if abs(mutated.values[idx] - preserved_strategy_value) > 1e-12:
+            new_values = list(mutated.values)
+            new_values[idx] = preserved_strategy_value
+            mutated = Genome.from_values(
+                new_values, bounds=mutated.bounds, labels=mutated.labels
+            )
+        return mutated
 
     def _resolve_strategy_index(self, genome: Genome) -> int:
         if self.strategy_dim < 0:
