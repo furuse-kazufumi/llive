@@ -17,4 +17,4 @@ classifiers = [
 
 [tool.maturin]
 features = ["python"]
-module-name = "llive_rust_ext"
+module-name = "llive_peer_rust_ext"
