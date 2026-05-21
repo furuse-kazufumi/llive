@@ -13,61 +13,95 @@ from __future__ import annotations
 
 import time
 
+import random
+
 from llive.rust_ext import (
     HAS_RUST,
-    _persona_dissimilarity_py,
+    _persona_dissimilarity_pairwise_py,
     _persona_id_to_u32,
-    persona_dissimilarity,
+    persona_dissimilarity_pairwise,
 )
 
 
-def _bench(name: str, fn, n_iter: int = 10000) -> float:
+def _bench(name: str, fn, n_iter: int) -> float:
     # warmup
-    for _ in range(50):
+    for _ in range(3):
         fn()
     start = time.perf_counter()
     for _ in range(n_iter):
         fn()
     elapsed = time.perf_counter() - start
     per_iter_us = elapsed / n_iter * 1e6
-    print(f"{name:50s} {per_iter_us:10.3f} us/iter")
+    print(f"{name:60s} {per_iter_us:12.2f} us/iter")
     return per_iter_us
 
 
+def _make_corpus(n: int, rng: random.Random) -> tuple[list[list[str]], list[list[float]]]:
+    pool = [
+        "oka-kiyoshi",
+        "grothendieck",
+        "feynman",
+        "galois",
+        "von-neumann",
+        "newton",
+        "kant",
+        "socrates",
+        "laozi",
+        "sun-tzu",
+    ]
+    ids_list: list[list[str]] = []
+    aff_matrix: list[list[float]] = []
+    for _ in range(n):
+        k = rng.randint(1, 3)
+        ids_list.append(rng.sample(pool, k))
+        aff_matrix.append([rng.random() for _ in range(10)])
+    return ids_list, aff_matrix
+
+
 def main() -> int:
-    print("=== RUST-15 persona_dissimilarity 5x gate ===\n")
+    print("=== RUST-15 persona_dissimilarity_pairwise 5x gate ===\n")
     print(f"HAS_RUST = {HAS_RUST}\n")
+    rng = random.Random(42)
 
-    a_ids = ["newton", "feynman"]
-    b_ids = ["kant", "galois"]
-    a_aff = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    b_aff = [0.5] * 10
+    sizes = [16, 32, 64]
+    speedups: list[float] = []
+    print(f"{'method':60s} {'us/iter':>12s}")
+    print("-" * 75)
+    for n in sizes:
+        ids_list, aff_matrix = _make_corpus(n, rng)
+        # warmup convert (sort/dedup) は wrapper 内で毎回走る — fair な比較.
+        active_us = _bench(
+            f"[N={n:3d}] active (rust if HAS_RUST)",
+            lambda i=ids_list, a=aff_matrix: persona_dissimilarity_pairwise(i, a),
+            n_iter=200,
+        )
+        # Python fallback baseline: 同 wrapper の py 経路 (sort/dedup を含む).
+        sorted_ids = [
+            sorted({_persona_id_to_u32(s) for s in ids}) for ids in ids_list
+        ]
+        aff_list = [[float(x) for x in row] for row in aff_matrix]
+        py_us = _bench(
+            f"[N={n:3d}] python fallback",
+            lambda si=sorted_ids, ai=aff_list: _persona_dissimilarity_pairwise_py(si, ai),
+            n_iter=200,
+        )
+        if HAS_RUST:
+            speedup = py_us / active_us if active_us > 0 else float("inf")
+            gate = "PASS" if speedup >= 5.0 else "FAIL"
+            print(f"  speedup x{speedup:.2f} [{gate}]\n")
+            speedups.append(speedup)
+        else:
+            print()
 
-    a_u32 = sorted({_persona_id_to_u32(s) for s in a_ids})
-    b_u32 = sorted({_persona_id_to_u32(s) for s in b_ids})
-
-    # 1. Active (Rust if available, else Python fallback inside wrapper)
-    active_us = _bench(
-        "active (rust if HAS_RUST else py)",
-        lambda: persona_dissimilarity(a_ids, b_ids, a_aff, b_aff),
-    )
-
-    # 2. Pure Python fallback (direct call, no FFI)
-    py_us = _bench(
-        "py fallback (direct, no FFI)",
-        lambda: _persona_dissimilarity_py(a_u32, b_u32, a_aff, b_aff),
-    )
-
-    print()
-    if HAS_RUST:
-        speedup = py_us / active_us if active_us > 0 else float("inf")
-        gate = "PASS" if speedup >= 5.0 else "FAIL"
-        print(f"speedup (py/rust): x{speedup:.2f}  [5x gate {gate}]")
-        # FFI overhead を含むので, sort/dedup を含む wrapper 全体での比較.
-        # 大規模 batch では wrapper 化して Rust 側で sort/dedup する別 kernel
-        # が必要 (RUST-NEW-B persona_dissimilarity_batch).
-        return 0 if speedup >= 5.0 else 2
-    print("HAS_RUST=False — gate check skipped (Rust ext absent)")
+    if HAS_RUST and speedups:
+        avg = sum(speedups) / len(speedups)
+        print("-" * 75)
+        print(f"Average speedup across {sizes}: x{avg:.2f}")
+        if avg >= 5.0:
+            print("Result: 5x gate PASSED")
+            return 0
+        print("Result: 5x gate FAILED")
+        return 2
     return 0
 
 
