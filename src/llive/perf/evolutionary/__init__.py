@@ -184,6 +184,7 @@ __all__ = [
     "fitness_accepts_seed",
     "initial_sigma_values",
     "initialize_self_adaptive_variant_genome_values",
+    "latin_hypercube_population",
     "llm_fitness_factory",
     "make_meta_variant_mutation",
     "make_self_adaptive_variant_mutation",
