@@ -93,6 +93,13 @@ from llive.perf.evolutionary.scheduler import (
     MultiprocessingScheduler,
     serial_scheduler,
 )
+from llive.perf.evolutionary.diversity import (
+    DiversityMetrics,
+    DiversityMonitor,
+    DiversityPreservingBreedFilter,
+    NoveltyScorer,
+    latin_hypercube_population,
+)
 from llive.perf.evolutionary.peer_evaluation import (
     PairScoreFn,
     PeerEvaluationMatrix,
