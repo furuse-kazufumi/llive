@@ -88,7 +88,7 @@ class SelfAdaptiveGaussianMutation:
         if genome.n_dims != 2 * n:
             raise ValueError(
                 f"genome.n_dims ({genome.n_dims}) must equal 2 * n_object_dims "
-                f"({2 * n}). Pack object vars and σ together."
+                f"({2 * n}). Pack object vars and sigma together."  # noqa: RUF001 σ vs sigma — ASCII-only エラー message
             )
         values = genome.as_array()
         x = values[:n].copy()
