@@ -207,6 +207,87 @@ fn persona_dissimilarity(
     Ok(0.5 * (1.0 - jaccard) + 0.5 * l2_norm)
 }
 
+/// Internal pairwise core, no PyResult overhead.
+fn _dissim_pair(a_ids: &[u32], b_ids: &[u32], a_aff: &[f64], b_aff: &[f64]) -> f64 {
+    let mut i = 0usize;
+    let mut j = 0usize;
+    let mut inter: u32 = 0;
+    while i < a_ids.len() && j < b_ids.len() {
+        match a_ids[i].cmp(&b_ids[j]) {
+            std::cmp::Ordering::Less => i += 1,
+            std::cmp::Ordering::Greater => j += 1,
+            std::cmp::Ordering::Equal => {
+                inter += 1;
+                i += 1;
+                j += 1;
+            }
+        }
+    }
+    let union = a_ids.len() as u32 + b_ids.len() as u32 - inter;
+    if union == 0 {
+        return 0.0;
+    }
+    let jaccard = inter as f64 / union as f64;
+    let mut sum_sq = 0.0_f64;
+    for k in 0..a_aff.len() {
+        let d = a_aff[k] - b_aff[k];
+        sum_sq += d * d;
+    }
+    let l2 = sum_sq.sqrt();
+    let n = a_aff.len() as f64;
+    let l2_norm = (l2 / n.sqrt()).min(1.0);
+    0.5 * (1.0 - jaccard) + 0.5 * l2_norm
+}
+
+/// Pairwise persona_dissimilarity matrix (RUST-15 batch).
+///
+/// Inputs:
+///   * `ids_list`: N entries of **sorted, deduped** u32 sets.
+///   * `aff_matrix`: N entries of equal-dim f64 affinity vector.
+///
+/// Output: flattened upper-triangular (i < j) NxN dissimilarities in
+/// row-major (i, j) order, length = N*(N-1)/2. Python wrapper rebuilds the
+/// symmetric NxN matrix.
+#[pyfunction]
+fn persona_dissimilarity_pairwise(
+    ids_list: Vec<Vec<u32>>,
+    aff_matrix: Vec<Vec<f64>>,
+) -> PyResult<Vec<f64>> {
+    let n = ids_list.len();
+    if aff_matrix.len() != n {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "len mismatch: ids_list={}, aff_matrix={}",
+            n,
+            aff_matrix.len()
+        )));
+    }
+    if n == 0 {
+        return Ok(Vec::new());
+    }
+    let dim = aff_matrix[0].len();
+    if dim == 0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "affinity vector must be non-empty",
+        ));
+    }
+    for row in &aff_matrix {
+        if row.len() != dim {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "affinity dim mismatch: expected {}, got {}",
+                dim,
+                row.len()
+            )));
+        }
+    }
+    let mut out: Vec<f64> = Vec::with_capacity(n * (n.saturating_sub(1)) / 2);
+    for i in 0..n {
+        for j in (i + 1)..n {
+            out.push(_dissim_pair(&ids_list[i], &ids_list[j], &aff_matrix[i], &aff_matrix[j]));
+        }
+    }
+    Ok(out)
+}
+
 #[pymodule]
 fn llive_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", VERSION)?;
@@ -214,5 +295,6 @@ fn llive_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(jaccard, m)?)?;
     m.add_function(wrap_pyfunction!(bulk_time_decay, m)?)?;
     m.add_function(wrap_pyfunction!(persona_dissimilarity, m)?)?;
+    m.add_function(wrap_pyfunction!(persona_dissimilarity_pairwise, m)?)?;
     Ok(())
 }
