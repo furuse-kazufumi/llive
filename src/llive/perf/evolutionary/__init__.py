@@ -129,6 +129,8 @@ __all__ = [
     "UCB_GENOME_LABELS",
     "UcbFitnessConfig",
     "UniformCrossover",
+    "VariantSubprocessError",
+    "VariantSubprocessScheduler",
     "Winner",
     "call_fitness_with_seed",
     "derive_sub_seed",
