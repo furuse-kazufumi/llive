@@ -47,14 +47,28 @@ llive v0.7 Rust 高速化の RUST-15 / 16 / 17 を着地させる中で, **同�
 |---|---|---|---|
 | **単発 (numpy ndarray zero-copy)** | **x66.70 平均 (N=8 で x115.04)** | ✅ | numpy 小 N の API overhead が主因. 単発でも余裕 |
 
-### 3.3 RUST-17 novelty_score_batch
+### 3.3 RUST-17 novelty_score_batch (RUST-17 baseline + RUST-17b 改善)
 
-| archive size | Python (numpy) | Rust pyo3 | speedup | gate |
-|---:|---:|---:|---:|:---:|
-| A=50 | 872.11us | 91.33us | **x9.55** | PASS |
-| A=200 | 1450.01us | 385.58us | **x3.76** | **FAIL** |
-| A=1000 | 3914.71us | 2277.47us | **x1.72** | **FAIL** |
-| **平均** | — | — | **x5.01** | 辛うじて PASS |
+| archive size | Python (numpy) | Rust **RUST-17** (naive ループ + full sort) | RUST-17 gate | Rust **RUST-17b** (rayon par_iter + quickselect) | RUST-17b gate |
+|---:|---:|---:|:---:|---:|:---:|
+| A=50 | 843-872us | 91.33us (x9.55) | PASS | **65.75us (x12.83)** | PASS |
+| A=200 | 1328-1450us | 385.58us (x3.76) | **FAIL** | **152.53us (x8.71)** | PASS |
+| A=1000 | 3879-3914us | 2277.47us (x1.72) | **FAIL** | **605.16us (x6.41)** | PASS |
+| **平均** | — | x5.01 | 辛うじて PASS | **x9.32** | **全 A PASS** |
+
+RUST-17b 改善は 2 手段:
+
+- **rayon par_iter** で N (集団) ループを 8-core 並列化, py.allow_threads
+  で GIL release.
+- **Vec::select_nth_unstable_by** (Hoare quickselect, O(A) avg) で top-k
+  partial sort — full sort O(A log A) を置換.
+
+改善率: A=50 で +34%, A=200 で **+132%**, A=1000 で **+273%**. 大 archive
+ほど効果が顕著 — 各 thread の計算量が overhead 相対小 + quickselect の
+algorithmic gain が効く.
+
+honest disclosure: **std::simd は nightly のみで stable 不可** だったため
+SIMD 化は scope 外. 入れればさらに 2-3x 期待 (次の RUST-17c 候補).
 
 ## 4. 4 パターン判定表 (本セッションで言語化)
 
