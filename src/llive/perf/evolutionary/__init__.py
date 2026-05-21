@@ -183,6 +183,8 @@ __all__ = [
     "AsyncioScheduler",
     "BlendCrossover",
     "ChainedMutation",
+    "CompositionStat",
+    "CouncilDecision",
     "DiversityMetrics",
     "DiversityMonitor",
     "DiversityPreservingBreedFilter",
