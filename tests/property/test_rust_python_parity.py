@@ -31,6 +31,7 @@ from llive.rust_ext import (
     _bulk_time_decay_py,
     _compute_surprise_py,
     _jaccard_py,
+    _persona_dissimilarity_pairwise_py,
     _persona_dissimilarity_py,
     _persona_id_to_u32,
 )
