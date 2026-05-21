@@ -93,6 +93,11 @@ from llive.perf.evolutionary.scheduler import (
     MultiprocessingScheduler,
     serial_scheduler,
 )
+from llive.perf.evolutionary.peer_evaluation import (
+    PairScoreFn,
+    PeerEvaluationMatrix,
+    PeerFitnessAdapter,
+)
 from llive.perf.evolutionary.self_adaptive import (
     SelfAdaptiveGaussianMutation,
     initial_sigma_values,
