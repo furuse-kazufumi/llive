@@ -136,6 +136,14 @@ from llive.perf.evolutionary.persona import (
     random_persona_composition,
 )
 from llive.perf.evolutionary.population import Population, PopulationStats
+from llive.perf.evolutionary.quality_diversity import (
+    MAPElitesCell,
+    MAPElitesGrid,
+    PersonaOverlapPenalty,
+    default_map_elites_features,
+    default_persona_features,
+    default_thought_features,
+)
 from llive.perf.evolutionary.scheduler import (
     AsyncFitness,
     AsyncioScheduler,
