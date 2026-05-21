@@ -14,6 +14,85 @@ Rosin-Belew / Irving Debate / MASPO / AlphaGo) と llive の派生集団進化�
 
 ---
 
+## 0.5 拡張洞察 (2026-05-21 追記)
+
+ユーザー追加コメント:
+
+> 「各 llive 亜種が独自に自己拡張や最適化を進め, 協調や敵対も含めて互いに
+> 競争しあい, 進化や淘汰が加速されるイメージです.」
+
+ここから 3 つの設計柱が明確になる:
+
+### 柱 A: 個別 self-extension (世代外学習)
+
+各派生が **世代 step とは別軸** で局所的に自己拡張する. 既存実装の地続き:
+
+- **memory 拡張** — semantic / episodic / structural memory への書き込み
+  (個体ごとの knowledge accumulation)
+- **思考因子 weight の online 微調整** — 個体内で UCB1 / SynapticSelector
+  が動く (v0.B 既存)
+- **LoRA / adapter 自己生成** — parameter memory (MEM-06) の生成 / fork
+- **構造変化** — TRIZ × bounded modification (v0.3) で局所改修
+
+= 世代 step は「集団進化」を担当, 個別 self-extension は「個体内成長」を
+担当. 両者は **直交補完**.
+
+### 柱 B: 協調 (cooperative) と敵対 (competitive) の両立
+
+```
+                        ┌─────── 協調 (cooperative) ───────┐
+                        │  - 課題分担 (Map-Reduce 型)        │
+                        │  - 知識共有 (memory pull/push)     │
+                        │  - 投票 / consensus formation      │
+                        └────────────────────────────────────┘
+派生集団  ──→
+                        ┌─────── 敵対 (competitive) ────────┐
+                        │  - peer evaluation (相互採点)      │
+                        │  - 同一課題で勝ち負け              │
+                        │  - 役割奪取 (niche competition)    │
+                        └────────────────────────────────────┘
+```
+
+両者を **同時に許す** 設計が新しい段階. 単なる「協調 multi-agent (CAMEL /
+AutoGen)」でも単なる「競争 GA」でもない. 派生群はタスクごとに **2 軸の
+configuration** を持つ:
+
+```python
+@dataclass
+class InteractionPolicy:
+    cooperation_intent: float    # 0.0 (pure compete) - 1.0 (pure cooperate)
+    target_pool_id: str          # どの派生群と相互作用するか
+    knowledge_share_zones: list[str]  # どの memory zone を共有するか
+```
+
+これも genome 1 級市民にすると **「敵対的派生集団」と「協調的派生集団」が
+共存し, 役割が世代と共に分化** する.
+
+### 柱 C: 加速 (acceleration)
+
+「進化や淘汰が加速」の意は **絶対時間あたりの世代進行が早まる** こと.
+2 機構:
+
+- **個体内 self-extension で fitness 改善** → 世代外で評価値が上がる →
+  selection 圧が即座に効く → 世代 step の意味が濃くなる
+- **協調により評価 / 知識生成のコストが下がる** → 1 世代あたりの実時間が
+  短縮 → 単位時間あたり世代数が増える
+
+これは memory `feedback_llive_measurement_purity` の **on-prem 限定** と
+矛盾しない. 加速は **集団内** の機構で達成し, 外部 cloud LLM に依存しない.
+
+### 設計上の追加 ID
+
+| ID | 内容 | 依存 |
+|---|---|---|
+| **CE-09** | IndividualSelfExtension layer (世代 step 外の個体内学習を hooks 化) | v0.B 既存 |
+| **CE-10** | InteractionPolicy dataclass + Genome 統合 | CE-05 |
+| **CE-11** | CooperativeKnowledgeShare (memory zone pull/push) | structural memory |
+| **CE-12** | NicheCompetition detector (役割奪取の検出) | LG-01 (League) |
+| **CE-13** | AccelerationMetric (世代/秒 + fitness 改善/秒) | observability |
+
+---
+
 ## 0. 動機 — 「進化と淘汰の次」
 
 v0.B/v0.C/v0.D で **個体集団 × 外部 fitness** が成立した. 次は **個体集団 ×
