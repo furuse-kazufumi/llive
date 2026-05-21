@@ -149,7 +149,7 @@
 - v0.E CE-02 (PeerCommunication via MCP) は llmesh 統合待ち
 - Rust 高速化 RUST-15〜20 は spec のみ, 実装は Phase 5 着工
 
-## [Unreleased]
+## [0.6.0a0] — 2026-05-16 (Brief API + progressive validation matrix)
 
 ### Added — LLIVE-002: Brief API end-to-end (closes LLIVE-001 / LLIVE-002) — 2026-05-16
 
