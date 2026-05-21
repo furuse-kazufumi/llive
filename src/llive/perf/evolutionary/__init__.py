@@ -217,6 +217,7 @@ __all__ = [
     "FitnessReport",
     "GaussianMutation",
     "Genome",
+    "GovernanceReport",
     "GenomeBounds",
     "Individual",
     "IslandModel",
