@@ -2,6 +2,16 @@
 
 このプロジェクトの変更履歴。形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/)、バージョニングは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [Unreleased]
+
+### Planned
+
+- v0.7 Rust 高速化 (`docs/rust_hotspot_v0E_addendum.md` の RUST-15〜18).
+- v0.E E.5 (League mode, AlphaStar 風) / E.6 (Debate mode) — credential
+  + judge LLM 復旧後.
+- lleval ↔ llive bridge v0.1.0a2 — promptfoo subprocess 実走 + llive
+  Genome → ProviderSpec mapper 連携.
+
 ## [0.6.0a1] — 2026-05-21 (Evolutionary stack v0.B/C/D/E 大規模前倒し)
 
 ユーザー Goal「完璧に近い Release 環境レベル + Rust 高速化検討」(2026-05-21)
