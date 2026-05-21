@@ -142,11 +142,77 @@ fn bulk_time_decay(
     })
 }
 
+/// Persona dissimilarity (RUST-15 baseline) — Jaccard + L2 + 合成を 1 FFI call.
+///
+/// `(1 - Jaccard(a_ids, b_ids)) * 0.5 + min(1, L2(a_aff - b_aff) / sqrt(N)) * 0.5`.
+///
+/// Inputs:
+///   * `a_ids` / `b_ids`: **sorted, deduped** u32 sets. caller (Python side) is
+///     responsible for the canonical form.
+///   * `a_aff` / `b_aff`: 同じ次元 N の f64 affinity vector ([0, 1] 推奨).
+///
+/// Output: dissimilarity in `[0, 1]`. Mirrors Python `persona_dissimilarity`
+/// (`src/llive/perf/evolutionary/persona.py:425`) to within 1e-6 (RUST-13 style
+/// parity gate).
+#[pyfunction]
+fn persona_dissimilarity(
+    a_ids: Vec<u32>,
+    b_ids: Vec<u32>,
+    a_aff: Vec<f64>,
+    b_aff: Vec<f64>,
+) -> PyResult<f64> {
+    if a_aff.len() != b_aff.len() {
+        return Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "affinity dim mismatch: a={}, b={}",
+            a_aff.len(),
+            b_aff.len()
+        )));
+    }
+    if a_aff.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "affinity vector must be non-empty",
+        ));
+    }
+    // Jaccard via linear merge (a_ids / b_ids are caller-canonical).
+    let mut i = 0usize;
+    let mut j = 0usize;
+    let mut inter: u32 = 0;
+    while i < a_ids.len() && j < b_ids.len() {
+        match a_ids[i].cmp(&b_ids[j]) {
+            std::cmp::Ordering::Less => i += 1,
+            std::cmp::Ordering::Greater => j += 1,
+            std::cmp::Ordering::Equal => {
+                inter += 1;
+                i += 1;
+                j += 1;
+            }
+        }
+    }
+    let union = a_ids.len() as u32 + b_ids.len() as u32 - inter;
+    let jaccard = if union == 0 {
+        // Python 側 persona_dissimilarity と一致させる: 両 set 空のとき 0.0.
+        return Ok(0.0);
+    } else {
+        inter as f64 / union as f64
+    };
+    // L2 of affinity diff
+    let mut sum_sq = 0.0_f64;
+    for k in 0..a_aff.len() {
+        let d = a_aff[k] - b_aff[k];
+        sum_sq += d * d;
+    }
+    let l2 = sum_sq.sqrt();
+    let n = a_aff.len() as f64;
+    let l2_norm = (l2 / n.sqrt()).min(1.0);
+    Ok(0.5 * (1.0 - jaccard) + 0.5 * l2_norm)
+}
+
 #[pymodule]
 fn llive_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", VERSION)?;
     m.add_function(wrap_pyfunction!(compute_surprise, m)?)?;
     m.add_function(wrap_pyfunction!(jaccard, m)?)?;
     m.add_function(wrap_pyfunction!(bulk_time_decay, m)?)?;
+    m.add_function(wrap_pyfunction!(persona_dissimilarity, m)?)?;
     Ok(())
 }
