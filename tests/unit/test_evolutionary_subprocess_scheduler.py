@@ -337,7 +337,6 @@ def test_zero_returncode_but_missing_result_raises(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.timeout(180)
 def test_evolution_loop_uses_subprocess_scheduler(tmp_path: Path) -> None:
     """EvolutionLoop に subprocess scheduler を差し込み 2 世代回す.
 
