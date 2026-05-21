@@ -36,6 +36,12 @@ from llive.perf.evolutionary.expert_council import (
     ExpertPanel,
     build_panel_from_personas,
 )
+from llive.perf.evolutionary.expert_evolution import (
+    CompositionStat,
+    ExpertCompositionGenome,
+    ExpertCompositionMutation,
+    SurvivalRateTracker,
+)
 from llive.perf.evolutionary.fitness import (
     Fitness,
     FitnessFn,
