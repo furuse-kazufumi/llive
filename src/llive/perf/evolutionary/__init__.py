@@ -265,6 +265,7 @@ __all__ = [
     "build_self_adaptive_meta_strategy_variant_bounds",
     "build_self_adaptive_variant_bounds",
     "call_fitness_with_seed",
+    "collusion_risk_score",
     "crowding_distance",
     "default_map_elites_features",
     "default_persona_features",
