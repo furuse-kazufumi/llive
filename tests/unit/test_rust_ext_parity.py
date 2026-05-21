@@ -92,10 +92,14 @@ def test_rust_ext_module_optional() -> None:
     assert has_rust in (True, False)
 
 
-@pytest.mark.skipif(
-    pytest.importorskip("llive_rust_ext", reason="rust ext not built") is None,
-    reason="rust ext not built",
-)
+try:
+    import llive_rust_ext as _rust_ext_for_test  # type: ignore[import]
+    _HAS_RUST = True
+except ImportError:
+    _HAS_RUST = False
+
+
+@pytest.mark.skipif(not _HAS_RUST, reason="rust ext not built")
 def test_rust_column_mean_matches_python() -> None:
     """Rust binding がある場合は Python と数値一致を確認 (Phase 2 でアクティブ化)."""
     import llive_rust_ext  # type: ignore[import]
