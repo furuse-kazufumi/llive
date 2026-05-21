@@ -337,7 +337,7 @@ def test_collusion_score_kernel_uniform_high_returns_low_variance():
 
     m = np.full((6, 6), 0.95, dtype=np.float64)
     np.fill_diagonal(m, np.nan)
-    var, sym, conc = collusion_score_kernel(m)
+    var, _sym, conc = collusion_score_kernel(m)
     assert var < 1e-9
     assert _isclose(conc, 1.0, tol=1e-6)
 
