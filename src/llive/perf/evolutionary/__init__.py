@@ -97,6 +97,11 @@ from llive.perf.evolutionary.mutation import (
     GaussianMutation,
     ResetMutation,
 )
+from llive.perf.evolutionary.nsga2 import (
+    NSGA2Selection,
+    crowding_distance,
+    non_dominated_sort,
+)
 from llive.perf.evolutionary.peer_evaluation import (
     PairScoreFn,
     PeerEvaluationMatrix,
