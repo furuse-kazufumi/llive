@@ -105,6 +105,62 @@ def _persona_id_to_u32(persona_id: str) -> int:
     return zlib.crc32(str(persona_id).encode("utf-8")) & 0xFFFFFFFF
 
 
+def collusion_score_kernel(matrix) -> tuple[float, float, float]:
+    """RUST-16 collusion_score kernel wrapper.
+
+    Args:
+        matrix: numpy ndarray (NxN, float64, contiguous). Off-diagonal NaN は
+            非評価セルとして除外される. 対角は NaN を期待 (caller が
+            ``np.fill_diagonal(m, np.nan)`` で marker 化済の前提).
+
+    Returns:
+        (score_variance, symmetry, concentration) tuple. Mirrors
+        ``PeerEvaluationMatrix.collusion_score()`` numerically (1e-6 parity).
+    """
+    import numpy as np
+
+    arr = np.ascontiguousarray(matrix, dtype=np.float64)
+    if arr.ndim != 2 or arr.shape[0] != arr.shape[1]:
+        raise ValueError(f"matrix must be square NxN, got shape={arr.shape}")
+    if _rust is not None and hasattr(_rust, "collusion_score_kernel"):
+        return tuple(float(x) for x in _rust.collusion_score_kernel(arr))
+    return _collusion_score_kernel_py(arr)
+
+
+def _collusion_score_kernel_py(matrix) -> tuple[float, float, float]:
+    """Pure-Python (numpy) fallback. Mirrors Rust kernel semantics."""
+    import numpy as np
+
+    m = matrix.copy()
+    n = m.shape[0]
+    if n < 2:
+        return (0.0, 0.0, 0.0)
+    # caller might or might not have NaN'd the diagonal; force it for safety.
+    np.fill_diagonal(m, np.nan)
+    valid = ~np.isnan(m)
+    if not valid.any():
+        return (0.0, 0.0, 0.0)
+    variance = float(np.nanvar(m))
+    m_flat = m[valid]
+    m_t_flat = m.T[valid]
+    if (
+        len(m_flat) >= 2
+        and float(np.nanstd(m_flat)) > 1e-12
+        and float(np.nanstd(m_t_flat)) > 1e-12
+    ):
+        symmetry = float(np.corrcoef(m_flat, m_t_flat)[0, 1])
+    else:
+        symmetry = 0.0
+    with __import__("numpy").errstate(invalid="ignore"):
+        col_mean = np.nanmean(m, axis=0)
+    col_valid = col_mean[~np.isnan(col_mean)]
+    if len(col_valid) > 0 and float(col_valid.mean()) > 1e-12:
+        concentration = float(col_valid.max() / col_valid.mean())
+    else:
+        concentration = 0.0
+    return (variance, symmetry, concentration)
+
+
 def persona_dissimilarity_pairwise(
     ids_list: Sequence[Sequence[str]],
     aff_matrix: Sequence[Sequence[float]],
