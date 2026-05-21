@@ -398,7 +398,14 @@ fn collusion_score_kernel(matrix: PyReadonlyArray2<f64>) -> PyResult<(f64, f64, 
     Ok((variance, symmetry, concentration))
 }
 
-/// RUST-17 novelty_score_batch — k-NN L2 mean for each query vs archive.
+/// RUST-17b novelty_score_batch — k-NN L2 mean for each query vs archive.
+///
+/// Improvements over RUST-17 baseline:
+///   * **rayon par_iter** on N (集団 N=64 を CPU cores で並列化).
+///   * **select_nth_unstable** (Hoare quickselect, O(A) avg) for top-k —
+///     replaces O(A log A) full sort.
+///   * GIL released via `py.allow_threads` during the compute kernel so
+///     concurrent Python work isn't blocked.
 ///
 /// Inputs (numpy zero-copy):
 ///   * `values`: shape (N, D). N query vectors.
@@ -410,22 +417,22 @@ fn collusion_score_kernel(matrix: PyReadonlyArray2<f64>) -> PyResult<(f64, f64, 
 /// (mirrors Python ``NoveltyScorer.novelty`` semantics).
 #[pyfunction]
 fn novelty_score_batch(
+    py: Python<'_>,
     values: PyReadonlyArray2<f64>,
     archive: PyReadonlyArray2<f64>,
     k: usize,
 ) -> PyResult<Vec<f64>> {
-    let v = values.as_array();
-    let a = archive.as_array();
     if k < 1 {
         return Err(pyo3::exceptions::PyValueError::new_err("k must be >= 1"));
     }
+    let v = values.as_array();
+    let a = archive.as_array();
     let v_shape = v.shape();
     let a_shape = a.shape();
     let n = v_shape[0];
     let dim = v_shape[1];
     let a_n = a_shape[0];
     if a_n == 0 {
-        // archive empty → all novelty 1.0 (mirror Python convention).
         return Ok(vec![1.0; n]);
     }
     if a_shape[1] != dim {
@@ -434,24 +441,34 @@ fn novelty_score_batch(
             dim, a_shape[1]
         )));
     }
-    let mut out = vec![0.0_f64; n];
-    let mut dists_buf = vec![0.0_f64; a_n];
     let k_use = k.min(a_n);
-    for i in 0..n {
-        for j in 0..a_n {
-            let mut sum_sq = 0.0_f64;
-            for d in 0..dim {
-                let diff = v[[i, d]] - a[[j, d]];
-                sum_sq += diff * diff;
-            }
-            dists_buf[j] = sum_sq.sqrt();
-        }
-        dists_buf
-            .sort_by(|x, y| x.partial_cmp(y).unwrap_or(std::cmp::Ordering::Equal));
-        let mean: f64 = dists_buf[..k_use].iter().sum::<f64>() / k_use as f64;
-        out[i] = mean;
-    }
-    Ok(out)
+
+    // Release GIL while we crunch — rayon par_iter on N, quickselect on A.
+    let result: Vec<f64> = py.allow_threads(|| {
+        (0..n)
+            .into_par_iter()
+            .map(|i| {
+                let mut dists: Vec<f64> = Vec::with_capacity(a_n);
+                for j in 0..a_n {
+                    let mut sum_sq = 0.0_f64;
+                    for d in 0..dim {
+                        let diff = v[[i, d]] - a[[j, d]];
+                        sum_sq += diff * diff;
+                    }
+                    dists.push(sum_sq.sqrt());
+                }
+                // Hoare quickselect: partial sort so the first k_use entries are
+                // the k smallest (any order). Mean is order-invariant.
+                if k_use < dists.len() {
+                    dists.select_nth_unstable_by(k_use, |x, y| {
+                        x.partial_cmp(y).unwrap_or(std::cmp::Ordering::Equal)
+                    });
+                }
+                dists[..k_use].iter().sum::<f64>() / k_use as f64
+            })
+            .collect()
+    });
+    Ok(result)
 }
 
 #[pymodule]
