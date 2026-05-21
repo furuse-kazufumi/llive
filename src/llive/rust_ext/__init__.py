@@ -105,6 +105,63 @@ def _persona_id_to_u32(persona_id: str) -> int:
     return zlib.crc32(str(persona_id).encode("utf-8")) & 0xFFFFFFFF
 
 
+def persona_dissimilarity_pairwise(
+    ids_list: Sequence[Sequence[str]],
+    aff_matrix: Sequence[Sequence[float]],
+) -> list[list[float]]:
+    """N 個の composition から pairwise dissimilarity の symmetric NxN matrix.
+
+    1 FFI call で N*(N-1)/2 個の pair 計算を完結 → ``persona_dissimilarity``
+    を Python 側 N×N ループするより速い (RUST-15 batch).
+
+    Mirrors ``PersonaOverlapPenalty.mean_dissimilarity`` の hot path.
+
+    Returns
+    -------
+    list[list[float]]
+        対称 NxN matrix (対角は 0.0).
+    """
+    n = len(ids_list)
+    if len(aff_matrix) != n:
+        raise ValueError(f"ids_list ({n}) != aff_matrix ({len(aff_matrix)})")
+    if n == 0:
+        return []
+
+    sorted_ids: list[list[int]] = [
+        sorted({_persona_id_to_u32(s) for s in ids}) for ids in ids_list
+    ]
+    aff_list: list[list[float]] = [[float(x) for x in row] for row in aff_matrix]
+
+    if _rust is not None and hasattr(_rust, "persona_dissimilarity_pairwise"):
+        flat: list[float] = list(_rust.persona_dissimilarity_pairwise(sorted_ids, aff_list))
+        result = [[0.0] * n for _ in range(n)]
+        idx = 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                result[i][j] = float(flat[idx])
+                result[j][i] = float(flat[idx])
+                idx += 1
+        return result
+
+    # fallback: Python NxN
+    return _persona_dissimilarity_pairwise_py(sorted_ids, aff_list)
+
+
+def _persona_dissimilarity_pairwise_py(
+    sorted_ids: list[list[int]], aff_list: list[list[float]]
+) -> list[list[float]]:
+    n = len(sorted_ids)
+    out = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(i + 1, n):
+            d = _persona_dissimilarity_py(
+                sorted_ids[i], sorted_ids[j], aff_list[i], aff_list[j]
+            )
+            out[i][j] = d
+            out[j][i] = d
+    return out
+
+
 def bulk_time_decay(
     edges: list[tuple[str, float, float]],
     tau_map: dict[str, float],
