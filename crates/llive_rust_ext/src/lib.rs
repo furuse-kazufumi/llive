@@ -15,6 +15,7 @@
 use numpy::PyReadonlyArray2;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
+use rayon::prelude::*;
 
 const VERSION: &str = "0.5.0";
 
