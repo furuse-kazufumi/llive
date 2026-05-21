@@ -105,6 +105,17 @@ from llive.perf.evolutionary.peer_evaluation import (
     PeerEvaluationMatrix,
     PeerFitnessAdapter,
 )
+from llive.perf.evolutionary.persona import (
+    PERSONA_ONTOLOGY,
+    Persona,
+    PersonaComposition,
+    PersonaCompositionMutation,
+    THOUGHT_FACTORS,
+    get_persona,
+    list_persona_ids,
+    persona_dissimilarity,
+    random_persona_composition,
+)
 from llive.perf.evolutionary.self_adaptive import (
     SelfAdaptiveGaussianMutation,
     initial_sigma_values,
