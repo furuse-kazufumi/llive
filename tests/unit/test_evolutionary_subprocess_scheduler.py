@@ -51,7 +51,12 @@ def _make_individuals(n: int, *, seed: int = 0) -> list[Individual]:
 
 
 def _make_population(n: int, *, seed: int = 0) -> Population:
-    return Population(individuals=_make_individuals(n, seed=seed), seed=seed)
+    return Population.random(
+        LIVE_VARIANT_GENOME_BOUNDS,
+        size=n,
+        seed=seed,
+        labels=LIVE_VARIANT_GENOME_LABELS,
+    )
 
 
 # ---------------------------------------------------------------------------
