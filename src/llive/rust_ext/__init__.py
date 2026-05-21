@@ -161,6 +161,68 @@ def _collusion_score_kernel_py(matrix) -> tuple[float, float, float]:
     return (variance, symmetry, concentration)
 
 
+def novelty_score_batch(values, archive, k: int) -> list[float]:
+    """RUST-17 novelty_score_batch wrapper (k-NN L2 mean).
+
+    Args:
+        values: numpy ndarray (N, D) or sequence of length-D sequences.
+        archive: numpy ndarray (A, D) or list of length-D vectors. Empty OK.
+        k: top-k for the mean (clamped to A when k > A).
+
+    Returns:
+        list[float] length N. Mirrors ``NoveltyScorer.novelty_batch`` numerically.
+        Empty archive → 1.0 per entry.
+    """
+    import numpy as np
+
+    if k < 1:
+        raise ValueError(f"k must be >= 1, got {k}")
+    vals = np.ascontiguousarray(values, dtype=np.float64)
+    if vals.ndim == 1:
+        vals = vals.reshape(1, -1)
+    if vals.ndim != 2:
+        raise ValueError(f"values must be 2D, got shape={vals.shape}")
+    if hasattr(archive, "__len__") and len(archive) == 0:
+        return [1.0] * vals.shape[0]
+    # archive may be list[np.ndarray] (NoveltyScorer.archive) or 2D ndarray.
+    if isinstance(archive, list):
+        if not archive:
+            return [1.0] * vals.shape[0]
+        arc = np.stack([np.ascontiguousarray(a, dtype=np.float64) for a in archive])
+    else:
+        arc = np.ascontiguousarray(archive, dtype=np.float64)
+    if arc.size == 0:
+        return [1.0] * vals.shape[0]
+    if arc.ndim != 2:
+        raise ValueError(f"archive must be 2D, got shape={arc.shape}")
+    if arc.shape[1] != vals.shape[1]:
+        raise ValueError(
+            f"dim mismatch: values D={vals.shape[1]}, archive D={arc.shape[1]}"
+        )
+
+    if _rust is not None and hasattr(_rust, "novelty_score_batch"):
+        return [float(x) for x in _rust.novelty_score_batch(vals, arc, int(k))]
+    return _novelty_score_batch_py(vals, arc, int(k))
+
+
+def _novelty_score_batch_py(values, archive, k: int) -> list[float]:
+    """Pure-numpy fallback. Mirrors NoveltyScorer.novelty for each row."""
+    import numpy as np
+
+    n = values.shape[0]
+    a_n = archive.shape[0]
+    if a_n == 0:
+        return [1.0] * n
+    out: list[float] = []
+    k_use = min(k, a_n)
+    for i in range(n):
+        diffs = archive - values[i][None, :]
+        dists = np.linalg.norm(diffs, axis=1)
+        nearest = np.sort(dists)[:k_use]
+        out.append(float(nearest.mean()))
+    return out
+
+
 def persona_dissimilarity_pairwise(
     ids_list: Sequence[Sequence[str]],
     aff_matrix: Sequence[Sequence[float]],
