@@ -152,7 +152,6 @@ def test_single_individual_subprocess_eval(tmp_path: Path) -> None:
     assert payload["score"] == pytest.approx(rep.score, abs=1e-9)
 
 
-@pytest.mark.timeout(120)
 def test_parity_with_in_process_mock(tmp_path: Path) -> None:
     """同じ Genome を subprocess / in-process それぞれで評価し score が一致.
 
@@ -182,7 +181,6 @@ def test_parity_with_in_process_mock(tmp_path: Path) -> None:
             assert sub.breakdown[k] == pytest.approx(v, abs=1e-9)
 
 
-@pytest.mark.timeout(120)
 def test_parallel_max_workers_preserves_order(tmp_path: Path) -> None:
     """max_workers > 1 でも入力順を保って返る (EvolutionLoop の zip 前提)."""
     inds = _make_individuals(4, seed=7)
