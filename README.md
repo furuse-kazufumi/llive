@@ -58,6 +58,7 @@ qwen2.5:7b, qwen2.5:14b}, on-prem only): **Brief API + loop overhead < 1 %**
 
 ## ステータス
 
+- **[Unreleased] v0.6.0a1** (2026-05-21 マラソン) — Evolutionary stack v0.B/C/D/E 大規模前倒し。13 wave + **303 件 test** 追加。本セッションでは更に **E.17 quality-diversity** (`PersonaOverlapPenalty` + `MAPElitesGrid`)、**E.4 governance skeleton** (`CoevolutionGovernance` × `CollusionDetector` × ApprovalBus × TonicRiskMonitor)、**E.12 persona import** (`PersonaImportAlgorithm` で hybrid persona 派生間転送) を着地。`src/llive/perf/evolutionary/` は ruff 0 警告維持。v0.E 要件は 34 IDs (CE-01〜34) で完成。詳細は [CHANGELOG.md](CHANGELOG.md#0.6.0a1) と [docs/release/v0.6.0a1_PR_PLAN.md](docs/release/v0.6.0a1_PR_PLAN.md)。
 - **v0.5.0** (2026-05-14) — Phase 5 first wire-in。`BayesianSurpriseGate.compute_surprise` (MEM-07) と `EdgeWeightUpdater.apply_time_decay` (RUST-03) を Rust kernel 経路へ自動委譲、不在時 numpy fallback、1e-6 parity 保証。**444 tests / 0 lint** (v0.4.0 baseline 439 + RUST-03 parity 5)。pyo3 0.24.2 (CVE-clean)。
 - **v0.4.0** (2026-05-14) — Phase 5 Rust acceleration **skeleton**。`crates/llive_rust_ext/` PyO3 0.22 + maturin scaffold、RUST-01 / RUST-02 baseline (`compute_surprise`) / RUST-04 baseline (`jaccard`) / RUST-13 Hypothesis parity harness。**439 tests**。
 - **v0.3.0** (2026-05-14) — Phase 3 (Controlled Self-Evolution MVR) + Phase 4 (Production Security MVR) 同時リリース。Z3 静的検証 / Failed Reservoir / Reverse-Evo Monitor / TRIZ Self-Reflection / Wiki ChangeOp / Quarantined Zone / Ed25519 Signed Adapter / SHA-256 Audit Chain。429 tests / 98% coverage / 0 lint。
