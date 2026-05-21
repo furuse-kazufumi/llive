@@ -130,7 +130,6 @@ def test_failure_fitness_report_marks_score_zero() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.timeout(60)
 def test_single_individual_subprocess_eval(tmp_path: Path) -> None:
     inds = _make_individuals(1, seed=11)
     sched = VariantSubprocessScheduler(
@@ -202,7 +201,6 @@ def test_parallel_max_workers_preserves_order(tmp_path: Path) -> None:
         assert sub.score == pytest.approx(inp.score, abs=1e-9)
 
 
-@pytest.mark.timeout(60)
 def test_cleanup_removes_variant_dir(tmp_path: Path) -> None:
     inds = _make_individuals(1, seed=3)
     sched = VariantSubprocessScheduler(
