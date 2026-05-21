@@ -203,4 +203,5 @@ __all__ = [
     "bulk_time_decay",
     "compute_surprise",
     "jaccard",
+    "persona_dissimilarity",
 ]
