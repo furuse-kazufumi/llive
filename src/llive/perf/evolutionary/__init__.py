@@ -77,6 +77,10 @@ from llive.perf.evolutionary.scheduler import (
     MultiprocessingScheduler,
     serial_scheduler,
 )
+from llive.perf.evolutionary.subprocess_scheduler import (
+    VariantSubprocessError,
+    VariantSubprocessScheduler,
+)
 from llive.perf.evolutionary.seeds import (
     call_fitness_with_seed,
     derive_sub_seed,
