@@ -304,6 +304,89 @@ def test_persona_dissimilarity_pairwise_empty_input():
     assert persona_dissimilarity_pairwise([], []) == []
 
 
+# ---------------------------------------------------------------------------
+# collusion_score_kernel (RUST-16 baseline)
+# ---------------------------------------------------------------------------
+
+
+@settings(max_examples=30, deadline=None)
+@given(
+    n=st.integers(min_value=2, max_value=16),
+    seed=st.integers(min_value=0, max_value=10_000),
+)
+def test_collusion_score_kernel_parity(n, seed):
+    """Rust kernel と numpy fallback の出力が 1e-6 で一致するか."""
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    rng = np.random.default_rng(seed)
+    m = rng.uniform(0.0, 1.0, size=(n, n))
+    np.fill_diagonal(m, np.nan)
+    py = _collusion_score_kernel_py(m)
+    rs = collusion_score_kernel(m)
+    assert _isclose(py[0], rs[0], tol=1e-6), ("variance", py[0], rs[0])
+    assert _isclose(py[1], rs[1], tol=1e-6), ("symmetry", py[1], rs[1])
+    assert _isclose(py[2], rs[2], tol=1e-6), ("concentration", py[2], rs[2])
+
+
+def test_collusion_score_kernel_uniform_high_returns_low_variance():
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    m = np.full((6, 6), 0.95, dtype=np.float64)
+    np.fill_diagonal(m, np.nan)
+    var, sym, conc = collusion_score_kernel(m)
+    assert var < 1e-9
+    assert _isclose(conc, 1.0, tol=1e-6)
+
+
+def test_collusion_score_kernel_symmetric_matrix_high_symmetry():
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    rng = np.random.default_rng(0)
+    m = rng.uniform(0.0, 1.0, size=(6, 6))
+    m = (m + m.T) / 2.0  # fully symmetric
+    np.fill_diagonal(m, np.nan)
+    _, sym, _ = collusion_score_kernel(m)
+    assert sym > 0.99, sym
+
+
+def test_collusion_score_kernel_too_small_returns_zeros():
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    m = np.array([[1.0]], dtype=np.float64)
+    assert collusion_score_kernel(m) == (0.0, 0.0, 0.0)
+
+
+def test_collusion_score_kernel_matches_peer_evaluation_matrix():
+    """既存 ``PeerEvaluationMatrix.collusion_score()`` と output が一致するか."""
+    import numpy as np
+
+    from llive.perf.evolutionary import PeerEvaluationMatrix
+    from llive.rust_ext import collusion_score_kernel
+
+    rng = np.random.default_rng(7)
+    n = 8
+    m = rng.uniform(0.0, 1.0, size=(n, n))
+    peer = PeerEvaluationMatrix(
+        agent_ids=tuple(f"a{i}" for i in range(n)), matrix=m.copy()
+    )
+    expected = peer.collusion_score()
+    # collusion_score_kernel expects diagonal already NaN'd.
+    m_diag_nan = m.copy()
+    np.fill_diagonal(m_diag_nan, np.nan)
+    actual = collusion_score_kernel(m_diag_nan)
+    assert _isclose(expected["score_variance"], actual[0], tol=1e-6)
+    assert _isclose(expected["symmetry"], actual[1], tol=1e-6)
+    assert _isclose(expected["concentration"], actual[2], tol=1e-6)
+
+
 def test_persona_dissimilarity_matches_persona_py_for_ontology():
     """ontology の Persona 同士で persona.py:persona_dissimilarity と一致するか.
 
