@@ -248,6 +248,7 @@ __all__ = [
     "PeerEvaluationMatrix",
     "PeerFitnessAdapter",
     "Persona",
+    "PersonaCandidate",
     "PersonaComposition",
     "PersonaCompositionMutation",
     "PersonaImportAlgorithm",
