@@ -83,6 +83,11 @@ from llive.perf.evolutionary.loop import (
     EvolutionLoop,
     EvolutionResult,
 )
+from llive.perf.evolutionary.island_model import (
+    IslandModel,
+    MigrationPolicy,
+    Topology,
+)
 from llive.perf.evolutionary.mating import (
     LexicaseSelection,
     MutualScorePairSelector,
