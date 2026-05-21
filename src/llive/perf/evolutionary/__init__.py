@@ -249,6 +249,7 @@ __all__ = [
     "PersonaImportAlgorithm",
     "PersonaImportPlan",
     "PersonaOverlapPenalty",
+    "PersonaSurvivalAnalysis",
     "PersonaZoneShareEvent",
     "Population",
     "PopulationStats",
