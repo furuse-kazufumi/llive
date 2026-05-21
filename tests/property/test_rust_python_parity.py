@@ -162,3 +162,96 @@ def test_bulk_time_decay_known_value():
     # exp(-7 / 14) ≈ 0.6065306597126334
     out = rust_ext.bulk_time_decay([("linked_concept", 1.0, 7.0)], {"linked_concept": 14.0})
     assert _isclose(out[0], math.exp(-0.5), tol=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# persona_dissimilarity (RUST-15 baseline)
+# ---------------------------------------------------------------------------
+
+
+_PERSONA_ID_STRATEGY = st.sampled_from(
+    [
+        "oka-kiyoshi",
+        "grothendieck",
+        "feynman",
+        "galois",
+        "von-neumann",
+        "newton",
+        "kant",
+        "socrates",
+        "laozi",
+        "sun-tzu",
+    ]
+)
+
+
+@settings(max_examples=80, deadline=None)
+@given(
+    a_ids=st.lists(_PERSONA_ID_STRATEGY, min_size=0, max_size=5, unique=True),
+    b_ids=st.lists(_PERSONA_ID_STRATEGY, min_size=0, max_size=5, unique=True),
+    a_aff=st.lists(
+        st.floats(min_value=0.0, max_value=1.0, allow_nan=False), min_size=10, max_size=10
+    ),
+    b_aff=st.lists(
+        st.floats(min_value=0.0, max_value=1.0, allow_nan=False), min_size=10, max_size=10
+    ),
+)
+def test_persona_dissimilarity_parity(a_ids, b_ids, a_aff, b_aff):
+    # `persona_dissimilarity` accepts string ids; both backends should agree.
+    active = rust_ext.persona_dissimilarity(a_ids, b_ids, a_aff, b_aff)
+    a_u32 = sorted({_persona_id_to_u32(s) for s in a_ids})
+    b_u32 = sorted({_persona_id_to_u32(s) for s in b_ids})
+    py = _persona_dissimilarity_py(a_u32, b_u32, list(a_aff), list(b_aff))
+    assert _isclose(py, active, tol=1e-6), (py, active)
+
+
+def test_persona_dissimilarity_identical_returns_zero():
+    aff = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    assert rust_ext.persona_dissimilarity(["newton"], ["newton"], aff, aff) == 0.0
+
+
+def test_persona_dissimilarity_both_empty_returns_zero():
+    aff = [0.5] * 10
+    assert rust_ext.persona_dissimilarity([], [], aff, aff) == 0.0
+
+
+def test_persona_dissimilarity_disjoint_ids_no_aff_diff_yields_half():
+    # 同じ affinity vector + 完全 disjoint id → (1 - 0) * 0.5 + 0 * 0.5 = 0.5
+    aff = [0.5] * 10
+    out = rust_ext.persona_dissimilarity(["newton"], ["kant"], aff, aff)
+    assert _isclose(out, 0.5, tol=1e-9), out
+
+
+def test_persona_dissimilarity_dim_mismatch_raises():
+    with pytest.raises((ValueError, Exception)):
+        rust_ext.persona_dissimilarity(["newton"], ["kant"], [0.5, 0.5], [0.5] * 10)
+
+
+def test_persona_dissimilarity_empty_affinity_raises():
+    with pytest.raises((ValueError, Exception)):
+        rust_ext.persona_dissimilarity(["newton"], ["kant"], [], [])
+
+
+def test_persona_dissimilarity_matches_persona_py_for_ontology():
+    """ontology の Persona 同士で persona.py:persona_dissimilarity と一致するか.
+
+    rust_ext は string id → u32 hash で持つので, Python (numpy) 経路の
+    persona_dissimilarity と数値的に一致しない可能性がある (Jaccard が
+    同 set サイズ + dim を共有する限り一致するはず). 簡易検証.
+    """
+    from llive.perf.evolutionary.persona import (
+        PersonaComposition,
+    )
+    from llive.perf.evolutionary.persona import (
+        persona_dissimilarity as py_persona_dissimilarity,
+    )
+
+    a = PersonaComposition(persona_ids=("newton",), weights=(1.0,))
+    b = PersonaComposition(persona_ids=("feynman",), weights=(1.0,))
+    a_aff = list(a.effective_factor_affinity())
+    b_aff = list(b.effective_factor_affinity())
+    py_val = py_persona_dissimilarity(a, b)
+    rust_val = rust_ext.persona_dissimilarity(
+        list(a.persona_ids), list(b.persona_ids), a_aff, b_aff
+    )
+    assert _isclose(py_val, rust_val, tol=1e-6), (py_val, rust_val)
