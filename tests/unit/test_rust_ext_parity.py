@@ -102,7 +102,7 @@ except ImportError:
 @pytest.mark.skipif(not _HAS_RUST, reason="rust ext not built")
 def test_rust_column_mean_matches_python() -> None:
     """Rust binding がある場合は Python と数値一致を確認 (Phase 2 でアクティブ化)."""
-    import llive_rust_ext  # type: ignore[import]
+    import llive_peer_rust_ext as llive_rust_ext  # type: ignore[import]
 
     m = PeerEvaluationMatrix.empty(["a", "b", "c"])
     m.record("a", "b", 0.8)
@@ -119,7 +119,7 @@ def test_rust_column_mean_matches_python() -> None:
 @pytest.mark.skipif(not _HAS_RUST, reason="rust ext not built")
 def test_rust_collusion_score_matches_python() -> None:
     """共謀検出 3 指標が Python ↔ Rust で bit-exact 一致."""
-    import llive_rust_ext  # type: ignore[import]
+    import llive_peer_rust_ext as llive_rust_ext  # type: ignore[import]
 
     m = PeerEvaluationMatrix.empty(["a", "b", "c"])
     m.record("a", "b", 0.8)
