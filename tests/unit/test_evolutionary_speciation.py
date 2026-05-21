@@ -95,7 +95,7 @@ def test_update_representatives() -> None:
         ind.genome.values[0] for ind in pop.individuals
         if ind.individual_id in layer.species[sid].member_ids
     ]
-    assert float(rep[0]) in pytest.approx(member_values, abs=1e-9)
+    assert any(abs(float(rep[0]) - v) < 1e-9 for v in member_values)
 
 
 # ---------------------------------------------------------------------------
