@@ -438,10 +438,10 @@ def test_novelty_score_batch_k_clamped_to_archive_size():
         k=100,
     )
     assert len(out) == 1
-    # 3 距離の平均
+    # 3 距離はいずれも sqrt(0.5) (二等辺三角形の頂点が等距離).
     import math
 
-    expected = (math.sqrt(0.5) + math.sqrt(0.5 + 0.25) + math.sqrt(0.5 + 0.25)) / 3
+    expected = math.sqrt(0.5)
     assert _isclose(out[0], expected, tol=1e-6), (out[0], expected)
 
 
