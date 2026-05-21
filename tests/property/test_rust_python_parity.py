@@ -233,6 +233,76 @@ def test_persona_dissimilarity_empty_affinity_raises():
         rust_ext.persona_dissimilarity(["newton"], ["kant"], [], [])
 
 
+@settings(max_examples=30, deadline=None)
+@given(
+    n=st.integers(min_value=2, max_value=8),
+    seed=st.integers(min_value=0, max_value=10_000),
+)
+def test_persona_dissimilarity_pairwise_parity(n, seed):
+    """Batch kernel と Python fallback の NxN 出力が 1e-6 で一致するか."""
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    rng = random.Random(seed)
+    pool = [
+        "oka-kiyoshi",
+        "grothendieck",
+        "feynman",
+        "galois",
+        "von-neumann",
+        "newton",
+        "kant",
+        "socrates",
+        "laozi",
+        "sun-tzu",
+    ]
+    ids_list = [rng.sample(pool, rng.randint(1, 3)) for _ in range(n)]
+    aff_matrix = [[rng.random() for _ in range(10)] for _ in range(n)]
+    active = persona_dissimilarity_pairwise(ids_list, aff_matrix)
+    sorted_ids = [
+        sorted({_persona_id_to_u32(s) for s in ids}) for ids in ids_list
+    ]
+    aff_list = [[float(x) for x in row] for row in aff_matrix]
+    py = _persona_dissimilarity_pairwise_py(sorted_ids, aff_list)
+    assert len(active) == n and len(py) == n
+    for i in range(n):
+        for j in range(n):
+            assert _isclose(active[i][j], py[i][j], tol=1e-6), (
+                i,
+                j,
+                active[i][j],
+                py[i][j],
+            )
+
+
+def test_persona_dissimilarity_pairwise_diagonal_zero():
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    out = persona_dissimilarity_pairwise(
+        [["newton"], ["feynman"], ["kant"]],
+        [[0.5] * 10, [0.5] * 10, [0.5] * 10],
+    )
+    for i in range(3):
+        assert out[i][i] == 0.0
+
+
+def test_persona_dissimilarity_pairwise_symmetric():
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    out = persona_dissimilarity_pairwise(
+        [["newton", "feynman"], ["kant"], ["galois"]],
+        [[0.1] * 10, [0.5] * 10, [0.9] * 10],
+    )
+    for i in range(3):
+        for j in range(3):
+            assert _isclose(out[i][j], out[j][i], tol=1e-9), (i, j)
+
+
+def test_persona_dissimilarity_pairwise_empty_input():
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    assert persona_dissimilarity_pairwise([], []) == []
+
+
 def test_persona_dissimilarity_matches_persona_py_for_ontology():
     """ontology の Persona 同士で persona.py:persona_dissimilarity と一致するか.
 

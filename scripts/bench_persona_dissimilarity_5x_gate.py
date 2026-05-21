@@ -11,9 +11,8 @@ Usage:
 
 from __future__ import annotations
 
-import time
-
 import random
+import time
 
 from llive.rust_ext import (
     HAS_RUST,
