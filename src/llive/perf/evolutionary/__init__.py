@@ -141,6 +141,11 @@ from llive.perf.evolutionary.persona import (
     persona_dissimilarity,
     random_persona_composition,
 )
+from llive.perf.evolutionary.persona_import import (
+    PersonaImportAlgorithm,
+    PersonaImportPlan,
+    PersonaZoneShareEvent,
+)
 from llive.perf.evolutionary.population import Population, PopulationStats
 from llive.perf.evolutionary.quality_diversity import (
     MAPElitesCell,
