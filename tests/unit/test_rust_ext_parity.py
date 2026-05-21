@@ -81,7 +81,7 @@ def test_collusion_score_normal_population_matches_rust_spec() -> None:
 def test_rust_ext_module_optional() -> None:
     """llive_rust_ext は optional. import 不能でも core test は動く."""
     try:
-        import llive_rust_ext  # noqa: F401
+        import llive_peer_rust_ext  # noqa: F401
 
         has_rust = True
     except ImportError:
