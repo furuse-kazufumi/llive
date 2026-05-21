@@ -93,7 +93,7 @@ def test_rust_ext_module_optional() -> None:
 
 
 try:
-    import llive_rust_ext as _rust_ext_for_test  # type: ignore[import]
+    import llive_peer_rust_ext as _rust_ext_for_test  # type: ignore[import]
     _HAS_RUST = True
 except ImportError:
     _HAS_RUST = False
