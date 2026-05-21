@@ -112,5 +112,24 @@ def test_rust_column_mean_matches_python() -> None:
     m.record("c", "a", 0.4)
     m.record("c", "b", 0.9)
     py_col = m.column_mean()
-    rs_col = llive_rust_ext.column_mean(m.matrix, True)
+    rs_col = llive_rust_ext.py_column_mean(m.matrix, True)
     np.testing.assert_allclose(py_col, rs_col, rtol=0, atol=1e-9)
+
+
+@pytest.mark.skipif(not _HAS_RUST, reason="rust ext not built")
+def test_rust_collusion_score_matches_python() -> None:
+    """共謀検出 3 指標が Python ↔ Rust で bit-exact 一致."""
+    import llive_rust_ext  # type: ignore[import]
+
+    m = PeerEvaluationMatrix.empty(["a", "b", "c"])
+    m.record("a", "b", 0.8)
+    m.record("a", "c", 0.3)
+    m.record("b", "a", 0.5)
+    m.record("b", "c", 0.7)
+    m.record("c", "a", 0.4)
+    m.record("c", "b", 0.6)
+    py_s = m.collusion_score()
+    rs_var, rs_sym, rs_conc = llive_rust_ext.py_collusion_score(m.matrix)
+    assert py_s["score_variance"] == pytest.approx(rs_var, abs=1e-9)
+    assert py_s["symmetry"] == pytest.approx(rs_sym, abs=1e-9)
+    assert py_s["concentration"] == pytest.approx(rs_conc, abs=1e-9)
