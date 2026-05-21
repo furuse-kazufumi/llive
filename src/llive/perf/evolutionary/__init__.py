@@ -76,6 +76,10 @@ from llive.perf.evolutionary.loop import (
     EvolutionLoop,
     EvolutionResult,
 )
+from llive.perf.evolutionary.mating import (
+    LexicaseSelection,
+    MutualScorePairSelector,
+)
 from llive.perf.evolutionary.meta_mutation import (
     MetaMutation,
     pack_meta_strategy_bounds,
