@@ -93,6 +93,85 @@ class InteractionPolicy:
 
 ---
 
+## 0.6 拡張洞察 (2026-05-21 追記その 2) — 内部専門家評議
+
+ユーザー追加コメント:
+
+> 「専門家が数人議論しあって一つの結論を出す構造を各 llive 亜種が実施する
+> としたら, どのような専門家を軸にすれば生存率が高いかを模索するような
+> 行動をとらせる必要があるかもしれないですね.」
+
+これにより設計は **三重進化構造** へ拡張される:
+
+```
+┌─ 第 1 層: 集団進化 (派生群レベル, v0.C)              ─┐
+│   - 1 派生 = 1 個体, 19/38/39 dim genome             │
+│   - tournament selection + crossover + mutation      │
+└──────────────────────────────────────────────────────┘
+┌─ 第 2 層: 派生間 peer evaluation (v0.E CE-01〜13)     ─┐
+│   - peer fitness matrix M[i,j]                        │
+│   - 協調 ↔ 敵対 InteractionPolicy                     │
+└──────────────────────────────────────────────────────┘
+┌─ 第 3 層: 各派生内部の専門家評議 (v0.E CE-14〜17) NEW ─┐
+│   - 1 派生 = N 人の expert agents が議論              │
+│   - どの専門家構成が生存率最大化か探索                │
+│   - expert composition も genome に乗る               │
+└──────────────────────────────────────────────────────┘
+```
+
+これは **Mixture-of-Experts (Shazeer 2017) × Society of Mind (Minsky 1986)
+× competitive coevolution** の組合せ. 「専門家集団 = 内部 society」を持つ
+派生群 = 外部 society が, 互いに peer evaluation する.
+
+### 1.5 先行研究 (内部専門家評議 layer)
+
+- **Mixture-of-Experts** (Shazeer et al. 2017) — neural net 層に gating
+  network + expert sub-networks. llive では **expert = thought factor or
+  role agent**.
+- **Society of Mind** (Minsky 1986) — 心は多数の agent の society. llive
+  COG-MESH の元思想.
+- **CAMEL** (Li et al. 2023) — Communicative Agents for "Mind" Exploration
+  of Large Language Model Society.
+- **AutoGen** (Microsoft 2023) — Multi-Agent Conversation Framework.
+- **MetaGPT** (Hong et al. 2023) — 役割分担 software company simulation
+  (PM / Architect / Engineer).
+- **Mixture-of-Agents** (Wang et al. 2024) — 複数 LLM 階層集約.
+- **Constitutional AI Council** (Anthropic 2022) — 内部 critic 構造.
+
+### 追加 ID
+
+| ID | 内容 | 依存 |
+|---|---|---|
+| **CE-14** | ExpertPanelGenome — 派生 1 個体内に N 人 expert 構成 dim を埋込 | CE-05 |
+| **CE-15** | ExpertCouncilProtocol — 議論型 (Round-robin / Moderator+Vote / Veto / Debate) | CE-02 |
+| **CE-16** | ExpertCompositionEvolution — 専門家組合せ自体を進化対象に (専門家数 / specialization vector / 議論プロトコル) | CE-14, v0.D SR-02 |
+| **CE-17** | SurvivalRateTracking — どの expert composition が世代を生き残ったか統計 | observability |
+| **CE-18** | ExpertSpecializationOntology — 思考因子 10 軸 / TRIZ 40 原理 / domain (math / vision / safety / ethics / ...) から expert role を draw | [[user-cognitive-mesh-model]] |
+
+### 仮説 H4-H6 追加
+
+- **H4: Expert composition の自然分化** — Initial random composition から
+  「議論パネル種別 = (生物 / 工学 / 法務 / 倫理 / 戦略 / 哲学 ...)」のような
+  名前付き専門家構成が浮上するか.
+- **H5: 内部評議の品質が派生の peer fitness を予測** — 議論プロトコル
+  健全性 (発言量 dispersion / consensus 到達度) が外部 peer fitness と
+  正相関するか.
+- **H6: 専門家数の最適値** — N=1 (単独) / N=3 (古典評議会) / N=5 (拡張) /
+  N=7+ (大規模). Brooks's law (1975) の逆発見が起きるか.
+
+### Phase 追加
+
+| Phase | 含まれる項目 | 前提 |
+|---|---|---|
+| **E.7** | CE-14 / CE-18 (Expert Panel Genome + Ontology) | v0.D SR-02 |
+| **E.8** | CE-15 (Council Protocol) — Round-robin + Moderator+Vote | E.7 |
+| **E.9** | CE-16 / CE-17 (Composition Evolution + Survival Tracking) | E.7, E.8 |
+
+E.7〜E.9 は **credential 不要** で着手可能 (mock LLM で議論を simulate).
+実 LLM 接続は credential 復旧後の付加価値.
+
+---
+
 ## 0. 動機 — 「進化と淘汰の次」
 
 v0.B/v0.C/v0.D で **個体集団 × 外部 fitness** が成立した. 次は **個体集団 ×
