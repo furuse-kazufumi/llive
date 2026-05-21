@@ -58,6 +58,17 @@ from llive.perf.evolutionary.llive_variant import (
     SegmentedScheduler,
     mock_variant_fitness_factory,
 )
+from llive.perf.evolutionary.llive_variant_extras import (
+    LV_OBJECT_DIMS,
+    build_meta_strategy_variant_bounds,
+    build_self_adaptive_meta_strategy_variant_bounds,
+    build_self_adaptive_variant_bounds,
+    default_variant_meta_strategies,
+    initialize_self_adaptive_variant_genome_values,
+    make_meta_variant_mutation,
+    make_self_adaptive_variant_mutation,
+    wrap_fitness_for_extended_genome,
+)
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.loop import (
