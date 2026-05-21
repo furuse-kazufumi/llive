@@ -66,6 +66,45 @@ def jaccard(a: Iterable[int], b: Iterable[int]) -> float:
     return _jaccard_py(a_sorted, b_sorted)
 
 
+def persona_dissimilarity(
+    a_ids: Sequence[str],
+    b_ids: Sequence[str],
+    a_affinity: Sequence[float],
+    b_affinity: Sequence[float],
+) -> float:
+    """``(1 - Jaccard(a, b)) * 0.5 + min(1, L2(diff)/sqrt(N)) * 0.5``.
+
+    RUST-15 baseline. Mirrors
+    ``llive.perf.evolutionary.persona.persona_dissimilarity`` (numpy 経路) と
+    数値的に等価 (1e-6 parity gate, ``tests/property/test_rust_python_parity.py``).
+
+    Persona id は ``zlib.crc32`` で stable な u32 にマップしてから Rust に
+    渡す. 衝突確率は数万件 id 同士で 1% 未満 (PERSONA_ONTOLOGY <= 数百件で
+    実用上ゼロ).
+    """
+    a_aff_list = [float(x) for x in a_affinity]
+    b_aff_list = [float(x) for x in b_affinity]
+    if len(a_aff_list) != len(b_aff_list):
+        raise ValueError(
+            f"affinity dim mismatch: a={len(a_aff_list)}, b={len(b_aff_list)}"
+        )
+    if not a_aff_list:
+        raise ValueError("affinity vector must be non-empty")
+
+    a_sorted = sorted({_persona_id_to_u32(s) for s in a_ids})
+    b_sorted = sorted({_persona_id_to_u32(s) for s in b_ids})
+    if _rust is not None and hasattr(_rust, "persona_dissimilarity"):
+        return float(
+            _rust.persona_dissimilarity(a_sorted, b_sorted, a_aff_list, b_aff_list)
+        )
+    return _persona_dissimilarity_py(a_sorted, b_sorted, a_aff_list, b_aff_list)
+
+
+def _persona_id_to_u32(persona_id: str) -> int:
+    """Stable u32 hash. Caller responsibility: 同じ string → 同じ u32."""
+    return zlib.crc32(str(persona_id).encode("utf-8")) & 0xFFFFFFFF
+
+
 def bulk_time_decay(
     edges: list[tuple[str, float, float]],
     tau_map: dict[str, float],
