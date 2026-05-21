@@ -5,8 +5,48 @@
 ## [0.6.0a1] — 2026-05-21 (Evolutionary stack v0.B/C/D/E 大規模前倒し)
 
 ユーザー Goal「完璧に近い Release 環境レベル + Rust 高速化検討」(2026-05-21)
-を受けて, 1 セッションで v0.B/C/D/E (進化系) の **13 wave + 208 件 test 追加**
+を受けて, 1 セッションで v0.B/C/D/E (進化系) の **13 wave + 303 件 test 追加**
 を着地. v0.E 要件定義は 34 IDs (CE-01〜34 + LG-FX + DB-FX) に完成.
+
+### Added — v0.E E.17 quality-diversity (PersonaOverlapPenalty + MAP-Elites)
+
+- `src/llive/perf/evolutionary/quality_diversity.py`:
+  - `PersonaOverlapPenalty` (CE-25) — fitness 軸に persona dissimilarity の
+    集団平均を加算. λ=0 で base, λ↑ で集団内で persona が被っていない
+    個体ほど高い実効 fitness.
+  - `MAPElitesGrid` (CE-26, Mouret & Clune 2015) — persona 2 軸 ×
+    thought_factor 2 軸 = 4 次元 archive. submit/coverage/best/
+    best_per_persona_slice/fitness_grid/to_dict.
+  - `default_persona_features` / `default_thought_features` /
+    `default_map_elites_features` — PERSONA_ONTOLOGY
+    effective_factor_affinity ベースの既定 feature extractor.
+- `tests/unit/test_evolutionary_quality_diversity.py`: 41 ケース PASS.
+
+### Added — v0.E E.12 persona import (CE-20)
+
+- `src/llive/perf/evolutionary/persona_import.py`:
+  - `PersonaImportAlgorithm` — 派生 A から派生 B へ persona を per-id で
+    部分採用. max_imports_per_event / min_source_peer_score /
+    affinity_threshold (cosine sim) / 3 blend strategy (extend / replace /
+    blend_weights) / forbid_existing / zone.
+  - `PersonaImportPlan` (frozen) — `apply()` で新 PersonaComposition を
+    返す純データ. `to_dict()` で序列化.
+  - `PersonaZoneShareEvent` (frozen) — COG-MESH-05 Quarantined Memory
+    zone への通知 envelope (本 module は event を返すだけ).
+- `tests/unit/test_evolutionary_persona_import.py`: 26 ケース PASS.
+
+### Added — v0.E E.4 governance skeleton (CE-06/07/08)
+
+- `src/llive/perf/evolutionary/coevolution_governance.py`:
+  - `CollusionDetector` (CE-06) — PeerEvaluationMatrix.is_suspected_collusion
+    を thresholds dataclass で wrap.
+  - `CoevolutionGovernance` (CE-07) — 共謀疑い時に
+    ApprovalBus.request("coevolution.suspected_collusion", payload) を発行.
+  - TonicRiskMonitor 連携 (CE-08) — collusion_risk_score を RiskModel と
+    して auto-register, evaluate_generation のたびに tick(state) に投入.
+  - `GovernanceReport` (frozen) — 1 世代の検査結果 (suspected / score /
+    approval / risk_alert) を統合 view として返す.
+- `tests/unit/test_evolutionary_coevolution_governance.py`: 28 ケース PASS.
 
 ### Added — v0.C Phase 2 subprocess transport
 
