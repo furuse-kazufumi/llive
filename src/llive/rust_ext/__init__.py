@@ -314,6 +314,7 @@ __all__ = [
     "__backend__",
     "__version__",
     "bulk_time_decay",
+    "collusion_score_kernel",
     "compute_surprise",
     "jaccard",
     "persona_dissimilarity",
