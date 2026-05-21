@@ -267,6 +267,73 @@ llive 既存実装 [[project-llive-oka]] (OKA-FX 岡潔フレームワーク: �
 - ``persona_diversity > 0.5`` (集団の半数以上が unique persona)
 - ``collusion_index`` を Approval Bus が trigger しない範囲に保つ
 
+---
+
+## 0.8 拡張洞察 (2026-05-21 追記その 4) — 多様性保護 variant generation
+
+ユーザー追加コメント:
+
+> 「出来るだけ, 思考の軸が被らないように llive 亜種を生成する必要があり
+> ます.」
+
+これは v0.E 成功基準 (多様性確立) の **具体的実装要件**. GA 古典の niching /
+fitness sharing / novelty search / quality-diversity 系を導入する.
+
+### 設計のコア — Diversity-Preserving Generation
+
+派生生成の 2 段階で思考軸の被りを避ける:
+
+1. **初期集団生成 (cold start)** — 単純 uniform random ではなく
+   **Latin Hypercube + persona dissimilarity** で軸を空間的に分散
+2. **次世代生成 (breed)** — crossover/mutation 後の child に対し
+   **既存集団との novelty score** を計算, 低 novelty なら **reject + resample**
+
+### 先行研究
+
+- **Fitness sharing** (Goldberg & Richardson 1987) — 似た個体の fitness を
+  互いに減点し niche を保持.
+- **Crowding** (De Jong 1975 / Mahfoud 1995) — 子は **最も似た親** と
+  fitness 比較して置換する.
+- **Novelty Search** (Lehman & Stanley 2008/2011) — fitness 不在で
+  「行動の新規性」を最大化する OoD-friendly 探索.
+- **MAP-Elites** (Mouret & Clune 2015) — feature 軸を grid 化して各 cell に
+  best individual を保存する quality-diversity 系.
+- **Behavioral diversity in coevolution** (de Jong et al. 2007).
+
+### 追加 ID
+
+| ID | 内容 | 依存 |
+|---|---|---|
+| **CE-24** | DiversityPreservingGeneration — 初期 + 次世代に novelty / niching を適用 | CE-19 (persona) |
+| **CE-25** | PersonaOverlapPenalty — peer_score + λ × persona_dissimilarity を fitness 軸に | CE-19, CE-22 |
+| **CE-26** | MAP-Elites grid — persona 2 軸 × thought_factor 2 軸 を grid 化, 各 cell に best 個体保存 | CE-14, CE-19 |
+| **CE-27** | NoveltyScore — 集団内 k-NN 平均距離 (Lehman-Stanley 風). 子個体の **採用 / 棄却** に使う | (新規 module) |
+| **CE-28** | LatinHypercubeInitialization — 初期 19 dim genome を LHS で生成 | (scipy.stats.qmc) |
+| **CE-29** | DiversityMonitor — diversity_l2 / persona_diversity / role_diversity を世代単位で track + 閾値 break | observability |
+
+### Phase 追加
+
+| Phase | 含まれる項目 | 前提 |
+|---|---|---|
+| **E.14** | CE-28 (Latin Hypercube Init) — 初期集団の被り削減 | scipy |
+| **E.15** | CE-27 (NoveltyScore) — k-NN ベース novelty 計算 | sklearn / scipy |
+| **E.16** | CE-24 (DiversityPreservingGeneration) — reject + resample loop | E.14, E.15 |
+| **E.17** | CE-25 / CE-26 (PersonaOverlapPenalty + MAP-Elites) | E.10 (persona ontology) |
+| **E.18** | CE-29 (DiversityMonitor) — 世代単位 metric + 閾値 alarm | observability layer |
+
+E.14〜E.15 は **scipy / sklearn のみ** で着手可能 (credential 不要).
+E.16〜E.18 は E.10 persona ontology との結合.
+
+### 仮説 H10-H11
+
+- **H10**: LHS + novelty rejection を導入すると 30 世代後の ``diversity_l2``
+  が baseline (uniform random + crowding 無し) より **30% 以上高い** か.
+- **H11**: MAP-Elites grid を併用すると, **複数の局所最適** に同時に到達
+  する派生群が現れる. 単一 global best より **multiple personality**
+  という llive の核思想に沿う.
+
+---
+
 E.10〜E.13 は **credential 不要** で着手可能 (人物 thought pattern を
 manual YAML で記述 → 段階的に corpus 自動抽出に置換).
 
