@@ -77,6 +77,11 @@ from llive.perf.evolutionary.scheduler import (
     MultiprocessingScheduler,
     serial_scheduler,
 )
+from llive.perf.evolutionary.self_adaptive import (
+    SelfAdaptiveGaussianMutation,
+    initial_sigma_values,
+    pack_self_adaptive_bounds,
+)
 from llive.perf.evolutionary.subprocess_scheduler import (
     VariantSubprocessError,
     VariantSubprocessScheduler,
