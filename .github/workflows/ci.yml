@@ -52,16 +52,30 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: cargo build --release
+      - name: cargo build --release (legacy crates/llive_rust_ext, RUST-01/02/04)
         working-directory: crates/llive_rust_ext
         run: cargo build --release
 
-      - name: cargo test (parity harness via Python)
+      - name: cargo test rust_ext (RUST-15 PeerScoreMatrixOps, pure Rust)
+        working-directory: rust_ext
+        run: cargo test --no-default-features --release
+
+      - name: Install Python + maturin for parity harness
         run: |
           pip install -e ".[verify,dev]"
           pip install maturin
-          maturin develop --release --manifest-path crates/llive_rust_ext/Cargo.toml
-          python -m pytest tests/property/test_rust_python_parity.py -q
+
+      - name: Build legacy crates/llive_rust_ext via maturin
+        run: maturin develop --release --manifest-path crates/llive_rust_ext/Cargo.toml
+
+      - name: Run legacy parity test (RUST-01/02/04)
+        run: python -m pytest tests/property/test_rust_python_parity.py -q
+
+      - name: Build new rust_ext (RUST-15) via maturin
+        run: pip install -e ./rust_ext
+
+      - name: Run new RUST-15 parity test
+        run: python -m pytest tests/unit/test_rust_ext_parity.py -q
 
   build:
     runs-on: ubuntu-latest
