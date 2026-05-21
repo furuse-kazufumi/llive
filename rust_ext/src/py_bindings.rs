@@ -18,7 +18,7 @@ fn py_column_mean<'py>(
 ) -> Bound<'py, PyArray1<f64>> {
     let view = matrix.as_array();
     let result = column_mean(view, exclude_self);
-    result.into_pyarray(py)
+    result.into_pyarray_bound(py)
 }
 
 /// Python から呼ぶ entry: `llive_rust_ext.row_mean(matrix, exclude_self=True)`
@@ -31,7 +31,7 @@ fn py_row_mean<'py>(
 ) -> Bound<'py, PyArray1<f64>> {
     let view = matrix.as_array();
     let result = row_mean(view, exclude_self);
-    result.into_pyarray(py)
+    result.into_pyarray_bound(py)
 }
 
 /// 3-tuple (variance, symmetry, concentration) を返す.
