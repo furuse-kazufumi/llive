@@ -141,14 +141,14 @@ from llive.perf.evolutionary.persona import (
     persona_dissimilarity,
     random_persona_composition,
 )
+from llive.perf.evolutionary.persona_corpus_loader import (
+    PersonaCandidate,
+    PersonaCorpusLoader,
+)
 from llive.perf.evolutionary.persona_import import (
     PersonaImportAlgorithm,
     PersonaImportPlan,
     PersonaZoneShareEvent,
-)
-from llive.perf.evolutionary.persona_corpus_loader import (
-    PersonaCandidate,
-    PersonaCorpusLoader,
 )
 from llive.perf.evolutionary.persona_survival import PersonaSurvivalAnalysis
 from llive.perf.evolutionary.population import Population, PopulationStats
@@ -251,6 +251,7 @@ __all__ = [
     "PersonaCandidate",
     "PersonaComposition",
     "PersonaCompositionMutation",
+    "PersonaCorpusLoader",
     "PersonaImportAlgorithm",
     "PersonaImportPlan",
     "PersonaOverlapPenalty",

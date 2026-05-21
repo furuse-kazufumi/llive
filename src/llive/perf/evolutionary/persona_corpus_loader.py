@@ -45,7 +45,6 @@ from llive.perf.evolutionary.persona import (
     Persona,
 )
 
-
 # ---------------------------------------------------------------------------
 # ThoughtPatternExtractor Protocol — LLM injection point
 # ---------------------------------------------------------------------------
