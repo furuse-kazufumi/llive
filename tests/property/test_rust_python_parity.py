@@ -32,6 +32,7 @@ from llive.rust_ext import (
     _collusion_score_kernel_py,
     _compute_surprise_py,
     _jaccard_py,
+    _novelty_score_batch_py,
     _persona_dissimilarity_pairwise_py,
     _persona_dissimilarity_py,
     _persona_id_to_u32,
