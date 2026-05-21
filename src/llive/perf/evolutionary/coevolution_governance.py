@@ -118,6 +118,9 @@ def collusion_risk_score(state: dict[str, Any]) -> float:
     - is_suspected: True で +0.1 bonus.
     """
     s = state.get("collusion_score") or {}
+    if not s:
+        # データ無し = リスク評価不能 = 0. is_suspected フラグ単独でも昇格させない.
+        return 0.0
     var_v = float(s.get("score_variance", 0.0))
     sym_v = float(s.get("symmetry", 0.0))
     conc_v = float(s.get("concentration", 0.0))
