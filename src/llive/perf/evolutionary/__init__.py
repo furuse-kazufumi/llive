@@ -18,6 +18,12 @@
 * :func:`sphere_fitness`, :func:`rosenbrock_fitness`, :func:`ucb_fitness_factory`
 """
 
+from llive.perf.evolutionary.coevolution_governance import (
+    CoevolutionGovernance,
+    CollusionDetector,
+    GovernanceReport,
+    collusion_risk_score,
+)
 from llive.perf.evolutionary.crossover import (
     BlendCrossover,
     SegmentCrossover,
