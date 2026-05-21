@@ -26,14 +26,13 @@ llive 統合:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
 
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.population import Population
-
 
 Topology = Literal["ring", "fully", "star"]
 MigrationPolicy = Literal["best", "random", "worst"]
@@ -148,7 +147,7 @@ class IslandModel:
 
         # まず全 island から emigrant を抽出 (移送計画)
         plan: list[tuple[int, int, list[Individual]]] = []
-        for src_idx, pop in enumerate(self.islands):
+        for src_idx, _pop in enumerate(self.islands):
             neighbors = self.neighbors(src_idx)
             if not neighbors:
                 continue

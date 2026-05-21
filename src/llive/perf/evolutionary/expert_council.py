@@ -34,13 +34,12 @@ Li et al. (2023) CAMEL, Wu et al. (2023) AutoGen.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
 
 from llive.perf.evolutionary.persona import THOUGHT_FACTORS
-
 
 Protocol = Literal["round_robin", "moderator_vote", "veto", "weighted_average"]
 
@@ -177,8 +176,6 @@ class ExpertPanel:
         confs = np.array(
             [e.confidence_for_topic(topic) for e in self.experts]
         )
-        transcript: list[tuple[str, float]] = []
-        contributions: dict[str, float] = {}
 
         if self.protocol == "weighted_average":
             return self._weighted_average(topic, confs)
@@ -206,8 +203,8 @@ class ExpertPanel:
                 for e in self.experts
             ])
             consensus = (weights[:, None] * vectors).sum(axis=0)
-        transcript = tuple((e.name, float(c)) for e, c in zip(self.experts, confs))
-        contributions = {e.name: float(c) for e, c in zip(self.experts, confs)}
+        transcript = tuple((e.name, float(c)) for e, c in zip(self.experts, confs, strict=False))
+        contributions = {e.name: float(c) for e, c in zip(self.experts, confs, strict=False)}
         return CouncilDecision(
             decided=True,
             consensus_vector=consensus,
@@ -228,7 +225,7 @@ class ExpertPanel:
         cumulative = topic.copy()
         transcript: list[tuple[str, float]] = []
         contributions: dict[str, float] = {}
-        for i, (e, conf) in enumerate(zip(self.experts, confs)):
+        for _i, (e, conf) in enumerate(zip(self.experts, confs, strict=False)):
             s = np.asarray(e.specialization_vector, dtype=np.float64)
             # 各 expert が cumulative を自身寄りに引っ張る
             cumulative = (1.0 - conf) * cumulative + conf * s
@@ -265,11 +262,11 @@ class ExpertPanel:
 
         transcript = tuple(
             (f"{e.name}({'YES' if v else 'NO'})", float(c))
-            for e, c, v in zip(self.experts, confs, votes)
+            for e, c, v in zip(self.experts, confs, votes, strict=False)
         )
         contributions = {
             e.name: float(c) if v else 0.0
-            for e, c, v in zip(self.experts, confs, votes)
+            for e, c, v in zip(self.experts, confs, votes, strict=False)
         }
         return CouncilDecision(
             decided=decided,
@@ -292,8 +289,8 @@ class ExpertPanel:
             consensus = (weights[:, None] * vectors).sum(axis=0)
         else:
             consensus = topic.copy()
-        transcript = tuple((e.name, float(c)) for e, c in zip(self.experts, confs))
-        contributions = {e.name: float(c) for e, c in zip(self.experts, confs)}
+        transcript = tuple((e.name, float(c)) for e, c in zip(self.experts, confs, strict=False))
+        contributions = {e.name: float(c) for e, c in zip(self.experts, confs, strict=False)}
         return CouncilDecision(
             decided=decided,
             consensus_vector=consensus,

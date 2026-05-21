@@ -30,14 +30,13 @@ Evolutionary Algorithms*.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 import numpy as np
 
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.population import Population
-
 
 # ---------------------------------------------------------------------------
 # Non-dominated sort

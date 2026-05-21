@@ -246,9 +246,9 @@ class SpeciatedTournamentSelection:
 
 
 __all__ = [
+    "SpeciatedTournamentSelection",
     "Speciation",
     "SpeciationLayer",
-    "SpeciatedTournamentSelection",
     "Species",
 ]
 

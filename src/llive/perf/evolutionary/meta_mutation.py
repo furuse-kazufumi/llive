@@ -62,7 +62,7 @@ class MetaMutation:
         idx = self._resolve_strategy_index(genome)
         # bounds に応じて strategy_id を 0..len(strategies)-1 に clip
         n_strategies = len(self.strategies)
-        clipped_id = max(0, min(n_strategies - 1, int(round(genome.values[idx]))))
+        clipped_id = max(0, min(n_strategies - 1, round(genome.values[idx])))
         strategy = self.strategies[clipped_id]
         # 内部 strategy が strategy_dim を書き換えないよう値を保存 → 復元
         preserved_strategy_value = float(genome.values[idx])
@@ -96,8 +96,8 @@ def pack_meta_strategy_bounds(
     if n_strategies < 1:
         raise ValueError("n_strategies must be >= 1")
     n = object_bounds.n_dims
-    lower = list(object_bounds.lower) + [0.0]
-    upper = list(object_bounds.upper) + [max(0.001, n_strategies - 0.001)]
+    lower = [*list(object_bounds.lower), 0.0]
+    upper = [*list(object_bounds.upper), max(0.001, n_strategies - 0.001)]
     if object_labels:
         if len(object_labels) != n:
             raise ValueError("object_labels length must equal object_bounds.n_dims")
@@ -106,7 +106,7 @@ def pack_meta_strategy_bounds(
         obj_lbl = [f"dim_{i}" for i in range(n)]
     return (
         GenomeBounds(lower=tuple(lower), upper=tuple(upper)),
-        tuple(obj_lbl + [strategy_label]),
+        tuple([*obj_lbl, strategy_label]),
     )
 
 
@@ -124,7 +124,7 @@ def strategy_distribution(
     inds_list = list(individuals)
     for ind in inds_list:
         idx = strategy_dim if strategy_dim >= 0 else ind.genome.n_dims + strategy_dim
-        sid = int(round(ind.genome.values[idx]))
+        sid = round(ind.genome.values[idx])
         sid = max(0, min(n_strategies - 1, sid)) if n_strategies > 0 else max(0, sid)
         counts[sid] = counts.get(sid, 0) + 1
     if n_strategies > 0:

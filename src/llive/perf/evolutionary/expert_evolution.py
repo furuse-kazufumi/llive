@@ -21,8 +21,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 import numpy as np
 
@@ -32,7 +32,6 @@ from llive.perf.evolutionary.expert_council import (
     build_panel_from_personas,
 )
 from llive.perf.evolutionary.persona import PERSONA_ONTOLOGY
-
 
 _PROTOCOLS: tuple[Protocol, ...] = (
     "weighted_average",
@@ -284,11 +283,14 @@ class SurvivalRateTracker:
     ) -> list[CompositionStat]:
         """上位 k 件を返す. by: survived_generations / appearances / mean_score."""
         if by == "survived_generations":
-            key_fn = lambda s: s.survived_generations
+            def key_fn(s):
+                return s.survived_generations
         elif by == "appearances":
-            key_fn = lambda s: s.appearances
+            def key_fn(s):
+                return s.appearances
         elif by == "mean_score":
-            key_fn = lambda s: s.mean_score()
+            def key_fn(s):
+                return s.mean_score()
         else:
             raise ValueError(f"unknown sort key: {by!r}")
         return sorted(self.stats.values(), key=key_fn, reverse=True)[:k]

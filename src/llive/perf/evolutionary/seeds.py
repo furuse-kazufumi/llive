@@ -71,7 +71,7 @@ def fitness_accepts_seed(fitness_fn: Callable) -> bool:
         return False
     # *args / **kwargs を除いた positional parameter count
     positional_count = 0
-    for name, param in sig.parameters.items():
+    for _name, param in sig.parameters.items():
         if param.kind in (
             inspect.Parameter.POSITIONAL_ONLY,
             inspect.Parameter.POSITIONAL_OR_KEYWORD,

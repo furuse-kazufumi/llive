@@ -62,6 +62,11 @@ from llive.perf.evolutionary.fitness_ucb import (
 )
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import FitnessReport, Individual
+from llive.perf.evolutionary.island_model import (
+    IslandModel,
+    MigrationPolicy,
+    Topology,
+)
 from llive.perf.evolutionary.lineage import (
     Winner,
     load_winners_jsonl,
@@ -94,11 +99,6 @@ from llive.perf.evolutionary.loop import (
     EvolutionConfig,
     EvolutionLoop,
     EvolutionResult,
-)
-from llive.perf.evolutionary.island_model import (
-    IslandModel,
-    MigrationPolicy,
-    Topology,
 )
 from llive.perf.evolutionary.mating import (
     LexicaseSelection,

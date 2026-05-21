@@ -153,9 +153,9 @@ def build_self_adaptive_meta_strategy_variant_bounds(
         sigma_lower=sigma_lower, sigma_upper=sigma_upper
     )
     # sa_bounds (38 dim) に strategy_id を追加
-    lower = list(sa_bounds.lower) + [0.0]
-    upper = list(sa_bounds.upper) + [max(0.001, n_strategies - 0.001)]
-    labels = list(sa_labels) + ["strategy_id"]
+    lower = [*list(sa_bounds.lower), 0.0]
+    upper = [*list(sa_bounds.upper), max(0.001, n_strategies - 0.001)]
+    labels = [*list(sa_labels), "strategy_id"]
     return GenomeBounds(lower=tuple(lower), upper=tuple(upper)), tuple(labels)
 
 

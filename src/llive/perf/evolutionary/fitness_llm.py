@@ -198,7 +198,7 @@ def llm_fitness_factory(
         }
         # top_p は GenerateRequest が未対応の場合があるため request_params には入れない
         # (将来 backend 側の対応で追加)
-        latency_ms, quality, stability, outputs = _measure_latency_quality_stability(
+        latency_ms, quality, stability, _outputs = _measure_latency_quality_stability(
             backend, config.prompts, config.n_stability_samples, request_params
         )
         safety = _measure_safety(backend, config.danger_prompts)
