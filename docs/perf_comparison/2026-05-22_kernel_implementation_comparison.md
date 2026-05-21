@@ -77,7 +77,7 @@ SIMD 化は scope 外. 入れればさらに 2-3x 期待 (次の RUST-17c 候補
 | **(A)** 純 Python ループ (numpy 不使用) の 1-pair 計算 | 単発 FAIL, batch 必須 | RUST-15 (string id → u32 hash の 1-pair) |
 | **(B)** numpy 大 array (>1000 要素) の vectorized op | 伸びない (numpy 内部既に C/BLAS) | — (該当 kernel まだ無し) |
 | **(C)** numpy 小 NxN (< 100) の API 多用 | **単発でも 10-100x** | RUST-16 (np.nanvar / np.corrcoef / np.nanmean を 3 つ重ねがけ) |
-| **(D)** numpy 中規模 batch (BLAS 1 関数で完結) | **境界線上**: 小サイズ Rust 圧勝, 大サイズで numpy 追いつく | RUST-17 (A=50 で x9.55, A=1000 で x1.72) |
+| **(D)** numpy 中規模 batch (BLAS 1 関数で完結) | **境界線上 → 並列化で挽回可能**: RUST-17 naive で A=1000 x1.72 (FAIL) → RUST-17b で rayon + quickselect 入れたら x6.41 (PASS). 並列化 + algorithmic 改善で「境界線上」を「Rust 圧勝」へ移せる | RUST-17 / RUST-17b 比較 |
 | **(E)** Python ↔ Rust 境界が冷たいデータ (zero-copy 不可) | overhead 大, batch 必須 | (例: dict / 文字列大量 |
 
 ## 5. 教訓 (2026-05-22 marathon)
