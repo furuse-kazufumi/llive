@@ -289,6 +289,114 @@ fn persona_dissimilarity_pairwise(
     Ok(out)
 }
 
+/// RUST-16 collusion_score kernel — numpy zero-copy NxN matrix → (variance, symmetry, concentration).
+///
+/// Mirrors `PeerEvaluationMatrix.collusion_score()` numerically (1e-6 parity).
+/// Receives the raw NxN matrix as a numpy `PyReadonlyArray2<f64>` (zero-copy).
+/// Returns `(score_variance, symmetry, concentration)` tuple.
+///
+/// NaN-aware: off-diagonal NaN entries are excluded (mirrors Python's
+/// `np.fill_diagonal(m, np.nan)` semantics by skipping NaN cells).
+#[pyfunction]
+fn collusion_score_kernel(matrix: PyReadonlyArray2<f64>) -> PyResult<(f64, f64, f64)> {
+    let m = matrix.as_array();
+    let shape = m.shape();
+    if shape.len() != 2 || shape[0] != shape[1] {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "matrix must be square NxN",
+        ));
+    }
+    let n = shape[0];
+    if n < 2 {
+        return Ok((0.0, 0.0, 0.0));
+    }
+
+    // First pass: gather mean / mean_t over valid off-diagonal cells.
+    let mut count: usize = 0;
+    let mut sum_val: f64 = 0.0;
+    let mut sum_t: f64 = 0.0;
+    for i in 0..n {
+        for j in 0..n {
+            if i == j {
+                continue;
+            }
+            let v = m[[i, j]];
+            if v.is_nan() {
+                continue;
+            }
+            count += 1;
+            sum_val += v;
+            sum_t += m[[j, i]];
+        }
+    }
+    if count == 0 {
+        return Ok((0.0, 0.0, 0.0));
+    }
+    let mean = sum_val / count as f64;
+    let mean_t = sum_t / count as f64;
+
+    // Second pass: variance / std / std_t / covariance.
+    let mut var_sum: f64 = 0.0;
+    let mut var_t_sum: f64 = 0.0;
+    let mut cov_sum: f64 = 0.0;
+    for i in 0..n {
+        for j in 0..n {
+            if i == j {
+                continue;
+            }
+            let v = m[[i, j]];
+            if v.is_nan() {
+                continue;
+            }
+            let v_t = m[[j, i]];
+            var_sum += (v - mean).powi(2);
+            var_t_sum += (v_t - mean_t).powi(2);
+            cov_sum += (v - mean) * (v_t - mean_t);
+        }
+    }
+    let variance = var_sum / count as f64;
+    let std = variance.sqrt();
+    let std_t = (var_t_sum / count as f64).sqrt();
+    let symmetry = if std > 1e-12 && std_t > 1e-12 {
+        (cov_sum / count as f64) / (std * std_t)
+    } else {
+        0.0
+    };
+
+    // Column mean (excluding diagonal NaN); then top-1 / overall mean.
+    let mut col_means: Vec<f64> = Vec::with_capacity(n);
+    for j in 0..n {
+        let mut col_sum = 0.0;
+        let mut col_cnt: usize = 0;
+        for i in 0..n {
+            if i == j {
+                continue;
+            }
+            let v = m[[i, j]];
+            if v.is_nan() {
+                continue;
+            }
+            col_sum += v;
+            col_cnt += 1;
+        }
+        if col_cnt > 0 {
+            col_means.push(col_sum / col_cnt as f64);
+        }
+    }
+    let concentration = if col_means.is_empty() {
+        0.0
+    } else {
+        let mean_col: f64 = col_means.iter().sum::<f64>() / col_means.len() as f64;
+        if mean_col > 1e-12 {
+            col_means.iter().cloned().fold(f64::MIN, f64::max) / mean_col
+        } else {
+            0.0
+        }
+    };
+
+    Ok((variance, symmetry, concentration))
+}
+
 #[pymodule]
 fn llive_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", VERSION)?;
@@ -297,5 +405,6 @@ fn llive_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(bulk_time_decay, m)?)?;
     m.add_function(wrap_pyfunction!(persona_dissimilarity, m)?)?;
     m.add_function(wrap_pyfunction!(persona_dissimilarity_pairwise, m)?)?;
+    m.add_function(wrap_pyfunction!(collusion_score_kernel, m)?)?;
     Ok(())
 }
