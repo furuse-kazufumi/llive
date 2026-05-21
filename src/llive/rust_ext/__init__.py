@@ -23,7 +23,8 @@ agree to within 1e-6.
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable
+import zlib
+from collections.abc import Iterable, Sequence
 
 try:
     import llive_rust_ext as _rust  # type: ignore[import-not-found]
