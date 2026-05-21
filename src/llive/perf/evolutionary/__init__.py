@@ -208,6 +208,8 @@ __all__ = [
     "make_self_adaptive_variant_mutation",
     "pack_meta_strategy_bounds",
     "pack_self_adaptive_bounds",
+    "persona_dissimilarity",
+    "random_persona_composition",
     "strategy_distribution",
     "wrap_fitness_for_extended_genome",
     "load_winners_jsonl",
