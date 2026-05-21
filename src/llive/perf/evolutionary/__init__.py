@@ -146,6 +146,10 @@ from llive.perf.evolutionary.persona_import import (
     PersonaImportPlan,
     PersonaZoneShareEvent,
 )
+from llive.perf.evolutionary.persona_corpus_loader import (
+    PersonaCandidate,
+    PersonaCorpusLoader,
+)
 from llive.perf.evolutionary.persona_survival import PersonaSurvivalAnalysis
 from llive.perf.evolutionary.population import Population, PopulationStats
 from llive.perf.evolutionary.quality_diversity import (
