@@ -247,6 +247,26 @@ llive 既存実装 [[project-llive-oka]] (OKA-FX 岡潔フレームワーク: �
 | **E.12** | CE-20 (Persona Import Algorithm) — 派生間 persona 転送 | E.10, CE-11 |
 | **E.13** | CE-23 (Persona Corpus Loader) — Raptor RAD から自動抽出 | rad-research |
 
+### 成功基準 (ユーザー 2026-05-21 コメント由来)
+
+> 「これが実現出来たら, llive 亜種の多様性が確立されて行くのではないかと
+> 思います.」
+
+= v0.E の **最終 KPI** は「llive 派生集団の多様性確立」.
+
+多様性 metric (定量):
+
+- **PopulationStats.diversity_l2** (既存) — genome 空間の pairwise L2 距離平均
+- **persona_diversity** = unique persona_ids 数 / 集団 size
+- **role_diversity** = (E.7+) expert composition の Shannon entropy
+- **collusion_index** = PeerEvaluationMatrix.collusion_score() の悪化検出
+
+** target**:
+
+- 30 世代後も ``diversity_l2 > 5.0`` 維持 (枯渇しない)
+- ``persona_diversity > 0.5`` (集団の半数以上が unique persona)
+- ``collusion_index`` を Approval Bus が trigger しない範囲に保つ
+
 E.10〜E.13 は **credential 不要** で着手可能 (人物 thought pattern を
 manual YAML で記述 → 段階的に corpus 自動抽出に置換).
 
