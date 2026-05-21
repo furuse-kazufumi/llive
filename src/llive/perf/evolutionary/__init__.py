@@ -30,6 +30,12 @@ from llive.perf.evolutionary.diversity import (
     NoveltyScorer,
     latin_hypercube_population,
 )
+from llive.perf.evolutionary.expert_council import (
+    CouncilDecision,
+    Expert,
+    ExpertPanel,
+    build_panel_from_personas,
+)
 from llive.perf.evolutionary.fitness import (
     Fitness,
     FitnessFn,
