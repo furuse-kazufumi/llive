@@ -12,6 +12,7 @@
 //! These are correctness-only baselines; rayon / ndarray-linalg parallelism
 //! will land in v0.5.0 after the parity harness validates the pure Rust path.
 
+use numpy::PyReadonlyArray2;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
