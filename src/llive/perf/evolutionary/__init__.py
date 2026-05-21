@@ -203,6 +203,7 @@ __all__ = [
     "Genome",
     "GenomeBounds",
     "Individual",
+    "IslandModel",
     "LexicaseSelection",
     "LlivVariantBuilder",
     "LlivVariantConfig",
