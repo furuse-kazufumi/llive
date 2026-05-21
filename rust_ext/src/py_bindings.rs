@@ -43,7 +43,7 @@ fn py_collusion_score(matrix: PyReadonlyArray2<f64>) -> (f64, f64, f64) {
 }
 
 #[pymodule]
-fn llive_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn llive_peer_rust_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_column_mean, m)?)?;
     m.add_function(wrap_pyfunction!(py_row_mean, m)?)?;
     m.add_function(wrap_pyfunction!(py_collusion_score, m)?)?;
