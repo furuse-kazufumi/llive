@@ -388,6 +388,122 @@ def test_collusion_score_kernel_matches_peer_evaluation_matrix():
     assert _isclose(expected["concentration"], actual[2], tol=1e-6)
 
 
+# ---------------------------------------------------------------------------
+# novelty_score_batch (RUST-17 baseline)
+# ---------------------------------------------------------------------------
+
+
+@settings(max_examples=20, deadline=None)
+@given(
+    n=st.integers(min_value=1, max_value=8),
+    a_n=st.integers(min_value=1, max_value=30),
+    d=st.integers(min_value=2, max_value=10),
+    k=st.integers(min_value=1, max_value=10),
+    seed=st.integers(min_value=0, max_value=10_000),
+)
+def test_novelty_score_batch_parity(n, a_n, d, k, seed):
+    """Rust kernel と numpy fallback の出力が 1e-6 で一致するか."""
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    rng = np.random.default_rng(seed)
+    values = rng.uniform(0.0, 1.0, size=(n, d))
+    archive = rng.uniform(0.0, 1.0, size=(a_n, d))
+    rs = novelty_score_batch(values, archive, k)
+    py = _novelty_score_batch_py(values, archive, k)
+    assert len(rs) == n and len(py) == n
+    for i in range(n):
+        assert _isclose(rs[i], py[i], tol=1e-6), (i, rs[i], py[i])
+
+
+def test_novelty_score_batch_empty_archive_returns_one():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    out = novelty_score_batch(np.zeros((3, 5)), np.zeros((0, 5)), k=5)
+    assert out == [1.0, 1.0, 1.0]
+
+
+def test_novelty_score_batch_k_clamped_to_archive_size():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    # k=100 で archive size 3 → clamp to 3.
+    out = novelty_score_batch(
+        np.array([[0.5, 0.5]]),
+        np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]),
+        k=100,
+    )
+    assert len(out) == 1
+    # 3 距離の平均
+    import math
+
+    expected = (math.sqrt(0.5) + math.sqrt(0.5 + 0.25) + math.sqrt(0.5 + 0.25)) / 3
+    assert _isclose(out[0], expected, tol=1e-6), (out[0], expected)
+
+
+def test_novelty_score_batch_dim_mismatch_raises():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    with pytest.raises((ValueError, Exception)):
+        novelty_score_batch(np.zeros((2, 3)), np.zeros((5, 4)), k=2)
+
+
+def test_novelty_score_batch_invalid_k_raises():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    with pytest.raises((ValueError, Exception)):
+        novelty_score_batch(np.zeros((2, 3)), np.zeros((5, 3)), k=0)
+
+
+def test_novelty_score_batch_matches_novelty_scorer():
+    """既存 ``NoveltyScorer.novelty_batch`` と output が一致するか."""
+    import numpy as np
+
+    from llive.perf.evolutionary import (
+        Genome,
+        GenomeBounds,
+        Individual,
+        NoveltyScorer,
+        Population,
+    )
+    from llive.rust_ext import novelty_score_batch
+
+    rng = np.random.default_rng(13)
+    d = 5
+    bounds = GenomeBounds(lower=(0.0,) * d, upper=(1.0,) * d)
+    inds = [
+        Individual.from_genome(
+            Genome.from_values(rng.uniform(0.0, 1.0, size=d), bounds=bounds, labels=())
+        )
+        for _ in range(4)
+    ]
+    pop = Population(
+        individuals=inds, bounds=bounds, generation=0, seed=0, generation_seeds=[0]
+    )
+    scorer = NoveltyScorer(k=3)
+    for _ in range(8):
+        scorer.add_to_archive(rng.uniform(0.0, 1.0, size=d))
+    expected = scorer.novelty_batch(pop)
+
+    values = np.stack([ind.genome.as_array() for ind in pop.individuals])
+    archive = np.stack(scorer.archive)
+    actual = novelty_score_batch(values, archive, scorer.k)
+    for i in range(4):
+        assert _isclose(float(expected[i]), actual[i], tol=1e-6), (
+            i,
+            expected[i],
+            actual[i],
+        )
+
+
 def test_persona_dissimilarity_matches_persona_py_for_ontology():
     """ontology の Persona 同士で persona.py:persona_dissimilarity と一致するか.
 
