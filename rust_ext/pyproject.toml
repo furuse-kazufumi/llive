@@ -1,0 +1,20 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "llive-rust-ext"
+version = "0.1.0"
+description = "llive Rust acceleration layer — RUST-15+ hotspot ports"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "furuse-kazufumi", email = "kazufumi@furuse.work" }]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: Apache Software License",
+]
+
+[tool.maturin]
+features = ["python"]
+module-name = "llive_rust_ext"
