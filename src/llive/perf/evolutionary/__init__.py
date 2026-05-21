@@ -65,6 +65,11 @@ from llive.perf.evolutionary.loop import (
     EvolutionLoop,
     EvolutionResult,
 )
+from llive.perf.evolutionary.meta_mutation import (
+    MetaMutation,
+    pack_meta_strategy_bounds,
+    strategy_distribution,
+)
 from llive.perf.evolutionary.mutation import (
     ChainedMutation,
     GaussianMutation,
