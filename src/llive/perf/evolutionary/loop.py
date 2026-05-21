@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable
 
 import numpy as np
 
@@ -180,7 +180,7 @@ class EvolutionLoop:
             if self.on_generation_end is not None:
                 try:
                     self.on_generation_end(population, stats)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     # hook の失敗で run 全体を止めない
                     if config.log_progress:
                         print(f"[gen {stats.generation:03d}] on_generation_end hook failed: {exc}")

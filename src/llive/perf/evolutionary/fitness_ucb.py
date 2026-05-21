@@ -11,15 +11,14 @@ Phase 4 skeleton. Genome = (exploration_constant, lr, decay) を表現し,
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 
 from llive.benchmark.runtime_metadata import collect_runtime_metadata
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import FitnessReport
-
 
 # Genome レイアウト規約 (UCB hyperparameter 進化用)
 UCB_GENOME_LABELS: tuple[str, str, str] = (
@@ -85,7 +84,7 @@ def ucb_fitness_factory(
         except TypeError:
             # `c` を kwarg で取らない実装の場合: instance 作成後に attribute set
             selector = UCBSynapticSelector(variants=variants)
-            setattr(selector, "c", float(genome.values[0]))
+            selector.c = float(genome.values[0])
 
         latencies: list[float] = []
         for _ in range(config.iters):

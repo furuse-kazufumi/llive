@@ -25,9 +25,10 @@ fitness** を計算する dataclass.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 import numpy as np
 
@@ -326,7 +327,7 @@ class PeerFitnessAdapter:
 
     def __call__(
         self,
-        fitness_fn: Callable[..., Any],  # noqa: ARG002 — placeholder, unused
+        fitness_fn: Callable[..., Any],
         individuals: Iterable[Individual],
     ) -> list[FitnessReport]:
         inds = list(individuals)

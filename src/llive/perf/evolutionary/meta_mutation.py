@@ -24,13 +24,12 @@ Promptbreeder (DeepMind 2023, arXiv:2309.16797) では「mutation prompt 自体�
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 
 import numpy as np
 
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
-
 
 MutationFn = Callable[[Genome, np.random.Generator], Genome]
 

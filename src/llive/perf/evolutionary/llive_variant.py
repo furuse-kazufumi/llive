@@ -18,15 +18,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
 from llive.benchmark.runtime_metadata import collect_runtime_metadata
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import FitnessReport
-
 
 # -------------------- Genome layout (LV-GEN-01〜05) --------------------
 
@@ -380,13 +380,13 @@ __all__ = [
     "LIVE_VARIANT_GENOME_BOUNDS",
     "LIVE_VARIANT_GENOME_LABELS",
     "LIVE_VARIANT_SEGMENTS",
-    "LlivVariantBuilder",
-    "LlivVariantConfig",
     "MEMORY_TIER_LABELS",
-    "MockVariantFitnessConfig",
     "PROACTIVE_LABELS",
     "SAMPLER_LABELS",
-    "SegmentedScheduler",
     "THOUGHT_FACTOR_LABELS",
+    "LlivVariantBuilder",
+    "LlivVariantConfig",
+    "MockVariantFitnessConfig",
+    "SegmentedScheduler",
     "mock_variant_fitness_factory",
 ]

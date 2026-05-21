@@ -27,15 +27,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Iterable
+from dataclasses import dataclass
 
 import numpy as np
 
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.peer_evaluation import PeerEvaluationMatrix
 from llive.perf.evolutionary.population import Population
-
 
 # ---------------------------------------------------------------------------
 # CE-30 — MutualScoreBasedPairing

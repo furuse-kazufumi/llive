@@ -23,9 +23,8 @@ GA 古典の niching / fitness sharing / novelty search / quality-diversity の
 
 from __future__ import annotations
 
-import math
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Iterable
 
 import numpy as np
 from scipy.stats import qmc
@@ -33,7 +32,6 @@ from scipy.stats import qmc
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.population import Population, PopulationStats
-
 
 # ---------------------------------------------------------------------------
 # E.14 — Latin Hypercube Initialization
@@ -201,7 +199,7 @@ class DiversityPreservingBreedFilter:
         *,
         parents: Population,
         resample_fn: Callable[[], Individual],
-        rng: np.random.Generator,  # noqa: ARG002 — reserved for future
+        rng: np.random.Generator,
     ) -> list[Individual]:
         """各 child の novelty を計算し, threshold 未達なら resample.
 

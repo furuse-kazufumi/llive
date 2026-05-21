@@ -56,10 +56,10 @@ import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.individual import FitnessReport, Individual
@@ -136,7 +136,7 @@ class VariantSubprocessScheduler:
 
     def __call__(
         self,
-        fitness_fn: Fitness,  # noqa: ARG002 — interface 互換のため受け取るが未使用
+        fitness_fn: Fitness,
         individuals: Iterable[Individual],
     ) -> list[FitnessReport]:
         """EvolutionLoop の SchedulerFn として呼ばれる entry point.
@@ -223,7 +223,7 @@ class VariantSubprocessScheduler:
                 f"[subprocess_scheduler] start {variant_id} "
                 f"attempt={attempt + 1} cmd={' '.join(cmd[2:])}"
             )
-        completed = subprocess.run(  # noqa: S603 — input sanitized via pathlib
+        completed = subprocess.run(
             cmd,
             check=False,
             capture_output=True,

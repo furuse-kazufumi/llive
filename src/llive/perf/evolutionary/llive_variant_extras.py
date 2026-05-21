@@ -17,7 +17,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 
@@ -37,7 +37,6 @@ from llive.perf.evolutionary.self_adaptive import (
     initial_sigma_values,
     pack_self_adaptive_bounds,
 )
-
 
 LV_OBJECT_DIMS = 19  # LIVE_VARIANT_GENOME_BOUNDS の n_dims
 

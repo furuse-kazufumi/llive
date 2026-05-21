@@ -23,6 +23,13 @@ from llive.perf.evolutionary.crossover import (
     SegmentCrossover,
     UniformCrossover,
 )
+from llive.perf.evolutionary.diversity import (
+    DiversityMetrics,
+    DiversityMonitor,
+    DiversityPreservingBreedFilter,
+    NoveltyScorer,
+    latin_hypercube_population,
+)
 from llive.perf.evolutionary.fitness import (
     Fitness,
     FitnessFn,
@@ -41,6 +48,8 @@ from llive.perf.evolutionary.fitness_ucb import (
     UcbFitnessConfig,
     ucb_fitness_factory,
 )
+from llive.perf.evolutionary.genome import Genome, GenomeBounds
+from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.lineage import (
     Winner,
     load_winners_jsonl,
@@ -69,8 +78,6 @@ from llive.perf.evolutionary.llive_variant_extras import (
     make_self_adaptive_variant_mutation,
     wrap_fitness_for_extended_genome,
 )
-from llive.perf.evolutionary.genome import Genome, GenomeBounds
-from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.loop import (
     EvolutionConfig,
     EvolutionLoop,
@@ -90,20 +97,6 @@ from llive.perf.evolutionary.mutation import (
     GaussianMutation,
     ResetMutation,
 )
-from llive.perf.evolutionary.population import Population, PopulationStats
-from llive.perf.evolutionary.scheduler import (
-    AsyncFitness,
-    AsyncioScheduler,
-    MultiprocessingScheduler,
-    serial_scheduler,
-)
-from llive.perf.evolutionary.diversity import (
-    DiversityMetrics,
-    DiversityMonitor,
-    DiversityPreservingBreedFilter,
-    NoveltyScorer,
-    latin_hypercube_population,
-)
 from llive.perf.evolutionary.peer_evaluation import (
     PairScoreFn,
     PeerEvaluationMatrix,
@@ -111,23 +104,21 @@ from llive.perf.evolutionary.peer_evaluation import (
 )
 from llive.perf.evolutionary.persona import (
     PERSONA_ONTOLOGY,
+    THOUGHT_FACTORS,
     Persona,
     PersonaComposition,
     PersonaCompositionMutation,
-    THOUGHT_FACTORS,
     get_persona,
     list_persona_ids,
     persona_dissimilarity,
     random_persona_composition,
 )
-from llive.perf.evolutionary.self_adaptive import (
-    SelfAdaptiveGaussianMutation,
-    initial_sigma_values,
-    pack_self_adaptive_bounds,
-)
-from llive.perf.evolutionary.subprocess_scheduler import (
-    VariantSubprocessError,
-    VariantSubprocessScheduler,
+from llive.perf.evolutionary.population import Population, PopulationStats
+from llive.perf.evolutionary.scheduler import (
+    AsyncFitness,
+    AsyncioScheduler,
+    MultiprocessingScheduler,
+    serial_scheduler,
 )
 from llive.perf.evolutionary.seeds import (
     call_fitness_with_seed,
@@ -139,12 +130,34 @@ from llive.perf.evolutionary.selection import (
     RouletteSelection,
     TournamentSelection,
 )
+from llive.perf.evolutionary.self_adaptive import (
+    SelfAdaptiveGaussianMutation,
+    initial_sigma_values,
+    pack_self_adaptive_bounds,
+)
+from llive.perf.evolutionary.subprocess_scheduler import (
+    VariantSubprocessError,
+    VariantSubprocessScheduler,
+)
 
 __all__ = [
+    "LIVE_VARIANT_GENOME_BOUNDS",
+    "LIVE_VARIANT_GENOME_LABELS",
+    "LIVE_VARIANT_SEGMENTS",
+    "LLM_GENOME_BOUNDS",
+    "LLM_GENOME_LABELS",
+    "LV_OBJECT_DIMS",
+    "PERSONA_ONTOLOGY",
+    "THOUGHT_FACTORS",
+    "UCB_GENOME_BOUNDS",
+    "UCB_GENOME_LABELS",
     "AsyncFitness",
     "AsyncioScheduler",
     "BlendCrossover",
     "ChainedMutation",
+    "DiversityMetrics",
+    "DiversityMonitor",
+    "DiversityPreservingBreedFilter",
     "ElitismSelection",
     "EvolutionConfig",
     "EvolutionLoop",
@@ -155,43 +168,30 @@ __all__ = [
     "GaussianMutation",
     "Genome",
     "GenomeBounds",
-    "DiversityMetrics",
-    "DiversityMonitor",
-    "DiversityPreservingBreedFilter",
     "Individual",
     "LexicaseSelection",
+    "LlivVariantBuilder",
+    "LlivVariantConfig",
+    "LlmFitnessConfig",
     "MetaMutation",
+    "MockVariantFitnessConfig",
     "MultiprocessingScheduler",
     "MutualScorePairSelector",
     "NoveltyScorer",
-    "PERSONA_ONTOLOGY",
     "PairScoreFn",
     "PeerEvaluationMatrix",
     "PeerFitnessAdapter",
     "Persona",
     "PersonaComposition",
     "PersonaCompositionMutation",
-    "THOUGHT_FACTORS",
     "Population",
     "PopulationStats",
     "ResetMutation",
     "RouletteSelection",
-    "SelfAdaptiveGaussianMutation",
-    "TournamentSelection",
-    "LIVE_VARIANT_GENOME_BOUNDS",
-    "LIVE_VARIANT_GENOME_LABELS",
-    "LIVE_VARIANT_SEGMENTS",
-    "LV_OBJECT_DIMS",
-    "LLM_GENOME_BOUNDS",
-    "LLM_GENOME_LABELS",
-    "LlivVariantBuilder",
-    "LlivVariantConfig",
-    "LlmFitnessConfig",
-    "MockVariantFitnessConfig",
     "SegmentCrossover",
     "SegmentedScheduler",
-    "UCB_GENOME_BOUNDS",
-    "UCB_GENOME_LABELS",
+    "SelfAdaptiveGaussianMutation",
+    "TournamentSelection",
     "UcbFitnessConfig",
     "UniformCrossover",
     "VariantSubprocessError",
@@ -210,21 +210,21 @@ __all__ = [
     "latin_hypercube_population",
     "list_persona_ids",
     "llm_fitness_factory",
+    "load_winners_jsonl",
     "make_meta_variant_mutation",
     "make_self_adaptive_variant_mutation",
+    "mock_variant_fitness_factory",
     "pack_meta_strategy_bounds",
     "pack_self_adaptive_bounds",
     "persona_dissimilarity",
     "random_persona_composition",
-    "strategy_distribution",
-    "wrap_fitness_for_extended_genome",
-    "load_winners_jsonl",
-    "mock_variant_fitness_factory",
     "render_lineage_mermaid",
     "rosenbrock_fitness",
     "serial_scheduler",
     "sphere_fitness",
+    "strategy_distribution",
     "ucb_fitness_factory",
+    "wrap_fitness_for_extended_genome",
     "write_lineage_mermaid_file",
     "write_winners_jsonl",
 ]

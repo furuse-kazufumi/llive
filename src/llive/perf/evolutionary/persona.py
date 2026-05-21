@@ -26,11 +26,10 @@ from __future__ import annotations
 
 import math
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-
 
 # ---------------------------------------------------------------------------
 # Persona dataclass + ontology
@@ -449,10 +448,10 @@ def persona_dissimilarity(
 
 __all__ = [
     "PERSONA_ONTOLOGY",
+    "THOUGHT_FACTORS",
     "Persona",
     "PersonaComposition",
     "PersonaCompositionMutation",
-    "THOUGHT_FACTORS",
     "get_persona",
     "list_persona_ids",
     "persona_dissimilarity",

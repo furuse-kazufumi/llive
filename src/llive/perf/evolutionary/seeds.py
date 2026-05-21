@@ -25,11 +25,9 @@ from __future__ import annotations
 
 import hashlib
 import inspect
-from typing import Callable
+from collections.abc import Callable
 
-from llive.perf.evolutionary.genome import Genome
 from llive.perf.evolutionary.individual import FitnessReport, Individual
-
 
 # -- public API -------------------------------------------------------------
 

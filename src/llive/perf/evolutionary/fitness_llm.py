@@ -28,8 +28,8 @@ Phase 4 mock では:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 import numpy as np
 
@@ -41,7 +41,6 @@ from llive.llm.backend import (
 )
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.individual import FitnessReport
-
 
 # Genome レイアウト (backend 選択 + sampler + 量子化)
 LLM_GENOME_LABELS: tuple[str, ...] = (

@@ -14,9 +14,9 @@ top-level 関数に分離する.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Iterable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Iterable
 
 from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.individual import FitnessReport, Individual
@@ -95,7 +95,7 @@ class AsyncioScheduler:
 
     def __call__(
         self,
-        fitness_fn: Fitness,  # noqa: ARG002 — sync 版は使わない (interface 整合のため受け取る)
+        fitness_fn: Fitness,
         individuals: Iterable[Individual],
     ) -> list[FitnessReport]:
         return asyncio.run(self._run(list(individuals)))

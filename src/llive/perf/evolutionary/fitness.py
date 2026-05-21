@@ -8,7 +8,8 @@ adapter として提供する.
 
 from __future__ import annotations
 
-from typing import Callable, Protocol
+from collections.abc import Callable
+from typing import Protocol
 
 import numpy as np
 
