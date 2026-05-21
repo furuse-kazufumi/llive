@@ -197,6 +197,8 @@ __all__ = [
     "AsyncioScheduler",
     "BlendCrossover",
     "ChainedMutation",
+    "CoevolutionGovernance",
+    "CollusionDetector",
     "CompositionStat",
     "CouncilDecision",
     "DiversityMetrics",
