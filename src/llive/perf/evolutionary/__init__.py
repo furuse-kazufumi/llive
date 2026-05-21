@@ -118,6 +118,7 @@ __all__ = [
     "Genome",
     "GenomeBounds",
     "Individual",
+    "MetaMutation",
     "MultiprocessingScheduler",
     "Population",
     "PopulationStats",
