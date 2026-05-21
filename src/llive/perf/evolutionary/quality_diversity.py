@@ -44,8 +44,8 @@ import numpy as np
 
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.persona import (
-    PersonaComposition,
     THOUGHT_FACTORS,
+    PersonaComposition,
     persona_dissimilarity,
 )
 

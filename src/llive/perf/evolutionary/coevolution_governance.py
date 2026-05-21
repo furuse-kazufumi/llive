@@ -46,7 +46,6 @@ from llive.approval.bus import ApprovalBus, ApprovalRequest
 from llive.cognitive_mesh.tonic_risk import RiskAlert, RiskModel, TonicRiskMonitor
 from llive.perf.evolutionary.peer_evaluation import PeerEvaluationMatrix
 
-
 # ---------------------------------------------------------------------------
 # CE-06 — CollusionDetector
 # ---------------------------------------------------------------------------
@@ -258,7 +257,7 @@ class CoevolutionGovernance:
             payload: dict[str, object] = {
                 "generation": int(generation),
                 "collusion_score": dict(score),
-                "n_agents": int(len(peer_matrix.agent_ids)),
+                "n_agents": len(peer_matrix.agent_ids),
             }
             if approval_payload_extra:
                 payload.update(approval_payload_extra)

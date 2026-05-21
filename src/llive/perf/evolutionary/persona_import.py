@@ -28,8 +28,7 @@ CE-19 (HistoricalPersonaOntology) と CE-21 (PersonaCompositionMutation) が
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -38,7 +37,6 @@ from llive.perf.evolutionary.persona import (
     PERSONA_ONTOLOGY,
     PersonaComposition,
 )
-
 
 # ---------------------------------------------------------------------------
 # PersonaImportPlan
