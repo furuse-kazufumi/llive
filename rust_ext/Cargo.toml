@@ -1,5 +1,5 @@
 [package]
-name = "llive_rust_ext"
+name = "llive_peer_rust_ext"
 version = "0.1.0"
 edition = "2021"
 authors = ["furuse-kazufumi <kazufumi@furuse.work>"]
@@ -7,7 +7,7 @@ license = "Apache-2.0"
 description = "llive Rust acceleration layer — RUST-15+ hotspot ports"
 
 [lib]
-name = "llive_rust_ext"
+name = "llive_peer_rust_ext"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
