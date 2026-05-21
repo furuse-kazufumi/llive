@@ -29,6 +29,7 @@ from hypothesis import strategies as st
 from llive import rust_ext
 from llive.rust_ext import (
     _bulk_time_decay_py,
+    _collusion_score_kernel_py,
     _compute_surprise_py,
     _jaccard_py,
     _persona_dissimilarity_pairwise_py,
