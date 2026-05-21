@@ -167,6 +167,91 @@ class InteractionPolicy:
 | **E.8** | CE-15 (Council Protocol) — Round-robin + Moderator+Vote | E.7 |
 | **E.9** | CE-16 / CE-17 (Composition Evolution + Survival Tracking) | E.7, E.8 |
 
+---
+
+## 0.7 拡張洞察 (2026-05-21 追記その 3) — 歴史人物の思考パターン取り込み
+
+ユーザー追加コメント:
+
+> 「数学面において岡潔を軸に思考パターンを構築したように, 各 llive 亜種が
+> 有名な人物の思考パターンを調べて, 自身の思考アルゴリズムに取り込んで
+> いくようなアルゴリズムが必要になります.」
+
+llive 既存実装 [[project-llive-oka]] (OKA-FX 岡潔フレームワーク: 情緒 /
+行き詰まり / 文章化 / 国語力) が **「歴史人物 1 名の思考パターンを framework
+化」** の先例. これを **集団内 multi-persona 拡張** に発展させる.
+
+### 設計のコア — Historical Persona Ontology
+
+```
+┌─ 歴史人物 思考パターン database (公開知識 base)        ─┐
+│  - 岡潔: 情緒/行き詰まり/文章化/国語力 (実装済 OKA-FX)  │
+│  - グロタンディーク: 普遍性/抽象化/構造                 │
+│  - ファインマン: 好奇心/直感/具体例                     │
+│  - ガロア: 群論/対称性/革命的視点                       │
+│  - フォン・ノイマン: 汎用性/速度/ゲーム理論             │
+│  - ニュートン: 巨人の肩/演繹/分析                       │
+│  - カント: 純粋理性/批判/カテゴリ                       │
+│  - ソクラテス: 問答法/無知の知                          │
+│  - 老子: 無為自然/反転思考                              │
+│  - 孫子: 兵法/勢/虚実                                   │
+│  - ジョブズ: 集中/削減/美意識                           │
+│  - ファラデー: 視覚化/実験 first                        │
+│  - ダーウィン: 観察累積/緩進主義                        │
+│  - チューリング: 計算可能性/万能機械                    │
+│  - シャノン: 情報量/符号化                              │
+│  ...                                                    │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─ Persona Composition Genome (各派生)                    ─┐
+│  - persona_ids: tuple[str, ...] (採用 persona id 列)     │
+│  - persona_weights: tuple[float, ...] (各 persona の比重)│
+│  - import_policy: "exclusive" / "mix" / "moderator"      │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─ Mentor Learning (派生間転送)                           ─┐
+│  - 派生 A の persona_ids を 派生 B が import (部分採用)  │
+│  - 「ガロア + 岡潔」のような hybrid persona が出現       │
+│  - 派生間で persona ライブラリを交換                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+これは **TRIZ 40 原理 (raptor RAD コーパス)** や **思考因子 10 軸** とは
+別軸の **「思考人物軸」**. 既存 OKA-FX (4 因子) を一般化した形.
+
+### 追加 ID
+
+| ID | 内容 | 依存 |
+|---|---|---|
+| **CE-19** | HistoricalPersonaOntology — 歴史人物 思考パターン database (yaml / json, 拡張可能) | (既存 OKA-FX 拡張) |
+| **CE-20** | PersonaImportAlgorithm — 派生が他派生から persona を import / 部分採用 | CE-19, CE-11 |
+| **CE-21** | PersonaCompositionMutation — genome に persona_ids を埋込み, mutation で組合せ変更 | CE-14 |
+| **CE-22** | PersonaSurvivalAnalysis — どの persona 組合せが世代を生き残ったか統計 | CE-17 |
+| **CE-23** | PersonaCorpusLoader — Raptor RAD コーパス (学術論文 / 伝記 / 哲学書) から persona thought pattern を auto 抽出 | rad-research skill |
+
+### 仮説 H7-H9 追加
+
+- **H7: persona の自然 cluster 化** — 集団内で 「数学者 cluster」「物理学者
+  cluster」「哲学者 cluster」のような persona 組合せ群が浮上.
+- **H8: hybrid persona の優位性** — 単一 persona より「ガロア+岡潔」「ニュートン
+  +ファインマン」のような **異分野 hybrid** が生存率高いか.
+- **H9: 思考人物軸 vs 思考因子軸** — 派生集団全体で **persona genome > thought
+  factor genome** か, 逆か, 両軸独立進化か.
+
+### Phase 追加
+
+| Phase | 含まれる項目 | 前提 |
+|---|---|---|
+| **E.10** | CE-19 (HistoricalPersonaOntology) — 最初 5-10 人物の thought pattern を YAML 化 | OKA-FX 既存 |
+| **E.11** | CE-21 / CE-22 (Persona Composition Mutation + Survival) | E.10, CE-14 |
+| **E.12** | CE-20 (Persona Import Algorithm) — 派生間 persona 転送 | E.10, CE-11 |
+| **E.13** | CE-23 (Persona Corpus Loader) — Raptor RAD から自動抽出 | rad-research |
+
+E.10〜E.13 は **credential 不要** で着手可能 (人物 thought pattern を
+manual YAML で記述 → 段階的に corpus 自動抽出に置換).
+
+---
+
 E.7〜E.9 は **credential 不要** で着手可能 (mock LLM で議論を simulate).
 実 LLM 接続は credential 復旧後の付加価値.
 
