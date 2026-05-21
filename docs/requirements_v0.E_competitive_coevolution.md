@@ -334,6 +334,77 @@ E.16〜E.18 は E.10 persona ontology との結合.
 
 ---
 
+## 0.9 拡張洞察 (2026-05-21 追記その 5) — Mutual-Score Pairing + Pareto + Speciation
+
+ユーザー追加コメント:
+
+> 「AI 同士の協調 / 派生が互いに採点した結果, 互いの採点結果が高いものは
+> ゲノム交配で子が残せる形にすると良いかもしれない. 一つの評価指標だけ
+> で子が残る形にすると, 単純な結果の収束になってしまい, 長期的には新しい
+> 種が生まれない気がします.」
+
+= **「互いに高評価のペア → 子残す」 (assortative mating) + 単一 fitness の
+収束を避ける multi-objective + speciation**.
+
+### コア仮説の構造
+
+```
+                ┌── peer score (CE-01) ─── 縦軸: 「集団からの信任」
+                │
+個体 i ─────────┤
+                │
+                └── novelty / persona dissimilarity / age 等 ─── 横軸: 多様性
+
+子の残し方:
+  1. 一定以上の peer score を持つ親同士で crossover 機会増
+  2. ただし Pareto front (peer × diversity) で nondominated を保護
+  3. 同 species (genome 距離 < ε) は適応的に枝分かれ
+```
+
+### 先行研究 (本日 survey 追加)
+
+- **Darwin's sexual selection** — assortative mating の古典.
+- **NSGA-II** (Deb et al. 2002) — Pareto front + crowding distance.
+- **NEAT speciation** (Stanley & Miikkulainen 2002) — 似た個体を種にまとめ
+  別 niche で進化.
+- **Island Model** (Cohoon 1987) — 集団を分離して独立進化, 偶発的に移住.
+- **Lexicase Selection** (Helmuth et al. 2014) — 単一 fitness ではなく
+  case-by-case で順位.
+
+### 追加 ID
+
+| ID | 内容 | 依存 |
+|---|---|---|
+| **CE-30** | MutualScoreBasedPairing — peer matrix から ``mutual_score(i,j) = M[i,j] + M[j,i]`` が高い pair を crossover 候補に. assortative mating の数式化. | CE-01 |
+| **CE-31** | MultiObjectiveFitness — NSGA-II ベース. (peer score, novelty, persona_diversity) の Pareto front を維持. | CE-15, CE-25 |
+| **CE-32** | SpeciationLayer — genome 距離閾値 ε で動的種分け. 種ごとに独立 selection. NEAT 流. | CE-24 |
+| **CE-33** | IslandModelMigration — 集団を island に分割 + 偶発的 migration. 多核時代の集団進化 in distributed setting. | CE-32 |
+| **CE-34** | LexicaseSelection — 「ケースごとに best な個体」を選び単一 fitness 収束を回避. | CE-01 |
+
+### 仮説 H12-H14
+
+- **H12**: 単一 column_mean fitness と比較して mutual_score pairing は
+  30 世代後の **新規 genome 出現率** が高い (Hamming-like distance で計測).
+- **H13**: NSGA-II Pareto front が **2 つ以上の非劣 cluster** に分裂すると
+  llive 集団から **異なる種** が同時に立ち上がる (核思想 multi-personality
+  に整合).
+- **H14**: SpeciationLayer 導入で **「種ごとに違う persona dominant」** な
+  状況が安定. 単純な「最強 1 種が全集団を支配」を避ける.
+
+### Phase 追加
+
+| Phase | 含まれる項目 | 前提 |
+|---|---|---|
+| **E.19** | CE-30 (MutualScoreBasedPairing) | CE-01 完了 (本日着地済) |
+| **E.20** | CE-34 (LexicaseSelection) | CE-01 |
+| **E.21** | CE-31 (NSGA-II MultiObjectiveFitness) | CE-15, CE-25 |
+| **E.22** | CE-32 (SpeciationLayer) | CE-24 |
+| **E.23** | CE-33 (IslandModelMigration) | CE-32 |
+
+E.19〜E.20 は **CE-01 完了済の本日** から直接着手可能 (credential 不要).
+
+---
+
 E.10〜E.13 は **credential 不要** で着手可能 (人物 thought pattern を
 manual YAML で記述 → 段階的に corpus 自動抽出に置換).
 
