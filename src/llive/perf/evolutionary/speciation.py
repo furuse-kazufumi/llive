@@ -129,7 +129,7 @@ class SpeciationLayer:
                 assignments[new_sid] = [ind]
 
         # 全 species の age を増やす (新規以外)
-        for sid, sp in self.species.items():
+        for sp in self.species.values():
             if sp.member_ids:  # 残った species
                 sp.age += 1
 
