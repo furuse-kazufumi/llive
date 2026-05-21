@@ -23,7 +23,7 @@ def bench(name: str, fn, n_iter: int = 1000) -> float:
 def main() -> int:
     print("=== RUST-15 PeerScoreMatrixOps 5x gate ===\n")
     try:
-        import llive_rust_ext as rs
+        import llive_peer_rust_ext as rs
     except ImportError:
         print("ERROR: llive_rust_ext is not installed.")
         return 1
