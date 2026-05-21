@@ -379,6 +379,7 @@ __all__ = [
     "collusion_score_kernel",
     "compute_surprise",
     "jaccard",
+    "novelty_score_batch",
     "persona_dissimilarity",
     "persona_dissimilarity_pairwise",
 ]
