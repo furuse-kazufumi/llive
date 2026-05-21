@@ -2,6 +2,103 @@
 
 このプロジェクトの変更履歴。形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/)、バージョニングは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [0.6.0a1] — 2026-05-21 (Evolutionary stack v0.B/C/D/E 大規模前倒し)
+
+ユーザー Goal「完璧に近い Release 環境レベル + Rust 高速化検討」(2026-05-21)
+を受けて, 1 セッションで v0.B/C/D/E (進化系) の **13 wave + 208 件 test 追加**
+を着地. v0.E 要件定義は 34 IDs (CE-01〜34 + LG-FX + DB-FX) に完成.
+
+### Added — v0.C Phase 2 subprocess transport
+
+- `src/llive/perf/evolutionary/subprocess_scheduler.py` —
+  `VariantSubprocessScheduler` (variant_runner を subprocess.run で起動,
+  ThreadPool 並列, timeout/retries/cleanup). 派生間プロセス分離 + OS-level
+  timeout で fault isolation を実現.
+
+### Added — v0.D Phase 1+2 self-referential mutation
+
+- `src/llive/perf/evolutionary/self_adaptive.py` —
+  `SelfAdaptiveGaussianMutation` (Schwefel σSA-ES, log-normal σ update,
+  Genome 38 dim) + `pack_self_adaptive_bounds` + `initial_sigma_values`.
+- `src/llive/perf/evolutionary/meta_mutation.py` — `MetaMutation`
+  (strategy_id を genome に埋込, 集団内で 4 戦略並走) +
+  `pack_meta_strategy_bounds` + `strategy_distribution`.
+- `src/llive/perf/evolutionary/llive_variant_extras.py` — LV 19 dim を
+  38/20/39 dim に拡張する high-level helper 9 関数 + demo script.
+
+### Added — v0.E E.1 peer evaluation
+
+- `src/llive/perf/evolutionary/peer_evaluation.py` — `PeerEvaluationMatrix`
+  (N×N 採点行列, 共謀検出 3 指標, Mermaid 可視化) +
+  `PeerFitnessAdapter` (EvolutionLoop.scheduler 互換).
+
+### Added — v0.E E.14-18 多様性保護
+
+- `src/llive/perf/evolutionary/diversity.py`:
+  - `latin_hypercube_population` (scipy.stats.qmc) — 空間均等初期集団
+  - `NoveltyScorer` (k-NN, Lehman-Stanley 2008/2011)
+  - `DiversityPreservingBreedFilter` (novelty rejection + resample)
+  - `DiversityMonitor` (diversity_l2 / spread / median + 閾値 alarm)
+
+### Added — v0.E E.10/11 historical persona
+
+- `src/llive/perf/evolutionary/persona.py` — PERSONA_ONTOLOGY 10 名
+  (岡潔 / グロタンディーク / ファインマン / ガロア / フォン・ノイマン /
+  ニュートン / カント / ソクラテス / 老子 / 孫子) +
+  PersonaComposition (3 policy: exclusive / mix / moderator) +
+  PersonaCompositionMutation + persona_dissimilarity.
+
+### Added — v0.E E.19/20 mating
+
+- `src/llive/perf/evolutionary/mating.py`:
+  - `MutualScorePairSelector` — assortative mating, softmax sampling
+  - `LexicaseSelection` (Helmuth 2014) — 単一 fitness 収束回避
+
+### Added — v0.E E.21/31/33 speciation + NSGA-II + IslandModel
+
+- `src/llive/perf/evolutionary/speciation.py` — NEAT 流種分け
+  (Stanley-Miikkulainen 2002) + SpeciatedTournamentSelection
+- `src/llive/perf/evolutionary/nsga2.py` — non_dominated_sort +
+  crowding_distance + NSGA2Selection (Deb et al. 2002)
+- `src/llive/perf/evolutionary/island_model.py` — ring/fully/star 3 topology
+  + best/random/worst migration policy (Cohoon 1987)
+
+### Added — v0.E E.7/8/9 expert council + composition evolution
+
+- `src/llive/perf/evolutionary/expert_council.py` — Expert dataclass +
+  ExpertPanel + 4 protocol (weighted_average / round_robin /
+  moderator_vote / veto) + CouncilDecision +
+  build_panel_from_personas helper.
+- `src/llive/perf/evolutionary/expert_evolution.py` —
+  ExpertCompositionGenome + ExpertCompositionMutation +
+  CompositionStat + SurvivalRateTracker.
+
+### Added — 要件 / spec
+
+- `docs/requirements_v0.D_self_referential_and_llm_operators.md` (SR/LX/SU/MR)
+- `docs/requirements_v0.E_competitive_coevolution.md` — 34 IDs
+  (CE-01〜34) + LG-FX + DB-FX
+- `docs/requirements_v0.7_rust_acceleration_v0DE_addendum.md` —
+  RUST-15〜20 (v0.D/v0.E hotspot を v0.7 既存 RUST-01〜14 に追補)
+
+### Changed
+
+- `__version__` 0.2.0.dev0 → 0.6.0a1 (pyproject.toml と同期)
+- ruff 95/126 errors fix (PEP 585 / collections.abc 移行 + I001 整列)
+
+### Tests
+
+- 全件 1673 → 1881 PASS (+208, 回帰ゼロ)
+- 新規 test 13 ファイル
+
+### Known limitations / honest disclosure
+
+- 実 LlivKernel spawn は credential / kernel module 待ち (variant_runner は
+  mock baseline で完走)
+- v0.D LX-01/02 (LMX crossover / EUREKA fitness) は credential 後
+- v0.E CE-02 (PeerCommunication via MCP) は llmesh 統合待ち
+- Rust 高速化 RUST-15〜20 は spec のみ, 実装は Phase 5 着工
+
 ## [Unreleased]
 
 ### Added — LLIVE-002: Brief API end-to-end (closes LLIVE-001 / LLIVE-002) — 2026-05-16
