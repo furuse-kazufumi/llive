@@ -261,4 +261,5 @@ __all__ = [
     "compute_surprise",
     "jaccard",
     "persona_dissimilarity",
+    "persona_dissimilarity_pairwise",
 ]
