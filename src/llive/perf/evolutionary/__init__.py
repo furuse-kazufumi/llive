@@ -216,6 +216,8 @@ __all__ = [
     "LlivVariantBuilder",
     "LlivVariantConfig",
     "LlmFitnessConfig",
+    "MAPElitesCell",
+    "MAPElitesGrid",
     "MetaMutation",
     "MigrationPolicy",
     "MockVariantFitnessConfig",
