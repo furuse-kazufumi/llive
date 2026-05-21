@@ -198,6 +198,7 @@ __all__ = [
     "default_variant_meta_strategies",
     "derive_sub_seed",
     "fitness_accepts_seed",
+    "get_persona",
     "initial_sigma_values",
     "initialize_self_adaptive_variant_genome_values",
     "latin_hypercube_population",
