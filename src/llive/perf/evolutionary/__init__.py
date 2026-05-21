@@ -231,6 +231,7 @@ __all__ = [
     "Persona",
     "PersonaComposition",
     "PersonaCompositionMutation",
+    "PersonaOverlapPenalty",
     "Population",
     "PopulationStats",
     "ResetMutation",
