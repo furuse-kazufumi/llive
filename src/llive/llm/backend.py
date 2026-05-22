@@ -137,6 +137,24 @@ class LLMBackend:
         """Whether this backend has a coding-specialised model variant (Phase C-1.2)."""
         return False
 
+    @property
+    def supports_audio(self) -> bool:
+        """Whether this backend can accept audio inputs (Phase C-1.3, skeleton).
+
+        実装は backend ごと. Whisper / Gemini Audio / GPT-4o audio 等.
+        default False — 各 backend が必要時に override.
+        """
+        return False
+
+    @property
+    def supports_sensor(self) -> bool:
+        """Whether this backend can accept structured sensor samples (Phase C-1.3).
+
+        典型的には専用 backend (llmesh MTEngine 直結, time-series LLM 等).
+        汎用 backend は通常 False, sensor は事前に prompt に序列化して渡す.
+        """
+        return False
+
 
 # ---------------------------------------------------------------------------
 # Mock backend — deterministic, network-free, used as fallback and in tests
