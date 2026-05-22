@@ -115,6 +115,11 @@ class GenerateRequest:
     # dict with at minimum ``ts`` / ``metric`` / ``value`` keys. llmesh の
     # MQTT/OPC-UA envelope と互換.
     sensor: list[SensorSample] = field(default_factory=list)
+    # Phase C-1.4 (Gemini #2 Stage 1, 2026-05-22): KV cache Memory Translator
+    # Embedding 結合経路. Open LLM backend が inputs_embeds に注入する用途.
+    # backend が supports_prefix_embeddings = False なら無視 (ignore) or reject
+    # (実装次第). MockBackend は accept + count を返す.
+    prefix_embeddings: list[PrefixEmbedding] = field(default_factory=list)
 
 
 @dataclass
