@@ -437,6 +437,378 @@ class PhyTree:
 
         return "\n".join(lines)
 
+    # -- animated SVG render ----------------------------------------------
+
+    def to_animated_svg(
+        self,
+        viewbox_width: int = 800,
+        viewbox_height: int = 240,
+        max_generations: int = 10,
+        layout: str = "left_to_right",
+    ) -> str:
+        """PhyTree を animated SVG (SMIL, no JS) 文字列として返す.
+
+        Qiita hero bar フォーマット (800x240) に揃えた hero 風 SVG.
+
+        - generation 別に column / row 配置 (DAG なので depth = generation).
+          ``layout='left_to_right'`` で世代を横軸 (X), ``layout='top_down'`` で
+          世代を縦軸 (Y) に並べる.
+        - node = 円 (radius 6-8), edge = curved cubic Bezier line.
+        - 新規 node は fade-in animation (SMIL ``<animate>``) — 世代順に
+          stagger された begin offset.
+        - pinned node は 色強調 + 二重円 (outer stroke + filled inner circle).
+        - extinct (= node が tree から消えたが edge には残っている) node は
+          ghost (薄い色 + dashed stroke).
+        - 親 → 子 のエッジは順次描画 (stagger, stroke-dashoffset animation).
+        - background gradient, palette は ``#5dd1ff`` / ``#7ee787`` /
+          ``#ffd166`` / ``#ef476f`` を世代深度に応じて使い分け.
+
+        Parameters
+        ----------
+        viewbox_width, viewbox_height : int
+            SVG viewBox サイズ. 普及 PR では 800x240 を統一推奨.
+        max_generations : int
+            描画対象の最大世代数. これを超える世代は省略 (上限 clamp).
+        layout : str
+            ``"left_to_right"`` (default) or ``"top_down"``.
+
+        Returns
+        -------
+        str
+            完結した SVG 文字列 (``<svg ...>...</svg>``).
+
+        Notes
+        -----
+        SMIL animation のみ. JavaScript は使わない. ``aria-label`` / ``<title>``
+        / ``<desc>`` を含むので screen reader にも対応.
+        """
+        if layout not in ("left_to_right", "top_down"):
+            raise ValueError(
+                f"unknown layout {layout!r}, expected 'left_to_right' or 'top_down'"
+            )
+        if max_generations < 1:
+            raise ValueError(f"max_generations must be >= 1, got {max_generations}")
+
+        # Empty tree: 背景 + 中央 placeholder text を返す
+        if not self.nodes:
+            return self._render_empty_svg(viewbox_width, viewbox_height)
+
+        # 世代別に node を分類
+        gen_to_nodes: dict[int, list[str]] = {}
+        for nid, node in self.nodes.items():
+            gen = min(node.individual.birth_generation, max_generations - 1)
+            gen_to_nodes.setdefault(gen, []).append(nid)
+        # 安定順 (ID sort) のため
+        for gen in gen_to_nodes:
+            gen_to_nodes[gen].sort()
+        generations = sorted(gen_to_nodes)
+
+        # 配置パラメータ
+        margin_x = 60
+        margin_y = 60
+        if layout == "left_to_right":
+            usable_w = viewbox_width - 2 * margin_x
+            usable_h = viewbox_height - 2 * margin_y
+            n_gen_slots = max(1, len(generations))
+            col_step = usable_w / max(1, n_gen_slots - 1) if n_gen_slots > 1 else 0
+        else:  # top_down
+            usable_w = viewbox_width - 2 * margin_x
+            usable_h = viewbox_height - 2 * margin_y
+            n_gen_slots = max(1, len(generations))
+            row_step = usable_h / max(1, n_gen_slots - 1) if n_gen_slots > 1 else 0
+
+        # node ID → (cx, cy) 座標
+        positions: dict[str, tuple[float, float]] = {}
+        gen_to_index: dict[int, int] = {g: i for i, g in enumerate(generations)}
+        for gen, nids in gen_to_nodes.items():
+            gi = gen_to_index[gen]
+            n_in_gen = len(nids)
+            if layout == "left_to_right":
+                cx = margin_x + gi * col_step if n_gen_slots > 1 else viewbox_width / 2
+                if n_in_gen == 1:
+                    cy_list = [viewbox_height / 2]
+                else:
+                    step = usable_h / max(1, n_in_gen - 1)
+                    cy_list = [margin_y + j * step for j in range(n_in_gen)]
+                for nid, cy in zip(nids, cy_list, strict=True):
+                    positions[nid] = (cx, cy)
+            else:  # top_down
+                cy = margin_y + gi * row_step if n_gen_slots > 1 else viewbox_height / 2
+                if n_in_gen == 1:
+                    cx_list = [viewbox_width / 2]
+                else:
+                    step = usable_w / max(1, n_in_gen - 1)
+                    cx_list = [margin_x + j * step for j in range(n_in_gen)]
+                for nid, cx in zip(nids, cx_list, strict=True):
+                    positions[nid] = (cx, cy)
+
+        # color palette (世代深度に応じて)
+        palette = ("#ef476f", "#ffd166", "#7ee787", "#5dd1ff")
+        n_palette = len(palette)
+
+        # animation 1 cycle (秒)
+        total_dur = max(6.0, len(generations) * 1.2)
+
+        # SVG 構築 ---------------------------------------------------------
+        parts: list[str] = []
+        parts.append(
+            f'<svg xmlns="http://www.w3.org/2000/svg" '
+            f'viewBox="0 0 {viewbox_width} {viewbox_height}" '
+            f'role="img" aria-label="PhyTree phylogenetic DAG across generations">'
+        )
+        n_nodes = len(self.nodes)
+        n_edges = len(self.edges)
+        n_pinned = len(self.pinned & set(self.nodes))
+        parts.append(
+            f"<title>llive PhyTree — {n_nodes} individuals across "
+            f"{len(generations)} generations ({n_pinned} pinned)</title>"
+        )
+        parts.append(
+            "<desc>Phylogenetic DAG: nodes are content-addressable individuals, "
+            "edges are crossover/mutation/clone operations. SMIL fade-in per "
+            "generation. Pinned nodes have double-circle accent; extinct ancestors "
+            "appear as ghost ring. No JavaScript.</desc>"
+        )
+
+        # defs: background gradient
+        parts.append("<defs>")
+        parts.append(
+            '<linearGradient id="phytree_bg" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0%" stop-color="#0e1426"/>'
+            '<stop offset="100%" stop-color="#0a0f17"/>'
+            "</linearGradient>"
+        )
+        parts.append("</defs>")
+
+        # background
+        parts.append(
+            f'<rect width="{viewbox_width}" height="{viewbox_height}" '
+            f'fill="url(#phytree_bg)"/>'
+        )
+
+        # title text (hero bar 風)
+        parts.append(
+            f'<text x="{viewbox_width / 2}" y="28" text-anchor="middle" '
+            f'fill="#e6edf3" font-family="ui-sans-serif,system-ui,sans-serif" '
+            f'font-size="16" font-weight="700">'
+            f"llive PhyTree — {n_nodes} individuals × {len(generations)} generations"
+            "</text>"
+        )
+
+        # generation axis labels (left_to_right / top_down で位置を変える)
+        for gen in generations:
+            gi = gen_to_index[gen]
+            if layout == "left_to_right":
+                x = (
+                    margin_x + gi * col_step
+                    if n_gen_slots > 1
+                    else viewbox_width / 2
+                )
+                y = viewbox_height - 12
+                parts.append(
+                    f'<text x="{x}" y="{y}" text-anchor="middle" '
+                    f'fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif" '
+                    f'font-size="10">gen {gen}</text>'
+                )
+            else:
+                x = 30
+                y = (
+                    margin_y + gi * row_step
+                    if n_gen_slots > 1
+                    else viewbox_height / 2
+                )
+                parts.append(
+                    f'<text x="{x}" y="{y + 3}" text-anchor="middle" '
+                    f'fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif" '
+                    f'font-size="10">gen {gen}</text>'
+                )
+
+        # edges (extinct parent も含む) — 親が pos に居なければ ghost を生成
+        ghost_positions: dict[str, tuple[float, float]] = {}
+        ghost_counter = 0
+        for edge_idx, edge in enumerate(self.edges):
+            # 子は必ず描画対象
+            if edge.child_id not in positions:
+                continue
+            cx_child, cy_child = positions[edge.child_id]
+            if edge.parent_id in positions:
+                cx_parent, cy_parent = positions[edge.parent_id]
+                is_ghost = False
+            else:
+                # extinct ancestor — 子の生成方向にずらして配置
+                if edge.parent_id not in ghost_positions:
+                    if layout == "left_to_right":
+                        gx = max(20, cx_child - col_step if n_gen_slots > 1 else cx_child - 80)
+                        gy = cy_child + (ghost_counter % 3 - 1) * 18
+                    else:
+                        gx = cx_child + (ghost_counter % 3 - 1) * 18
+                        gy = max(20, cy_child - row_step if n_gen_slots > 1 else cy_child - 60)
+                    ghost_positions[edge.parent_id] = (gx, gy)
+                    ghost_counter += 1
+                cx_parent, cy_parent = ghost_positions[edge.parent_id]
+                is_ghost = True
+
+            # cubic Bezier (control points)
+            if layout == "left_to_right":
+                cp1x = cx_parent + (cx_child - cx_parent) * 0.5
+                cp1y = cy_parent
+                cp2x = cx_parent + (cx_child - cx_parent) * 0.5
+                cp2y = cy_child
+            else:
+                cp1x = cx_parent
+                cp1y = cy_parent + (cy_child - cy_parent) * 0.5
+                cp2x = cx_child
+                cp2y = cy_parent + (cy_child - cy_parent) * 0.5
+            d = (
+                f"M {cx_parent:.1f},{cy_parent:.1f} "
+                f"C {cp1x:.1f},{cp1y:.1f} {cp2x:.1f},{cp2y:.1f} "
+                f"{cx_child:.1f},{cy_child:.1f}"
+            )
+            stroke = "#4b5563" if is_ghost else "#64748b"
+            dash = ' stroke-dasharray="3 3"' if is_ghost else ""
+            # 子 node が居る世代の index で stagger
+            child_gen = self.nodes[edge.child_id].individual.birth_generation
+            child_gi = gen_to_index.get(min(child_gen, max_generations - 1), 0)
+            begin = (child_gi / max(1, len(generations))) * total_dur
+            parts.append(
+                f'<path d="{d}" fill="none" stroke="{stroke}" '
+                f'stroke-width="1.4"{dash} opacity="0" class="phytree-edge"'
+                f' data-op="{edge.op}">'
+                f'<animate attributeName="opacity" values="0;0.8" '
+                f'begin="{begin:.2f}s" dur="0.6s" fill="freeze" '
+                f'repeatCount="1"/>'
+                "</path>"
+            )
+
+        # ghost ancestor circles (extinct)
+        for gid, (gx, gy) in ghost_positions.items():
+            parts.append(
+                f'<circle cx="{gx:.1f}" cy="{gy:.1f}" r="5" '
+                f'fill="none" stroke="#475569" stroke-width="1" '
+                f'stroke-dasharray="2 2" opacity="0.5" class="phytree-ghost"/>'
+            )
+            parts.append(
+                f'<text x="{gx:.1f}" y="{gy + 18:.1f}" text-anchor="middle" '
+                f'fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif" '
+                f'font-size="8" opacity="0.6">extinct</text>'
+            )
+
+        # nodes (円)
+        for nid, (cx, cy) in positions.items():
+            ind = self.nodes[nid].individual
+            gen = min(ind.birth_generation, max_generations - 1)
+            gi = gen_to_index[gen]
+            color = palette[gi % n_palette]
+            is_pinned = nid in self.pinned
+            radius = 8 if is_pinned else 6
+            begin = (gi / max(1, len(generations))) * total_dur
+
+            # node group
+            short = nid[:8]
+            classes = "phytree-node" + (" pinned" if is_pinned else "")
+            parts.append(
+                f'<g class="{classes}" data-id="{short}" '
+                f'data-gen="{ind.birth_generation}">'
+            )
+            # pinned: 二重円 (outer ring)
+            if is_pinned:
+                parts.append(
+                    f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius + 3}" '
+                    f'fill="none" stroke="{color}" stroke-width="1.2" '
+                    f'opacity="0" class="phytree-pin-ring">'
+                    f'<animate attributeName="opacity" values="0;0.9" '
+                    f'begin="{begin:.2f}s" dur="0.8s" fill="freeze" '
+                    f'repeatCount="1"/>'
+                    f'<animate attributeName="r" values="{radius + 3};{radius + 5};{radius + 3}" '
+                    f'begin="{begin + 0.8:.2f}s" dur="2.4s" '
+                    f'repeatCount="indefinite"/>'
+                    "</circle>"
+                )
+            # main node
+            parts.append(
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius}" '
+                f'fill="{color}" stroke="#0a0f17" stroke-width="1.5" '
+                f'opacity="0">'
+                f'<animate attributeName="opacity" values="0;1" '
+                f'begin="{begin:.2f}s" dur="0.6s" fill="freeze" '
+                f'repeatCount="1"/>'
+                "</circle>"
+            )
+            # label (short ID)
+            parts.append(
+                f'<text x="{cx:.1f}" y="{cy + radius + 12:.1f}" '
+                f'text-anchor="middle" fill="#cbd5e1" '
+                f'font-family="ui-monospace,monospace" font-size="8" '
+                f'opacity="0">'
+                f"{short}"
+                f'<animate attributeName="opacity" values="0;0.8" '
+                f'begin="{begin + 0.3:.2f}s" dur="0.6s" fill="freeze" '
+                f'repeatCount="1"/>'
+                "</text>"
+            )
+            parts.append("</g>")
+
+        # legend (右下)
+        legend_x = viewbox_width - 130
+        legend_y = viewbox_height - 70
+        parts.append(
+            f'<g transform="translate({legend_x} {legend_y})" '
+            f'font-family="ui-sans-serif,system-ui,sans-serif" font-size="9" '
+            f'fill="#94a3b8">'
+        )
+        parts.append(
+            '<text x="0" y="0" font-weight="600" fill="#e6edf3">legend</text>'
+        )
+        for i, (label, color) in enumerate(
+            zip(("seed", "early", "mid", "elite"), palette, strict=True)
+        ):
+            parts.append(
+                f'<circle cx="6" cy="{12 + i * 12}" r="4" fill="{color}"/>'
+                f'<text x="16" y="{15 + i * 12}">{label}</text>'
+            )
+        parts.append("</g>")
+
+        # footer subtle text
+        parts.append(
+            f'<text x="{viewbox_width / 2}" y="{viewbox_height - 28}" '
+            f'text-anchor="middle" fill="#64748b" '
+            f'font-family="ui-sans-serif,system-ui,sans-serif" font-size="9">'
+            f"{n_edges} edges · {n_pinned} pinned · content-addressable DAG"
+            "</text>"
+        )
+
+        parts.append("</svg>")
+        return "".join(parts)
+
+    @staticmethod
+    def _render_empty_svg(viewbox_width: int, viewbox_height: int) -> str:
+        """Empty PhyTree 用の placeholder SVG."""
+        return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" '
+            f'viewBox="0 0 {viewbox_width} {viewbox_height}" '
+            f'role="img" aria-label="Empty PhyTree placeholder">'
+            "<title>llive PhyTree — empty</title>"
+            "<desc>Phylogenetic DAG with no individuals yet. "
+            "Add via PhyTree.add_individual() to populate.</desc>"
+            "<defs>"
+            '<linearGradient id="phytree_bg_empty" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0%" stop-color="#0e1426"/>'
+            '<stop offset="100%" stop-color="#0a0f17"/>'
+            "</linearGradient>"
+            "</defs>"
+            f'<rect width="{viewbox_width}" height="{viewbox_height}" '
+            f'fill="url(#phytree_bg_empty)"/>'
+            f'<text x="{viewbox_width / 2}" y="{viewbox_height / 2 - 4}" '
+            f'text-anchor="middle" fill="#94a3b8" '
+            f'font-family="ui-sans-serif,system-ui,sans-serif" font-size="13" '
+            f'font-weight="600">PhyTree is empty</text>'
+            f'<text x="{viewbox_width / 2}" y="{viewbox_height / 2 + 16}" '
+            f'text-anchor="middle" fill="#64748b" '
+            f'font-family="ui-sans-serif,system-ui,sans-serif" font-size="10">'
+            "add individuals to see the phylogenetic DAG</text>"
+            "</svg>"
+        )
+
 
 __all__ = [
     "KNOWN_OPS",
