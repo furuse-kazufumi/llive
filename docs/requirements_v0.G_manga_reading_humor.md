@@ -86,14 +86,41 @@ VLM (Gemini Vision / Claude Vision / Qwen-VL / GPT-4o) は **panel 単体の描�
 
 ### 柱 C: 現代ユーモア知識ベース (HumorKB)
 
-漫画読解で抽出した「現代ユーモアパターン」を蓄積:
+漫画読解で抽出した「**構造パターン**」を蓄積する.
+**注意**: 既存 [[feedback_article_humor_style]] (2026-05-20 修正) は **架空対話の捏造 / 落語の枕的喩え話 / 過剰なオノマトペ + AI 擬人化** を禁止. 漫画本文を **直接引用** することも (柱 D の著作権制約からも) 禁止. HumorKB は **構造のみ** を扱う.
 
-- 表現パターン (例: 「〜なのか?」「〜では?」式ツッコミ、「(察し)」末尾省略、「~~~ww」)
-- ジャンル別 (日常系 / コメディ / シリアス + ギャグ混在)
-- 年代タグ (2020-2024 / 2025-2026) — 古いミームを使わせない
-- 失敗パターンも記録 ([[feedback_article_humor_style]] の漫才/落語事例)
+#### C-1. 抽出する「構造」と除外する「コピー」
 
-記事執筆プロンプト ([[feedback_articles_concept_hook]] / [[feedback_qiita_long_form]]) で HumorKB を参照、**年代タグ + ジャンル一致** を加重して、古臭くならないようにする。
+- ✅ **抽出 (構造)**: panel リズム (短-短-長 / 短-中-オチ) / 視線誘導 / SFX 配置 / 三段オチ / 天丼 / ツッコミ pattern / 間の取り方 (cut to / black panel) / 期待裏切りの depth
+- ❌ **除外 (コピー)**: 台詞そのまま / キャラ固有口癖 / 作品固有ミーム / 流行語そのもの / 架空対話の生成
+
+#### C-2. メタ構造のみのスキーマ
+
+```json
+{
+  "structure_id": "...",
+  "category": "三段オチ" | "天丼" | "黙りオチ" | "視点ジャンプ" | "状況逆転" | ...,
+  "rhythm": ["short", "short", "long-then-cut"],
+  "year_observed": 2024,
+  "genre": "日常コメディ",
+  "abstraction_level": "structural",
+  "examples_paraphrased": ["[paraphrased structure description, no direct quote]"],
+  "applicability": ["技術記事の section closer", "ベンチ結果の honest disclosure 直前"]
+}
+```
+
+直接の台詞・キャラ名・作品固有 phrase は保存しない. 抽象化 (paraphrase) された構造記述のみ.
+
+#### C-3. 記事執筆プロンプトでの利用
+
+- 利用は **構造ガイドの形** ([[feedback_article_humor_style]] OK 項目「事実ベースの軽妙な書き口」と整合): 「ここで三段オチの rhythm を使い、第三項で期待を裏切る」程度のヒント
+- **架空対話を生成させない** (NG 項目): HumorKB を理由に「ボケ『〜』 ツッコミ『〜』」を書かせない
+- 年代タグで古いミームを抑制 / 失敗パターン (漫才/落語直接参照) は **明示的なネガティブサンプル** として「これは使うな」リストに
+
+#### C-4. 失敗パターン登録
+
+- 2026-05-20 の漫才/落語参照失敗 ([[feedback_article_humor_style]]) を **negative example** として HumorKB に登録
+- 同類の失敗を繰り返さないよう、生成前 lint で「捏造ダイアログ / 落語枕 / AI 擬人化」を検出
 
 ### 柱 D: 法的・倫理的配慮
 
