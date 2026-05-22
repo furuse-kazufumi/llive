@@ -368,6 +368,7 @@ __all__ = [
     "PythonSubstrateAdapter",
     "ResetMutation",
     "RouletteSelection",
+    "RustSubstrateAdapter",
     "SegmentCrossover",
     "SegmentedScheduler",
     "SelfAdaptiveGaussianMutation",
