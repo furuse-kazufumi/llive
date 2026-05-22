@@ -302,8 +302,11 @@ def test_cross_layer_crossover_meta_is_50_50() -> None:
 
 
 def test_genome3d_is_frozen() -> None:
+    """frozen dataclass — 属性再代入は FrozenInstanceError を投げる."""
+    from dataclasses import FrozenInstanceError
+
     g = Genome3D.default()
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         g.c_impl = ImplChromosome.default()  # type: ignore[misc]
 
 
