@@ -293,6 +293,7 @@ __all__ = [
     "AlgorithmFn",
     "AsyncFitness",
     "AsyncioScheduler",
+    "BciSubstrateAdapter",
     "BlendCrossover",
     "ChainedMutation",
     "CoevolutionGovernance",
