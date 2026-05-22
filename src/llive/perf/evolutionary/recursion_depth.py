@@ -93,11 +93,11 @@ EXPECTED_THOUGHT_FACTORS: tuple[str, ...] = tuple(THOUGHT_FACTORS)
 # ---------------------------------------------------------------------------
 
 
-class RefineStrategy(str, Enum):
+class RefineStrategy(StrEnum):
     """各 recursion iteration で適用される refine 戦略 (6 種).
 
-    str を mixin することで JSON 直接 serialize 可能 / pytest assert で読みやすい
-    形にしている.
+    :class:`enum.StrEnum` を継承することで JSON 直接 serialize 可能 / pytest
+    assert で読みやすい形にしている (DuplicationOrigin と同じ pattern).
     """
 
     SELF_CRITIQUE = "self_critique"
