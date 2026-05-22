@@ -212,6 +212,11 @@ class MockBackend(LLMBackend):
         # mock は sensor も accept する (sample 数を返すだけ).
         return True
 
+    @property
+    def supports_prefix_embeddings(self) -> bool:
+        # mock は prefix embeddings も accept する (count と label 一覧を返す).
+        return True
+
     def generate(self, request: GenerateRequest) -> GenerateResponse:
         text = f"{self.prefix} {request.prompt[: max(0, request.max_tokens)]}".strip()
         normed = [_normalise_image(im) for im in request.images]
