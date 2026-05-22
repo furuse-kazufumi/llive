@@ -226,6 +226,9 @@ class MockBackend(LLMBackend):
             text = f"{text} (with {len(request.audio)} audio clip{'s' if len(request.audio) != 1 else ''})"
         if request.sensor:
             text = f"{text} (with {len(request.sensor)} sensor sample{'s' if len(request.sensor) != 1 else ''})"
+        if request.prefix_embeddings:
+            n_pre = len(request.prefix_embeddings)
+            text = f"{text} (with {n_pre} prefix embedding{'s' if n_pre != 1 else ''})"
         raw: dict[str, Any] = {"echo": True}
         if normed:
             raw["images"] = [
@@ -238,6 +241,9 @@ class MockBackend(LLMBackend):
             raw["sensor_metrics"] = sorted(
                 {str(s.get("metric", "")) for s in request.sensor if s.get("metric")}
             )
+        if request.prefix_embeddings:
+            raw["prefix_count"] = len(request.prefix_embeddings)
+            raw["prefix_labels"] = [str(label) for label, _ in request.prefix_embeddings]
         return GenerateResponse(
             text=text,
             finish_reason="stop",
