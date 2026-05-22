@@ -370,6 +370,7 @@ __all__ = [
     "call_fitness_with_seed",
     "collusion_risk_score",
     "compute_individual_id",
+    "compute_novelty_scores",
     "cross_layer_crossover",
     "crowding_distance",
     "default_map_elites_features",
