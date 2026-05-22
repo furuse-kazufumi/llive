@@ -231,6 +231,102 @@ def tool_vlm_describe_image(
     }
 
 
+def tool_audio_transcribe(
+    audio_path: str | Path,
+    *,
+    prompt: str = "Transcribe this audio.",
+    model: str | None = None,
+    max_tokens: int = 1024,
+    backend: LLMBackend | None = None,
+) -> dict[str, Any]:
+    """Phase C-1.3 (skeleton): Transcribe / describe an audio clip via the active LLM.
+
+    Backend が `supports_audio = False` ならば RuntimeError. Mock backend は
+    accept (count を返すだけ). 実 transcription は Whisper / Gemini Audio /
+    GPT-4o audio 等の backend で対応する想定.
+
+    Returns
+    -------
+    dict
+        ``text`` / ``backend`` / ``model`` / ``finish_reason`` / ``audio_path``.
+    """
+    aud = Path(audio_path)
+    if not aud.is_file():
+        raise FileNotFoundError(f"audio not found: {aud}")
+    be = _resolve_backend(backend)
+    if not be.supports_audio:
+        raise RuntimeError(
+            f"backend {be.name!r} does not support audio inputs; "
+            "set LLIVE_LLM_BACKEND to an audio-capable backend "
+            "(mock for testing / future: whisper / gpt-4o-audio)"
+        )
+    req = GenerateRequest(
+        prompt=prompt,
+        audio=[aud],
+        model=model,
+        max_tokens=int(max_tokens),
+    )
+    resp = be.generate(req)
+    return {
+        "text": resp.text,
+        "backend": resp.backend,
+        "model": resp.model,
+        "finish_reason": resp.finish_reason,
+        "audio_path": str(aud),
+    }
+
+
+def tool_sensor_summarize(
+    samples: list[dict[str, Any]],
+    *,
+    prompt: str = "Summarize the following sensor observations.",
+    model: str | None = None,
+    max_tokens: int = 1024,
+    backend: LLMBackend | None = None,
+) -> dict[str, Any]:
+    """Phase C-1.3 (skeleton): Summarize a list of sensor samples.
+
+    Each sample is a dict like ``{"ts": float, "metric": str, "value": ...,
+    "unit": str | None}``. llmesh MQTT / OPC-UA envelope と互換.
+
+    Backend が `supports_sensor = False` でも fallback として **prompt に
+    serialize** して text-only generate に流す (本実装は skeleton で fallback
+    なし — 必要なら upper layer で対応).
+
+    Returns
+    -------
+    dict
+        ``text`` / ``backend`` / ``model`` / ``n_samples`` / ``metrics``.
+    """
+    if not isinstance(samples, list):
+        raise TypeError(f"samples must be list, got {type(samples).__name__}")
+    be = _resolve_backend(backend)
+    if not be.supports_sensor:
+        raise RuntimeError(
+            f"backend {be.name!r} does not support sensor inputs; "
+            "set LLIVE_LLM_BACKEND to a sensor-capable backend "
+            "(mock for testing / future: llmesh MTEngine direct)"
+        )
+    req = GenerateRequest(
+        prompt=prompt,
+        sensor=list(samples),
+        model=model,
+        max_tokens=int(max_tokens),
+    )
+    resp = be.generate(req)
+    metrics = sorted(
+        {str(s.get("metric", "")) for s in samples if s.get("metric")}
+    )
+    return {
+        "text": resp.text,
+        "backend": resp.backend,
+        "model": resp.model,
+        "finish_reason": resp.finish_reason,
+        "n_samples": len(samples),
+        "metrics": metrics,
+    }
+
+
 def tool_code_complete(
     code_context: str,
     instruction: str,
