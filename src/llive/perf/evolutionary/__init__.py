@@ -259,6 +259,7 @@ __all__ = [
     "AlgorithmFn",
     "KNOWN_ALGORITHM_IDS",
     "KNOWN_CROSSOVER_STRATEGIES",
+    "KNOWN_OPS",
     "LAYER_NAMES",
     "MetaChromosome",
     "MetaEvolutionLoop",
