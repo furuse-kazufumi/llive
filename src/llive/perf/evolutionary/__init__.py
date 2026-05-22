@@ -181,6 +181,14 @@ from llive.perf.evolutionary.phylogeny import (
     compute_individual_id,
 )
 from llive.perf.evolutionary.population import Population, PopulationStats
+from llive.perf.evolutionary.prompt_chromosome import (
+    KNOWN_PROMPT_LANGUAGE_STYLES,
+    KNOWN_PROMPT_PERSONAS,
+    KNOWN_PROMPT_RULES,
+    KNOWN_PROMPT_SKILLS,
+    KNOWN_PROMPT_TEMPLATES,
+    PromptChromosome,
+)
 from llive.perf.evolutionary.quality_diversity import (
     MAPElitesCell,
     MAPElitesGrid,
