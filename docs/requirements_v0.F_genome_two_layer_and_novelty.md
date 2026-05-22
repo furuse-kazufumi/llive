@@ -231,6 +231,19 @@ novelty preservation (柱 B) は「個別に独自進化を保護する」方向
 これら 3 作品の構造的共通項 = (派生個体集団 / 個性継承 / 競争 / 協調 / 進化) =
 llive v0.F の `Genome = (C-impl, C-prompt)` 設計と完全一致 = 技術側原典 (PBT 系) を後追いで補強する形になった.
 
+### 4.3 科学 / SF 側原典 (ユーザー追加指摘 2026-05-22 セッション末)
+
+漫画系 anchor に加えて、科学/SF 系の anchor を 2 つ追加. これらは設計の長期視野と段階定量化を支える.
+
+| 作品 / 概念 | 著者 / 発表年 | llive への寄与 |
+|---|---|---|
+| **アフターマン** (After Man: A Zoology of the Future) | Dougal Dixon / 1981 | **並列 niche 進化 + 収斂進化** → Novelty Lane (柱 B) + Similarity Quota (柱 D) の科学的補強. niche taxonomy / convergent detection / speciation event の設計動機 |
+| **カルダシェフ・スケール** (Kardashev Scale) | Nikolai Kardashev / 1964 + Sagan 1973 拡張 | **進化レベルの段階定量化** → llive maturity scale (0/I/II/III/IV) の設計指針. lleval radar に +1 maturity 軸追加, 段階間 transition criteria の明示, milestone 可視化 |
+
+科学側 anchor は **科学的厳密性が高い** ため、技術側読者にも刺さりやすい. 漫画 anchor との併用で「同じ構造を全方位 anchor で多重定義」が完成する.
+
+詳細: memory `project_llive_evolution_scale_anchors`. アフターマンの niche taxonomy を v0.F EV-17 Novelty Lane の subprocess 分離に, カルダシェフのスケール段階を lleval LE-XX に組み込む方向で次セッション以降検討.
+
 ---
 
 ## 5. リスクと honest disclosure
