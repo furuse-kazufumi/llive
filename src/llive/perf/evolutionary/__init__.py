@@ -462,6 +462,7 @@ __all__ = [
     "random_persona_composition",
     "render_lineage_mermaid",
     "rosenbrock_fitness",
+    "run_recursive_inference",
     "serial_scheduler",
     "sphere_fitness",
     "strategy_distribution",
