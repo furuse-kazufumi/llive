@@ -110,6 +110,18 @@ from llive.perf.evolutionary.mating import (
     LexicaseSelection,
     MutualScorePairSelector,
 )
+from llive.perf.evolutionary.meta_chromosome import (
+    KNOWN_ALGORITHM_IDS,
+    KNOWN_CROSSOVER_STRATEGIES,
+    LAYER_NAMES,
+    MetaChromosome,
+    ucb1_score,
+)
+from llive.perf.evolutionary.meta_loop import (
+    AlgorithmFn,
+    MetaEvolutionLoop,
+    MetaLoopState,
+)
 from llive.perf.evolutionary.meta_mutation import (
     MetaMutation,
     pack_meta_strategy_bounds,
