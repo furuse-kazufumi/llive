@@ -341,6 +341,7 @@ __all__ = [
     "GovernanceReport",
     "ImplChromosome",
     "Individual",
+    "IndividualWithMultiplicity",
     "IslandModel",
     "LexicaseSelection",
     "LlivVariantBuilder",
