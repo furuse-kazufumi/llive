@@ -47,7 +47,7 @@ import gzip
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -93,12 +93,12 @@ def _parse_iso8601(value: str) -> datetime:
         raise ValueError(f"expiry_iso {value!r} is not ISO 8601: {exc}") from exc
     if dt.tzinfo is None:
         # naive datetime は UTC とみなす (skeleton 段階の妥協).
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 # ---------------------------------------------------------------------------
