@@ -296,6 +296,7 @@ __all__ = [
     "FrozenGeneRegistry",
     "GaussianMutation",
     "Genome",
+    "Genome3D",
     "GenomeBounds",
     "GovernanceReport",
     "ImplChromosome",
