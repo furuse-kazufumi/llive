@@ -561,6 +561,51 @@ def tool_describe() -> list[dict[str, Any]]:
             },
         },
         {
+            "name": "audio_transcribe",
+            "description": (
+                "Transcribe / describe an audio clip via an audio-capable LLM backend "
+                "(Phase C-1.3 skeleton). Requires supports_audio backend."
+            ),
+            "input_schema": {
+                "type": "object",
+                "required": ["audio_path"],
+                "properties": {
+                    "audio_path": {"type": "string"},
+                    "prompt": {"type": "string", "default": "Transcribe this audio."},
+                    "model": {"type": "string"},
+                    "max_tokens": {"type": "integer", "default": 1024, "minimum": 1, "maximum": 16384},
+                },
+            },
+        },
+        {
+            "name": "sensor_summarize",
+            "description": (
+                "Summarize a list of sensor samples (MQTT/OPC-UA envelope compatible). "
+                "Phase C-1.3 skeleton. Requires supports_sensor backend."
+            ),
+            "input_schema": {
+                "type": "object",
+                "required": ["samples"],
+                "properties": {
+                    "samples": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "ts": {"type": ["number", "string"]},
+                                "metric": {"type": "string"},
+                                "value": {},
+                                "unit": {"type": ["string", "null"]},
+                            },
+                        },
+                    },
+                    "prompt": {"type": "string", "default": "Summarize the following sensor observations."},
+                    "model": {"type": "string"},
+                    "max_tokens": {"type": "integer", "default": 1024, "minimum": 1, "maximum": 16384},
+                },
+            },
+        },
+        {
             "name": "code_complete",
             "description": "Code completion / edit suggestion via the active LLM backend.",
             "input_schema": {
