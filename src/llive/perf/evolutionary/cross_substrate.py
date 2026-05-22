@@ -77,11 +77,11 @@ DEFAULT_INTENT_DIM: int = 16
 # ---------------------------------------------------------------------------
 
 
-class Substrate(str, Enum):
+class Substrate(StrEnum):
     """物理基盤 (substrate) 識別子.
 
-    ``str`` 派生にしてあるので JSON serialization / 比較が自然に動く.
-    skeleton 段階では Python / Rust のみ実 adapter, 他は将来.
+    :class:`enum.StrEnum` 派生 (Python 3.11+) — JSON serialization / 比較が
+    自然に動く. skeleton 段階では Python / Rust のみ実 adapter, 他は将来.
     """
 
     PYTHON = "python"
