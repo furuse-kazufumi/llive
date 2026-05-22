@@ -638,6 +638,10 @@ def dispatch(name: str, arguments: dict[str, Any]) -> Any:
         return tool_append_learning(**args)
     if name == "vlm_describe_image":
         return tool_vlm_describe_image(**args)
+    if name == "audio_transcribe":
+        return tool_audio_transcribe(**args)
+    if name == "sensor_summarize":
+        return tool_sensor_summarize(**args)
     if name == "code_complete":
         return tool_code_complete(**args)
     if name == "code_review":
