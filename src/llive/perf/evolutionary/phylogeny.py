@@ -626,7 +626,7 @@ class PhyTree:
         # edges (extinct parent も含む) — 親が pos に居なければ ghost を生成
         ghost_positions: dict[str, tuple[float, float]] = {}
         ghost_counter = 0
-        for edge_idx, edge in enumerate(self.edges):
+        for edge in self.edges:
             # 子は必ず描画対象
             if edge.child_id not in positions:
                 continue
