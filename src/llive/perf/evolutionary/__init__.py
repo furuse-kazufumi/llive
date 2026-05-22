@@ -42,6 +42,11 @@ from llive.perf.evolutionary.diversity import (
     NoveltyScorer,
     latin_hypercube_population,
 )
+from llive.perf.evolutionary.duplication import (
+    KNOWN_DUPLICATION_ORIGINS,
+    DuplicationOrigin,
+    IndividualWithMultiplicity,
+)
 from llive.perf.evolutionary.expert_council import (
     CouncilDecision,
     Expert,
