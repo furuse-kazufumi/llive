@@ -591,7 +591,7 @@ class PhyTree:
             f'<text x="{viewbox_width / 2}" y="28" text-anchor="middle" '
             f'fill="#e6edf3" font-family="ui-sans-serif,system-ui,sans-serif" '
             f'font-size="16" font-weight="700">'
-            f"llive PhyTree — {n_nodes} individuals × {len(generations)} generations"
+            f"llive PhyTree — {n_nodes} individuals x {len(generations)} generations"
             "</text>"
         )
 
