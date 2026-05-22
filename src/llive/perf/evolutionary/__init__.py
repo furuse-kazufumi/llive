@@ -163,6 +163,13 @@ from llive.perf.evolutionary.persona_import import (
     PersonaZoneShareEvent,
 )
 from llive.perf.evolutionary.persona_survival import PersonaSurvivalAnalysis
+from llive.perf.evolutionary.phylogeny import (
+    KNOWN_OPS,
+    PhyEdge,
+    PhyNode,
+    PhyTree,
+    compute_individual_id,
+)
 from llive.perf.evolutionary.population import Population, PopulationStats
 from llive.perf.evolutionary.quality_diversity import (
     MAPElitesCell,
