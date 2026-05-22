@@ -12,22 +12,26 @@ wraps them into the official ``mcp`` package's stdio server.
 
 from llive.mcp.tools import (
     tool_append_learning,
+    tool_audio_transcribe,
     tool_code_complete,
     tool_code_review,
     tool_get_domain_info,
     tool_list_rad_domains,
     tool_query_rad,
     tool_read_document,
+    tool_sensor_summarize,
     tool_vlm_describe_image,
 )
 
 __all__ = [
     "tool_append_learning",
+    "tool_audio_transcribe",
     "tool_code_complete",
     "tool_code_review",
     "tool_get_domain_info",
     "tool_list_rad_domains",
     "tool_query_rad",
     "tool_read_document",
+    "tool_sensor_summarize",
     "tool_vlm_describe_image",
 ]
