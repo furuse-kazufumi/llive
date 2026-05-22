@@ -653,6 +653,7 @@ __all__ = [
     "get_default_index",
     "reset_default_index",
     "tool_append_learning",
+    "tool_audio_transcribe",
     "tool_code_complete",
     "tool_code_review",
     "tool_describe",
@@ -660,6 +661,7 @@ __all__ = [
     "tool_list_rad_domains",
     "tool_query_rad",
     "tool_read_document",
+    "tool_sensor_summarize",
     "tool_submit_brief",
     "tool_vlm_describe_image",
 ]
