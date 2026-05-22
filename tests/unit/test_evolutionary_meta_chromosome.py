@@ -261,7 +261,8 @@ def test_ucb1_includes_exploration_bonus() -> None:
 
 def test_ucb1_exploitation_dominates_with_many_uses() -> None:
     # use_count 大 → bonus 小 → mean_delta が支配
-    score = ucb1_score(mean_delta=0.5, use_count=1000, total_gen=10000)
+    # c=sqrt(2), n=10000, N=10^6: bonus = sqrt(2) * sqrt(2 * ln(1e6) / 10000) ≈ 0.074
+    score = ucb1_score(mean_delta=0.5, use_count=10_000, total_gen=1_000_000)
     assert score < 0.6  # bonus は 0.1 未満
 
 
