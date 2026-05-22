@@ -286,7 +286,10 @@ from llive.perf.evolutionary.substrate_adapters import (
 )
 
 __all__ = [
+    "DEFAULT_EARLY_STOP_THRESHOLD",
     "DEFAULT_INTENT_DIM",
+    "DEFAULT_MAX_TOTAL_RECURSION",
+    "EXPECTED_THOUGHT_FACTORS",
     "KNOWN_AGGREGATIONS",
     "KNOWN_ALGORITHM_IDS",
     "KNOWN_CROSSOVER_STRATEGIES",
