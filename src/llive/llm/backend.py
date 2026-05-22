@@ -169,6 +169,17 @@ class LLMBackend:
         """
         return False
 
+    @property
+    def supports_prefix_embeddings(self) -> bool:
+        """Whether this backend can accept prefix embeddings (Phase C-1.4).
+
+        Open LLM (Ollama / llama.cpp / HF Transformers) のうち inputs_embeds を
+        受け付ける backend で True. Closed LLM (Anthropic / OpenAI) は API が
+        公開されていないため False が default. これは [[project_idea_kv_cache_memory_translator]]
+        Stage 1: Embedding 結合経路.
+        """
+        return False
+
 
 # ---------------------------------------------------------------------------
 # Mock backend — deterministic, network-free, used as fallback and in tests
