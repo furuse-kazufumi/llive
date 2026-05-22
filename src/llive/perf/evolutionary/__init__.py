@@ -153,6 +153,12 @@ from llive.perf.evolutionary.mutation import (
     GaussianMutation,
     ResetMutation,
 )
+from llive.perf.evolutionary.novelty_lane import (
+    MultiObjectiveSelector,
+    NoveltyDescriptor,
+    NoveltyScore,
+    compute_novelty_scores,
+)
 from llive.perf.evolutionary.nsga2 import (
     NSGA2Selection,
     crowding_distance,

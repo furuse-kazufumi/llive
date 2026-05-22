@@ -294,8 +294,3 @@ __all__ = [
     "NoveltyScore",
     "compute_novelty_scores",
 ]
-
-
-# Silence "imported but unused" lint complaints in cases where downstream
-# users import ``field`` via this module (not part of public API).
-_ = field
