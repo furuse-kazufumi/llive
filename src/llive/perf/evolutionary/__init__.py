@@ -420,6 +420,7 @@ __all__ = [
     "default_thought_features",
     "default_variant_meta_strategies",
     "derive_sub_seed",
+    "evaluate_parallel",
     "fitness_accepts_seed",
     "get_persona",
     "initial_sigma_values",
