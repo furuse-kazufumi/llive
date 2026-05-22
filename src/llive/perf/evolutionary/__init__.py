@@ -66,6 +66,12 @@ from llive.perf.evolutionary.fitness_ucb import (
     UcbFitnessConfig,
     ucb_fitness_factory,
 )
+from llive.perf.evolutionary.frozen_gene import (
+    MIN_SIGNATURE_BYTES,
+    FreezeReason,
+    FrozenGene,
+)
+from llive.perf.evolutionary.frozen_registry import FrozenGeneRegistry
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.impl_chromosome import (
     KNOWN_IMPL_ALGORITHM_FAMILIES,
