@@ -24,6 +24,12 @@ from llive.perf.evolutionary.coevolution_governance import (
     GovernanceReport,
     collusion_risk_score,
 )
+from llive.perf.evolutionary.cross_substrate import (
+    DEFAULT_INTENT_DIM,
+    AbstractGenome,
+    Substrate,
+    SubstrateAdapter,
+)
 from llive.perf.evolutionary.crossover import (
     BlendCrossover,
     SegmentCrossover,
