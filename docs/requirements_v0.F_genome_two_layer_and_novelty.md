@@ -132,6 +132,52 @@ novelty preservation (柱 B) は「個別に独自進化を保護する」方向
 - quota 適用ログ (どの cluster が何個体を削除したか / 強制突然変異したか) を ledger に記録
 - v0.F EV-20 の 5+1 因子分解で「quota 効果 = 集団 entropy 向上量」を測定
 
+### 柱 E: 統計駆動 + 評価方法の継続更新 (運用ルール)
+
+ユーザー追加指摘 (2026-05-22):
+
+> それも統計的にデータを取って進めて行きましょう。評価方法は常に最新の AI 技術を調べて更新していきましょう。
+
+本要件は **設計ではなく運用規約**. v0.F 実装フェーズ全体に常時適用する.
+
+#### E-1. 統計的データ駆動 (Telemetry as First-Class Citizen)
+
+- 柱 A〜D の各 gene / cluster / lane / mutation について **per-generation 統計** を JSONL で出力 (existing benchmark infra 拡張)
+- 必須メトリクス:
+  - `genome_diversity_entropy` (per chromosome)
+  - `cluster_count` / `avg_cluster_size` / `quota_evictions`
+  - `novelty_score_distribution` (histogram)
+  - `fitness × novelty 2D scatter` (時系列)
+  - `crossover_success_rate` (層内 / 層間別)
+  - `mutation_acceptance_rate` (gene 別)
+  - `persona_set selection frequency` (どの偉人 persona が survival に寄与したか)
+- すべての設計判断 (e.g., `sim_threshold` の閾値選定) は **A/B test + 統計的有意性** を伴ってから採用. 印象論で決めない.
+- honest disclosure 5+1 因子分解 ([[feedback_benchmark_honest_disclosure]]) を毎回適用
+
+#### E-2. 評価方法の継続更新
+
+- 評価指標は静的に固定せず、**最新の AI 評価技術を継続フォロー**:
+  - **HELM (Holistic Evaluation of Language Models)** — Stanford CRFM
+  - **BIG-bench / BIG-bench Hard** — Google / Anthropic
+  - **MMLU / MMLU-Pro** — knowledge
+  - **GPQA / GPQA-Diamond** — reasoning
+  - **Arena (Chatbot Arena, LMSYS)** — pairwise human preference
+  - **AlpacaEval 2.0 / MT-Bench** — instruction following
+  - **SWE-bench / LiveCodeBench** — coding
+  - **AgentBench / WebArena / SWE-Lancer** — agentic
+  - **EvalChemy / Inspect AI** — eval framework
+  - **HoneyBee / DABStep** — emerging (要追跡)
+- 月次で `docs/evaluation_metrics.md` を更新し、新規 benchmark の採用是非を判定
+- 採用基準: ① OSS + reproducible / ② 既存メトリクスでカバーできない次元 / ③ コミュニティ採用度 (citations or GitHub stars)
+- 採用したら lleval (LE 系) に組み込み、v0.F の population evaluation に注入
+
+#### E-3. 既存 lleval / honest disclosure との接続
+
+- lleval v0.1 PoC ([[project_lleval_v01_poc_scope]]) は本要件で本格運用に昇格
+- v0.F 全 evolution run は lleval 経由で結果を流す
+- "5+1 因子分解" を v0.F の per-generation report の必須セクションとする
+- 「変に良い結果」が出たら必ず内訳を疑う ([[feedback_benchmark_honest_disclosure]] 強制適用)
+
 ### 柱 C: Genome Schema Versioning
 
 - 既存 v0.B EV-01 の 19-dim Genome は **C-impl 部分集合** として保持 (互換)
