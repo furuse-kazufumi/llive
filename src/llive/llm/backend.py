@@ -44,6 +44,15 @@ AudioInput = bytes | Path | str
 # epoch, "metric": str, "value": float | str | list, "unit": str | None}.
 # llmesh の MQTT / OPC-UA bridge と同じ envelope を想定.
 SensorSample = dict[str, Any]
+# Phase C-1.4 (Gemini #2 Stage 1, 2026-05-22): KV cache Memory Translator.
+# Embedding 結合経路 — テキストトークン化せず memory entry の embedding を
+# 直接 LLM の inputs_embeds に注入. **ローカル LLM を内包する FullSense
+# だからこそできる hack**. Open LLM (Ollama / llama.cpp / HF Transformers)
+# 経路限定 — Closed LLM (Anthropic / OpenAI) はこの API を公開していない.
+# 1 prefix = (label: str, vector: ndarray-like 1D of float). label は
+# observability 用 (実 LLM には流さない). vector は backend の hidden_dim と
+# 一致が必要 (mismatch は generate() 内で reject).
+PrefixEmbedding = tuple[str, Any]  # (label, ndarray | list[float])
 
 _EXT_TO_MEDIA = {
     ".png": "image/png",
