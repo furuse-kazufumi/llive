@@ -99,6 +99,13 @@ class GenerateRequest:
     # Each item can be ``bytes`` (raw image), ``Path`` (file to read), or
     # ``str`` (already base64-encoded payload).
     images: list[ImageInput] = field(default_factory=list)
+    # Phase C-1.3 (multimodal extension, 2026-05-22 skeleton):
+    # audio inputs (bytes/Path/base64) for speech / sound backends.
+    audio: list[AudioInput] = field(default_factory=list)
+    # sensor sample list (numeric / categorical time-series). 1 sample is a
+    # dict with at minimum ``ts`` / ``metric`` / ``value`` keys. llmesh の
+    # MQTT/OPC-UA envelope と互換.
+    sensor: list[SensorSample] = field(default_factory=list)
 
 
 @dataclass
