@@ -175,6 +175,13 @@ from llive.perf.evolutionary.nsga2 import (
     crowding_distance,
     non_dominated_sort,
 )
+from llive.perf.evolutionary.parallel_mutation import (
+    KNOWN_AGGREGATIONS,
+    FitnessTaskFn,
+    ParallelEvaluationResult,
+    evaluate_parallel,
+    parallel_mutate,
+)
 from llive.perf.evolutionary.peer_evaluation import (
     PairScoreFn,
     PeerEvaluationMatrix,
