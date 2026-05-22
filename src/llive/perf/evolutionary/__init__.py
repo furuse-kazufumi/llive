@@ -364,6 +364,7 @@ __all__ = [
     "NoveltyScore",
     "NoveltyScorer",
     "PairScoreFn",
+    "ParallelEvaluationResult",
     "PeerEvaluationMatrix",
     "PeerFitnessAdapter",
     "Persona",
