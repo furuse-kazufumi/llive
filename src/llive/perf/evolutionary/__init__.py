@@ -321,6 +321,7 @@ __all__ = [
     "PhyTree",
     "Population",
     "PopulationStats",
+    "PromptChromosome",
     "ResetMutation",
     "RouletteSelection",
     "SegmentCrossover",
