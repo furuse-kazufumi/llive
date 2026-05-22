@@ -288,7 +288,6 @@ __all__ = [
     "THOUGHT_FACTORS",
     "UCB_GENOME_BOUNDS",
     "UCB_GENOME_LABELS",
-    "DEFAULT_INTENT_DIM",
     "AbstractGenome",
     "AlgorithmFn",
     "AsyncFitness",
