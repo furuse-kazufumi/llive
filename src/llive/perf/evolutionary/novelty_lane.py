@@ -35,7 +35,7 @@ selection のみ. 実 EvolutionLoop 統合は EV-17 (Novelty Lane subprocess) �
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
