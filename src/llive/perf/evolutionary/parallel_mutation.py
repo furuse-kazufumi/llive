@@ -43,7 +43,6 @@ from typing import Any, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Protocol — sample_neighborhood を持つ任意 genome
 # ---------------------------------------------------------------------------

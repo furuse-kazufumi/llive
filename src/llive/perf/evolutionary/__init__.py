@@ -436,6 +436,7 @@ __all__ = [
     "non_dominated_sort",
     "pack_meta_strategy_bounds",
     "pack_self_adaptive_bounds",
+    "parallel_mutate",
     "persona_dissimilarity",
     "random_persona_composition",
     "render_lineage_mermaid",
