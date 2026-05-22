@@ -19,6 +19,8 @@ v0.F EV-19 の skeleton 検証.
 
 from __future__ import annotations
 
+from itertools import pairwise
+
 import numpy as np
 import pytest
 
