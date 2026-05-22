@@ -224,6 +224,14 @@ from llive.perf.evolutionary.prompt_chromosome import (
     KNOWN_PROMPT_TEMPLATES,
     PromptChromosome,
 )
+from llive.perf.evolutionary.quality_diversity import (
+    MAPElitesCell,
+    MAPElitesGrid,
+    PersonaOverlapPenalty,
+    default_map_elites_features,
+    default_persona_features,
+    default_thought_features,
+)
 from llive.perf.evolutionary.recursion_depth import (
     DEFAULT_EARLY_STOP_THRESHOLD,
     DEFAULT_MAX_TOTAL_RECURSION,
@@ -236,14 +244,6 @@ from llive.perf.evolutionary.recursion_depth import (
 from llive.perf.evolutionary.recursive_inference import (
     RecursionTrace,
     run_recursive_inference,
-)
-from llive.perf.evolutionary.quality_diversity import (
-    MAPElitesCell,
-    MAPElitesGrid,
-    PersonaOverlapPenalty,
-    default_map_elites_features,
-    default_persona_features,
-    default_thought_features,
 )
 from llive.perf.evolutionary.scheduler import (
     AsyncFitness,

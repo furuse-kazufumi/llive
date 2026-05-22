@@ -546,7 +546,7 @@ def test_recursion_trace_structure() -> None:
         assert t.refine_applied == RefineStrategy.EVIDENCE_SEEK
         assert t.elapsed_ms >= 0.0
     # 連続 trace の chain (前回 output_hash == 今回 input_hash)
-    for prev, curr in zip(traces[:-1], traces[1:], strict=True):
+    for prev, curr in pairwise(traces):
         assert prev.output_hash == curr.input_hash
 
 
