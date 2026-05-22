@@ -313,6 +313,7 @@ __all__ = [
     "build_self_adaptive_variant_bounds",
     "call_fitness_with_seed",
     "collusion_risk_score",
+    "compute_individual_id",
     "crowding_distance",
     "default_map_elites_features",
     "default_persona_features",
