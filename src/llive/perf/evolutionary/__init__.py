@@ -274,8 +274,10 @@ from llive.perf.evolutionary.substrate_adapters import (
 
 __all__ = [
     "DEFAULT_INTENT_DIM",
+    "KNOWN_AGGREGATIONS",
     "KNOWN_ALGORITHM_IDS",
     "KNOWN_CROSSOVER_STRATEGIES",
+    "KNOWN_DUPLICATION_ORIGINS",
     "KNOWN_IMPL_ALGORITHM_FAMILIES",
     "KNOWN_IMPL_JUDGE_MODELS",
     "KNOWN_IMPL_LANGUAGES",
