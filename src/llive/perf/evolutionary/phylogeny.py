@@ -681,7 +681,7 @@ class PhyTree:
             )
 
         # ghost ancestor circles (extinct)
-        for gid, (gx, gy) in ghost_positions.items():
+        for _gid, (gx, gy) in ghost_positions.items():
             parts.append(
                 f'<circle cx="{gx:.1f}" cy="{gy:.1f}" r="5" '
                 f'fill="none" stroke="#475569" stroke-width="1" '
