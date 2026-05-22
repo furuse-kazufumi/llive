@@ -50,7 +50,21 @@ def _print_generation_stats(pop: Population, gen: int) -> None:
     )
 
 
+def _ensure_utf8_stdout() -> None:
+    """Force stdout to UTF-8 (Windows cp932 mojibake guard).
+
+    See memory ``feedback_cli_utf8_stdout_pattern`` and llmesh
+    commits 11b38e7 / 798bf93 for the rationale.
+    """
+    import sys
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    except (AttributeError, ValueError):  # pragma: no cover
+        pass
+
+
 def main(argv: list[str] | None = None) -> int:
+    _ensure_utf8_stdout()
     parser = argparse.ArgumentParser(prog="demo_self_adaptive_variant")
     parser.add_argument("--size", type=int, default=20, help="集団 size")
     parser.add_argument("--gens", type=int, default=12, help="世代数")
