@@ -318,6 +318,7 @@ __all__ = [
     "DiversityMetrics",
     "DiversityMonitor",
     "DiversityPreservingBreedFilter",
+    "DuplicationOrigin",
     "ElitismSelection",
     "EvolutionConfig",
     "EvolutionLoop",
