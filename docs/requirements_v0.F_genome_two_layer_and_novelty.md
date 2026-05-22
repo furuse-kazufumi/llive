@@ -92,6 +92,46 @@
 - v0.E peer evaluation で「多数派評価」へ全個体が collapse しないよう、評価者 sampling で **同質個体の評価重複を下げる** (近傍 N 個 / 親個体 / 評価者は明示的に除外)
 - ペナルティ: 評価が全体平均から大きく外れた評価者は immediate に無効化しない。novelty 評価者は独立 weight を持つ
 
+### 柱 D: Similarity Quota — 類似個体の上限制 (Crowding / Niching)
+
+ユーザー追加指摘 (2026-05-22):
+
+> あまりに似すぎている個体は一定数を除き排除されるようなルールがあると進化の促進が進むかもしれません。
+
+novelty preservation (柱 B) は「個別に独自進化を保護する」方向、本柱 D はその対になる「類似集中を解体する」方向。両者は補完関係。
+
+#### D-1. Similarity Cluster Detection
+
+- 全個体ペア間の **genome distance** + **behavioral distance** を計算
+- 距離が閾値 `sim_threshold` 未満のペアを同一 cluster とみなす (Union-Find で連結成分化)
+- 1 cluster 内の個体数を `cluster_size` とする
+
+#### D-2. Quota Enforcement
+
+- cluster ごとに上限 `cluster_quota` (default 4) を設定
+- 上限超過時の処理:
+  1. cluster 内を fitness 降順 sort
+  2. 上位 `cluster_quota` 個体を残す
+  3. 残り個体は **削除** または **強制突然変異** (確率 0.5 / 0.5)
+- 削除は世代 step の selection 前に行い、空いたスロットを次世代生成枠として確保
+
+#### D-3. Adaptive Threshold
+
+- `sim_threshold` は固定でなく、世代経過に応じて **動的調整**:
+  - 集団全体の avg pairwise distance が低い (集団が縮退) → threshold を上げて quota 強化
+  - distance が高い (健全) → threshold を下げて quota 緩和
+- 突然変異率 (柱 A-3) と連動: 類似が増えたら mutation rate も自動上昇
+
+#### D-4. Novelty Lane との共存
+
+- 柱 B Novelty Lane の個体は cluster_quota の **対象外** (絶滅候補にしない)
+- 通常 lane のみに quota を適用 — novelty 候補が誤って淘汰されない設計
+
+#### D-5. Honest Disclosure
+
+- quota 適用ログ (どの cluster が何個体を削除したか / 強制突然変異したか) を ledger に記録
+- v0.F EV-20 の 5+1 因子分解で「quota 効果 = 集団 entropy 向上量」を測定
+
 ### 柱 C: Genome Schema Versioning
 
 - 既存 v0.B EV-01 の 19-dim Genome は **C-impl 部分集合** として保持 (互換)
