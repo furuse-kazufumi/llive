@@ -60,7 +60,7 @@ import gzip
 import hashlib
 import json
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 
 # ---------------------------------------------------------------------------
