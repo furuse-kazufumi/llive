@@ -65,7 +65,7 @@ MIN_SIGNATURE_BYTES: int = 32
 # ---------------------------------------------------------------------------
 
 
-class FreezeReason(str, Enum):
+class FreezeReason(StrEnum):
     """Frozen gene 凍結理由分類. Enum 値は audit log に直接書ける str."""
 
     ETHICS = "ETHICS"          # 倫理 (差別 / 偏見 / 自傷誘導)
