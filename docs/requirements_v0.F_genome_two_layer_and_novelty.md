@@ -203,6 +203,8 @@ novelty preservation (柱 B) は「個別に独自進化を保護する」方向
 
 ## 4. 先行研究 / 参考
 
+### 4.1 技術側原典
+
 - **Lehman & Stanley (2011)** "Abandoning Objectives: Evolution Through the Search for Novelty Alone" — Novelty Search の理論的根拠
 - **Hillis (1990)** — Red Queen effect, parasites による fitness 向上
 - **Rosin & Belew (1997)** — competitive coevolution の理論整理
@@ -210,6 +212,24 @@ novelty preservation (柱 B) は「個別に独自進化を保護する」方向
 - **AlphaStar (2019)** — population-based training with diverse policies
 - **Open-Ended Evolution (Soros 2017)** — genome schema 拡張による innovation 維持
 - **田中 隆司 / TRIZ 系**: 矛盾マトリクスの遺伝子化 (既存 v0.3 TRIZ ChangeOp の延長)
+- **ROS PBT (Population-Based Training) / morphology evolution**: 進化的歩行学習. llive 派生集団の **技術側 anchor** (ユーザー指摘 2026-05-22, [[project_llive_v0B_evolutionary]] 「ROS 歩行進化の AI 版」と既出)
+
+### 4.2 文化側原典 (発想 anchor)
+
+ユーザー指摘 (2026-05-22): プロンプト層染色体 `C-prompt` の発想は次の漫画作品が原典.
+記事執筆 ([[reference_article_idea_inventory]] §10.1) で文化メタファーとして使用可
+(直接引用禁止、構造のみ paraphrase, [[feedback_article_humor_style]] 準拠).
+
+| 作品 | 著者 / 媒体 | llive への写像 |
+|---|---|---|
+| **キン肉星王位争奪編** (1985-1987) | ゆでたまご / 週刊少年ジャンプ / 集英社 | コード層 `C-impl` + 競争的進化 (5 大超人 = 派生個体集団) |
+| **リィンカーネーションの花弁** (2013-2024) | 三栖ハル / コミックアース・スター | プロンプト層 `C-prompt` + 偉人能力継承 + 異才同士の競争 |
+| **R.O.D シリーズ** (1998〜) | 倉田英之 / 集英社 / Aniplex 等 | プロンプト層 `C-prompt` + subprocess 偉人クローン軍団 + 集団敵対 |
+
+詳細: [[../../../puruy/.claude/projects/C--Users-puruy-raptor/memory/project_llive_reincarnation_rod_metaphor.md]] (memory 側).
+
+これら 3 作品の構造的共通項 = (派生個体集団 / 個性継承 / 競争 / 協調 / 進化) =
+llive v0.F の `Genome = (C-impl, C-prompt)` 設計と完全一致 = 技術側原典 (PBT 系) を後追いで補強する形になった.
 
 ---
 
