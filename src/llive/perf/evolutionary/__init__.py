@@ -372,6 +372,7 @@ __all__ = [
     "get_persona",
     "initial_sigma_values",
     "initialize_self_adaptive_variant_genome_values",
+    "intra_layer_crossover",
     "latin_hypercube_population",
     "list_persona_ids",
     "llm_fitness_factory",
