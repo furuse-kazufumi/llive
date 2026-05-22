@@ -365,6 +365,7 @@ __all__ = [
     "Population",
     "PopulationStats",
     "PromptChromosome",
+    "PythonSubstrateAdapter",
     "ResetMutation",
     "RouletteSelection",
     "SegmentCrossover",
