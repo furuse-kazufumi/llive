@@ -50,7 +50,7 @@ from enum import StrEnum
 from typing import Any
 
 
-class DuplicationOrigin(str, Enum):
+class DuplicationOrigin(StrEnum):
     """個体重複の origin (生成由来).
 
     PhyTree edge op (``crossover`` / ``mutation`` / ``clone``) とは独立で,
