@@ -35,9 +35,7 @@ from llive.perf.evolutionary.meta_chromosome import (
 )
 from llive.perf.evolutionary.meta_loop import (
     MetaEvolutionLoop,
-    MetaLoopState,
 )
-
 
 # ===========================================================================
 # 1. MetaChromosome — validation

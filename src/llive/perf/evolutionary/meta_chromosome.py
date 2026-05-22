@@ -181,7 +181,7 @@ class MetaChromosome:
     # ----- factories ------------------------------------------------------
 
     @classmethod
-    def default(cls) -> "MetaChromosome":
+    def default(cls) -> MetaChromosome:
         """v0.B baseline 互換のデフォルト. UCB1 cold start で使う."""
         return cls(
             mutation_rate_per_layer=(0.05, 0.15, 0.02),  # impl 低 / prompt 高 / meta 最低
@@ -195,7 +195,7 @@ class MetaChromosome:
         )
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "MetaChromosome":
+    def from_dict(cls, data: Mapping[str, Any]) -> MetaChromosome:
         return cls(
             mutation_rate_per_layer=tuple(data["mutation_rate_per_layer"]),
             crossover_strategy=str(data["crossover_strategy"]),
@@ -246,7 +246,7 @@ class MetaChromosome:
         self,
         rng: np.random.Generator,
         step_size: float = 0.1,
-    ) -> "MetaChromosome":
+    ) -> MetaChromosome:
         """近傍 chromosome を 1 つ sample. UCB1 探索の候補生成.
 
         - 連続 field: Gaussian perturbation + clip
