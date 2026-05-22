@@ -323,14 +323,15 @@ def test_loop_selection_prefers_better_after_warmup() -> None:
     loop.register(good)
     loop.register(bad)
 
-    # warmup: 全 candidate を 1 回ずつ使う (cold start の +inf を消化)
-    loop.record_delta(good, fitness_delta=1.0)
-    loop.record_delta(bad, fitness_delta=0.01)
-    # さらに good を多く使って mean_Δ を効かせる
-    for _ in range(5):
+    # warmup: 両 candidate を **十分均等に** 使う (cold start fairness で
+    # use_count 少ない方の bonus が大きくなりすぎないように 30 回ずつ).
+    # UCB1 は use_count 少ない arm を探索する性質があるため、両方を等しく
+    # 試した後でないと mean_Δ の差が score に反映されにくい.
+    for _ in range(30):
         loop.record_delta(good, fitness_delta=1.0)
+        loop.record_delta(bad, fitness_delta=0.01)
 
-    # この時点で good の方が UCB1 score が高いはず
+    # この時点で good の方が UCB1 score が高い (bonus は同等, mean が支配)
     scores = loop.state.scores()
     assert scores[good] > scores[bad]
     chosen = loop.select_next(rng)
