@@ -330,6 +330,7 @@ __all__ = [
     "Fitness",
     "FitnessFn",
     "FitnessReport",
+    "FitnessTaskFn",
     "FreezeReason",
     "FrozenGene",
     "FrozenGeneRegistry",
