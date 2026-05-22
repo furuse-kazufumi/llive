@@ -36,7 +36,7 @@ from llive.perf.evolutionary import (
 
 def test_descriptor_is_frozen() -> None:
     desc = NoveltyDescriptor(embedding=(1.0, 2.0, 3.0))
-    with pytest.raises(Exception):  # noqa: PT011, B017 — FrozenInstanceError
+    with pytest.raises(Exception):  # noqa: B017 — FrozenInstanceError
         desc.embedding = (9.0, 9.0, 9.0)  # type: ignore[misc]
 
 
@@ -68,7 +68,7 @@ def test_descriptor_hashable() -> None:
 
 def test_score_is_frozen() -> None:
     score = NoveltyScore(individual_id="ind-001", score=0.42, k=3)
-    with pytest.raises(Exception):  # noqa: PT011, B017 — FrozenInstanceError
+    with pytest.raises(Exception):  # noqa: B017 — FrozenInstanceError
         score.score = 0.99  # type: ignore[misc]
 
 
