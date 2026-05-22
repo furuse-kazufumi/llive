@@ -226,15 +226,19 @@ VLM (Gemini Vision / Claude Vision / Qwen-VL / GPT-4o) は **panel 単体の描�
 
 ---
 
-## 4. 先行研究 / 参考
+## 4. 先行研究 / 参考 (ライセンス分類込み)
 
-- **Scott McCloud (1993)** "Understanding Comics" — panel transition 6 分類
-- **Manga109** (Aizawa Lab) — 公開漫画データセット (アカデミック利用)
-- **Magi** (https://github.com/ragavsachdeva/magi) — manga panel + character detection
-- **Manga OCR** (kha-white) — Japanese manga 専用 OCR
-- **comic-text-detector** — speech bubble detection
-- **Qwen-VL / Llama 3.2 Vision** — local VLM 候補
-- **Gemini 1.5 / Claude Sonnet Vision / GPT-4o** — cloud VLM (権利確認時のみ)
+| 名称 | 用途 | License | 商用 OK | llive 採用方針 |
+|---|---|---|---|---|
+| Scott McCloud (1993) "Understanding Comics" | panel transition 6 分類 | book | — | 理論的枠組として参照 |
+| Manga109 (Aizawa Lab) | 漫画データセット | アカデミック利用 | ❌ | A/B 評価の参考のみ、配布物に含めない |
+| ragavsachdeva/magi (v1/v2/v3) | panel + character + dialog transcription | **academic only** | ❌ | llive Apache-2.0 商用と非互換、研究用調査限定 |
+| **kha-white/manga-ocr** | 日本語漫画 OCR (縦書き / ふりがな) | **Apache-2.0** | ✅ | **MNG-02 採用. skill 化済 (`.claude/skills/manga-ocr/SKILL.md`)** |
+| dmMaze/comic-text-detector | speech bubble detection | 要確認 | ? | 次セッションで license 確認 |
+| kha-white/mokuro | manga reader + OCR | 要確認 | ? | 次セッションで license 確認 |
+| 自作 OpenCV panel splitter | 罫線検出 ベース | OSS自作 | ✅ | MNG-01 で license clear な panel detector に採用検討 |
+| Qwen-VL local / Llama 3.2 Vision | 汎用 VLM | Apache-2.0 / Llama-2 community | ✅ / ⚠ | local 推論優先、Llama は配布制限あり |
+| Gemini 1.5 / Claude Vision / GPT-4o | cloud VLM | 各社規約 | $ | 権利確認時のみ、データ最小化原則 |
 
 ---
 
