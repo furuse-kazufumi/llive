@@ -177,16 +177,37 @@ class MockBackend(LLMBackend):
     def supports_vlm(self) -> bool:
         return True
 
+    @property
+    def supports_audio(self) -> bool:
+        # mock は audio も accept する (count を返すだけ, transcription なし).
+        return True
+
+    @property
+    def supports_sensor(self) -> bool:
+        # mock は sensor も accept する (sample 数を返すだけ).
+        return True
+
     def generate(self, request: GenerateRequest) -> GenerateResponse:
         text = f"{self.prefix} {request.prompt[: max(0, request.max_tokens)]}".strip()
         normed = [_normalise_image(im) for im in request.images]
         if normed:
             text = f"{text} (with {len(normed)} image{'s' if len(normed) != 1 else ''})"
+        if request.audio:
+            text = f"{text} (with {len(request.audio)} audio clip{'s' if len(request.audio) != 1 else ''})"
+        if request.sensor:
+            text = f"{text} (with {len(request.sensor)} sensor sample{'s' if len(request.sensor) != 1 else ''})"
         raw: dict[str, Any] = {"echo": True}
         if normed:
             raw["images"] = [
                 {"media_type": m, "base64_len": len(b64)} for m, b64 in normed
             ]
+        if request.audio:
+            raw["audio_count"] = len(request.audio)
+        if request.sensor:
+            raw["sensor_count"] = len(request.sensor)
+            raw["sensor_metrics"] = sorted(
+                {str(s.get("metric", "")) for s in request.sensor if s.get("metric")}
+            )
         return GenerateResponse(
             text=text,
             finish_reason="stop",
