@@ -224,6 +224,19 @@ from llive.perf.evolutionary.prompt_chromosome import (
     KNOWN_PROMPT_TEMPLATES,
     PromptChromosome,
 )
+from llive.perf.evolutionary.recursion_depth import (
+    DEFAULT_EARLY_STOP_THRESHOLD,
+    DEFAULT_MAX_TOTAL_RECURSION,
+    EXPECTED_THOUGHT_FACTORS,
+    KNOWN_REFINE_STRATEGIES,
+    NUM_LAYER_BOUNDARIES,
+    RecursionDepthGene,
+    RefineStrategy,
+)
+from llive.perf.evolutionary.recursive_inference import (
+    RecursionTrace,
+    run_recursive_inference,
+)
 from llive.perf.evolutionary.quality_diversity import (
     MAPElitesCell,
     MAPElitesGrid,
