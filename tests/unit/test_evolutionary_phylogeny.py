@@ -28,7 +28,6 @@ from llive.perf.evolutionary import (
     compute_individual_id,
 )
 
-
 # ---------------------------------------------------------------------------
 # fixtures
 # ---------------------------------------------------------------------------
@@ -70,6 +69,16 @@ def test_compute_individual_id_differs_for_different_genomes() -> None:
 def test_phyedge_validates_op() -> None:
     with pytest.raises(ValueError, match="unknown op"):
         PhyEdge(parent_id="a" * 64, child_id="b" * 64, op="invalid")
+
+
+def test_phynode_roundtrip() -> None:
+    ind = _make_individual((0.5, 1.2), gen=2)
+    nid = compute_individual_id(ind)
+    node = PhyNode(individual_id=nid, individual=ind)
+    node2 = PhyNode.from_dict(node.to_dict())
+    assert node2.individual_id == nid
+    assert node2.individual.birth_generation == 2
+    assert node2.individual.genome.values == (0.5, 1.2)
 
 
 def test_phyedge_roundtrip() -> None:
