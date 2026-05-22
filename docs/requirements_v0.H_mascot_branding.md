@@ -153,6 +153,40 @@
 
 ---
 
+## 6.5 長期ビジョン — Transformer 脱却後のコラボ路線
+
+ユーザー追加指摘 (2026-05-22):
+
+> Transformer アルゴリズムを脱却し普及することが実現した暁には、コラボ路線とか歩めたらいいのになと思います。
+
+短期 (v0.H 〜) と長期で **戦略を分離**:
+
+### 短期 (now 〜 transformer 脱却前)
+
+- 「古瀬あい」とは **完全に切り離す**. 名前 / ビジュアル / マーケティング上の被りを排除
+- llive は独自ブランドで普及ファネル (#24 series / animated SVG / 採用ファネル先頭) を整備
+- 出典: `https://self.systems/ai-news-app-furuseai-gpt/` は **競合ではなく将来パートナー候補** として位置づけ、敵対的態度は取らない
+
+### 長期 (Transformer 脱却が普及した暁に)
+
+- llive non-transformer backend ([[#24-06]] Mamba / Jamba / RWKV / Diffusion) が普及 → llive の存在感が立つ
+- そのタイミングで **SELF株式会社 (古瀬あい) とコラボ路線** を歩む可能性:
+  - 古瀬あい × llive の **連携 SDK** (古瀬あい個性層を llive 4 層メモリで強化)
+  - llive 4 層メモリ ⇄ 古瀬あい 課金型記憶 のブリッジ (record / replay)
+  - 共通 brand event ("Transformer 後の AI" コラボ keynote)
+  - 名前衝突問題は「ファミリーキャラ」「兄弟キャラ」位置づけで解決
+- 進め方:
+  1. llive non-transformer backend が普及指標 (production 採用 / DL 数 / 学術引用) で **明確な実績** を持つまでは静観
+  2. その時点で **公式に approach**: 競合ではなく complementarity を提示
+  3. 商標 / ライセンス上の **dual-track** を維持 (協業 OK / 独立運営も OK)
+- 失敗時: コラボ不成立でも llive 単独で立てる (依存しない)
+
+### How to apply
+
+- v0.H 命名選定 (柱 3) では **「古瀬あい」と並んでも違和感がない別名** を選ぶ (兄弟関係を作りやすい命名)
+- 戦略的に「敵」化しない: 記事 / SNS 発信で SELF株式会社 や古瀬あいを **批判的に言及しない**
+- 長期 KPI: Transformer 脱却関連の milestone (non-transformer backend production 採用 N 社 / 学術論文 M 本) を年次計測
+
 ## 7. 連動 memory / docs
 
 - `[[project_llive_mascot_design]]` — 本要件の memory 側
