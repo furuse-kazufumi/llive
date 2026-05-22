@@ -251,6 +251,14 @@ from llive.perf.evolutionary.subprocess_scheduler import (
     VariantSubprocessError,
     VariantSubprocessScheduler,
 )
+from llive.perf.evolutionary.substrate_adapters import (
+    BciSubstrateAdapter,
+    CythonSubstrateAdapter,
+    NeuromorphicSubstrateAdapter,
+    PythonSubstrateAdapter,
+    RustSubstrateAdapter,
+    TypescriptSubstrateAdapter,
+)
 
 __all__ = [
     "KNOWN_ALGORITHM_IDS",
