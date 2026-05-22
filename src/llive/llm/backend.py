@@ -36,6 +36,15 @@ _UNSET = object()
 # Phase C-1.1: VLM image input types
 ImageInput = bytes | Path | str  # bytes payload, file path, or base64-encoded string
 
+# Phase C-1.3: multimodal extension — audio + sensor input types (skeleton).
+# audio: 同じく bytes / Path / base64-str. 実 encoding (wav / mp3 / ogg) は
+# backend ごとに対応, supports_audio で能力を表明.
+AudioInput = bytes | Path | str
+# sensor: 時系列 numeric / categorical 観測. 1 sample = {"ts": float ISO 8601 or
+# epoch, "metric": str, "value": float | str | list, "unit": str | None}.
+# llmesh の MQTT / OPC-UA bridge と同じ envelope を想定.
+SensorSample = dict[str, Any]
+
 _EXT_TO_MEDIA = {
     ".png": "image/png",
     ".jpg": "image/jpeg",
