@@ -342,6 +342,7 @@ __all__ = [
     "MultiprocessingScheduler",
     "MutualScorePairSelector",
     "NSGA2Selection",
+    "NeuromorphicSubstrateAdapter",
     "NoveltyDescriptor",
     "NoveltyScore",
     "NoveltyScorer",
