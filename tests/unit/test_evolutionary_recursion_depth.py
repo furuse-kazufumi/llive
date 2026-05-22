@@ -265,7 +265,6 @@ def test_sample_neighborhood_zero_step_keeps_threshold() -> None:
 
 def test_sample_neighborhood_can_switch_strategy_at_high_step() -> None:
     """step_size 大きいと refine_strategy が変わりうる."""
-    rng = np.random.default_rng(42)
     base = RecursionDepthGene.default()
     strategies = {
         base.sample_neighborhood(np.random.default_rng(s), step_size=1.0).refine_strategy
