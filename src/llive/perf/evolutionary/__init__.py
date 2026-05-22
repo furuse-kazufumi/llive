@@ -67,6 +67,16 @@ from llive.perf.evolutionary.fitness_ucb import (
     ucb_fitness_factory,
 )
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
+from llive.perf.evolutionary.impl_chromosome import (
+    KNOWN_IMPL_ALGORITHM_FAMILIES,
+    KNOWN_IMPL_JUDGE_MODELS,
+    KNOWN_IMPL_LANGUAGES,
+    KNOWN_IMPL_MEMORY_BACKENDS,
+    KNOWN_IMPL_ORCHESTRATION_MODES,
+    KNOWN_IMPL_PARALLEL_STRATEGIES,
+    KNOWN_IMPL_SELECTOR_CLASSES,
+    ImplChromosome,
+)
 from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.island_model import (
     IslandModel,
