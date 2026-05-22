@@ -300,6 +300,7 @@ __all__ = [
     "CollusionDetector",
     "CompositionStat",
     "CouncilDecision",
+    "CythonSubstrateAdapter",
     "DiversityMetrics",
     "DiversityMonitor",
     "DiversityPreservingBreedFilter",
