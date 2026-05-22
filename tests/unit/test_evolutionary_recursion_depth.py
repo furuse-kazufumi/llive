@@ -458,7 +458,7 @@ def test_run_recursive_inference_layer_dispatch() -> None:
         early_stop_threshold=0.0001,
     )
 
-    def make_divergent() -> "object":
+    def make_divergent() -> object:
         counter = {"n": 0}
 
         def fn(x: str) -> str:
