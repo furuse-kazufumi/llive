@@ -46,14 +46,12 @@ def build_demo_tree() -> PhyTree:
 
     # gen 1: 4 mutated children
     gen1_ids: list[str] = []
-    for i, (parent_sid, vals) in enumerate(
-        [
-            (seeds[0], (0.15, 0.25)),
-            (seeds[1], (0.55, -0.25)),
-            (seeds[2], (-0.75, 0.45)),
-            (seeds[3], (0.85, 0.85)),
-        ]
-    ):
+    for parent_sid, vals in [
+        (seeds[0], (0.15, 0.25)),
+        (seeds[1], (0.55, -0.25)),
+        (seeds[2], (-0.75, 0.45)),
+        (seeds[3], (0.85, 0.85)),
+    ]:
         ind = _make_individual(vals, gen=1)
         cid = tree.add_individual(
             ind, parents=[parent_sid], op="mutation",
