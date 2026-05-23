@@ -387,6 +387,64 @@ def test_cross_layer_crossover_meta_is_50_50() -> None:
     assert 0.45 <= ratio <= 0.55, f"meta from_a ratio {ratio:.3f} not 50/50"
 
 
+def test_cross_layer_crossover_factors_each_row_from_one_parent() -> None:
+    """c_factors は ``crossover_per_factor`` (行 = 因子ごと 50/50) で混合される.
+
+    親 A = 全 0, 親 B = 全 1 のとき, 子の各行 (因子) は全 0 か全 1 のどちらかに
+    なるはず (列方向には混ざらない).
+    """
+    rng = np.random.default_rng(11)
+    pa, pb = _make_distinct_parents()
+    pa = Genome3D(
+        c_impl=pa.c_impl,
+        c_prompt=pa.c_prompt,
+        c_meta=pa.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(np.zeros((10, 4))),
+    )
+    pb = Genome3D(
+        c_impl=pb.c_impl,
+        c_prompt=pb.c_prompt,
+        c_meta=pb.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(np.ones((10, 4))),
+    )
+    child = cross_layer_crossover(pa, pb, rng)
+    child_arr = child.c_factors.as_array()
+    for row in child_arr:
+        assert np.all(row == 0.0) or np.all(row == 1.0)
+
+
+def test_cross_layer_crossover_factors_observe_both_parents_over_trials() -> None:
+    """十分な試行回数があれば, 子の c_factors に親 A 由来の因子行と親 B 由来の
+    因子行が両方現れる (= 単一の親だけから来ているわけではない)."""
+    rng = np.random.default_rng(2026)
+    pa, pb = _make_distinct_parents()
+    pa = Genome3D(
+        c_impl=pa.c_impl,
+        c_prompt=pa.c_prompt,
+        c_meta=pa.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(np.zeros((10, 4))),
+    )
+    pb = Genome3D(
+        c_impl=pb.c_impl,
+        c_prompt=pb.c_prompt,
+        c_meta=pb.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(np.ones((10, 4))),
+    )
+    has_zero_row_seen = False
+    has_one_row_seen = False
+    for _ in range(50):
+        child = cross_layer_crossover(pa, pb, rng)
+        arr = child.c_factors.as_array()
+        for row in arr:
+            if np.all(row == 0.0):
+                has_zero_row_seen = True
+            if np.all(row == 1.0):
+                has_one_row_seen = True
+        if has_zero_row_seen and has_one_row_seen:
+            break
+    assert has_zero_row_seen and has_one_row_seen
+
+
 # ===========================================================================
 # G. frozen / hashable
 # ===========================================================================
