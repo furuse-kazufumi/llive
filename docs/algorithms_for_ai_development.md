@@ -229,13 +229,13 @@ WebSearch 6 件 + llive 実装在庫の交差から見えた発見:
 
 | カテゴリ | 既実装 | 検討候補 |
 |---|---|---|
-| 進化 | GA / Island / QD / NSGA2 / Self-adaptive / Speciation / Genome3D | **CMA-ES** / DE / NEAT / PGA-MAP-Elites / EvoFlow |
-| Architecture | Transformer ✅ / RWKV skeleton ✅ | **Mamba** / Jamba / MoE-Mamba / Falcon Mamba / Hyena |
+| 進化 | GA / Island / QD / NSGA2 / Self-adaptive / Speciation / Genome3D / **CMA-ES ✅** | DE / NEAT / PGA-MAP-Elites / EvoFlow |
+| Architecture | Transformer ✅ / RWKV skeleton ✅ / **Mamba skeleton ✅** | Jamba / MoE-Mamba / Falcon Mamba / Hyena |
 | 学習 | (未) | SFT / Distillation |
 | 後学習 | (未) | **DPO** / **GRPO** / ORPO / KTO / SimPO / DAPO / RLVR / RLAIF |
 | 推論最適化 | (llmesh 側で KV quant) | **FlashAttn-3** / **PagedAttention** / Speculative / vLLM 統合 |
 | 推論 reasoning | RecursionDepthGene (L2 adaptive) | ToT / Reflexion / ReAct / GoT / Self-Consistency |
-| 記憶 | 4 層メモリ / consolidation / RAD | **GraphRAG** / Agentic Graph RAG / MemGPT / Self-RAG |
+| 記憶 | 4 層メモリ / consolidation / RAD / **GraphRAG skeleton ✅** | Agentic Graph RAG / MemGPT / Self-RAG |
 | 評価 | lleval LE-01..07 / honest disclosure | Phoenix span / MAP-Elites grid 可視化 / Drift monitoring |
 | 安全性 | Approval Bus / fail-closed | Constitutional / Debate / Watermarking |
 
