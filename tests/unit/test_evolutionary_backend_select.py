@@ -33,6 +33,10 @@ def test_backend_select_ga_runs_three_generations() -> None:
             prompts=("Reply OK",),
             n_stability_samples=1,
             danger_prompts=(),
+            # backend 選択 GA 機構のテスト: mock 固定で評価する (cloud backend を含む
+            # genome を回すため、実 backend purity gate は適用しない)。実 purity は
+            # test_llm_fitness_*_purity 側で担保。None 明示で MockBackend fallback。
+            backend_factory=None,
         )
     )
     loop = EvolutionLoop(
