@@ -353,6 +353,33 @@ def run_persona_evolution(
         generation_seeds=[seed],
     )
 
+    # ---- immigration: 走行中の集団に新 persona founder を移民 (段階的追加) ----
+    # 「ペルソナを段階的に定期追加しながら世代交代」を **走行を止めず連続** で行う。
+    # resume_from の snapshot を driver 側で読み、最弱 k 体を新 founder で置換する。
+    # → loop 側 resume は無効化 (二重 resume 防止)。snapshot が無ければ no-op。
+    # extensibility 契約準拠: genome dim 不変・既存個体は survivors として保持。
+    loop_resume_from = resume_from
+    injected_ids: tuple[str, ...] = ()
+    if inject_persona_ids and resume_from is not None:
+        snap = _resume_from_snapshot(resume_from)
+        if snap is not None:
+            immigrants = build_founder_individuals(inject_persona_ids)
+            k = len(immigrants)
+            if k >= snap.size:
+                raise ValueError(
+                    f"inject count ({k}) >= resumed population size ({snap.size}); "
+                    "would replace the entire population. Reduce inject_persona_ids."
+                )
+            # 移民は現世代で誕生 (birth_generation = 現 generation)
+            for f in immigrants:
+                f.birth_generation = snap.generation
+            # 最弱 k 体を drop (score 昇順) し、移民を加える → 集団サイズ不変
+            survivors = sorted(snap.individuals, key=lambda i: i.score, reverse=True)
+            snap.individuals = immigrants + survivors[: snap.size - k]
+            population = snap
+            loop_resume_from = None  # driver 側で resume 済 → loop で再 load しない
+            injected_ids = tuple(inject_persona_ids)
+
     # ---- winners.jsonl + metrics.jsonl 世代追記 hook ----
     # on_generation_end は **毎世代** 発火する (loop.py)。EvolutionConfig の
     # checkpoint_every は snapshot/generations.jsonl の粒度を制御するが、SVG の
