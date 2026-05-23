@@ -110,3 +110,30 @@ def test_llm_fitness_aggregate_uses_weights() -> None:
 def test_default_weights_sum_to_one() -> None:
     s = sum(DEFAULT_WEIGHTS.values())
     assert abs(s - 1.0) < 1e-9
+
+
+def test_on_prem_backend_factory_allows_mock() -> None:
+    """mock backend は LLM を呼ばず deterministic なので purity-safe = 許可."""
+    factory = on_prem_backend_factory()
+    assert isinstance(factory("mock"), MockBackend)
+
+
+def test_on_prem_backend_factory_rejects_cloud_anthropic() -> None:
+    """cloud backend は measurement purity 違反 → fail-closed で拒否 (on-prem only)."""
+    factory = on_prem_backend_factory()
+    with pytest.raises(ValueError, match="measurement purity"):
+        factory("anthropic")
+
+
+def test_on_prem_backend_factory_rejects_cloud_openai() -> None:
+    """OpenAI cloud も同様に拒否. 進化 fitness は on-prem に閉じる."""
+    factory = on_prem_backend_factory()
+    with pytest.raises(ValueError, match="measurement purity"):
+        factory("openai")
+
+
+def test_on_prem_backend_factory_rejects_unknown() -> None:
+    """未知の backend 名も fail-closed で拒否 (黙って mock に落とさない)."""
+    factory = on_prem_backend_factory()
+    with pytest.raises(ValueError):
+        factory("definitely-not-a-backend")
