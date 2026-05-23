@@ -471,6 +471,8 @@ __all__ = [
     "build_self_adaptive_meta_strategy_variant_bounds",
     "build_self_adaptive_variant_bounds",
     "call_fitness_with_seed",
+    "candidate_to_map_elites_features",
+    "candidate_to_thought_features",
     "collusion_risk_score",
     "compute_individual_id",
     "compute_novelty_scores",
