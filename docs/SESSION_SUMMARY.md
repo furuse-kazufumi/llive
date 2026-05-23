@@ -3,23 +3,23 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-16 14:01:19
+- **最終更新**: 2026-05-23 23:18:44
 - **プロジェクト**: `D:/projects/llive`
-- **ブランチ**: `main`
+- **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
-ca37a56 docs(rfc): Phase 3 sub document — skill chunk replication 詳細仕様
-ecee0ff docs(learning): EDLA vs BP XOR loss curve 実験レポート + SVG plot
-d7152a8 docs(articles): zh 言語拡張 — LinkedIn v2 zh + Qiita zh draft
-7726f29 docs(articles): 多言語化 — Qiita en + LinkedIn v2 update (ja+en)
-2395695 docs(family): fullsense umbrella repo 作成手順を追記
-f28aa31 feat(learning): EDLA skeleton + BP 比較 (RFC Phase 5, 金子勇 1999 思想)
-bfc5b23 auto: test_edla.py 編集前 (2026-05-16 13:11)
-1598ce5 auto: __init__.py 編集前 (2026-05-16 13:10)
-7004dc2 docs(rfc): llmesh discovery 実装状況を RFC に反映、未実装 Phase に絞込み
-6c71ba5 auto: llmesh_p2p_mesh_rfc.md 編集前 (2026-05-16 12:47)
+f82c794 feat(evolution): purity 違反個体を fitness=0 で淘汰 — 走行を壊さず二重担保
+08f03ba auto: fitness_llm.py 編集前 (2026-05-23 23:15)
+4b28449 feat(evolution): on_prem_backend_factory で measurement purity を fail-closed 担保
+92950e9 auto: fitness_llm.py 編集前 (2026-05-23 23:10)
+7eaa455 auto: test_evolutionary_fitness_llm.py 編集前 (2026-05-23 23:08)
+b56ad6a feat(evolutionary): persona immigration for mid-run roster growth
+ab3e4c5 auto: run_persona_evolution_long.py 編集前 (2026-05-23 22:29)
+0a3d5d8 auto: run_persona_evolution_long.py 編集前 (2026-05-23 22:28)
+d6bafe6 auto: run_persona_evolution_long.py 編集前 (2026-05-23 22:28)
+f192aa0 auto: test_persona_evolution_extensibility.py 編集前 (2026-05-23 22:28)
 ```
 
 ## 現在の git status
@@ -31,21 +31,21 @@ bfc5b23 auto: test_edla.py 編集前 (2026-05-16 13:11)
 ## 直近 2 時間に変更されたファイル
 
 ```
-13:44 docs/llmesh_p2p_phase3_skill_chunk_rfc.md
-13:42 docs/scenarios/learning/edla_xor_report.md
-13:41 docs/scenarios/learning/edla_xor_loss.svg
-13:41 examples/edla_xor_demo.py
-13:39 docs/qiita/qiita-overview.zh.md
-13:39 docs/linkedin/post_2026-05-16_update_v2.zh.md
-13:36 docs/linkedin/post_2026-05-16_update_v2.en.md
-13:35 docs/linkedin/post_2026-05-16_update_v2.ja.md
-13:34 docs/qiita/qiita-overview.en.md
-13:32 docs/family_setup_status.md
-13:12 .ruff_cache/0.15.12/12334922619133000292
-13:12 .ruff_cache/0.15.12/10638194744700293557
-13:12 .pytest_cache/v/cache/nodeids
-13:12 .hypothesis/constants/9c9c8fa1d603dce6
-13:12 .hypothesis/constants/183ba5d68f65d41b
+23:16 .pytest_cache/v/cache/nodeids
+23:16 .pytest_cache/v/cache/lastfailed
+23:15 src/llive/perf/evolutionary/fitness_llm.py
+23:15 tests/unit/test_evolutionary_fitness_llm.py
+22:29 scripts/run_persona_evolution_long.py
+22:28 tests/unit/test_persona_evolution_extensibility.py
+22:27 src/llive/perf/evolutionary/persona_evolution.py
+22:09 docs/PROGRESS.md
+22:07 tests/unit/test_svg_render.py
+22:07 src/llive/perf/evolutionary/__init__.py
+22:06 scripts/render_evolution_svg.py
+22:06 src/llive/perf/evolutionary/svg_render.py
+21:54 tests/unit/test_persona_evolution.py
+21:54 scripts/demo_persona_evolution.py
+21:46 tests/unit/test_evolutionary_persona.py
 ```
 
 ---
