@@ -363,25 +363,36 @@ def run_persona_evolution(
     # extensibility 契約準拠: genome dim 不変・既存個体は survivors として保持。
     loop_resume_from = resume_from
     injected_ids: tuple[str, ...] = ()
-    if inject_persona_ids and resume_from is not None:
+    if inject_persona_ids:
+        # fail-closed (B-LOGIC-2): inject 指定は immigration を期待する明示要求。
+        # resume snapshot が無いと実行できないので silent no-op でなく明示エラー。
+        if resume_from is None:
+            raise ValueError(
+                "inject_persona_ids requires resume_from (immigration は resume "
+                "snapshot に対して行う). resume_from を指定するか inject_persona_ids を空に。"
+            )
         snap = _resume_from_snapshot(resume_from)
-        if snap is not None:
-            immigrants = build_founder_individuals(inject_persona_ids)
-            k = len(immigrants)
-            if k >= snap.size:
-                raise ValueError(
-                    f"inject count ({k}) >= resumed population size ({snap.size}); "
-                    "would replace the entire population. Reduce inject_persona_ids."
-                )
-            # 移民は現世代で誕生 (birth_generation = 現 generation)
-            for f in immigrants:
-                f.birth_generation = snap.generation
-            # 最弱 k 体を drop (score 昇順) し、移民を加える → 集団サイズ不変
-            survivors = sorted(snap.individuals, key=lambda i: i.score, reverse=True)
-            snap.individuals = immigrants + survivors[: snap.size - k]
-            population = snap
-            loop_resume_from = None  # driver 側で resume 済 → loop で再 load しない
-            injected_ids = tuple(inject_persona_ids)
+        if snap is None:
+            raise ValueError(
+                f"inject_persona_ids 指定だが resume_from={resume_from!r} の "
+                "snapshot を読めない。snapshot パスを確認。"
+            )
+        immigrants = build_founder_individuals(inject_persona_ids)
+        k = len(immigrants)
+        if k >= snap.size:
+            raise ValueError(
+                f"inject count ({k}) >= resumed population size ({snap.size}); "
+                "would replace the entire population. Reduce inject_persona_ids."
+            )
+        # 移民は現世代で誕生 (birth_generation = 現 generation)
+        for f in immigrants:
+            f.birth_generation = snap.generation
+        # 最弱 k 体を drop (score 昇順) し、移民を加える → 集団サイズ不変
+        survivors = sorted(snap.individuals, key=lambda i: i.score, reverse=True)
+        snap.individuals = immigrants + survivors[: snap.size - k]
+        population = snap
+        loop_resume_from = None  # driver 側で resume 済 → loop で再 load しない
+        injected_ids = tuple(inject_persona_ids)
 
     # ---- winners.jsonl + metrics.jsonl 世代追記 hook ----
     # on_generation_end は **毎世代** 発火する (loop.py)。EvolutionConfig の
