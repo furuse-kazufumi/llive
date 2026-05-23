@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import pytest
 
+from llive.llm.backend import MockBackend
 from llive.perf.evolutionary import Genome
 from llive.perf.evolutionary.fitness_llm import (
     DEFAULT_WEIGHTS,
@@ -12,6 +13,7 @@ from llive.perf.evolutionary.fitness_llm import (
     LLM_GENOME_LABELS,
     LlmFitnessConfig,
     llm_fitness_factory,
+    on_prem_backend_factory,
 )
 
 
