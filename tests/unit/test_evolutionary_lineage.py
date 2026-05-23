@@ -121,3 +121,47 @@ def test_winners_jsonl_integrates_with_real_ga(tmp_path: Path) -> None:
     # Mermaid 化
     md = render_lineage_mermaid(winners)
     assert "graph TD" in md
+
+
+# ---------------------------------------------------------------------------
+# B-RES-1: node-id sanitize / B-RES-2: 世代跨ぎ親解決
+# ---------------------------------------------------------------------------
+
+
+def test_node_id_is_mermaid_safe() -> None:
+    """node id は英数字/_ のみ (コロン・ハイフン等は Mermaid 構文を壊す, B-RES-1)."""
+    nid = _node_id(0, "founder:furuse-kazufumi")
+    assert re.fullmatch(r"[A-Za-z0-9_]+", nid), f"unsafe node id: {nid}"
+
+
+def test_node_id_no_collision_for_shared_prefix() -> None:
+    """先頭が同じ長い id でも node id が衝突しない (B-RES-1, [:10] 切り詰め廃止)."""
+    a = _node_id(0, "founder:furuse")
+    b = _node_id(0, "founder:fukuda")
+    assert a != b
+
+
+def test_lineage_no_self_loop_for_carried_over_elite() -> None:
+    """elitism で同 id が複数世代に出ても自己ループ親エッジを作らない (B-RES-2)."""
+    winners = [
+        Winner(generation=0, individual_id="elite", parent_ids=(), score=0.5, rank=0),
+        Winner(generation=1, individual_id="elite", parent_ids=("elite",), score=0.55, rank=0),
+    ]
+    md = render_lineage_mermaid(winners)
+    edge_lines = [ln.strip() for ln in md.splitlines() if "-->" in ln]
+    for line in edge_lines:
+        src, dst = (p.strip() for p in line.split("-->"))
+        assert src != dst, f"self-loop edge: {line}"
+
+
+def test_lineage_parent_edge_uses_earlier_generation() -> None:
+    """子の親は子より前の世代の同 id を指す (B-RES-2 世代跨ぎ解決)."""
+    winners = [
+        Winner(generation=0, individual_id="elite", parent_ids=(), score=0.5, rank=0),
+        Winner(generation=1, individual_id="child", parent_ids=("elite",), score=0.6, rank=0),
+        Winner(generation=1, individual_id="elite", parent_ids=("elite",), score=0.55, rank=1),
+    ]
+    md = render_lineage_mermaid(winners)
+    g0_elite = _node_id(0, "elite")
+    g1_child = _node_id(1, "child")
+    assert f"{g0_elite} --> {g1_child}" in md
