@@ -73,5 +73,62 @@ def test_dashboard_sparkline_handles_edge_cases() -> None:
 def test_dashboard_handles_missing_dir(tmp_path: Path) -> None:
     missing = tmp_path / "nonexistent"
     assert ed._load_summary(missing) is None
+    assert ed._load_manifest(missing) is None
     assert ed._load_migrations(missing) == []
     assert ed._load_island_jsonl(missing) == {}
+
+
+def test_dashboard_progress_completed(tmp_path: Path) -> None:
+    _generate_run(tmp_path)
+    islands_data = ed._load_island_jsonl(tmp_path)
+    summary = ed._load_summary(tmp_path)
+    manifest = ed._load_manifest(tmp_path)
+    progress = ed._compute_progress(islands_data, manifest, summary)
+    assert progress["status"] == "completed"
+    assert progress["max_gen"] == 4
+    assert progress["current_gen"] == 4
+    assert progress["progress_ratio"] == 1.0
+
+
+def test_dashboard_progress_running(tmp_path: Path) -> None:
+    """manifest だけあって summary がない (実行中) 状態の進捗率."""
+    manifest = {
+        "started_at_epoch": 0.0,
+        "problem": "sphere",
+        "n_islands": 2,
+        "island_size": 4,
+        "migration_interval": 2,
+        "migration_size": 1,
+        "topology": "ring",
+        "migration_policy": "best",
+        "max_generations": 10,
+        "max_workers": 1,
+        "seed": 1,
+    }
+    islands_data = {
+        0: [{"wall_gen": i, "best_score": -i, "diversity_l2": 1.0, "generation": i, "n_individuals": 4} for i in range(3)],
+        1: [{"wall_gen": i, "best_score": -i, "diversity_l2": 1.0, "generation": i, "n_individuals": 4} for i in range(3)],
+    }
+    progress = ed._compute_progress(islands_data, manifest, summary=None)
+    assert progress["status"] == "running"
+    assert progress["current_gen"] == 3
+    assert progress["max_gen"] == 10
+    assert 0.25 < progress["progress_ratio"] < 0.35
+
+
+def test_dashboard_progress_idle() -> None:
+    progress = ed._compute_progress({}, manifest=None, summary=None)
+    assert progress["status"] == "idle"
+    assert progress["current_gen"] == 0
+
+
+def test_ascii_progress_bar_clamp() -> None:
+    assert len(ed._ascii_progress_bar(0.0)) == ed._PROGRESS_BAR_WIDTH
+    assert len(ed._ascii_progress_bar(1.0)) == ed._PROGRESS_BAR_WIDTH
+    assert ed._ascii_progress_bar(0.0).count("█") == 0
+    assert ed._ascii_progress_bar(1.0).count("░") == 0
+    assert "█" in ed._ascii_progress_bar(0.5)
+    assert "░" in ed._ascii_progress_bar(0.5)
+    # clamp out-of-range
+    assert len(ed._ascii_progress_bar(-1.0)) == ed._PROGRESS_BAR_WIDTH
+    assert len(ed._ascii_progress_bar(2.0)) == ed._PROGRESS_BAR_WIDTH
