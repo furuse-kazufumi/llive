@@ -81,16 +81,30 @@ def test_c_factors_can_be_overridden_in_constructor() -> None:
 def test_to_dict_is_nested_dict() -> None:
     g = Genome3D.default()
     d = g.to_dict()
-    assert set(d.keys()) == {"c_impl", "c_prompt", "c_meta"}
+    assert set(d.keys()) == {"c_impl", "c_prompt", "c_meta", "c_factors"}
     assert isinstance(d["c_impl"], dict)
     assert isinstance(d["c_prompt"], dict)
     assert isinstance(d["c_meta"], dict)
+    assert isinstance(d["c_factors"], dict)
 
 
 def test_from_dict_round_trip() -> None:
     g0 = Genome3D.default()
     g1 = Genome3D.from_dict(g0.to_dict())
     assert g0 == g1
+
+
+def test_from_dict_backward_compat_without_c_factors() -> None:
+    """c_factors キーが欠落した legacy dict も読めるべき (backward-compat)."""
+    g0 = Genome3D.default()
+    legacy = g0.to_dict()
+    legacy.pop("c_factors")
+    g1 = Genome3D.from_dict(legacy)
+    # c_factors は default で埋まる
+    assert g1.c_factors == ThoughtFactorPerLayerChromosome.default()
+    assert g1.c_impl == g0.c_impl
+    assert g1.c_prompt == g0.c_prompt
+    assert g1.c_meta == g0.c_meta
 
 
 def test_round_trip_after_neighborhood_sample() -> None:
