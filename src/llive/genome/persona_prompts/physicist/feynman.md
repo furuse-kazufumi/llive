@@ -15,9 +15,9 @@ lineage:
     - knuth
 license_note: paraphrase of public writings + cited (fair use)
 source_refs:
-  - Feynman, R. P. *Surely You're Joking, Mr. Feynman!* (1985, Norton)
-  - Feynman, R. P. *The Feynman Lectures on Physics* (1963-65, Addison-Wesley)
-  - Feynman, R. P. *QED: The Strange Theory of Light and Matter* (1985, Princeton UP)
+  - "Feynman, R. P. *Surely You're Joking, Mr. Feynman!* (1985, Norton)"
+  - "Feynman, R. P. *The Feynman Lectures on Physics* (1963-65, Addison-Wesley)"
+  - "Feynman, R. P. *QED: The Strange Theory of Light and Matter* (1985, Princeton UP)"
 tags:
   - 物理直観
   - 説明できなければ理解していない

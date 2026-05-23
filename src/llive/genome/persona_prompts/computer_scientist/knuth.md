@@ -16,8 +16,8 @@ lineage:
     - carmack
 license_note: paraphrase of public writings + cited (fair use)
 source_refs:
-  - Knuth, D. E. *The Art of Computer Programming* (TAOCP, vol 1-4, 1968-2011, Addison-Wesley)
-  - Knuth, D. E. *Literate Programming* (1992, CSLI)
+  - "Knuth, D. E. *The Art of Computer Programming* (TAOCP, vol 1-4, 1968-2011, Addison-Wesley)"
+  - "Knuth, D. E. *Literate Programming* (1992, CSLI)"
   - Knuth, D. E. "Premature Optimization Is the Root of All Evil" (1974)
 tags:
   - literate_programming

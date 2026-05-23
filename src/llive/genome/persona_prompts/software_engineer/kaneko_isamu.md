@@ -16,7 +16,7 @@ license_note: paraphrase of public writings + court documents (fair use)
 source_refs:
   - 金子勇『Winny の技術』(2005, ASCII)
   - 金子勇 EDLA 論文 "Evolutionary Distributed Learning Algorithm" (1999, 東大博士論文)
-  - 壇俊光『Winny 事件』(2014, インプレスR&D)
+  - "壇俊光『Winny 事件』(2014, インプレスR&D)"
 tags:
   - P2P
   - Winny
