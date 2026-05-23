@@ -124,7 +124,7 @@ llive のメイン路線。実装在庫が豊富:
 | アルゴリズム | 種別 | llive 実装 |
 |---|---|---|
 | **GA** (Genetic Algorithm) | base | ✅ `EvolutionLoop` |
-| **CMA-ES** (Hansen 2003) | covariance adaptive | 検討余地 (継続 numeric に強) |
+| **CMA-ES** (Hansen 2003) | covariance adaptive | ✅ **skeleton 着地** (`cma_es.py`, Genome3D.c_factors 40-dim, EvolutionLoop 疎結合) |
 | **Differential Evolution** (Storn 1997) | vector difference | 検討余地 |
 | **NSGA-II** (Deb 2002) | 多目的 Pareto | ✅ `nsga2.py` |
 | **Island Model** (Cohoon 1987) | 分散進化 + migration | ✅ `island_model.py` + dashboard 着地 (本日) |
