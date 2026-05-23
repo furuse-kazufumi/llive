@@ -287,22 +287,66 @@ def test_intra_layer_crossover_each_layer_independent_50_50() -> None:
         assert 0.45 <= ratio <= 0.55, f"{label}: {ratio:.3f} not in [0.45, 0.55]"
 
 
-def test_intra_layer_crossover_all_8_combinations_appear() -> None:
-    """seed 固定 + 多数試行で 2^3 = 8 通りの組合せが少なくとも 1 回は出る."""
+def test_intra_layer_crossover_all_16_combinations_appear() -> None:
+    """seed 固定 + 多数試行で 2^4 = 16 通り (impl/prompt/meta/factors) が少なくとも 1 回は出る."""
     rng = np.random.default_rng(7)
     pa, pb = _make_distinct_parents()
-    seen: set[tuple[bool, bool, bool]] = set()
-    for _ in range(500):
+    # 親 A / 親 B の c_factors を識別できるように違う値で上書き
+    pa = Genome3D(
+        c_impl=pa.c_impl,
+        c_prompt=pa.c_prompt,
+        c_meta=pa.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(
+            np.zeros((10, 4))
+        ),
+    )
+    pb = Genome3D(
+        c_impl=pb.c_impl,
+        c_prompt=pb.c_prompt,
+        c_meta=pb.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(
+            np.ones((10, 4))
+        ),
+    )
+    seen: set[tuple[bool, bool, bool, bool]] = set()
+    for _ in range(2000):
         child = intra_layer_crossover(pa, pb, rng)
         key = (
             child.c_impl == pa.c_impl,
             child.c_prompt == pa.c_prompt,
             child.c_meta == pa.c_meta,
+            child.c_factors == pa.c_factors,
         )
         seen.add(key)
-        if len(seen) == 8:
+        if len(seen) == 16:
             break
-    assert len(seen) == 8, f"8 通り出るはずが {len(seen)} 通りしか出ない: {seen}"
+    assert len(seen) == 16, f"16 通り出るはずが {len(seen)} 通りしか出ない: {seen}"
+
+
+def test_intra_layer_crossover_c_factors_50_50() -> None:
+    """c_factors も独立 50/50 で親 A/B から継承."""
+    rng = np.random.default_rng(20260523)
+    pa, pb = _make_distinct_parents()
+    pa = Genome3D(
+        c_impl=pa.c_impl,
+        c_prompt=pa.c_prompt,
+        c_meta=pa.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(np.zeros((10, 4))),
+    )
+    pb = Genome3D(
+        c_impl=pb.c_impl,
+        c_prompt=pb.c_prompt,
+        c_meta=pb.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(np.ones((10, 4))),
+    )
+    n_trials = 2000
+    factors_from_a = 0
+    for _ in range(n_trials):
+        child = intra_layer_crossover(pa, pb, rng)
+        if child.c_factors == pa.c_factors:
+            factors_from_a += 1
+    ratio = factors_from_a / n_trials
+    assert 0.45 <= ratio <= 0.55, f"c_factors from_a ratio {ratio:.3f} not 50/50"
 
 
 # ===========================================================================
