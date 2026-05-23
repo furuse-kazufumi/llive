@@ -57,6 +57,7 @@ from llive.perf.evolutionary.loop import (
     EvolutionConfig,
     EvolutionLoop,
     EvolutionResult,
+    _resume_from_snapshot,
 )
 from llive.perf.evolutionary.persona import (
     PERSONA_ONTOLOGY,
