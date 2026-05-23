@@ -350,19 +350,30 @@ def run_persona_evolution(
         generation_seeds=[seed],
     )
 
-    # ---- winners.jsonl 世代追記 hook ----
+    # ---- winners.jsonl + metrics.jsonl 世代追記 hook ----
+    # on_generation_end は **毎世代** 発火する (loop.py)。EvolutionConfig の
+    # checkpoint_every は snapshot/generations.jsonl の粒度を制御するが、SVG の
+    # 滑らかな時系列には毎世代の集計が要るので、metrics.jsonl をフックで別途書く。
+    # → snapshot は粗く (checkpoint_every)、metrics は毎世代、と分離する。
     winners_path: Path | None = None
+    metrics_path: Path | None = None
     on_generation_end = None
     if out_dir is not None:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         winners_path = out_dir / "winners.jsonl"
-        # 過去 run の追記混入を防ぐため新規 run 開始時に消す。
-        if winners_path.exists():
-            winners_path.unlink()
+        metrics_path = out_dir / "metrics.jsonl"
+        # 過去 run の追記混入を防ぐため新規 run 開始時に消す (resume 時は残す)。
+        if resume_from is None:
+            for p in (winners_path, metrics_path):
+                if p.exists():
+                    p.unlink()
 
-        def on_generation_end(pop: Population, _stats) -> None:  # noqa: ANN001
+        def on_generation_end(pop: Population, stats) -> None:  # noqa: ANN001
             write_winners_jsonl(winners_path, pop, top_n=3)
+            # 毎世代の集計 (best/mean/std/diversity) を append = SVG 時系列材料。
+            with metrics_path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(stats.to_dict(), ensure_ascii=False) + "\n")
 
     # ---- EvolutionLoop (default operators) ----
     loop = EvolutionLoop(
