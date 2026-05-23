@@ -118,6 +118,18 @@ class Genome:
             return {label: v for label, v in zip(self.labels, self.values, strict=True)}
         return {f"dim_{i}": v for i, v in enumerate(self.values)}
 
+    def value_by_label(self, label: str, fallback_index: int) -> float:
+        """値を **label** で解決する.
+
+        position 直読み (``values[i]``) は genome layout 依存で誤読を生むため
+        (B1/A-1 バグの原因)、label が存在すればそれで解決する. labels が無い、
+        または label が不在の場合のみ ``fallback_index`` に退避 (後方互換).
+        FullSense Spec §E3 (genome dimensionality invariant) / §I1 (provenance) 準拠.
+        """
+        if self.labels and label in self.labels:
+            return self.values[self.labels.index(label)]
+        return self.values[fallback_index]
+
     # -- serialize ---------------------------------------------------------
 
     def to_dict(self) -> dict[str, Any]:
