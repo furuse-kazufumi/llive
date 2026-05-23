@@ -213,6 +213,7 @@ from llive.perf.evolutionary.peer_evaluation import (
 )
 from llive.perf.evolutionary.persona import (
     PERSONA_ONTOLOGY,
+    RESEARCH_METHODOLOGY_PERSONA_IDS,
     THOUGHT_FACTORS,
     Persona,
     PersonaComposition,
