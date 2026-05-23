@@ -187,6 +187,26 @@ def test_custom_fitness_fn_marks_not_proxy() -> None:
     assert result.used_proxy_fitness is False
 
 
+# ---------------------------------------------------------------------------
+# immigration fail-closed (B-LOGIC-2)
+# ---------------------------------------------------------------------------
+
+
+def test_immigration_without_resume_is_fail_closed() -> None:
+    """inject_persona_ids 指定 + resume_from なしは silent no-op でなく ValueError.
+
+    immigration は resume snapshot に対して行う設計。inject を指定したのに何も
+    起きないと「ペルソナ段階的追加」要件が静かに無視される (B-LOGIC-2)。
+    """
+    with pytest.raises(ValueError, match="resume_from"):
+        run_persona_evolution(
+            population_size=6,
+            generations=1,
+            inject_persona_ids=("friston",),
+            resume_from=None,
+        )
+
+
 def test_no_out_dir_skips_files() -> None:
     result = run_persona_evolution(population_size=6, generations=2, seed=0)
     assert result.winners_path is None
