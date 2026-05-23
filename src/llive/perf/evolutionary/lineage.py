@@ -207,13 +207,21 @@ def write_lineage_mermaid_file(
 # ---------------------------------------------------------------------------
 
 
+def _sanitize_id(individual_id: str) -> str:
+    """Mermaid node id 用に英数字/_ のみへ変換 (コロン・ハイフン等が構文を壊すため).
+
+    ``[:10]`` 切り詰めはせず full id を sanitize し、prefix 共通時の衝突を避ける (B-RES-1).
+    """
+    return re.sub(r"[^A-Za-z0-9_]", "_", individual_id)
+
+
 def _node_id(generation: int, individual_id: str) -> str:
-    # Mermaid node id は alpha-num 開始必須 + 短く
-    return f"g{generation}_{individual_id[:10]}"
+    # Mermaid node id は alpha-num 開始必須. sanitize で安全化.
+    return f"g{generation}_{_sanitize_id(individual_id)}"
 
 
 def _ghost_node_id(generation: int, individual_id: str) -> str:
-    return f"gh{generation}_{individual_id[:10]}"
+    return f"gh{generation}_{_sanitize_id(individual_id)}"
 
 
 __all__ = [
