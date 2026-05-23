@@ -249,7 +249,7 @@ def llm_fitness_factory(
             breakdown=breakdown,
             runtime_metadata=dict(md),
             n_samples=len(config.prompts) * config.n_stability_samples,
-            notes=f"llm_fitness (5-axis, backend={_BACKEND_NAMES[int(genome.values[0])]})",
+            notes=f"llm_fitness (5-axis, backend={_BACKEND_NAMES[backend_id]})",
         )
 
     return _fitness
