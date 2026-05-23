@@ -432,6 +432,7 @@ __all__ = [
     "PersonaOverlapPenalty",
     "PersonaSurvivalAnalysis",
     "PersonaZoneShareEvent",
+    "RESEARCH_METHODOLOGY_PERSONA_IDS",
     "PhyEdge",
     "PhyNode",
     "PhyTree",
