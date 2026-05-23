@@ -289,3 +289,67 @@ def test_openai_backend_passes_base_url_env_to_client(
 
     OpenAIBackend()
     fake_openai.OpenAI.assert_called_once_with(base_url="http://localhost:8080/v1")
+
+
+# ---------------------------------------------------------------------------
+# Phase C-1.4 (Gemini #2 Stage 1, 2026-05-22): prefix_embeddings —
+# KV cache Memory Translator Embedding 結合経路.
+#
+# Open LLM (Ollama / llama.cpp / HF Transformers) で memory entry embedding を
+# inputs_embeds 経由で直接注入する経路. Mock は accept + count を返す.
+# ---------------------------------------------------------------------------
+
+
+def test_mock_backend_accepts_prefix_embeddings() -> None:
+    """MockBackend accepts prefix_embeddings — count appended to text + raw."""
+    backend = MockBackend()
+    req = GenerateRequest(
+        prompt="hello",
+        prefix_embeddings=[
+            ("mem_episodic_1", [0.1, 0.2, 0.3]),
+            ("mem_semantic_2", [0.4, 0.5, 0.6]),
+        ],
+    )
+    resp = backend.generate(req)
+    assert "2 prefix embeddings" in resp.text
+    assert resp.raw["prefix_count"] == 2
+    assert resp.raw["prefix_labels"] == ["mem_episodic_1", "mem_semantic_2"]
+
+
+def test_mock_backend_single_prefix_embedding_singular() -> None:
+    """Singular grammar — 1 embedding → 'prefix embedding' (not 'embeddings')."""
+    backend = MockBackend()
+    req = GenerateRequest(prompt="x", prefix_embeddings=[("only_one", [0.0])])
+    resp = backend.generate(req)
+    assert "1 prefix embedding" in resp.text
+    assert "1 prefix embeddings" not in resp.text
+
+
+def test_mock_backend_empty_prefix_embeddings_omits_raw() -> None:
+    """Empty list → no prefix_count/prefix_labels in raw (clean API surface)."""
+    backend = MockBackend()
+    req = GenerateRequest(prompt="x", prefix_embeddings=[])
+    resp = backend.generate(req)
+    assert "prefix_count" not in resp.raw
+    assert "prefix_labels" not in resp.raw
+    assert "prefix embedding" not in resp.text
+
+
+def test_mock_backend_supports_prefix_embeddings_flag() -> None:
+    """MockBackend.supports_prefix_embeddings is True (used as test double)."""
+    assert MockBackend().supports_prefix_embeddings is True
+
+
+def test_default_backend_does_not_support_prefix_embeddings() -> None:
+    """Abstract LLMBackend default is False — closed LLMs (Anthropic/OpenAI)
+    inherit this and must explicitly opt-in."""
+
+    class _Stub(LLMBackend):
+        name = "stub"
+
+        def generate(self, request: GenerateRequest) -> Any:
+            from llive.llm import GenerateResponse
+
+            return GenerateResponse(text="", backend=self.name)
+
+    assert _Stub().supports_prefix_embeddings is False
