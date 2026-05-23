@@ -97,6 +97,22 @@ from llive.perf.evolutionary.genome_3d import (
     cross_layer_crossover,
     intra_layer_crossover,
 )
+from llive.perf.evolutionary.genome_version import (
+    FACTOR_GENOME_DIM,
+    FLAT_GENOME_DIM,
+    GENOME_FACTORS,
+    GENOME_V1_FLAT,
+    GENOME_V2_SIGMA,
+    GENOME_VERSION,
+    GENOME_VERSION_DIMS,
+    KNOWN_GENOME_VERSIONS,
+    assert_factor_dim,
+    assert_flat_dim,
+    assert_no_fourth_dim,
+    assert_sigma_view_dim,
+    dispatch_target,
+    expected_dim,
+)
 from llive.perf.evolutionary.impl_chromosome import (
     KNOWN_IMPL_ALGORITHM_FAMILIES,
     KNOWN_IMPL_JUDGE_MODELS,
