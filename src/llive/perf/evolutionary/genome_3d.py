@@ -188,8 +188,8 @@ def intra_layer_crossover(
     """各層を独立に 50/50 で choice (層内 crossover).
 
     v0.F 要件 §3.3 の「層内 crossover」. 親 A / 親 B のどちらの ``c_impl`` が
-    選ばれるかは独立コインフリップで決まり, ``c_prompt`` / ``c_meta`` も
-    同様. 3 層独立 → 2^3 = 8 通りの組合せが等確率で生まれる.
+    選ばれるかは独立コインフリップで決まり, ``c_prompt`` / ``c_meta`` /
+    ``c_factors`` も同様. 4 層独立 → 2^4 = 16 通りの組合せが等確率で生まれる.
 
     Args:
         parent_a: 親 A. frozen Genome3D.
@@ -203,6 +203,9 @@ def intra_layer_crossover(
         c_impl=parent_a.c_impl if rng.random() < 0.5 else parent_b.c_impl,
         c_prompt=parent_a.c_prompt if rng.random() < 0.5 else parent_b.c_prompt,
         c_meta=parent_a.c_meta if rng.random() < 0.5 else parent_b.c_meta,
+        c_factors=parent_a.c_factors
+        if rng.random() < 0.5
+        else parent_b.c_factors,
     )
 
 
@@ -211,28 +214,35 @@ def cross_layer_crossover(
     parent_b: Genome3D,
     rng: np.random.Generator,
 ) -> Genome3D:
-    """親 A から code 層, 親 B から prompt 層, meta 層は片親優位 (層間 crossover).
+    """親 A から code 層, 親 B から prompt 層, meta / factors は混合 (層間 crossover).
 
     v0.F 要件 §3.3 の「層間 crossover」. cross-substrate な遺伝物質交換を模倣.
 
     - ``c_impl`` は **常に親 A** から (code substrate fixed)
     - ``c_prompt`` は **常に親 B** から (prompt substrate fixed)
     - ``c_meta`` は 50/50 で片親優位 (どちらのアルゴリズムを受け継ぐかは確率的)
+    - ``c_factors`` は **因子ごと 50/50 混合** (`crossover_per_factor`):
+      行 = 思考因子, ということは「ある因子の層別 profile は親 A から,
+      別の因子の層別 profile は親 B から」を継承する. これは cross-substrate な
+      因子分布交換になり, code/prompt 層の cross 遺伝と同じく「親 A の世界観 +
+      親 B の世界観」を一段細かく混ぜる.
 
     Args:
-        parent_a: コード層 donor. frozen Genome3D.
-        parent_b: プロンプト層 donor. frozen Genome3D.
+        parent_a: コード層 donor + factor 混合の親 A. frozen Genome3D.
+        parent_b: プロンプト層 donor + factor 混合の親 B. frozen Genome3D.
         rng: numpy RNG.
 
     Returns:
-        子 Genome3D. ``c_impl=parent_a.c_impl``, ``c_prompt=parent_b.c_prompt``,
-        ``c_meta`` は片親優位.
+        子 Genome3D.
     """
     use_a_meta = rng.random() < 0.5
     return Genome3D(
         c_impl=parent_a.c_impl,
         c_prompt=parent_b.c_prompt,
         c_meta=parent_a.c_meta if use_a_meta else parent_b.c_meta,
+        c_factors=_factor_crossover_per_factor(
+            parent_a.c_factors, parent_b.c_factors, rng
+        ),
     )
 
 
