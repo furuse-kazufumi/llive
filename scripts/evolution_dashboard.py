@@ -44,6 +44,13 @@ except ImportError:
 
 _SPARK_GLYPHS = "▁▂▃▄▅▆▇█"
 _DIVERSITY_WARN_RATIO = 10.0  # diversity_floor (1e-6) × 10 を warning 閾値に
+_PROGRESS_BAR_WIDTH = 32
+
+
+def _ascii_progress_bar(ratio: float, width: int = _PROGRESS_BAR_WIDTH) -> str:
+    ratio = max(0.0, min(1.0, ratio))
+    filled = int(width * ratio)
+    return "█" * filled + "░" * (width - filled)
 
 
 def _ensure_utf8_stdout() -> None:
