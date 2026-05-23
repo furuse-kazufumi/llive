@@ -216,8 +216,11 @@ def llm_fitness_factory(
                 n_samples=0,
                 notes=f"purity violation (culled): {exc}",
             )
-        temperature = float(genome.values[1])
-        top_p = float(genome.values[2])
+        backend_id = max(
+            0, min(len(_BACKEND_NAMES) - 1, int(_genome_field(genome, "backend_id", 0)))
+        )
+        temperature = float(_genome_field(genome, "temperature", 1))
+        top_p = float(_genome_field(genome, "top_p", 2))
         request_params = {
             "max_tokens": 64,
             "temperature": max(0.0, min(2.0, temperature)),
