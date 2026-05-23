@@ -245,6 +245,8 @@ class PersonaEvolutionResult:
     lineage_path: Path | None
     founder_ids: tuple[str, ...]
     used_proxy_fitness: bool
+    #: immigration で走行中に追加投入した persona id (resume + inject 時のみ非空)。
+    injected_persona_ids: tuple[str, ...] = ()
 
     def to_dict(self) -> dict:
         return {
@@ -253,6 +255,7 @@ class PersonaEvolutionResult:
             "lineage_path": str(self.lineage_path) if self.lineage_path else None,
             "founder_ids": list(self.founder_ids),
             "used_proxy_fitness": self.used_proxy_fitness,
+            "injected_persona_ids": list(self.injected_persona_ids),
         }
 
 
