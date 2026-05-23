@@ -90,9 +90,23 @@ class LlmFitnessConfig:
     """backend を作る factory. None なら全部 MockBackend (Phase 4 mock default)."""
 
 
+def _genome_field(genome: Genome, label: str, fallback_index: int) -> float:
+    """genome 値を **label** で解決する (position 直読みは genome layout 依存で危険).
+
+    19-dim LIVE_VARIANT genome (backend_id=index13) と 5-dim LLM genome
+    (backend_id=index0) のどちらでも正しく読む. labels が無い/label 不在の genome は
+    fallback_index に退避 (後方互換). FullSense Spec §E3 (genome dimensionality
+    invariant) / §I1 (provenance: breakdown が label に対応) 準拠.
+    gem-critic 検証で発見した致命バグ B1 の修正.
+    """
+    if genome.labels and label in genome.labels:
+        return genome.values[genome.labels.index(label)]
+    return genome.values[fallback_index]
+
+
 def _resolve_backend(genome: Genome, config: LlmFitnessConfig) -> LLMBackend:
     """Genome の backend_id を実 backend に解決. Phase 4 mock では MockBackend 固定."""
-    backend_idx = int(genome.values[0])
+    backend_idx = int(_genome_field(genome, "backend_id", 0))
     backend_idx = max(0, min(len(_BACKEND_NAMES) - 1, backend_idx))
     backend_name = _BACKEND_NAMES[backend_idx]
     if config.backend_factory is not None:
