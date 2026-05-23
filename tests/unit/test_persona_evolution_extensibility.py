@@ -123,3 +123,68 @@ def test_determinism_enables_regression_detection() -> None:
     a = run_persona_evolution(RESEARCH_METHODOLOGY_PERSONA_IDS, **kw)
     b = run_persona_evolution(RESEARCH_METHODOLOGY_PERSONA_IDS, **kw)
     assert a.evolution_result.best_score == b.evolution_result.best_score
+
+
+# 7. immigration — 走行中の集団に persona を追加しても破綻しない (段階的追加の連続化)
+def test_immigration_adds_persona_midrun_without_breakage(tmp_path: Path) -> None:
+    out = tmp_path / "evo"
+    # 初回 run (founders 2 名) + snapshot
+    r1 = run_persona_evolution(
+        ["friston", "millidge"],
+        population_size=8,
+        generations=3,
+        seed=0,
+        out_dir=out,
+        patience=99,
+        persist_generation_log=True,
+        checkpoint_every=1,
+    )
+    gen1 = r1.evolution_result.final_population.generation
+    assert r1.injected_persona_ids == ()
+
+    # resume + 新ペルソナ 1 名を移民 (mid-run 追加)
+    r2 = run_persona_evolution(
+        ["friston", "millidge"],
+        population_size=8,
+        generations=2,
+        seed=0,
+        out_dir=out,
+        patience=99,
+        persist_generation_log=True,
+        checkpoint_every=1,
+        resume_from=out,
+        inject_persona_ids=["isomura-takuya"],
+    )
+    # 移民が記録され、世代が前進、集団サイズ不変、破綻なし
+    assert r2.injected_persona_ids == ("isomura-takuya",)
+    assert r2.evolution_result.final_population.generation > gen1
+    assert r2.evolution_result.final_population.size == 8
+    # extensibility 契約: 移民後も全個体 19-dim flat 不変
+    for ind in r2.evolution_result.final_population.individuals:
+        assert_flat_dim(ind.genome.as_array())
+
+
+# 8. immigration — 集団全置換になる過大投入は fail-closed
+def test_immigration_rejects_oversized_injection(tmp_path: Path) -> None:
+    out = tmp_path / "evo2"
+    run_persona_evolution(
+        ["friston"],
+        population_size=3,
+        generations=2,
+        seed=0,
+        out_dir=out,
+        patience=99,
+        persist_generation_log=True,
+        checkpoint_every=1,
+    )
+    # inject 数 >= 集団サイズ → ValueError (集団を全置換しない)
+    with pytest.raises(ValueError):
+        run_persona_evolution(
+            ["friston"],
+            population_size=3,
+            generations=1,
+            seed=0,
+            out_dir=out,
+            resume_from=out,
+            inject_persona_ids=["friston", "millidge", "isomura-takuya"],
+        )
