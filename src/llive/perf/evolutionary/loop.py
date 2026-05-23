@@ -139,10 +139,21 @@ class EvolutionLoop:
         if config.resume_from is not None:
             resumed = _resume_from_snapshot(config.resume_from)
             if resumed is not None:
+                # bounds も同期する (B-LOGIC-3): しないと resumed 個体の genome dim と
+                # population.bounds dim が食い違い、以後の operator/clip が破綻する。
                 population.individuals = resumed.individuals
+                population.bounds = resumed.bounds
                 population.generation = resumed.generation
                 population.seed = resumed.seed
                 population.generation_seeds = list(resumed.generation_seeds)
+                # snapshot 整合性検証 (fail-closed)。
+                for ind in population.individuals:
+                    if ind.genome.n_dims != population.bounds.n_dims:
+                        raise ValueError(
+                            f"resumed individual genome dim ({ind.genome.n_dims}) != "
+                            f"snapshot bounds dim ({population.bounds.n_dims}); "
+                            "snapshot が破損している可能性。"
+                        )
 
         rng = np.random.default_rng(population.seed)
 
