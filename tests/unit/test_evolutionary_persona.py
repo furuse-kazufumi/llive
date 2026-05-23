@@ -29,8 +29,69 @@ from llive.perf.evolutionary.thought_factor_per_layer import (
 # ---------------------------------------------------------------------------
 
 
-def test_ontology_has_10_personas() -> None:
-    assert len(PERSONA_ONTOLOGY) == 10
+def test_ontology_has_historical_and_research_personas() -> None:
+    # 歴史人物 10 名 + 研究方法論ペルソナ 4 名 (2026-05-23 追加) = 14
+    assert len(PERSONA_ONTOLOGY) == 14
+    assert len(RESEARCH_METHODOLOGY_PERSONA_IDS) == 4
+    for pid in RESEARCH_METHODOLOGY_PERSONA_IDS:
+        assert pid in PERSONA_ONTOLOGY
+
+
+def test_research_methodology_personas_well_formed() -> None:
+    """furuse + 予測符号化評議会 (friston/millidge/isomura) の整合性."""
+    for pid in RESEARCH_METHODOLOGY_PERSONA_IDS:
+        p = get_persona(pid)
+        assert len(p.factor_affinity) == len(THOUGHT_FACTORS)
+        assert p.thought_patterns  # 非空
+        assert p.fields  # 非空
+
+    # furuse 調査者: 来歴 (provenance) が最大級, 自己拡張は低い (規律的)
+    furuse = get_persona("furuse-kazufumi")
+    fa = dict(zip(THOUGHT_FACTORS, furuse.factor_affinity, strict=True))
+    assert fa["factor_provenance"] >= 0.9
+    assert fa["factor_self_extend"] <= 0.4
+
+    # Friston: 自己拡張/構造化が高い (統一), 来歴は低い
+    friston = get_persona("friston")
+    ffa = dict(zip(THOUGHT_FACTORS, friston.factor_affinity, strict=True))
+    assert ffa["factor_self_extend"] >= 0.9
+    assert ffa["factor_provenance"] <= 0.5
+
+    # Millidge: 不確実性 (honest disclosure 番人) が最大級
+    millidge = get_persona("millidge")
+    mfa = dict(zip(THOUGHT_FACTORS, millidge.factor_affinity, strict=True))
+    assert mfa["factor_uncertainty"] >= 0.9
+
+
+def test_research_personas_convert_to_genome() -> None:
+    """ペルソナ親和度 → ThoughtFactorPerLayerChromosome へゲノム化できる (founder 種)."""
+    for pid in RESEARCH_METHODOLOGY_PERSONA_IDS:
+        p = get_persona(pid)
+        chrom = ThoughtFactorPerLayerChromosome.from_persona_affinity(
+            p.factor_affinity, broadcast_strategy="uniform"
+        )
+        arr = chrom.as_array()
+        assert arr.shape[0] == NUM_THOUGHT_FACTORS
+        # uniform broadcast なので各層が persona affinity と一致
+        for li in range(arr.shape[1]):
+            np.testing.assert_allclose(arr[:, li], p.factor_affinity)
+
+
+def test_research_persona_composition_and_mutation() -> None:
+    """research ペルソナで composition を作り mutation が壊れないこと (世代交代に乗る)."""
+    rng = np.random.default_rng(0)
+    comp = PersonaComposition(
+        persona_ids=("friston", "millidge", "isomura-takuya"),
+        weights=(1.0, 1.0, 1.0),
+        import_policy="moderator",
+    ).normalize_weights()
+    affinity = comp.effective_factor_affinity()
+    assert affinity.shape == (len(THOUGHT_FACTORS),)
+    mut = PersonaCompositionMutation()
+    child = mut(comp, rng)
+    assert 1 <= len(child.persona_ids) <= 5
+    for pid in child.persona_ids:
+        assert pid in PERSONA_ONTOLOGY
 
 
 def test_thought_factors_length_10() -> None:
