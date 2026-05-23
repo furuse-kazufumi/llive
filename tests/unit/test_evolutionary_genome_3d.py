@@ -1,15 +1,18 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Genome3D (v0.F EV-13 + v0.I EV-21 join) — unit tests.
+"""Genome3D (v0.F EV-13 + v0.I EV-21 + 2026-05-23 EV-22 c_factors join) — unit tests.
 
-3 階建てゲノム結合 dataclass の skeleton カバー範囲:
+多階建てゲノム結合 dataclass のカバー範囲 (class 名は歴史的経緯で Genome3D だが
+2026-05-23 から c_factors が加わって実質 4 階建て):
 
-1. default 生成 + 3 chromosome 全件 OK
-2. serialization round-trip (nested dict)
-3. kolmogorov_proxy が 3 chromosome の合計と一致
-4. sample_neighborhood が valid Genome3D を返す
-5. intra_layer_crossover: 各層が独立に 50/50 (統計的検証)
-6. cross_layer_crossover: c_impl=a, c_prompt=b 固定 / c_meta 確率的
-7. frozen / hashable 性
+1. default 生成 + 4 chromosome 全件 OK
+2. serialization round-trip (nested dict, c_factors 含む)
+3. backward-compat: c_factors キー無しの dict も読める
+4. kolmogorov_proxy が 4 chromosome の合計と一致
+5. sample_neighborhood が valid Genome3D を返す (c_factors 含む)
+6. intra_layer_crossover: 各層独立 50/50, 2^4 = 16 通り
+7. cross_layer_crossover: c_impl=a / c_prompt=b 固定 / c_meta 確率的 /
+   c_factors は per_factor 混合
+8. frozen / hashable 性
 """
 
 from __future__ import annotations
@@ -25,6 +28,9 @@ from llive.perf.evolutionary.genome_3d import (
 from llive.perf.evolutionary.impl_chromosome import ImplChromosome
 from llive.perf.evolutionary.meta_chromosome import MetaChromosome
 from llive.perf.evolutionary.prompt_chromosome import PromptChromosome
+from llive.perf.evolutionary.thought_factor_per_layer import (
+    ThoughtFactorPerLayerChromosome,
+)
 
 # ===========================================================================
 # A. default factory
