@@ -141,14 +141,26 @@ def render_lineage_mermaid(
         label = f"gen {w.generation} #{w.rank}<br/>{w.individual_id[:8]}<br/>score={w.score:.3f}"
         lines.append(f"    {nid}[\"{label}\"]")
 
-    # edge (親 → 子)
-    by_id = {w.individual_id: w for w in winners_list}
+    # edge (親 → 子). 同 id が複数世代に出る (elitism 持ち越し) ため、id ごとに
+    # 世代リストを持ち、子より前の世代で最も近いものを親とする (B-RES-2)。
+    # 単純な {id: winner} dict だと最後の世代で上書きされ自己ループ/誤親になる。
+    by_id_gens: dict[str, list[Winner]] = defaultdict(list)
+    for w in winners_list:
+        by_id_gens[w.individual_id].append(w)
+
+    def _resolve_parent(parent_id: str, child_generation: int) -> Winner | None:
+        cands = [
+            pw
+            for pw in by_id_gens.get(parent_id, [])
+            if pw.generation < child_generation
+        ]
+        return max(cands, key=lambda pw: pw.generation) if cands else None
+
     edges_emitted: set[tuple[str, str]] = set()
     for w in winners_list:
         child_nid = _node_id(w.generation, w.individual_id)
         for parent_id in w.parent_ids:
-            # 親の世代を辿る (1 つ前世代の winners 内に居れば見つかる)
-            parent_w = by_id.get(parent_id)
+            parent_w = _resolve_parent(parent_id, w.generation)
             if parent_w is None:
                 # 親が winners に居ない場合は generation - 1 の架空 node に
                 ghost_nid = _ghost_node_id(w.generation - 1, parent_id)
