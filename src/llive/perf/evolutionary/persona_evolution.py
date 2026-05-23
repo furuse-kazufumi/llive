@@ -454,6 +454,7 @@ def run_persona_evolution(
         lineage_path=lineage_path,
         founder_ids=founder_ids,
         used_proxy_fitness=used_proxy,
+        injected_persona_ids=injected_ids,
     )
 
 
