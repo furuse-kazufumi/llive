@@ -974,6 +974,8 @@ def resolve_backend(name: str | None = None) -> LLMBackend:
         return JambaBackend()
     if candidate == "diffusion":
         return DiffusionBackend()
+    if candidate in ("hf", "huggingface"):
+        return HFTransformersBackend()
     raise ValueError(f"unknown LLM backend: {candidate!r}")
 
 
