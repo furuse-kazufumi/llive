@@ -83,6 +83,8 @@ def main() -> int:
     args = ap.parse_args()
 
     unknown = [p for p in args.personas if p not in PERSONA_ONTOLOGY]
+    if args.inject:
+        unknown += [p for p in args.inject if p not in PERSONA_ONTOLOGY]
     if unknown:
         print(f"[ERROR] unknown persona ids: {unknown}", file=sys.stderr)
         return 2
