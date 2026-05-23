@@ -227,6 +227,17 @@ from llive.perf.evolutionary.persona_corpus_loader import (
     PersonaCandidate,
     PersonaCorpusLoader,
 )
+from llive.perf.evolutionary.persona_evolution import (
+    FOUNDER_ID_PREFIX,
+    PersonaEvolutionResult,
+    build_founder_genome,
+    build_founder_individuals,
+    compare_against_llm_baselines,
+    founder_persona_id,
+    is_founder,
+    read_winners,
+    run_persona_evolution,
+)
 from llive.perf.evolutionary.persona_import import (
     PersonaImportAlgorithm,
     PersonaImportPlan,
