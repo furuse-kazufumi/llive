@@ -533,6 +533,7 @@ __all__ = [
     "persona_dissimilarity",
     "random_persona_composition",
     "read_winners",
+    "render_evolution_svg",
     "render_lineage_mermaid",
     "rosenbrock_fitness",
     "run_persona_evolution",
