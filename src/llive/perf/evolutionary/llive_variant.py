@@ -274,14 +274,14 @@ def _compute_variant_score(breakdown: dict[str, float], weights: dict[str, float
     latency_ms = breakdown.get("latency_ms", 50.0)
     latency_score = 1.0 / (1.0 + latency_ms / 100.0)
     return (
-        weights["latency"] * latency_score
-        + weights["quality"] * breakdown.get("quality", 0.0)
-        + weights["stability"] * breakdown.get("stability", 0.0)
-        + weights["safety"] * breakdown.get("safety", 0.0)
-        + weights["honesty"] * breakdown.get("honesty", 0.0)
-        + weights["factor_coverage"] * breakdown.get("factor_coverage", 0.0)
-        + weights["memory_efficiency"] * breakdown.get("memory_efficiency", 0.0)
-        + weights["proactive_balance"] * breakdown.get("proactive_balance", 0.0)
+        weights.get("latency", 0.0) * latency_score
+        + weights.get("quality", 0.0) * breakdown.get("quality", 0.0)
+        + weights.get("stability", 0.0) * breakdown.get("stability", 0.0)
+        + weights.get("safety", 0.0) * breakdown.get("safety", 0.0)
+        + weights.get("honesty", 0.0) * breakdown.get("honesty", 0.0)
+        + weights.get("factor_coverage", 0.0) * breakdown.get("factor_coverage", 0.0)
+        + weights.get("memory_efficiency", 0.0) * breakdown.get("memory_efficiency", 0.0)
+        + weights.get("proactive_balance", 0.0) * breakdown.get("proactive_balance", 0.0)
     )
 
 
