@@ -165,30 +165,35 @@ class LlivVariantBuilder:
         values = genome.as_array()
         if values.shape != (19,):
             raise ValueError(f"expected 19-dim genome, got {values.shape}")
-        # ----- 思考因子 weight -----
+        # ----- 思考因子 weight (label 解決で position 依存を排除, A-1) -----
         factor_weights = {
-            label: float(values[i]) for i, label in enumerate(THOUGHT_FACTOR_LABELS)
+            label: float(genome.value_by_label(label, i))
+            for i, label in enumerate(THOUGHT_FACTOR_LABELS)
         }
         # ----- memory tier -----
         memory_thresholds = {
-            "semantic_threshold": float(values[10]),
-            "episodic_threshold": float(values[11]),
-            "structural_decay": float(values[12]),
+            "semantic_threshold": float(genome.value_by_label("semantic_threshold", 10)),
+            "episodic_threshold": float(genome.value_by_label("episodic_threshold", 11)),
+            "structural_decay": float(genome.value_by_label("structural_decay", 12)),
         }
         # ----- backend -----
-        backend_idx = int(max(0, min(len(_BACKEND_NAMES) - 1, values[13])))
+        backend_idx = int(
+            max(0, min(len(_BACKEND_NAMES) - 1, genome.value_by_label("backend_id", 13)))
+        )
         backend_name = _BACKEND_NAMES[backend_idx]
         # ----- sampler -----
-        kv_idx = int(max(0, min(len(_KV_QUANT_NAMES) - 1, values[16])))
+        kv_idx = int(
+            max(0, min(len(_KV_QUANT_NAMES) - 1, genome.value_by_label("kv_quant_id", 16)))
+        )
         sampler = {
-            "temperature": float(values[14]),
-            "top_p": float(values[15]),
+            "temperature": float(genome.value_by_label("temperature", 14)),
+            "top_p": float(genome.value_by_label("top_p", 15)),
             "kv_quant": _KV_QUANT_NAMES[kv_idx],
         }
         # ----- proactive -----
         proactive = {
-            "gift_value_threshold": float(values[17]),
-            "cooldown_minutes": float(values[18]),
+            "gift_value_threshold": float(genome.value_by_label("gift_value_threshold", 17)),
+            "cooldown_minutes": float(genome.value_by_label("cooldown_minutes", 18)),
         }
         data_dir = f"{self.data_dir_root}/{variant_id or 'noid'}"
         return LlivVariantConfig(
