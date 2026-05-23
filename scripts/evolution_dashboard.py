@@ -296,13 +296,45 @@ def _build_migration_panel(migrations: list[dict[str, Any]], limit: int = 10):
     )
 
 
+_STATUS_STYLES = {
+    "running": "bold yellow",
+    "completed": "bold green",
+    "idle": "dim",
+}
+
+
+def _build_progress_panel(progress: dict[str, Any]):
+    status = progress["status"]
+    style = _STATUS_STYLES.get(status, "white")
+    bar = _ascii_progress_bar(progress["progress_ratio"])
+    pct = progress["progress_ratio"] * 100.0
+    eta = progress["eta_seconds"]
+    eta_str = f"ETA {_format_duration(eta)}" if eta is not None else "ETA --"
+    elapsed_str = _format_duration(progress["elapsed_seconds"])
+    line1 = (
+        f"[{style}]{status.upper():>9}[/{style}]  "
+        f"Generation [bold]{progress['current_gen']}[/bold]"
+        f" / {progress['max_gen']}  "
+        f"[cyan]{bar}[/cyan] {pct:5.1f}%"
+    )
+    line2 = f"elapsed {elapsed_str}  |  {eta_str}"
+    return Panel(
+        f"{line1}\n{line2}",
+        title="Evolution Progress",
+        border_style=style if status != "idle" else "dim",
+    )
+
+
 def _render_rich(out_dir: Path) -> Layout:
     islands_data = _load_island_jsonl(out_dir)
     migrations = _load_migrations(out_dir)
     summary = _load_summary(out_dir)
+    manifest = _load_manifest(out_dir)
+    progress = _compute_progress(islands_data, manifest, summary)
     layout = Layout()
     layout.split_column(
-        Layout(_build_island_table(islands_data, summary), name="top"),
+        Layout(_build_progress_panel(progress), name="progress", size=5),
+        Layout(_build_island_table(islands_data, summary), name="middle"),
         Layout(_build_migration_panel(migrations), name="bottom", size=12),
     )
     return layout
