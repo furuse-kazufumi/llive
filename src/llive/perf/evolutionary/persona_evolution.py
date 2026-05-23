@@ -268,6 +268,13 @@ def run_persona_evolution(
     out_dir: Path | None = None,
     fitness_fn: Fitness | None = None,
     log_progress: bool = False,
+    # ---- 長期運用パラメータ (2026-05-23 環境整備: 100→1000 世代研究用) ----
+    patience: int | None = None,
+    diversity_floor: float | None = None,
+    checkpoint_every: int | None = None,
+    resume_from: Path | None = None,
+    max_wallclock_seconds: float | None = None,
+    persist_generation_log: bool = False,
 ) -> PersonaEvolutionResult:
     """ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバ.
 
