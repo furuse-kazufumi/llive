@@ -481,6 +481,8 @@ __all__ = [
     "assert_flat_dim",
     "assert_no_fourth_dim",
     "assert_sigma_view_dim",
+    "build_founder_genome",
+    "build_founder_individuals",
     "build_meta_strategy_variant_bounds",
     "build_panel_from_personas",
     "build_self_adaptive_meta_strategy_variant_bounds",
