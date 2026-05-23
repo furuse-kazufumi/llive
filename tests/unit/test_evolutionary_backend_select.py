@@ -69,7 +69,12 @@ def test_backend_select_ga_runs_three_generations() -> None:
 
 def test_backend_select_with_no_danger_prompts_safety_neutral() -> None:
     fitness_fn = llm_fitness_factory(
-        LlmFitnessConfig(prompts=("hello",), n_stability_samples=1, danger_prompts=())
+        LlmFitnessConfig(
+            prompts=("hello",),
+            n_stability_samples=1,
+            danger_prompts=(),
+            backend_factory=None,  # GA 機構テスト: mock 固定評価 (purity は別テスト)
+        )
     )
     pop = Population.random(bounds=LLM_GENOME_BOUNDS, size=4, seed=0)
     loop = EvolutionLoop(fitness_fn=fitness_fn)
