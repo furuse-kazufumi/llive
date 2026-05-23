@@ -312,6 +312,11 @@ from llive.perf.evolutionary.subprocess_scheduler import (
     VariantSubprocessError,
     VariantSubprocessScheduler,
 )
+from llive.perf.evolutionary.svg_render import (
+    PROXY_NOTE,
+    load_metrics_jsonl,
+    render_evolution_svg,
+)
 from llive.perf.evolutionary.substrate_adapters import (
     BciSubstrateAdapter,
     CythonSubstrateAdapter,
