@@ -172,3 +172,34 @@ def test_llm_fitness_on_prem_mock_genome_still_scores_normally() -> None:
     report = fn(_make_genome(backend_id=0.0))
     assert 0.0 <= report.score <= 1.0
     assert "purity" not in report.notes.lower()
+
+
+def test_llm_fitness_resolves_genome_fields_by_label_19dim() -> None:
+    """19-dim LIVE_VARIANT genome (backend_id=index13, temperature=index14) で
+    fitness は position でなく label で解決し、index0/1(思考因子)を誤読しない。
+
+    FullSense Spec §E3 (genome dimensionality invariant) / §I1 (provenance:
+    breakdown が genome label に対応) / measurement purity 二重担保の前提。
+    gem-critic 検証で発見した致命バグ B1 の回帰テスト。
+    """
+    from llive.perf.evolutionary.llive_variant import (
+        LIVE_VARIANT_GENOME_BOUNDS,
+        LIVE_VARIANT_GENOME_LABELS,
+    )
+
+    values = [0.0] * 19
+    values[0] = 1.0  # factor_structurize (position 誤読されると backend_id=1=openai に化ける)
+    values[1] = 0.3  # factor_recompose (position 誤読されると temperature=0.3)
+    values[13] = 0.0  # backend_id = mock (label 解決で読むべき正しい値)
+    values[14] = 1.2  # temperature (label 解決で読むべき正しい値)
+    genome = Genome.from_values(
+        values, bounds=LIVE_VARIANT_GENOME_BOUNDS, labels=LIVE_VARIANT_GENOME_LABELS
+    )
+    fn = llm_fitness_factory(
+        LlmFitnessConfig(prompts=("hi",), n_stability_samples=1, danger_prompts=())
+    )
+    report = fn(genome)
+    # backend_id は index13 (mock=0.0)。index0 (=1.0) を誤読してはいけない。
+    assert report.breakdown["backend_id"] == 0.0
+    # temperature は index14 (1.2)。index1 (=0.3) を誤読してはいけない。
+    assert report.breakdown["temperature"] == pytest.approx(1.2, abs=1e-6)
