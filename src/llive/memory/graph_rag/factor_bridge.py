@@ -209,12 +209,15 @@ def factor_strength_prior(
         store: GraphRAGStore。
         layer_names: メモリ層名。
         max_hops: 集約 hop 上限。
-        blend: prior と baseline の混合比 ``blend*strength + (1-blend)*baseline``。
-            1.0 で strength のみ、0.0 で baseline のみ。
+        blend: strength を持つ cell での prior と baseline の混合比
+            ``blend*strength + (1-blend)*baseline``。1.0 で strength のみ、
+            0.0 で baseline のみ。**strength=0 の cell は常に baseline** に落ちる
+            (prior が無い = 中立)。
         baseline: prior が無い cell の中立値 (chromosome default と同じ 0.5)。
 
     Returns:
-        ThoughtFactorPerLayerChromosome (40-dim 維持、値域 [0, 1])。
+        ThoughtFactorPerLayerChromosome (40-dim 維持、値域 [0, 1])。空 store や
+        全 0 strength では全 cell が ``baseline`` の中立 chromosome を返す。
 
     Raises:
         ValueError: blend が [0, 1] 外 / layer 数が NUM_MEMORY_LAYERS 不一致時は
@@ -225,7 +228,9 @@ def factor_strength_prior(
     strength = factor_strength(
         store, layer_names=layer_names, max_hops=max_hops, normalize=True
     )
-    prior = blend * strength + (1.0 - blend) * baseline
+    # strength を持つ cell のみ blend、無い (= 0) cell は baseline 中立に落とす。
+    blended = blend * strength + (1.0 - blend) * baseline
+    prior = np.where(strength > 0.0, blended, baseline)
     prior = np.clip(prior, 0.0, 1.0)
     return ThoughtFactorPerLayerChromosome.from_array(
         prior, layer_names=tuple(layer_names)
