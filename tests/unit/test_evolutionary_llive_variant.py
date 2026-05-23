@@ -284,3 +284,14 @@ def test_build_config_resolves_by_label_not_position() -> None:
     cfg = LlivVariantBuilder().build_config(genome)
     # position 直読み(values[13]=0.0→mock)でなく label 解決(values[0]=4.0→rwkv)
     assert cfg.backend_name == "rwkv"
+
+
+def test_mock_variant_fitness_partial_weights_no_keyerror() -> None:
+    """部分 weights でも KeyError でなく欠落軸は 0 weight 扱い (B-EDGE-2)."""
+    rng = np.random.default_rng(0)
+    genome = Genome.random(
+        LIVE_VARIANT_GENOME_BOUNDS, rng, labels=LIVE_VARIANT_GENOME_LABELS
+    )
+    fn = mock_variant_fitness_factory(MockVariantFitnessConfig(weights={"quality": 1.0}))
+    report = fn(genome)  # KeyError が出ないこと
+    assert 0.0 <= report.score <= 1.0
