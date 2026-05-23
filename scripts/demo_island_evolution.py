@@ -149,11 +149,35 @@ def _step_island(
     return stats
 
 
+def _write_manifest(cfg: IslandConfig, problem: str, started_at: float) -> None:
+    """run 開始時に書き出す不変メタデータ. dashboard が max_generations を
+    知って進捗率を出すために使う. summary.json は run 終了時のみ書かれる
+    ため, 進行中は manifest から max を読む."""
+    manifest = {
+        "started_at_epoch": float(started_at),
+        "problem": problem,
+        "n_islands": cfg.n_islands,
+        "island_size": cfg.island_size,
+        "migration_interval": cfg.migration_interval,
+        "migration_size": cfg.migration_size,
+        "topology": cfg.topology,
+        "migration_policy": cfg.migration_policy,
+        "max_generations": cfg.max_generations,
+        "max_workers": cfg.max_workers,
+        "seed": cfg.seed,
+    }
+    (cfg.out_dir / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def run_island_evolution(cfg: IslandConfig, problem: str = "sphere") -> dict:
     bounds, fitness_fn, labels = _build_problem(problem)
     cfg.out_dir.mkdir(parents=True, exist_ok=True)
     for i in range(cfg.n_islands):
         (cfg.out_dir / f"island_{i:02d}").mkdir(parents=True, exist_ok=True)
+    _write_manifest(cfg, problem, started_at=time.time())
 
     islands = [
         Population.random(
