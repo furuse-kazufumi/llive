@@ -148,7 +148,7 @@ llive のメイン路線。実装在庫が豊富:
 | **Naive RAG** | dense/sparse retrieval | RAD ベース |
 | **HyDE** | LLM が hypothetical doc 生成 → embed | working layer で生成 |
 | **Reranker** (BGE/Cohere) | second-stage filter | precision 向上 |
-| **GraphRAG** (Microsoft 2024) | knowledge graph retrieval | long_term layer 親和 |
+| **GraphRAG** (Microsoft 2024) | knowledge graph retrieval | ✅ **skeleton 着地** (`memory/graph_rag/`, hybrid score = cosine + hop_decay, long_term layer 連動) |
 | **Agentic Graph RAG** | retrieve-evaluate-refine loop | Reflexion 系と合流 |
 | **Self-RAG** (Asai 2023) | retrieval を model 自身が判定 | confidence-driven |
 | **Knowledge Graph + 多段 reasoning** | structured | episodic layer 連動 |
