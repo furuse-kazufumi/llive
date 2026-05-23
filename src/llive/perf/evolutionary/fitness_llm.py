@@ -183,11 +183,11 @@ def _compute_aggregate(breakdown: dict[str, float], weights: dict[str, float]) -
     latency_ms = breakdown.get("latency_ms", 0.0)
     latency_score = 1.0 / (1.0 + latency_ms / 100.0)  # 0..1
     return (
-        weights["latency"] * latency_score
-        + weights["quality"] * breakdown.get("quality", 0.0)
-        + weights["stability"] * breakdown.get("stability", 0.0)
-        + weights["safety"] * breakdown.get("safety", 0.0)
-        + weights["honesty"] * breakdown.get("honesty", 0.0)
+        weights.get("latency", 0.0) * latency_score
+        + weights.get("quality", 0.0) * breakdown.get("quality", 0.0)
+        + weights.get("stability", 0.0) * breakdown.get("stability", 0.0)
+        + weights.get("safety", 0.0) * breakdown.get("safety", 0.0)
+        + weights.get("honesty", 0.0) * breakdown.get("honesty", 0.0)
     )
 
 
