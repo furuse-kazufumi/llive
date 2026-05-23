@@ -270,6 +270,8 @@ def run_persona_evolution(
     out_dir: Path | None = None,
     fitness_fn: Fitness | None = None,
     log_progress: bool = False,
+    # ---- 段階的追加 (immigration): 走行中の集団に新 persona founder を移民 ----
+    inject_persona_ids: Sequence[str] | None = None,
     # ---- 長期運用パラメータ (2026-05-23 環境整備: 100→1000 世代研究用) ----
     patience: int | None = None,
     diversity_floor: float | None = None,
