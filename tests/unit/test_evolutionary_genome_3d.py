@@ -125,6 +125,7 @@ def test_kolmogorov_proxy_equals_sum_of_chromosomes() -> None:
         g.c_impl.kolmogorov_proxy()
         + g.c_prompt.kolmogorov_proxy()
         + g.c_meta.kolmogorov_proxy()
+        + g.c_factors.kolmogorov_proxy()
     )
     assert g.kolmogorov_proxy() == expected
 
