@@ -101,7 +101,7 @@ OpenAI o1 (2024) 以降爆発した領域。L1 (固定 budget) vs L2 (適応的 
 | アルゴリズム | 計算量 | 強み | 弱み | llive backend 状態 |
 |---|---|---|---|---|
 | **Transformer** | O(N²) attention | 短-中 context 最強 | 128K+ で爆発 | ✅ Anthropic/OpenAI/Ollama 既稼働 |
-| **Mamba / Mamba-2** (Gu/Dao 2024) | O(N) selective SSM | 長 context 安価 | training tricky | 未着 (CUDA + Linux 前提) |
+| **Mamba / Mamba-2** (Gu/Dao 2024) | O(N) selective SSM | 長 context 安価 | training tricky | ✅ **skeleton 着地** (`MambaPyBackend`, 実 load は WSL2+CUDA 待ち) |
 | **RWKV-7 "Goose"** (Peng 2025) | O(N) recurrent | CPU 動作 + 7B で Llama 3.1 8B 競合 | tooling 限定 | ✅ **本日 skeleton 着地** |
 | **Jamba** (AI21 2024) | Transformer:Mamba = 1:7 + MoE | 256K context + 効率 | 52B → on-prem 困難 | ✗ (cloud only) |
 | **MoE** (Mixtral, DeepSeek-MoE) | sparse expert routing | 高品質 + 低 active params | routing 不安定 | 検討余地 |
