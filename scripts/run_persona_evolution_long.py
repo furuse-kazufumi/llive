@@ -105,6 +105,7 @@ def main() -> int:
         generations=args.generations,
         seed=args.seed,
         out_dir=args.out,
+        inject_persona_ids=args.inject,
         patience=patience,
         diversity_floor=0.0,  # 多様性枯渇でも止めない (長期研究)
         checkpoint_every=args.checkpoint_every,
@@ -112,6 +113,8 @@ def main() -> int:
         persist_generation_log=True,  # generations.jsonl + snapshot (SVG材料 + resume)
         log_progress=True,
     )
+    if res.injected_persona_ids:
+        print(f"[immigration] injected mid-run: {list(res.injected_persona_ids)}")
     er = res.evolution_result
     print("---- result (honest: proxy fitness, NOT real LLM eval) ----")
     print(f"final_generation = {er.final_population.generation}")
