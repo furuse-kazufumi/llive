@@ -786,6 +786,149 @@ class DiffusionBackend(LLMBackend):
 
 
 # ---------------------------------------------------------------------------
+# HuggingFace Transformers backend (Phase C-1.4 Stage 1)
+#
+# 直接 inputs_embeds に注入できる唯一の Open LLM 経路. Ollama / llama-server の
+# HTTP API は inputs_embeds を公開していないため, KV cache Memory Translator
+# Stage 1 (Embedding 結合) は HF Transformers in-process が前提.
+#
+# 重い依存 (transformers + torch) は lazy import. 未 install 環境では
+# resolve_backend("hf") 時点で明示的に ModuleNotFoundError を投げる.
+# ---------------------------------------------------------------------------
+
+
+class HFTransformersBackend(LLMBackend):
+    """HuggingFace Transformers in-process backend with inputs_embeds support.
+
+    Loads a causal LM via ``transformers.AutoModelForCausalLM`` and accepts
+    ``request.prefix_embeddings`` (Phase C-1.4 Stage 1). Each prefix vector is
+    concatenated to the prompt's token embeddings, then ``model.generate`` is
+    called with ``inputs_embeds=...`` (token-economy bypass).
+
+    Requirements: ``pip install transformers torch`` (heavy). For tests,
+    mock ``sys.modules["transformers"]`` + ``sys.modules["torch"]`` and stub
+    the model — this skeleton's wiring is unit-testable without real weights.
+
+    Why this backend exists (vs. Ollama / llama-server):
+        Closed LLM APIs and Ollama's REST do not expose ``inputs_embeds``.
+        Only in-process HF transformers + raw llama.cpp C API can accept
+        pre-computed embeddings. This is the **token-economy bypass** core of
+        [[project_idea_kv_cache_memory_translator]] Stage 1.
+    """
+
+    name = "hf"
+    DEFAULT_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        *,
+        device: str | None = None,
+        torch_dtype: str | None = None,
+    ) -> None:
+        try:
+            import torch  # type: ignore[import-not-found]
+            import transformers  # type: ignore[import-not-found]
+        except ModuleNotFoundError as exc:  # pragma: no cover - heavy dep
+            raise ModuleNotFoundError(
+                "HFTransformersBackend requires: pip install transformers torch. "
+                "This backend exists for Phase C-1.4 Stage 1 (KV cache Memory "
+                "Translator inputs_embeds path) — closed LLMs do not expose it."
+            ) from exc
+
+        self.model_name = model or os.environ.get("LLIVE_HF_MODEL") or self.DEFAULT_MODEL
+        self.device = device or os.environ.get("LLIVE_HF_DEVICE") or "cpu"
+        dtype_str = torch_dtype or os.environ.get("LLIVE_HF_DTYPE") or "float32"
+        self._torch = torch
+        self._transformers = transformers
+        self._dtype = getattr(torch, dtype_str)
+
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(self.model_name)
+        self.model = transformers.AutoModelForCausalLM.from_pretrained(
+            self.model_name, torch_dtype=self._dtype
+        ).to(self.device)
+        self.model.eval()
+
+    @property
+    def supports_prefix_embeddings(self) -> bool:
+        return True
+
+    def _build_inputs_embeds(
+        self,
+        prompt: str,
+        prefix_embeddings: list[PrefixEmbedding],
+    ) -> Any:
+        """Return ``inputs_embeds`` tensor: [prefix_1, ..., prefix_n, prompt_embeds].
+
+        Each prefix vector's length must equal the model's hidden_size — else
+        the model would silently misinterpret the injection. Raises
+        ``ValueError`` on mismatch (fail-closed per CLAUDE.md MCP rules).
+        """
+        torch = self._torch
+        embed_layer = self.model.get_input_embeddings()
+        hidden_size = embed_layer.embedding_dim
+        token_ids = self.tokenizer(prompt, return_tensors="pt").input_ids.to(self.device)
+        prompt_embeds = embed_layer(token_ids)  # [1, T, H]
+
+        if not prefix_embeddings:
+            return prompt_embeds
+
+        prefix_tensors = []
+        for label, vec in prefix_embeddings:
+            t = torch.as_tensor(vec, dtype=self._dtype, device=self.device)
+            if t.ndim == 1:
+                if t.shape[0] != hidden_size:
+                    raise ValueError(
+                        f"prefix_embedding {label!r} dim={t.shape[0]} but "
+                        f"model hidden_size={hidden_size} — must match. "
+                        f"Reproject upstream or use a model with matching dim."
+                    )
+                t = t.unsqueeze(0)  # [1, H]
+            elif t.ndim == 2:
+                if t.shape[1] != hidden_size:
+                    raise ValueError(
+                        f"prefix_embedding {label!r} dim={t.shape[1]} but "
+                        f"model hidden_size={hidden_size} — must match."
+                    )
+            else:
+                raise ValueError(
+                    f"prefix_embedding {label!r} must be 1D or 2D, got ndim={t.ndim}"
+                )
+            prefix_tensors.append(t.unsqueeze(0))  # [1, P, H]
+
+        # [1, sum(P)+T, H]
+        return torch.cat(prefix_tensors + [prompt_embeds], dim=1)
+
+    def generate(self, request: GenerateRequest) -> GenerateResponse:  # pragma: no cover - heavy
+        torch = self._torch
+        with torch.no_grad():
+            inputs_embeds = self._build_inputs_embeds(
+                request.prompt, request.prefix_embeddings
+            )
+            out = self.model.generate(
+                inputs_embeds=inputs_embeds,
+                max_new_tokens=int(request.max_tokens),
+                temperature=float(request.temperature) if request.temperature > 0 else 1.0,
+                do_sample=request.temperature > 0,
+                pad_token_id=self.tokenizer.eos_token_id,
+            )
+        # Decoder-only models return generated tokens for inputs_embeds path;
+        # the prompt is not echoed back (different from input_ids path).
+        text = self.tokenizer.decode(out[0], skip_special_tokens=True)
+        return GenerateResponse(
+            text=text,
+            finish_reason="stop",
+            backend=self.name,
+            model=request.model or self.model_name,
+            raw={
+                "prefix_count": len(request.prefix_embeddings),
+                "device": self.device,
+                "hidden_size": self.model.get_input_embeddings().embedding_dim,
+            },
+        )
+
+
+# ---------------------------------------------------------------------------
 # Default backend resolution
 # ---------------------------------------------------------------------------
 
