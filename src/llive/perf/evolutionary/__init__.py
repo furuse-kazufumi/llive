@@ -24,6 +24,14 @@ from llive.perf.evolutionary.coevolution_governance import (
     GovernanceReport,
     collusion_risk_score,
 )
+from llive.perf.evolutionary.cma_es import CMAESAdapter, CMAESState
+from llive.perf.evolutionary.cma_es_diversity import (
+    CMAESDiversityDriver,
+    CMAESDiversityGenerationResult,
+    candidate_to_map_elites_features,
+    candidate_to_thought_features,
+    parse_frozen_factor_indices,
+)
 from llive.perf.evolutionary.cross_substrate import (
     DEFAULT_INTENT_DIM,
     AbstractGenome,
