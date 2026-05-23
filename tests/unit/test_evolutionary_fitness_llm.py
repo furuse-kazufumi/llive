@@ -137,3 +137,38 @@ def test_on_prem_backend_factory_rejects_unknown() -> None:
     factory = on_prem_backend_factory()
     with pytest.raises(ValueError):
         factory("definitely-not-a-backend")
+
+
+def test_llm_fitness_cloud_genome_scores_zero_without_crashing() -> None:
+    """on_prem factory 下で cloud backend を選んだ個体は fitness=0 で淘汰され,
+    進化 loop は落ちない (extensibility 契約: 走行中の進化を壊さない).
+
+    architecture (factory が拒否) + evolution (低 fitness で淘汰) の二重で
+    measurement purity を担保する.
+    """
+    cfg = LlmFitnessConfig(
+        prompts=("hi",),
+        n_stability_samples=1,
+        danger_prompts=(),
+        backend_factory=on_prem_backend_factory(),
+    )
+    fn = llm_fitness_factory(cfg)
+    # backend_id=2.0 → "anthropic" (cloud) を選んだ個体
+    report = fn(_make_genome(backend_id=2.0))
+    assert report.score == 0.0
+    assert "purity" in report.notes.lower()
+
+
+def test_llm_fitness_on_prem_mock_genome_still_scores_normally() -> None:
+    """on_prem factory 下でも mock backend (id=0) は通常どおり評価される
+    (purity 違反でないので淘汰されない)."""
+    cfg = LlmFitnessConfig(
+        prompts=("hi",),
+        n_stability_samples=1,
+        danger_prompts=(),
+        backend_factory=on_prem_backend_factory(),
+    )
+    fn = llm_fitness_factory(cfg)
+    report = fn(_make_genome(backend_id=0.0))
+    assert 0.0 <= report.score <= 1.0
+    assert "purity" not in report.notes.lower()
