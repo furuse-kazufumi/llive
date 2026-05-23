@@ -136,6 +136,88 @@ def _load_summary(out_dir: Path) -> dict[str, Any] | None:
         return None
 
 
+def _load_manifest(out_dir: Path) -> dict[str, Any] | None:
+    path = out_dir / "manifest.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+
+
+def _compute_progress(
+    islands_data: dict[int, list[dict[str, Any]]],
+    manifest: dict[str, Any] | None,
+    summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """current_gen / max_gen / progress_ratio / status を算出.
+
+    * ``current_gen`` = 全 island の wall_gen の最大 + 1 (= これまで完了した世代数)
+    * ``max_gen`` = manifest.max_generations が真. 無ければ summary, それも無ければ
+      current_gen を仮の最大として表示.
+    * ``status`` = "running" / "completed" / "idle".
+    """
+    max_wall_gen = -1
+    for rows in islands_data.values():
+        for r in rows:
+            wg = int(r.get("wall_gen", -1))
+            if wg > max_wall_gen:
+                max_wall_gen = wg
+    current_gen = max_wall_gen + 1 if max_wall_gen >= 0 else 0
+
+    max_gen: int | None = None
+    if manifest is not None:
+        max_gen = int(manifest.get("max_generations", 0))
+    if max_gen is None and summary is not None:
+        max_gen = int(summary.get("max_generations", 0))
+
+    if summary is not None:
+        status = "completed"
+    elif current_gen > 0:
+        status = "running"
+    else:
+        status = "idle"
+
+    if max_gen is None or max_gen <= 0:
+        max_gen = max(current_gen, 1)
+        ratio = 1.0 if status == "completed" else 0.0
+    else:
+        ratio = min(1.0, current_gen / max_gen)
+
+    elapsed = float(summary.get("elapsed_seconds", 0.0)) if summary else 0.0
+    if status == "running" and manifest is not None:
+        started = float(manifest.get("started_at_epoch", 0.0))
+        if started > 0:
+            elapsed = max(0.0, time.time() - started)
+
+    eta_seconds: float | None = None
+    if status == "running" and current_gen > 0 and max_gen > current_gen and elapsed > 0:
+        per_gen = elapsed / current_gen
+        eta_seconds = per_gen * (max_gen - current_gen)
+
+    return {
+        "current_gen": current_gen,
+        "max_gen": max_gen,
+        "progress_ratio": ratio,
+        "status": status,
+        "elapsed_seconds": elapsed,
+        "eta_seconds": eta_seconds,
+    }
+
+
+def _format_duration(seconds: float) -> str:
+    if seconds < 0:
+        return "?"
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    minutes = seconds / 60.0
+    if minutes < 60:
+        return f"{minutes:.1f}m"
+    hours = minutes / 60.0
+    return f"{hours:.1f}h"
+
+
 def _build_island_table(
     islands_data: dict[int, list[dict[str, Any]]],
     summary: dict[str, Any] | None,
