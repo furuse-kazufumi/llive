@@ -389,6 +389,7 @@ __all__ = [
     "EvolutionConfig",
     "EvolutionLoop",
     "EvolutionResult",
+    "FOUNDER_ID_PREFIX",
     "Expert",
     "ExpertCompositionGenome",
     "ExpertCompositionMutation",
