@@ -20,6 +20,7 @@ from llive.perf.evolutionary import (
 )
 from llive.perf.evolutionary.lineage import (
     Winner,
+    _node_id,
     load_winners_jsonl,
     render_lineage_mermaid,
     write_lineage_mermaid_file,
