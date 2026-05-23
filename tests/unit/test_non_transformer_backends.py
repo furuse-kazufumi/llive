@@ -155,6 +155,47 @@ def test_mamba_delegates_to_openai_with_overridden_backend_tag(
     assert resp.raw["inner_backend"] == "openai"  # preserved for traceability
 
 
+def test_delegate_generate_propagates_prefix_embeddings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: _delegate_generate must forward prefix_embeddings/audio/sensor.
+
+    Phase C-1.4 + C-1.3 fields were silently dropped in the wrapper helper —
+    only prompt/system/max_tokens/temperature/stop/model/images were forwarded.
+    This caused Mamba/RWKV/Jamba/Diffusion to lose KV cache Memory Translator
+    embeddings (Stage 1 [[project_idea_kv_cache_memory_translator]]) and audio /
+    sensor inputs (Phase C-1.3).
+    """
+    _stub_openai(monkeypatch)
+    backend = MambaBackend()
+    captured: dict[str, Any] = {}
+
+    def _capture(req: GenerateRequest) -> GenerateResponse:
+        captured["prefix_embeddings"] = list(req.prefix_embeddings)
+        captured["audio"] = list(req.audio)
+        captured["sensor"] = list(req.sensor)
+        return GenerateResponse(
+            text="ok", finish_reason="stop", backend="openai", model="x", raw={}
+        )
+
+    with mock.patch.object(backend._inner, "generate", side_effect=_capture):
+        backend.generate(
+            GenerateRequest(
+                prompt="hi",
+                prefix_embeddings=[("mem_1", [0.1, 0.2])],
+                audio=[b"\x00\x01"],
+                sensor=[{"ts": 1.0, "metric": "temp", "value": 22.5}],
+            )
+        )
+
+    assert len(captured["prefix_embeddings"]) == 1, (
+        "prefix_embeddings dropped by _delegate_generate — Stage 1 broken"
+    )
+    assert captured["prefix_embeddings"][0][0] == "mem_1"
+    assert len(captured["audio"]) == 1, "audio dropped by _delegate_generate"
+    assert len(captured["sensor"]) == 1, "sensor dropped by _delegate_generate"
+
+
 # ---------------------------------------------------------------------------
 # RwkvBackend
 # ---------------------------------------------------------------------------
