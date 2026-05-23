@@ -193,7 +193,85 @@ PERSONA_ONTOLOGY: dict[str, Persona] = {
         thought_patterns=("兵法", "勢", "虚実", "勝兵先勝"),
         factor_affinity=(0.85, 0.85, 0.7, 0.6, 0.9, 0.7, 0.8, 0.6, 0.85, 0.95),
     ),
+    # --- 研究方法論ペルソナ群 (2026-05-23 追加) ---------------------------------
+    # FullSense「表現×リアルタイム」ideation marathon の来歴調査から抽出。
+    # ユーザー (furuse-kazufumi) 公認で本人の調査メソッドを persona 化し進化ゲノムに
+    # 組込む ([[project_persona_genome_integration]])。予測符号化評議会 = 生成
+    # (Friston) ↔ 懐疑 (Millidge) ↔ 検証 (Isomura) の三役。詳細思考フレームは
+    # raptor/tiers/personas/{provenance_investigator,predictive_coding/*}.md。
+    # THOUGHT_FACTORS 順: structurize, recompose, closed_loop, self_extend,
+    #                     uncertainty, exploration, consistency, provenance,
+    #                     multiview, reality_link
+    "furuse-kazufumi": Persona(
+        persona_id="furuse-kazufumi",
+        name="Furuse Kazufumi",
+        era="21C-Provenance-Investigation",
+        fields=("investigation", "provenance-tracing", "patent-research", "supply-chain"),
+        thought_patterns=(
+            "特許→発明者→研究者",
+            "源流まで全辿り",
+            "人材/資金/道具/アイデアの4サプライチェーン",
+            "確証段階の明示",
+            "honest-disclosure",
+        ),
+        # 来歴=最大, 現実接続/不確実性/整合/多視点=高, 自己拡張=低 (規律的で発散しない)
+        factor_affinity=(0.7, 0.5, 0.55, 0.3, 0.85, 0.75, 0.85, 0.98, 0.8, 0.9),
+    ),
+    "friston": Persona(
+        persona_id="friston",
+        name="カール・フリストン",
+        era="21C-Theoretical-Neuroscience",
+        fields=("neuroscience", "free-energy-principle", "active-inference"),
+        thought_patterns=(
+            "自由エネルギー最小化",
+            "生成モデル",
+            "precision重み付け",
+            "能動的推論",
+            "統一原理",
+        ),
+        # 統一/自己拡張/構造化=高, 来歴/現実接続=低 (反証困難と批判される抽象化)
+        factor_affinity=(0.95, 0.85, 0.8, 0.95, 0.85, 0.7, 0.8, 0.4, 0.7, 0.45),
+    ),
+    "millidge": Persona(
+        persona_id="millidge",
+        name="ベレン・ミリッジ",
+        era="21C-ML-Theory",
+        fields=("machine-learning", "computational-neuroscience", "predictive-coding"),
+        thought_patterns=(
+            "仮定の代償を計上",
+            "実証vs思弁の線引き",
+            "反証可能性",
+            "honest-disclosure",
+            "PC≒backpropの限界",
+        ),
+        # 不確実性=最大 (honest disclosure 番人), 来歴/現実接続/整合=高, 自己拡張=低
+        factor_affinity=(0.7, 0.5, 0.6, 0.3, 0.95, 0.5, 0.85, 0.8, 0.7, 0.9),
+    ),
+    "isomura-takuya": Persona(
+        persona_id="isomura-takuya",
+        name="磯村拓哉",
+        era="21C-Theoretical-Neuroscience",
+        fields=("neuroscience", "free-energy-principle", "active-inference"),
+        thought_patterns=(
+            "反証可能な実験命題化",
+            "生成モデルのリバースエンジニアリング",
+            "培養神経回路で実証",
+            "数理駆動",
+            "最小検証系",
+        ),
+        # 現実接続=最大 (実証で確かめる), 構造化/整合=高, 思弁を測定可能仕様へ
+        factor_affinity=(0.85, 0.6, 0.7, 0.6, 0.8, 0.6, 0.85, 0.6, 0.6, 0.95),
+    ),
 }
+
+#: 研究方法論ペルソナ群 (2026-05-23 追加). 歴史人物 ontology と区別する便宜定数.
+#: furuse 調査者 + 予測符号化評議会 (生成/懐疑/検証). founder 種個体候補.
+RESEARCH_METHODOLOGY_PERSONA_IDS: tuple[str, ...] = (
+    "furuse-kazufumi",
+    "friston",
+    "millidge",
+    "isomura-takuya",
+)
 
 
 def list_persona_ids() -> tuple[str, ...]:
