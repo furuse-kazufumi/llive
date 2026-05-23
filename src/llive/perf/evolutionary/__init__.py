@@ -500,6 +500,7 @@ __all__ = [
     "mock_variant_fitness_factory",
     "non_dominated_sort",
     "pack_meta_strategy_bounds",
+    "parse_frozen_factor_indices",
     "pack_self_adaptive_bounds",
     "parallel_mutate",
     "persona_dissimilarity",
