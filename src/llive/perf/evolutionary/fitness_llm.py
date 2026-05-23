@@ -238,7 +238,7 @@ def llm_fitness_factory(
             "stability": float(stability),
             "safety": float(safety),
             "honesty": float(honesty),
-            "backend_id": float(int(genome.values[0])),
+            "backend_id": float(backend_id),
             "temperature": float(temperature),
             "top_p": float(top_p),
         }
