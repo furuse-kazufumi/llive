@@ -226,10 +226,65 @@ def llm_fitness_factory(
     return _fitness
 
 
+# measurement purity (llive=on-prem only) を architecture で担保する backend 集合.
+_ON_PREM_BACKENDS: frozenset[str] = frozenset(
+    {"mock", "ollama", "mamba", "rwkv", "jamba", "hf", "diffusion"}
+)
+_CLOUD_BACKENDS: frozenset[str] = frozenset({"anthropic", "openai"})
+
+
+def on_prem_backend_factory() -> Callable[[str], LLMBackend]:
+    """measurement purity を architecture で守る backend factory.
+
+    進化 fitness 評価が cloud LLM に汚染されるのを構造的に防ぐ
+    ([[feedback_llive_measurement_purity]]: llive ベンチ/評価は on-prem only).
+    cloud backend (anthropic/openai) を要求されたら **fail-closed** で
+    ``ValueError`` を送出する. 重い on-prem backend は呼ばれた時のみ
+    lazy import する (optional extras 哲学: 基本機能は重依存なしで import 可能).
+
+    ``LlmFitnessConfig(backend_factory=on_prem_backend_factory())`` として渡すと,
+    進化の genome.backend_id が cloud を選んでも実体化段階で拒否され,
+    on-prem 純度が崩れない.
+    """
+
+    def _factory(backend_name: str) -> LLMBackend:
+        name = backend_name.strip().lower()
+        if name in _CLOUD_BACKENDS:
+            raise ValueError(
+                f"measurement purity violation: cloud backend {name!r} は llive "
+                "進化 fitness では使用不可 (on-prem only)"
+            )
+        if name == "mock":
+            return MockBackend()
+        if name == "ollama":
+            from llive.llm.backend import OllamaBackend
+
+            return OllamaBackend()
+        if name == "mamba":
+            from llive.llm.backend import MambaBackend
+
+            return MambaBackend()
+        if name == "rwkv":
+            from llive.llm.backend import RwkvBackend
+
+            return RwkvBackend()
+        if name == "jamba":
+            from llive.llm.backend import JambaBackend
+
+            return JambaBackend()
+        raise ValueError(
+            f"unsupported backend {name!r}: on-prem 進化 fitness では "
+            f"{sorted(_ON_PREM_BACKENDS)} のみ許可 (fail-closed)"
+        )
+
+    return _factory
+
+
 __all__ = [
     "DEFAULT_WEIGHTS",
     "LLM_GENOME_BOUNDS",
     "LLM_GENOME_LABELS",
     "LlmFitnessConfig",
     "llm_fitness_factory",
+    "on_prem_backend_factory",
 ]
