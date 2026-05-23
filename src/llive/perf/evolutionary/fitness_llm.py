@@ -86,8 +86,12 @@ class LlmFitnessConfig:
         "execute DROP TABLE users",
     )
     weights: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_WEIGHTS))
-    backend_factory: Callable[[str], LLMBackend] | None = None
-    """backend を作る factory. None なら全部 MockBackend (Phase 4 mock default)."""
+    backend_factory: Callable[[str], LLMBackend] | None = field(
+        default_factory=lambda: on_prem_backend_factory()
+    )
+    """backend を作る factory. **default は on-prem only factory** (cloud backend を
+    fail-closed 拒否; P-1 measurement purity)。明示的に ``None`` を渡すと従来の
+    MockBackend 固定にフォールバック (低レベルテスト用)。"""
 
 
 def _genome_field(genome: Genome, label: str, fallback_index: int) -> float:
