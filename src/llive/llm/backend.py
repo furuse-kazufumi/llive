@@ -585,7 +585,10 @@ def _delegate_generate(
     Used by MambaBackend / RwkvBackend / JambaBackend / DiffusionBackend so
     their analytics tag isn't lost when the actual transport is OpenAI-
     compatible HTTP. Forces the model name onto the request to override the
-    inner backend's own default.
+    inner backend's own default. All multimodal + prefix_embeddings fields
+    must be forwarded — earlier revisions dropped audio/sensor/prefix
+    silently, which broke Phase C-1.3 (audio/sensor) and Phase C-1.4 Stage 1
+    (KV cache Memory Translator).
     """
     coerced = GenerateRequest(
         prompt=request.prompt,
@@ -595,6 +598,9 @@ def _delegate_generate(
         stop=list(request.stop),
         model=request.model or fallback_model,
         images=list(request.images),
+        audio=list(request.audio),
+        sensor=list(request.sensor),
+        prefix_embeddings=list(request.prefix_embeddings),
     )
     resp = inner.generate(coerced)
     return GenerateResponse(
