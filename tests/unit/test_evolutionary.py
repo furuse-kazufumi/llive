@@ -221,6 +221,16 @@ def test_rosenbrock_fitness_max_at_ones() -> None:
     assert r_opt.score > r_bad.score
 
 
+def test_rosenbrock_empty_genome_no_indexerror() -> None:
+    """空 genome (n_dims=0) で IndexError でなく有限 score を返す (B-EDGE-1).
+
+    arr.size < 2 の分岐が arr[0] を読むため size==0 で IndexError していた。
+    """
+    g = Genome.from_values([], bounds=GenomeBounds(lower=(), upper=()))
+    report = rosenbrock_fitness(g)
+    assert isinstance(report.score, float)
+
+
 # ---------------------------------------------------------------------------
 # EvolutionLoop on sphere (best fitness 単調増加 を要求)
 # ---------------------------------------------------------------------------
