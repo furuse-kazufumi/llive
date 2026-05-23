@@ -368,11 +368,28 @@ def run_persona_evolution(
         fitness_fn=effective_fitness,
         on_generation_end=on_generation_end,
     )
-    config = EvolutionConfig(
-        max_generations=generations,
-        out_dir=None,  # generations.jsonl/snapshot は本ドライバでは出さない
-        log_progress=log_progress,
-    )
+    # 長期運用 (100→1000 世代) 対応: 後方互換のため新パラメータは None default で、
+    # 指定時のみ EvolutionConfig に渡す (None → 既存の EvolutionConfig 既定値)。
+    # - persist_generation_log + out_dir → generations.jsonl / snapshot_gen_*.json を
+    #   書き、resume と SVG 時系列材料の素材にする。
+    # - patience を generations+1 等にすれば早期停止せず指定世代を完走できる
+    #   (proxy fitness は早く収束するため、長期研究では patience 無効化が必須)。
+    cfg_kwargs: dict = {
+        "max_generations": generations,
+        "log_progress": log_progress,
+        "out_dir": out_dir if (persist_generation_log and out_dir is not None) else None,
+    }
+    if patience is not None:
+        cfg_kwargs["patience"] = patience
+    if diversity_floor is not None:
+        cfg_kwargs["diversity_floor"] = diversity_floor
+    if checkpoint_every is not None:
+        cfg_kwargs["checkpoint_every"] = checkpoint_every
+    if resume_from is not None:
+        cfg_kwargs["resume_from"] = resume_from
+    if max_wallclock_seconds is not None:
+        cfg_kwargs["max_wallclock_seconds"] = max_wallclock_seconds
+    config = EvolutionConfig(**cfg_kwargs)
     result = loop.run(population, config)
 
     # ---- lineage.mmd 出力 ----
