@@ -219,3 +219,16 @@ def test_llm_fitness_partial_weights_no_keyerror() -> None:
     fn = llm_fitness_factory(cfg)
     report = fn(_make_genome())  # KeyError が出ないこと
     assert 0.0 <= report.score <= 1.0
+
+
+def test_llm_fitness_default_config_is_purity_fail_closed() -> None:
+    """default config (backend_factory 明示なし) でも cloud genome は purity 違反で
+    fitness=0 に淘汰される (P-1, fail-closed default).
+
+    purity gate が opt-in (明示時のみ) だと fail-open で MCP 規約違反。default で enforce.
+    """
+    cfg = LlmFitnessConfig(prompts=("hi",), n_stability_samples=1, danger_prompts=())
+    fn = llm_fitness_factory(cfg)
+    report = fn(_make_genome(backend_id=2.0))  # anthropic (cloud)
+    assert report.score == 0.0
+    assert "purity" in report.notes.lower()
