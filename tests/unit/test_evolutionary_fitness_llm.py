@@ -203,3 +203,19 @@ def test_llm_fitness_resolves_genome_fields_by_label_19dim() -> None:
     assert report.breakdown["backend_id"] == 0.0
     # temperature は index14 (1.2)。index1 (=0.3) を誤読してはいけない。
     assert report.breakdown["temperature"] == pytest.approx(1.2, abs=1e-6)
+
+
+def test_llm_fitness_partial_weights_no_keyerror() -> None:
+    """部分 weights dict でも KeyError でなく欠落軸は 0 weight 扱い (B-EDGE-2).
+
+    weights は外部注入可能 = 信頼境界越え。直キー参照は fail-open でなく fail-safe に.
+    """
+    cfg = LlmFitnessConfig(
+        prompts=("hi",),
+        n_stability_samples=1,
+        danger_prompts=(),
+        weights={"quality": 1.0},  # latency/stability/safety/honesty 欠落
+    )
+    fn = llm_fitness_factory(cfg)
+    report = fn(_make_genome())  # KeyError が出ないこと
+    assert 0.0 <= report.score <= 1.0
