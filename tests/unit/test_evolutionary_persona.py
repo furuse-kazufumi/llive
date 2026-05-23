@@ -8,6 +8,7 @@ import pytest
 
 from llive.perf.evolutionary import (
     PERSONA_ONTOLOGY,
+    RESEARCH_METHODOLOGY_PERSONA_IDS,
     Persona,
     PersonaComposition,
     PersonaCompositionMutation,
@@ -16,6 +17,10 @@ from llive.perf.evolutionary import (
     list_persona_ids,
     persona_dissimilarity,
     random_persona_composition,
+)
+from llive.perf.evolutionary.thought_factor_per_layer import (
+    NUM_THOUGHT_FACTORS,
+    ThoughtFactorPerLayerChromosome,
 )
 
 
