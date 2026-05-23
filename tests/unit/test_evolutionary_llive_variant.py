@@ -240,3 +240,47 @@ def test_variant_ga_runs_three_generations() -> None:
             assert lo <= v <= up
     # best は ≥ 初期 (mock では大きく動かないかもだが下回らない)
     assert result.best_score >= result.stats_history[0].best_score - 1e-6
+
+
+# ---------------------------------------------------------------------------
+# A-1: build_config の label 解決 (B1 同型バグ修正の回帰)
+# ---------------------------------------------------------------------------
+
+
+def test_genome_value_by_label_resolves_and_falls_back() -> None:
+    """Genome.value_by_label は label 解決し、labels 無し/不在は fallback_index.
+
+    B1/A-1 修正の共通器。position 直読みを置き換える。
+    """
+    bounds = GenomeBounds(lower=(0.0, 0.0, 0.0), upper=(10.0, 10.0, 10.0))
+    g = Genome.from_values([1.0, 2.0, 3.0], bounds=bounds, labels=("a", "b", "c"))
+    assert g.value_by_label("b", 0) == 2.0  # label 解決
+    assert g.value_by_label("zzz", 2) == 3.0  # label 不在 → fallback index
+    g2 = Genome.from_values([1.0, 2.0, 3.0], bounds=bounds, labels=())
+    assert g2.value_by_label("a", 1) == 2.0  # labels 無し → fallback index
+
+
+def test_build_config_resolves_by_label_not_position() -> None:
+    """labels が正準順でない 19-dim genome でも backend を label で正しく読む.
+
+    gem-critic 発見の A-1 (B1 同型: build_config の position 直読み) 回帰テスト。
+    index0(factor_structurize) と index13(backend_id) を入れ替えた genome を渡し、
+    position 直読み (values[13]) でなく label 解決 (value_by_label('backend_id')) で
+    読むことを保証する。
+    """
+    labels = list(LIVE_VARIANT_GENOME_LABELS)
+    lower = list(LIVE_VARIANT_GENOME_BOUNDS.lower)
+    upper = list(LIVE_VARIANT_GENOME_BOUNDS.upper)
+    labels[0], labels[13] = labels[13], labels[0]
+    lower[0], lower[13] = lower[13], lower[0]
+    upper[0], upper[13] = upper[13], upper[0]
+    values = [0.0] * 19
+    values[0] = 4.0  # この位置の label は backend_id → rwkv(4)
+    genome = Genome.from_values(
+        values,
+        bounds=GenomeBounds(lower=tuple(lower), upper=tuple(upper)),
+        labels=tuple(labels),
+    )
+    cfg = LlivVariantBuilder().build_config(genome)
+    # position 直読み(values[13]=0.0→mock)でなく label 解決(values[0]=4.0→rwkv)
+    assert cfg.backend_name == "rwkv"
