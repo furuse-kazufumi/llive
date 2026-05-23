@@ -69,6 +69,12 @@ def main() -> int:
         help="out_dir の最新 snapshot から再開 (ずっと回せる)",
     )
     ap.add_argument(
+        "--inject",
+        nargs="*",
+        default=None,
+        help="resume 時に走行中の集団へ追加投入する persona id (immigration, 段階的追加)",
+    )
+    ap.add_argument(
         "--patience",
         type=int,
         default=None,
