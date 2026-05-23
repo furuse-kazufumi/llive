@@ -241,10 +241,10 @@ WebSearch 6 件 + llive 実装在庫の交差から見えた発見:
 
 ## 優先度ランキング (推奨着手順、honest disclosure)
 
-1. **CMA-ES を進化計算 module に追加** — continuous 探索で GA より高速、Genome3D.c_factors 用. 1 日.
-2. **GraphRAG skeleton** — 4 層メモリ × knowledge graph で本質的多様性増. 2 日.
-3. **Mamba backend** (`MambaPyBackend`) — RWKV に続く SSM 系第二弾. WSL2 要. 2 日.
-4. **DPO / GRPO mock 評価** — variant 評価基盤を後学習 path に転用. 2-3 日.
+1. ~~**CMA-ES を進化計算 module に追加**~~ — ✅ **着地** (2026-05-23, `cma_es.py`, 42 tests). continuous 探索で GA より高速、Genome3D.c_factors 用.
+2. ~~**GraphRAG skeleton**~~ — ✅ **着地** (2026-05-23, `memory/graph_rag/`, 12 tests). 4 層メモリ × knowledge graph で本質的多様性増.
+3. ~~**Mamba backend** (`MambaPyBackend`)~~ — ✅ **skeleton 着地** (2026-05-23, 24 tests). RWKV に続く SSM 系第二弾. 実 load は WSL2+CUDA 待ち.
+4. **DPO / GRPO mock 評価** ← **次の着手候補**. variant 評価基盤を後学習 path に転用. 2-3 日.
 5. **FlashAttention-3 / PagedAttention 検討** — llmesh 側で 5-8x 効率. 1 週間.
 6. **Constitutional AI / Debate** — llive Approval Bus の理論裏付け. 1 週間+.
 
