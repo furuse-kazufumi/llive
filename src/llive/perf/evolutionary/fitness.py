@@ -51,7 +51,10 @@ def rosenbrock_fitness(genome: Genome) -> FitnessReport:
     すべての dim が 1 のとき最大. valley が狭い non-convex 問題.
     """
     arr = genome.as_array()
-    if arr.size < 2:
+    if arr.size == 0:
+        # 空 genome は評価対象がない → neutral (0.0). IndexError 回避 (B-EDGE-1).
+        score = 0.0
+    elif arr.size < 2:
         score = -float((1 - arr[0]) ** 2)
     else:
         score = -float(
