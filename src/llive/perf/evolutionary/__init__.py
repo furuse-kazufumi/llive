@@ -520,6 +520,7 @@ __all__ = [
     "latin_hypercube_population",
     "list_persona_ids",
     "llm_fitness_factory",
+    "load_metrics_jsonl",
     "load_winners_jsonl",
     "make_meta_variant_mutation",
     "make_self_adaptive_variant_mutation",
