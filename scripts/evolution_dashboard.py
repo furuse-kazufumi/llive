@@ -344,7 +344,23 @@ def _render_plain(out_dir: Path) -> str:
     islands_data = _load_island_jsonl(out_dir)
     migrations = _load_migrations(out_dir)
     summary = _load_summary(out_dir)
+    manifest = _load_manifest(out_dir)
+    progress = _compute_progress(islands_data, manifest, summary)
     parts: list[str] = []
+    bar = _ascii_progress_bar(progress["progress_ratio"])
+    pct = progress["progress_ratio"] * 100.0
+    eta = progress["eta_seconds"]
+    eta_str = (
+        f"ETA {_format_duration(eta)}" if eta is not None else "ETA --"
+    )
+    elapsed_str = _format_duration(progress["elapsed_seconds"])
+    parts.append(
+        f"[{progress['status'].upper()}] "
+        f"Generation {progress['current_gen']}/{progress['max_gen']} "
+        f"{bar} {pct:5.1f}%  "
+        f"elapsed {elapsed_str}  {eta_str}"
+    )
+    parts.append("")
     parts.append("=== Island Portfolio ===")
     floor_warn = 1e-6 * _DIVERSITY_WARN_RATIO
     for idx in sorted(islands_data.keys()):
