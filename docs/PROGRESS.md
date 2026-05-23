@@ -6,6 +6,44 @@
 
 ---
 
+## 2026-05-23 — 進化 fitness 時系列 animated SVG (SMIL) 可視化材料着地 (proxy fitness)
+
+persona 世代交代の進化ダイナミクスを **animated SVG (SMIL)** で可視化する生成器を実装。
+`metrics.jsonl` (毎世代の `PopulationStats` ダンプ) を読み、世代軸 fitness 折れ線
+(best/mean) を stroke-dashoffset で「描き進める」+ 再生ヘッド (縦線) が左→右へ走る
+animated SVG にする。diversity_l2 は下段別トラックの帯。既存 `phylogeny.to_animated_svg`
+と同じ「依存なし純 Python 文字列生成 / SMIL only / no JS / `role="img"`/`<title>`/`<desc>`」
+方針を踏襲し、GitHub README で再生できることを前提とする。
+
+| 着地物 | 内容 | 状態 |
+|---|---|---|
+| `src/llive/perf/evolutionary/svg_render.py` | `render_evolution_svg()` / `load_metrics_jsonl()` / `PROXY_NOTE`。best/mean draw-on 折れ線 + diversity 帯 + 再生ヘッド + 走査ドット。1001 点は `max_points` (default 200) に等間隔ダウンサンプリング (先頭/末尾保持) | **done** |
+| `scripts/render_evolution_svg.py` | CLI (`--metrics --out --founders --max-points --loop-seconds --no-proxy-note`)。UTF-8 reconfigure 踏襲 | **done** |
+| `out/persona_evo_1000/evolution.svg` | 実 1000 世代ランから生成 (18 KB, animate×7, polyline×3, well-formed)。best 1.000 / mean 0.996 へ収束 | **done** |
+| `tests/unit/test_svg_render.py` | 17 テスト (well-formed / `<animate>` / no-JS / proxy 注記 / founder 注記 / ダウンサンプリング / flat / 空 metrics) | **done** |
+| `__init__.py` export | `render_evolution_svg` / `load_metrics_jsonl` / `PROXY_NOTE` を追加 | **done** |
+
+honest disclosure:
+
+- **fitness は proxy のみ** — SVG の title / caption / `<desc>` / footer の 4 箇所に
+  `proxy fitness (NOT real LLM eval)` を明記。実 LLM タスク評価へは未配線
+  (feedback_benchmark_honest_disclosure)。`--no-proxy-note` で外せるが現状は付けたまま使う。
+- **SMIL の GitHub 互換前提** — CSS keyframe でなく `<animate>` を使用 (GitHub README は
+  SMIL を再生するが CSS animation は再生しないため)。Safari/Chrome/Firefox は SMIL 再生可。
+- **founder 注記は呼び出し側指定** — 自動推定せず `--founders` で渡したものを列挙
+  (どの種から始めたかの来歴明示)。
+
+### 検証
+
+```powershell
+Set-Location 'D:\projects\llive'; $env:PYTHONPATH='src'
+py -3.11 -m pytest tests/unit/test_svg_render.py -q   # 17 passed
+py -3.11 -m pytest tests/unit/test_persona_evolution.py tests/unit/test_evolutionary_lineage.py tests/unit/test_evolutionary_phylogeny_svg.py tests/unit/test_svg_render.py -q   # 56 passed (回帰なし)
+py -3.11 scripts/render_evolution_svg.py --metrics out/persona_evo_1000/metrics.jsonl --out out/persona_evo_1000/evolution.svg --founders furuse-kazufumi friston millidge isomura-takuya
+```
+
+---
+
 ## 2026-05-23 — persona 世代交代 turnkey ドライバ着地 (proxy fitness)
 
 ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバを実装。
