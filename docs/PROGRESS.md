@@ -6,6 +6,43 @@
 
 ---
 
+## 2026-05-23 — persona 世代交代 turnkey ドライバ着地 (proxy fitness)
+
+ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバを実装。
+既存進化系 (`genome`/`individual`/`population`/`loop`/`lineage`) を薄く束ねる
+orchestrator で、新規進化アルゴリズムは導入していない。
+
+| 着地物 | 内容 | 状態 |
+|---|---|---|
+| `src/llive/perf/evolutionary/persona_evolution.py` | `run_persona_evolution()` (roster パラメータ化 = ID 追加で歴史人物も混在可) / `build_founder_genome` / `build_founder_individuals` / `is_founder` / `founder_persona_id` / `PersonaEvolutionResult` | **done** |
+| founder 種個体 | persona.factor_affinity を LIVE_VARIANT_GENOME_BOUNDS の思考因子 dim 0..9 に書込、残り 9 dim は bounds 中点。`individual_id="founder:<pid>"` で識別 | **done** |
+| winners.jsonl / lineage.mmd | 世代ごと top3 を `on_generation_end` で追記、run 後に Mermaid 系統樹出力 | **done** |
+| `scripts/demo_persona_evolution.py` | turnkey demo (smoke 確認済: 8 体×5 世代で best 0.697→0.760) | **done** |
+| `tests/unit/test_persona_evolution.py` | 22 テスト (founder/履歴/決定論/stub) | **done** |
+| `_proxy_fitness` | **proxy** (LLM を呼ばない)。`0.7*balance + 0.3*provenance`。honest disclosure: 実 LLM 評価ではない | **proxy (実 fitness 未配線)** |
+| `compare_against_llm_baselines` | 「現状 LLM との比較」interface。lleval 連携設計を docstring に記載 | **stub (NotImplementedError)** |
+
+honest disclosure / 未配線:
+
+- **fitness は proxy のみ** — 実 LLM タスク評価へは未配線。proxy 値をベンチとして
+  外部に出すときは「proxy」と明記必須 (feedback_benchmark_honest_disclosure)。
+- **LLM 比較は stub** — `compare_against_llm_baselines` は NotImplementedError。
+  実装には (1) proxy → 実 LLM-task fitness 差し替え、(2) lleval 連携が前提。
+  llive 被験者は on-prem only、cloud LLM ベースラインと measurement purity を
+  分けて記録する制約 (feedback_llive_measurement_purity)。
+
+### 検証
+
+```powershell
+Set-Location 'D:\projects\llive'; $env:PYTHONPATH='src'
+py -3.11 -m pytest tests/unit/test_persona_evolution.py tests/unit/test_evolutionary_persona.py -q
+# 46 passed
+py -3.11 -m pytest tests/unit -k "evolutionary or persona or lineage or genome" -q
+# 826 passed, 1657 deselected (既存回帰なし)
+```
+
+---
+
 ## 2026-05-19 (昼前) — M8.8 + M8.9 本実装 (continuation セッション)
 
 朝の M8.2〜M8.7 着地に続き、同セッションで残りの自律実装可能タスク
