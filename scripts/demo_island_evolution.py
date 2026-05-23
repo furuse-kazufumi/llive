@@ -252,16 +252,12 @@ def run_island_evolution(cfg: IslandConfig, problem: str = "sphere") -> dict:
             with (cfg.out_dir / "migrations.jsonl").open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(mig_record, ensure_ascii=False) + "\n")
 
-        bests = [
-            max(
-                (ind.score for ind in isl.individuals if ind.fitness is not None),
-                default=float("-inf"),
-            )
-            for isl in model.islands
-        ]
+        # stats から best を取る (replace 後の bests は新個体 = 未評価で -inf になる)
+        bests_per_island = [s.best_score for _, s in sorted(results, key=lambda t: t[0])]
+        global_best_now = max(bests_per_island) if bests_per_island else float("-inf")
         print(
             f"[gen {gen:03d}] effective_pop={model.total_size()} "
-            f"global_best={max(bests):.4f} "
+            f"global_best={global_best_now:.4e} "
             f"migrants={mig_stats['total_migrants']} "
             f"sizes={model.island_sizes()}",
             flush=True,
