@@ -427,8 +427,8 @@ def run_persona_evolution(
         cfg_kwargs["diversity_floor"] = diversity_floor
     if checkpoint_every is not None:
         cfg_kwargs["checkpoint_every"] = checkpoint_every
-    if resume_from is not None:
-        cfg_kwargs["resume_from"] = resume_from
+    if loop_resume_from is not None:
+        cfg_kwargs["resume_from"] = loop_resume_from
     if max_wallclock_seconds is not None:
         cfg_kwargs["max_wallclock_seconds"] = max_wallclock_seconds
     config = EvolutionConfig(**cfg_kwargs)
