@@ -163,12 +163,15 @@ def crowding_distance(
     for key in objectives:
         scored = []
         for ind in front:
-            v = float("-inf")
-            if ind.fitness is not None:
-                raw = float(ind.fitness.breakdown.get(key, float("-inf")))
-                # NaN / Inf は最劣 (-inf) に正規化し crowding 計算への伝播を防ぐ (B-NUM-1).
-                v = raw if np.isfinite(raw) else float("-inf")
-            scored.append((v, ind.individual_id))
+            if ind.fitness is None:
+                continue
+            v = float(ind.fitness.breakdown.get(key, float("-inf")))
+            # 非有限 (NaN/Inf) は crowding 計算に使えないため除外。該当個体の
+            # distance は初期値 0.0 のまま = 最劣扱いで淘汰されやすい (B-NUM-1).
+            if np.isfinite(v):
+                scored.append((v, ind.individual_id))
+        if len(scored) < 2:
+            continue
         scored.sort(key=lambda t: t[0])
         v_min = scored[0][0]
         v_max = scored[-1][0]
@@ -178,7 +181,7 @@ def crowding_distance(
         distances[scored[-1][1]] = float("inf")
         if rng_val <= 0:
             continue
-        for i in range(1, n - 1):
+        for i in range(1, len(scored) - 1):
             prev_v = scored[i - 1][0]
             next_v = scored[i + 1][0]
             distances[scored[i][1]] += (next_v - prev_v) / rng_val
