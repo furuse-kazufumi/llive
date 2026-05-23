@@ -149,6 +149,10 @@ def test_sample_neighborhood_returns_valid_genome3d() -> None:
     assert isinstance(g1.c_impl, ImplChromosome)
     assert isinstance(g1.c_prompt, PromptChromosome)
     assert isinstance(g1.c_meta, MetaChromosome)
+    assert isinstance(g1.c_factors, ThoughtFactorPerLayerChromosome)
+    # c_factors の値は [0, 1] にクリップされている
+    arr = g1.c_factors.as_array()
+    assert (arr >= 0.0).all() and (arr <= 1.0).all()
 
 
 def test_sample_neighborhood_zero_step_impl_prompt_identity() -> None:
