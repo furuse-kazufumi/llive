@@ -165,7 +165,9 @@ def crowding_distance(
         for ind in front:
             v = float("-inf")
             if ind.fitness is not None:
-                v = float(ind.fitness.breakdown.get(key, float("-inf")))
+                raw = float(ind.fitness.breakdown.get(key, float("-inf")))
+                # NaN / Inf は最劣 (-inf) に正規化し crowding 計算への伝播を防ぐ (B-NUM-1).
+                v = raw if np.isfinite(raw) else float("-inf")
             scored.append((v, ind.individual_id))
         scored.sort(key=lambda t: t[0])
         v_min = scored[0][0]
