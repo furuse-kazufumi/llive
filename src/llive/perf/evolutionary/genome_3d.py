@@ -52,7 +52,7 @@ kolmogorov proxy 加法 + neighborhood sampling + 2 種 crossover のみ.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
@@ -60,17 +60,28 @@ import numpy as np
 from llive.perf.evolutionary.impl_chromosome import ImplChromosome
 from llive.perf.evolutionary.meta_chromosome import MetaChromosome
 from llive.perf.evolutionary.prompt_chromosome import PromptChromosome
+from llive.perf.evolutionary.thought_factor_per_layer import (
+    ThoughtFactorPerLayerChromosome,
+    crossover_per_factor as _factor_crossover_per_factor,
+)
 
 
 @dataclass(frozen=True)
 class Genome3D:
-    """3 階建てゲノム (C_impl + C_prompt + C_meta) の frozen aggregate.
+    """多階建てゲノム (C_impl + C_prompt + C_meta + C_factors) の frozen aggregate.
 
-    v0.F 2 階建て (impl + prompt) と v0.I 3 階建て (+meta) の合流点. EvolutionLoop /
-    selector / fitness 評価は本クラスを受け取って 3 chromosome それぞれを参照する.
+    v0.F 2 階建て (impl + prompt) と v0.I 3 階建て (+meta), さらに本セッション
+    (2026-05-23) で 4 層目として加わった因子×層 2D matrix の合流点. class 名は
+    歴史的経緯で ``Genome3D`` のまま (referenecs/import 不変を優先).
 
-    skeleton 段階では既存 v0.B :class:`Genome` (scalar 19 dim) と並走し,
-    Population は引き続き Genome ベース. Genome3D は段階的に注入される.
+    EvolutionLoop / selector / fitness 評価は本クラスを受け取って 4 chromosome
+    それぞれを参照する. skeleton 段階では既存 v0.B :class:`Genome`
+    (scalar 19 dim) と並走し, Population は引き続き Genome ベース. Genome3D は
+    段階的に注入される.
+
+    Backward-compat: ``c_factors`` は default factory 付きなので, ``c_impl``
+    / ``c_prompt`` / ``c_meta`` のみを指定する既存コードはそのまま動く.
+    ``from_dict`` も ``c_factors`` キー欠落時は default を使う.
     """
 
     #: 実装層 (コード層). frozen dataclass.
@@ -82,49 +93,66 @@ class Genome3D:
     #: メタ層 (進化アルゴリズム自身). frozen dataclass.
     c_meta: MetaChromosome
 
+    #: 因子層 (10 思考因子 × メモリ層 2D matrix). frozen dataclass.
+    #: 2026-05-23 ユーザー要件「10 因子がゲノム化できているのが理想」由来.
+    c_factors: ThoughtFactorPerLayerChromosome = field(
+        default_factory=ThoughtFactorPerLayerChromosome.default
+    )
+
     # ----- factories ------------------------------------------------------
 
     @classmethod
     def default(cls) -> Genome3D:
-        """v0.B baseline 互換のデフォルト. 3 chromosome 全て default 値."""
+        """v0.B baseline 互換のデフォルト. 4 chromosome 全て default 値."""
         return cls(
             c_impl=ImplChromosome.default(),
             c_prompt=PromptChromosome.default(),
             c_meta=MetaChromosome.default(),
+            c_factors=ThoughtFactorPerLayerChromosome.default(),
         )
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Genome3D:
-        """nested dict → Genome3D 復元. ``to_dict()`` と round-trip 整合."""
-        return cls(
-            c_impl=ImplChromosome.from_dict(data["c_impl"]),
-            c_prompt=PromptChromosome.from_dict(data["c_prompt"]),
-            c_meta=MetaChromosome.from_dict(data["c_meta"]),
-        )
+        """nested dict → Genome3D 復元. ``to_dict()`` と round-trip 整合.
+
+        Backward-compat: ``c_factors`` キーが無ければ default を使う.
+        """
+        kwargs: dict[str, Any] = {
+            "c_impl": ImplChromosome.from_dict(data["c_impl"]),
+            "c_prompt": PromptChromosome.from_dict(data["c_prompt"]),
+            "c_meta": MetaChromosome.from_dict(data["c_meta"]),
+        }
+        if "c_factors" in data:
+            kwargs["c_factors"] = ThoughtFactorPerLayerChromosome.from_dict(
+                data["c_factors"]
+            )
+        return cls(**kwargs)
 
     # ----- serialization --------------------------------------------------
 
     def to_dict(self) -> dict[str, Any]:
-        """3 chromosome を nested dict 化. JSON 化可能."""
+        """4 chromosome を nested dict 化. JSON 化可能."""
         return {
             "c_impl": self.c_impl.to_dict(),
             "c_prompt": self.c_prompt.to_dict(),
             "c_meta": self.c_meta.to_dict(),
+            "c_factors": self.c_factors.to_dict(),
         }
 
     # ----- Kolmogorov complexity proxy ------------------------------------
 
     def kolmogorov_proxy(self) -> int:
-        """gzip K(joint) の上界近似. 3 chromosome の K を加法和で集約.
+        """gzip K(joint) の上界近似. 4 chromosome の K を加法和で集約.
 
-        厳密には K(A,B,C) ≤ K(A) + K(B) + K(C) + O(1) (Li & Vitanyi 2008 §2.8)
-        だが, 計算可能近似 (gzip) では各 chromosome の json を独立に圧縮した
-        ものを加算する形を採る. skeleton 段階では十分.
+        厳密には K(A,B,C,D) ≤ K(A) + K(B) + K(C) + K(D) + O(1)
+        (Li & Vitanyi 2008 §2.8) だが, 計算可能近似 (gzip) では各 chromosome の
+        json を独立に圧縮したものを加算する形を採る.
         """
         return (
             self.c_impl.kolmogorov_proxy()
             + self.c_prompt.kolmogorov_proxy()
             + self.c_meta.kolmogorov_proxy()
+            + self.c_factors.kolmogorov_proxy()
         )
 
     # ----- neighborhood sampling ------------------------------------------
@@ -134,7 +162,7 @@ class Genome3D:
         rng: np.random.Generator,
         step_size: float = 0.1,
     ) -> Genome3D:
-        """各層を独立に sample_neighborhood. step_size は 3 chromosome 共通.
+        """各層を独立に sample_neighborhood. step_size は 4 chromosome 共通.
 
         層別 step_size を使いたい場合は ``c_meta.mutation_rate_per_layer`` から
         派生させる EvolutionLoop 側で実装. ここでは API を単純に保つ.
@@ -143,6 +171,7 @@ class Genome3D:
             c_impl=self.c_impl.sample_neighborhood(rng, step_size),
             c_prompt=self.c_prompt.sample_neighborhood(rng, step_size),
             c_meta=self.c_meta.sample_neighborhood(rng, step_size),
+            c_factors=self.c_factors.sample_neighborhood(rng, step_size),
         )
 
 
