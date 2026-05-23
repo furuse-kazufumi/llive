@@ -189,7 +189,19 @@ def llm_fitness_factory(
     """``Callable[[Genome], FitnessReport]`` を返す factory. 5 軸合成 fitness."""
 
     def _fitness(genome: Genome) -> FitnessReport:
-        backend = _resolve_backend(genome, config)
+        try:
+            backend = _resolve_backend(genome, config)
+        except ValueError as exc:
+            # measurement purity 違反 (cloud backend を選んだ個体) は例外で
+            # loop を止めず fitness=0 で淘汰する (extensibility 契約: 走行中の
+            # 進化を壊さない). architecture (factory 拒否) と evolution (低
+            # fitness) の二重で purity を担保する.
+            return FitnessReport(
+                score=0.0,
+                breakdown={"purity_violation": 1.0},
+                n_samples=0,
+                notes=f"purity violation (culled): {exc}",
+            )
         temperature = float(genome.values[1])
         top_p = float(genome.values[2])
         request_params = {
