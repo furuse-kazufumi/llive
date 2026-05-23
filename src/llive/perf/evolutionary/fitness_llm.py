@@ -91,17 +91,11 @@ class LlmFitnessConfig:
 
 
 def _genome_field(genome: Genome, label: str, fallback_index: int) -> float:
-    """genome 値を **label** で解決する (position 直読みは genome layout 依存で危険).
+    """genome 値を label で解決する薄いラッパ (共通器 Genome.value_by_label に委譲).
 
-    19-dim LIVE_VARIANT genome (backend_id=index13) と 5-dim LLM genome
-    (backend_id=index0) のどちらでも正しく読む. labels が無い/label 不在の genome は
-    fallback_index に退避 (後方互換). FullSense Spec §E3 (genome dimensionality
-    invariant) / §I1 (provenance: breakdown が label に対応) 準拠.
-    gem-critic 検証で発見した致命バグ B1 の修正.
+    B1/A-1 修正の解決ロジックは Genome.value_by_label に集約 (DRY).
     """
-    if genome.labels and label in genome.labels:
-        return genome.values[genome.labels.index(label)]
-    return genome.values[fallback_index]
+    return genome.value_by_label(label, fallback_index)
 
 
 def _resolve_backend(genome: Genome, config: LlmFitnessConfig) -> LLMBackend:
