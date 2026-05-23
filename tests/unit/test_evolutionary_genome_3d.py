@@ -42,6 +42,7 @@ def test_default_constructs_valid_3d() -> None:
     assert isinstance(g.c_impl, ImplChromosome)
     assert isinstance(g.c_prompt, PromptChromosome)
     assert isinstance(g.c_meta, MetaChromosome)
+    assert isinstance(g.c_factors, ThoughtFactorPerLayerChromosome)
 
 
 def test_default_matches_chromosome_defaults() -> None:
@@ -49,6 +50,27 @@ def test_default_matches_chromosome_defaults() -> None:
     assert g.c_impl == ImplChromosome.default()
     assert g.c_prompt == PromptChromosome.default()
     assert g.c_meta == MetaChromosome.default()
+    assert g.c_factors == ThoughtFactorPerLayerChromosome.default()
+
+
+def test_c_factors_default_is_uniform_neutral() -> None:
+    g = Genome3D.default()
+    arr = g.c_factors.as_array()
+    # ThoughtFactorPerLayerChromosome.default() は全 cell 0.5
+    assert (arr == 0.5).all()
+    assert arr.shape[0] == 10  # 10 factors
+
+
+def test_c_factors_can_be_overridden_in_constructor() -> None:
+    rng = np.random.default_rng(42)
+    custom = ThoughtFactorPerLayerChromosome.random(rng)
+    g = Genome3D(
+        c_impl=ImplChromosome.default(),
+        c_prompt=PromptChromosome.default(),
+        c_meta=MetaChromosome.default(),
+        c_factors=custom,
+    )
+    assert g.c_factors == custom
 
 
 # ===========================================================================
