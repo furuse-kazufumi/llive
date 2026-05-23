@@ -196,9 +196,16 @@ def _compute_aggregate(breakdown: dict[str, float], weights: dict[str, float]) -
 
 
 def llm_fitness_factory(
-    config: LlmFitnessConfig = LlmFitnessConfig(),
+    config: LlmFitnessConfig | None = None,
 ) -> Callable[[Genome], FitnessReport]:
-    """``Callable[[Genome], FitnessReport]`` を返す factory. 5 軸合成 fitness."""
+    """``Callable[[Genome], FitnessReport]`` を返す factory. 5 軸合成 fitness.
+
+    ``config`` 省略時は default ``LlmFitnessConfig`` (on-prem fail-closed backend
+    factory)。default 引数を module ロード時に評価しないため None default + 内部生成
+    にする (on_prem_backend_factory は後方定義なので即時評価すると NameError)。
+    """
+    if config is None:
+        config = LlmFitnessConfig()
 
     def _fitness(genome: Genome) -> FitnessReport:
         try:
