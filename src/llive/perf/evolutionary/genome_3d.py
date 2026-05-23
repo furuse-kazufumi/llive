@@ -1,15 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Genome3D — 3 階建てゲノム結合 dataclass (llive v0.F EV-13 + v0.I EV-21 join).
+"""Genome3D — 多階建てゲノム結合 dataclass (llive v0.F EV-13 + v0.I EV-21 + 2026-05-23 EV-22 join).
 
-直前の skeleton phase で着地した 3 つの chromosome:
+着地済みの chromosome (現 4 階建て, class 名は歴史的経緯で ``Genome3D``):
 
 * :class:`ImplChromosome` — 実装的選択 (コード層 / v0.F 柱 A-1)
 * :class:`PromptChromosome` — 偉人思想・スキル・ルール (プロンプト層 / v0.F 柱 A-2)
 * :class:`MetaChromosome` — 進化アルゴリズム自体 (メタ層 / v0.I §3.2)
+* :class:`ThoughtFactorPerLayerChromosome` — 10 思考因子 × メモリ層 2D matrix
+  (因子層 / 2026-05-23 ユーザー要件: 「10 因子がゲノム化できているのが理想」).
+  既存 ``LIVE_VARIANT_GENOME`` の scalar 10 dim を拡張して層別 (working /
+  short_term / long_term / episodic) に強度を持てるよう一段上げたもの.
 
-を **frozen な 1 つの aggregate** にまとめる. v0.F 要件 §2 (2 階建てゲノム) と
-v0.I 要件 §3.3 (3 階建てゲノム / cross-substrate self-improvement) の結節点に
-あたる skeleton.
+を **frozen な 1 つの aggregate** にまとめる. v0.F 要件 §2 (2 階建てゲノム),
+v0.I 要件 §3.3 (3 階建てゲノム / cross-substrate self-improvement),
+そして因子 × 層構造 (本セッション) の結節点.
 
 設計方針:
 
