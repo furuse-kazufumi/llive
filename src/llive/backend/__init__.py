@@ -25,8 +25,12 @@ delegating wrapper (``rwkv_cpp_server`` 等) と対になる ``*_py`` 経路.
 from __future__ import annotations
 
 from llive.backend.rwkv_backend import RwkvPyBackend, default_weights_dir
+from llive.backend.mamba_backend import MambaPyBackend
+from llive.backend.mamba_backend import default_weights_dir as default_mamba_weights_dir
 
 __all__ = [
     "RwkvPyBackend",
+    "MambaPyBackend",
     "default_weights_dir",
+    "default_mamba_weights_dir",
 ]
