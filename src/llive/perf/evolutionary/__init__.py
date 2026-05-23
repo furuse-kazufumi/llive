@@ -439,6 +439,7 @@ __all__ = [
     "PersonaComposition",
     "PersonaCompositionMutation",
     "PersonaCorpusLoader",
+    "PersonaEvolutionResult",
     "PersonaImportAlgorithm",
     "PersonaImportPlan",
     "PersonaOverlapPenalty",
