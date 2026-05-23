@@ -131,6 +131,22 @@ def test_crowding_distance_small_front() -> None:
     assert d["b"] == float("inf")
 
 
+def test_crowding_distance_handles_nan_objective() -> None:
+    """NaN objective を含む front で crowding distance が NaN を伝播しない (B-NUM-1).
+
+    NaN を放置すると NSGA2Selection の dist 比較が常に False になり選択圧が壊れる。
+    """
+    front = [
+        _make_ind("a", {"obj": 0.1}),
+        _make_ind("b", {"obj": float("nan")}),
+        _make_ind("c", {"obj": 0.9}),
+        _make_ind("d", {"obj": 0.5}),
+    ]
+    dists = crowding_distance(front, objectives=("obj",))
+    for d in dists.values():
+        assert not np.isnan(d), f"NaN distance propagated: {dists}"
+
+
 # ---------------------------------------------------------------------------
 # 3. NSGA2Selection
 # ---------------------------------------------------------------------------
