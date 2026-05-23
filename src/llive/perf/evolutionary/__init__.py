@@ -491,6 +491,7 @@ __all__ = [
     "candidate_to_map_elites_features",
     "candidate_to_thought_features",
     "collusion_risk_score",
+    "compare_against_llm_baselines",
     "compute_individual_id",
     "compute_novelty_scores",
     "cross_layer_crossover",
