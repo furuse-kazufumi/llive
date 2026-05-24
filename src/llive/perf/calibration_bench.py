@@ -20,7 +20,6 @@ import numpy as np
 
 from llive.evolution.antifragile_bench import run_ga
 
-
 # ---------------------------------------------------------------------------
 # 較正 (calibration)
 # ---------------------------------------------------------------------------
@@ -132,7 +131,7 @@ def main() -> None:
     print("# 安定性 (stability) — Antifragile 脱出率の seed 分散\n")
     s = stability_antifragile()
     print(f"- escape rate: mean={s.mean:.2f} std={s.std:.3f} min={s.min:.2f} max={s.max:.2f} "
-          f"({s.n_batches}×{s.batch_size} seeds)")
+          f"({s.n_batches}x{s.batch_size} seeds)")
     print("- std≈0 かつ min 高 = seed 運でなく頑健。" if s.std < 0.1 else "- std 大 = seed 依存に注意。")
 
 
