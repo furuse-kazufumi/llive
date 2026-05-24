@@ -111,7 +111,12 @@ def _write_run_manifest(out_dir: Path, args: argparse.Namespace) -> None:
 
 
 def _write_run_summary(
-    out_dir: Path, *, status: str, res=None, error: Exception | None = None
+    out_dir: Path,
+    *,
+    status: str,
+    res=None,
+    error: Exception | None = None,
+    traceback_str: str | None = None,
 ) -> None:
     """run の結果 (成功/失敗とも) を run_summary.json に記録する.
 
