@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
+from llive.perf.evolutionary.genome_3d import genome_flat_vector
 from llive.perf.evolutionary.individual import Individual
 
 
@@ -52,7 +53,10 @@ class Population:
     """
 
     individuals: list[Individual]
-    bounds: GenomeBounds
+    # ``bounds`` describes the flat Genome search box. Genome3D has no single
+    # GenomeBounds (each chromosome bounds itself), so a Genome3D population
+    # carries ``bounds=None`` (G1). Flat populations always set it.
+    bounds: GenomeBounds | None = None
     generation: int = 0
     seed: int = 0
     generation_seeds: list[int] = field(default_factory=list)
@@ -136,7 +140,7 @@ class Population:
         n = len(self.individuals)
         if n < 2:
             return 0.0
-        vectors = np.stack([ind.genome.as_array() for ind in self.individuals], axis=0)
+        vectors = np.stack([genome_flat_vector(ind.genome) for ind in self.individuals], axis=0)
         # pairwise L2: ((v_i - v_j)^2).sum(-1)
         diff = vectors[:, None, :] - vectors[None, :, :]
         dists = np.sqrt(np.sum(diff * diff, axis=-1))
@@ -159,7 +163,7 @@ class Population:
     def to_dict(self) -> dict[str, Any]:
         return {
             "individuals": [ind.to_dict() for ind in self.individuals],
-            "bounds": self.bounds.to_dict(),
+            "bounds": None if self.bounds is None else self.bounds.to_dict(),
             "generation": int(self.generation),
             "seed": int(self.seed),
             "generation_seeds": list(self.generation_seeds),
@@ -167,9 +171,10 @@ class Population:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Population:
+        bounds_data = data.get("bounds")
         return cls(
             individuals=[Individual.from_dict(d) for d in data["individuals"]],
-            bounds=GenomeBounds.from_dict(data["bounds"]),
+            bounds=None if bounds_data is None else GenomeBounds.from_dict(bounds_data),
             generation=int(data.get("generation", 0)),
             seed=int(data.get("seed", 0)),
             generation_seeds=[int(s) for s in data.get("generation_seeds", [])],

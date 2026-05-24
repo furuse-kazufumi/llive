@@ -246,8 +246,36 @@ def cross_layer_crossover(
     )
 
 
+# ---------------------------------------------------------------------------
+# flat numeric view (shared by Population diversity / NoveltyScorer)
+# ---------------------------------------------------------------------------
+
+
+def genome_flat_vector(genome: object) -> np.ndarray:
+    """Flat float64 view of any genome, for diversity / novelty distance math.
+
+    - flat :class:`~llive.perf.evolutionary.genome.Genome` → its ``as_array()``
+      (the 19-dim vector).
+    - :class:`Genome3D` → ``c_factors.as_flat()`` (the 10×layer factor matrix,
+      flattened). impl/prompt/meta are categorical and not part of this
+      continuous view — diversity over Genome3D is measured on the factor layer
+      only (same choice as ``scripts/demo_genome3d_evolution.py``). Extending to
+      include a categorical (Hamming) component is a later refinement.
+
+    A population is homogeneous (all flat *or* all Genome3D) within one run, so
+    the per-population vectors are always the same length.
+    """
+    as_array = getattr(genome, "as_array", None)
+    if callable(as_array):
+        return np.asarray(as_array(), dtype=np.float64)
+    if isinstance(genome, Genome3D):
+        return np.asarray(genome.c_factors.as_flat(), dtype=np.float64)
+    raise TypeError(f"unsupported genome type for flat vector: {type(genome).__name__}")
+
+
 __all__ = [
     "Genome3D",
     "cross_layer_crossover",
+    "genome_flat_vector",
     "intra_layer_crossover",
 ]

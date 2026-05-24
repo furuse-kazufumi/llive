@@ -8,6 +8,17 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from llive.perf.evolutionary.genome import Genome
+from llive.perf.evolutionary.genome_3d import Genome3D
+
+# A genome carried by an Individual is either the flat v0.B Genome or the
+# multi-layer Genome3D. The infra is generic over this union; serialization
+# tags which one so resume can reconstruct the right type (G1/G7).
+GenomeT = Genome | Genome3D
+
+
+def _genome_type_tag(genome: GenomeT) -> str:
+    """Serialization tag used by Individual.to_dict/from_dict to branch on type."""
+    return "Genome3D" if isinstance(genome, Genome3D) else "Genome"
 
 
 @dataclass(frozen=True)
@@ -52,7 +63,7 @@ class Individual:
     dataclass 操作は避け, ``record_fitness`` 経由で更新する.
     """
 
-    genome: Genome
+    genome: GenomeT
     individual_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     parent_ids: tuple[str, ...] = field(default_factory=tuple)
     birth_generation: int = 0
@@ -74,7 +85,7 @@ class Individual:
     @classmethod
     def from_genome(
         cls,
-        genome: Genome,
+        genome: GenomeT,
         parent_ids: tuple[str, ...] = (),
         birth_generation: int = 0,
     ) -> Individual:
@@ -87,6 +98,7 @@ class Individual:
             "individual_id": self.individual_id,
             "parent_ids": list(self.parent_ids),
             "birth_generation": int(self.birth_generation),
+            "genome_type": _genome_type_tag(self.genome),
             "genome": self.genome.to_dict(),
             "fitness": None if self.fitness is None else self.fitness.to_dict(),
             "history": [h.to_dict() for h in self.history],
@@ -94,8 +106,15 @@ class Individual:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Individual:
+        # `genome_type` defaults to "Genome": snapshots written before the
+        # Genome3D split (no tag) are flat, so this stays backward-compatible.
+        genome_type = data.get("genome_type", "Genome")
+        if genome_type == "Genome3D":
+            genome: GenomeT = Genome3D.from_dict(data["genome"])
+        else:
+            genome = Genome.from_dict(data["genome"])
         ind = cls(
-            genome=Genome.from_dict(data["genome"]),
+            genome=genome,
             individual_id=str(data["individual_id"]),
             parent_ids=tuple(data.get("parent_ids", [])),
             birth_generation=int(data.get("birth_generation", 0)),
@@ -106,4 +125,4 @@ class Individual:
         return ind
 
 
-__all__ = ["FitnessReport", "Individual"]
+__all__ = ["FitnessReport", "GenomeT", "Individual"]

@@ -146,14 +146,17 @@ class EvolutionLoop:
                 population.generation = resumed.generation
                 population.seed = resumed.seed
                 population.generation_seeds = list(resumed.generation_seeds)
-                # snapshot 整合性検証 (fail-closed)。
-                for ind in population.individuals:
-                    if ind.genome.n_dims != population.bounds.n_dims:
-                        raise ValueError(
-                            f"resumed individual genome dim ({ind.genome.n_dims}) != "
-                            f"snapshot bounds dim ({population.bounds.n_dims}); "
-                            "snapshot が破損している可能性。"
-                        )
+                # snapshot 整合性検証 (fail-closed)。flat genome のみ: Genome3D は
+                # 単一 bounds を持たず (population.bounds is None) 次元検証の対象外。
+                if population.bounds is not None:
+                    for ind in population.individuals:
+                        n_dims = getattr(ind.genome, "n_dims", None)
+                        if n_dims is not None and n_dims != population.bounds.n_dims:
+                            raise ValueError(
+                                f"resumed individual genome dim ({n_dims}) != "
+                                f"snapshot bounds dim ({population.bounds.n_dims}); "
+                                "snapshot が破損している可能性。"
+                            )
 
         rng = np.random.default_rng(population.seed)
 
