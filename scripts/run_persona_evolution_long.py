@@ -105,14 +105,24 @@ def main() -> int:
     patience = args.patience if args.patience is not None else args.generations + 1
     resume_from = args.out if args.resume else None
 
+    # fitness 選択: llm は on-prem fail-closed backend factory (measurement purity)。
+    # cloud backend を選んだ個体は実体化で拒否され fitness=0 で淘汰される
+    # (backend_id は B1 修正で label 解決済 = position 誤読なし)。
+    fitness_fn = None
+    if args.fitness == "llm":
+        fitness_fn = llm_fitness_factory(
+            LlmFitnessConfig(backend_factory=on_prem_backend_factory())
+        )
+
     print(
         f"[run] personas={len(args.personas)} pop={args.population} "
-        f"generations={args.generations} patience={patience} "
+        f"generations={args.generations} patience={patience} fitness={args.fitness} "
         f"resume={'yes' if args.resume else 'no'} out={args.out}"
     )
 
     res = run_persona_evolution(
         args.personas,
+        fitness_fn=fitness_fn,
         population_size=args.population,
         generations=args.generations,
         seed=args.seed,
