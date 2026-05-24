@@ -145,6 +145,8 @@ def _write_run_summary(
         )
     if error is not None:
         summary["error"] = repr(error)
+    if traceback_str:
+        summary["traceback"] = traceback_str
     (out_dir / "run_summary.json").write_text(
         json.dumps(summary, indent=2, ensure_ascii=False, default=str), encoding="utf-8"
     )
