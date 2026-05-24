@@ -263,6 +263,10 @@ WebSearch 6 件 + llive 実装在庫の交差から見えた発見:
   = L2 / IBPO / early-exit)、KV-cache の mesh 差分共有 (予定)。
 - 判断基準 = 優先度ランキングのフィルタを「現状構造を壊すか」で読む。壊さず genuine な
   価値があれば KEEP、in-model は adopt に回す。
+- **導入手順 (ユーザー確定 2026-05-24)**: 「使えそう」で本格導入しない。**定量比較 PoC
+  (baseline vs 手法、honest disclosure) で効果を実測 → 効果があれば要件定義に集約 →
+  本格導入**の順 ([[feedback_poc_feasibility_first]] / [[feedback_workflow_phases]])。
+  各 PoC の数値は `docs/perf_comparison/` に時系列で残す。
 
 ## Sources (WebSearch 2026-05-23)
 
