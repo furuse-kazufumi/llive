@@ -77,6 +77,13 @@ FOUNDER_ID_PREFIX = "founder"
 #: THOUGHT_FACTOR_LABELS は同順 (構造化→現実接続) であることを起動時に検証する.
 _FACTOR_DIM_COUNT = len(THOUGHT_FACTOR_LABELS)
 
+#: founder の backend_id dim と on-prem 初期値。bounds 中点 (≈2.5 → anthropic=cloud) だと
+#: 実 LLM fitness (on_prem fail-closed) 下で全 founder が淘汰され mock 個体に収束してしまう。
+#: founder は on-prem 純な mock (=0) から始め、進化が mutate で他 on-prem backend を探索する。
+#: proxy fitness には backend_id は無関係なので影響しない (走行前に確定すべき凍結点)。
+_BACKEND_ID_DIM = LIVE_VARIANT_GENOME_LABELS.index("backend_id")
+_ON_PREM_FOUNDER_BACKEND_ID = 0  # _BACKEND_NAMES[0] = "mock" (on-prem, fail-closed を通る)
+
 # 起動時健全性検査: persona 側 (THOUGHT_FACTORS) と genome 側
 # (THOUGHT_FACTOR_LABELS) の思考因子ラベルが完全一致していること。
 # 一致しないと founder の affinity を誤った dim に書き込んでしまう。
