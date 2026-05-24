@@ -64,6 +64,86 @@ DEFAULT_ROSTER: tuple[str, ...] = (
 )
 
 
+def _git_commit() -> str:
+    """llive repo の HEAD commit (トレーサビリティ用、取得不可なら 'unknown')."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(Path(__file__).resolve().parents[1]),
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except Exception:
+        return "unknown"
+
+
+def _write_run_manifest(out_dir: Path, args: argparse.Namespace) -> None:
+    """run の条件 (commit/設定/genome/環境) を run_manifest.json に記録する.
+
+    「進化 run はデータ取りの貴重な実験」— 後々の改良で「どの commit のどの設定・どの genome
+    構造で取ったデータか」を追えるようにする。**run 前に書く**ので失敗しても条件は必ず残る。
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "schema": "run_manifest/v1",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "llive_commit": _git_commit(),
+        "fitness": args.fitness,
+        "personas": list(args.personas),
+        "population": args.population,
+        "generations": args.generations,
+        "seed": args.seed,
+        "resume": bool(args.resume),
+        "inject": list(args.inject) if args.inject else [],
+        "genome": {
+            "dim": len(LIVE_VARIANT_GENOME_LABELS),
+            "labels": list(LIVE_VARIANT_GENOME_LABELS),
+            "bounds_lower": list(LIVE_VARIANT_GENOME_BOUNDS.lower),
+            "bounds_upper": list(LIVE_VARIANT_GENOME_BOUNDS.upper),
+        },
+        "operators": "default: TournamentSelection / BlendCrossover / Gaussian+Reset / Elitism",
+        "runtime": collect_runtime_metadata(),
+    }
+    (out_dir / "run_manifest.json").write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False, default=str), encoding="utf-8"
+    )
+
+
+def _write_run_summary(
+    out_dir: Path, *, status: str, res=None, error: Exception | None = None
+) -> None:
+    """run の結果 (成功/失敗とも) を run_summary.json に記録する.
+
+    「失敗してもいいが結果が残らないと意味がない」— 成功時は best/収束/elapsed の主要指標、
+    失敗時は status=failed + error を残す。個体別の詳細 breakdown は snapshot_gen_*.json に
+    残るので、改良時 (backend 収束 / 淘汰理由の解析) はそちらを使う。
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    summary: dict = {
+        "schema": "run_summary/v1",
+        "status": status,
+        "timestamp": datetime.now(UTC).isoformat(),
+    }
+    if res is not None:
+        er = res.evolution_result
+        summary.update(
+            {
+                "final_generation": er.final_population.generation,
+                "best_score": float(er.best_score),
+                "stopped_reason": er.stopped_reason,
+                "elapsed_seconds": float(er.elapsed_seconds),
+                "used_proxy_fitness": res.used_proxy_fitness,
+                "founder_ids": list(res.founder_ids),
+                "injected_persona_ids": list(res.injected_persona_ids),
+            }
+        )
+    if error is not None:
+        summary["error"] = repr(error)
+    (out_dir / "run_summary.json").write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False, default=str), encoding="utf-8"
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="persona 世代交代 長期ランナー")
     ap.add_argument("--generations", type=int, default=100)
