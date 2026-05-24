@@ -95,6 +95,9 @@ def _write_run_manifest(out_dir: Path, args: argparse.Namespace) -> None:
         "timestamp": datetime.now(UTC).isoformat(),
         "llive_commit": _git_commit(),
         "fitness": args.fitness,
+        "eval_timeout_seconds": (
+            args.eval_timeout if (args.fitness == "llm" and args.eval_timeout and args.eval_timeout > 0) else None
+        ),
         "personas": list(args.personas),
         "population": args.population,
         "generations": args.generations,
@@ -209,6 +212,13 @@ def main() -> int:
         default="proxy",
         help="proxy=決定論 heuristic (既定, LLM 呼ばない) / llm=実 LLM fitness (on-prem fail-closed)",
     )
+    ap.add_argument(
+        "--eval-timeout",
+        type=float,
+        default=120.0,
+        help="--fitness llm 時の 1 個体評価の hang guard 秒数 (無応答 backend を打ち切り淘汰)。"
+        "0 で無効。既定 120。proxy では無視。",
+    )
     # ---- Genome3D (多層ゲノム) モード ----
     ap.add_argument(
         "--genome3d",
@@ -254,8 +264,13 @@ def main() -> int:
     # (backend_id は B1 修正で label 解決済 = position 誤読なし)。
     fitness_fn = None
     if args.fitness == "llm":
+        # per-eval hang guard: 無応答 backend で run 全体が止まらないよう打ち切り淘汰。
+        eval_timeout = args.eval_timeout if args.eval_timeout and args.eval_timeout > 0 else None
         fitness_fn = llm_fitness_factory(
-            LlmFitnessConfig(backend_factory=on_prem_backend_factory())
+            LlmFitnessConfig(
+                backend_factory=on_prem_backend_factory(),
+                eval_timeout_seconds=eval_timeout,
+            )
         )
 
     # 0 → 無効化 (None) として run_persona_evolution に渡す。

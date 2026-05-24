@@ -27,6 +27,7 @@ Phase 4 mock では:
 
 from __future__ import annotations
 
+import concurrent.futures
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -92,6 +93,15 @@ class LlmFitnessConfig:
     """backend を作る factory. **default は on-prem only factory** (cloud backend を
     fail-closed 拒否; P-1 measurement purity)。明示的に ``None`` を渡すと従来の
     MockBackend 固定にフォールバック (低レベルテスト用)。"""
+    eval_timeout_seconds: float | None = None
+    """**per-evaluation hang guard**: 1 個体の LLM 評価がこの秒数を超えたら打ち切り、
+    ``eval_timeout`` で fitness=0 淘汰して走行を継続する。実 LLM backend (ollama 等) が
+    無応答 / ネット stall で ``backend.generate()`` が hang すると、それ無しでは進化 run
+    全体が 1 個体で止まる — 長時間 run の停止防止 (ユーザー要望 2026-05-24) の real-LLM 版。
+    ``None`` / 0 以下で無効 (default; mock/proxy 経路は不変・既存テストに影響なし)。
+    実 LLM run では driver が秒数を設定する。注: Python は thread 内の blocking I/O を強制
+    キャンセルできないため、超過時は評価結果を破棄して個体を淘汰し、orphan thread は I/O が
+    解けた時点で自然終了する (run は即座に次へ進む)。"""
 
 
 def _genome_field(genome: Genome, label: str, fallback_index: int) -> float:
@@ -223,41 +233,66 @@ def llm_fitness_factory(
                 n_samples=0,
                 notes=f"{reason} (culled): {exc}",
             )
-        backend_id = max(
-            0, min(len(_BACKEND_NAMES) - 1, int(_genome_field(genome, "backend_id", 0)))
-        )
-        temperature = float(_genome_field(genome, "temperature", 1))
-        top_p = float(_genome_field(genome, "top_p", 2))
-        request_params = {
-            "max_tokens": 64,
-            "temperature": max(0.0, min(2.0, temperature)),
-        }
-        # top_p は GenerateRequest が未対応の場合があるため request_params には入れない
-        # (将来 backend 側の対応で追加)
-        latency_ms, quality, stability, _outputs = _measure_latency_quality_stability(
-            backend, config.prompts, config.n_stability_samples, request_params
-        )
-        safety = _measure_safety(backend, config.danger_prompts)
-        honesty = _measure_honesty(backend)
-        breakdown = {
-            "latency_ms": float(latency_ms),
-            "quality": float(quality),
-            "stability": float(stability),
-            "safety": float(safety),
-            "honesty": float(honesty),
-            "backend_id": float(backend_id),
-            "temperature": float(temperature),
-            "top_p": float(top_p),
-        }
-        score = _compute_aggregate(breakdown, config.weights)
-        md = collect_runtime_metadata()
-        return FitnessReport(
-            score=float(score),
-            breakdown=breakdown,
-            runtime_metadata=dict(md),
-            n_samples=len(config.prompts) * config.n_stability_samples,
-            notes=f"llm_fitness (5-axis, backend={_BACKEND_NAMES[backend_id]})",
-        )
+
+        def _run_eval() -> FitnessReport:
+            backend_id = max(
+                0, min(len(_BACKEND_NAMES) - 1, int(_genome_field(genome, "backend_id", 0)))
+            )
+            temperature = float(_genome_field(genome, "temperature", 1))
+            top_p = float(_genome_field(genome, "top_p", 2))
+            request_params = {
+                "max_tokens": 64,
+                "temperature": max(0.0, min(2.0, temperature)),
+            }
+            # top_p は GenerateRequest が未対応の場合があるため request_params には入れない
+            # (将来 backend 側の対応で追加)
+            latency_ms, quality, stability, _outputs = _measure_latency_quality_stability(
+                backend, config.prompts, config.n_stability_samples, request_params
+            )
+            safety = _measure_safety(backend, config.danger_prompts)
+            honesty = _measure_honesty(backend)
+            breakdown = {
+                "latency_ms": float(latency_ms),
+                "quality": float(quality),
+                "stability": float(stability),
+                "safety": float(safety),
+                "honesty": float(honesty),
+                "backend_id": float(backend_id),
+                "temperature": float(temperature),
+                "top_p": float(top_p),
+            }
+            score = _compute_aggregate(breakdown, config.weights)
+            md = collect_runtime_metadata()
+            return FitnessReport(
+                score=float(score),
+                breakdown=breakdown,
+                runtime_metadata=dict(md),
+                n_samples=len(config.prompts) * config.n_stability_samples,
+                notes=f"llm_fitness (5-axis, backend={_BACKEND_NAMES[backend_id]})",
+            )
+
+        # per-evaluation hang guard: timeout 未設定なら従来どおり inline 実行。
+        timeout = config.eval_timeout_seconds
+        if timeout is None or timeout <= 0:
+            return _run_eval()
+        # 超過したら hung eval thread を待たずに (shutdown wait=False) 打ち切り、fitness=0 淘汰。
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(_run_eval)
+        try:
+            result = future.result(timeout=timeout)
+            executor.shutdown(wait=False)
+            return result
+        except concurrent.futures.TimeoutError:
+            executor.shutdown(wait=False)
+            return FitnessReport(
+                score=0.0,
+                breakdown={"eval_timeout": 1.0},
+                n_samples=0,
+                notes=(
+                    f"eval_timeout (>{timeout}s, culled): hung LLM eval を打ち切り走行継続 "
+                    "(orphan thread は I/O 解放時に自然終了)"
+                ),
+            )
 
     return _fitness
 
