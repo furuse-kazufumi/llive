@@ -33,9 +33,11 @@ import traceback
 from datetime import UTC, datetime
 from pathlib import Path
 
-# UTF-8 stdout (Windows cp932 対策, feedback_cli_utf8_stdout_pattern)
+# UTF-8 stdout/stderr (Windows cp932 対策, feedback_cli_utf8_stdout_pattern)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 from llive.perf.evolutionary import persona_extended as _persona_extended  # noqa: E402,F401  (import 副作用で拡張ペルソナを PERSONA_ONTOLOGY に登録)
 from llive.perf.evolutionary.fitness_llm import (  # noqa: E402
