@@ -177,7 +177,7 @@ def main() -> None:
     print("|---|---|---|")
     print(f"| 大域最適 脱出率 | {r.baseline_escape_rate:.0%} | {r.antifragile_escape_rate:.0%} |")
     print(f"| 平均 best fitness | {r.baseline_mean_best:.3f} | {r.antifragile_mean_best:.3f} |")
-    print(f"| 平均 panic 世代数 (cost) | – | {r.antifragile_mean_panic_gens:.1f} |")
+    print(f"| 平均 panic 世代数 (cost) | n/a | {r.antifragile_mean_panic_gens:.1f} |")
 
 
 if __name__ == "__main__":
