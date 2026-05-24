@@ -3,49 +3,49 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-24 12:02:56
+- **最終更新**: 2026-05-24 12:37:54
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
-f2c2d1e feat(evolution): Antifragile Mutation controller (opt-in / fail-closed)
-a5a73df fix(evolution): crowding_distance の非有限 objective を除外 (B-NUM-1)
-ed789c3 auto: nsga2.py 編集前 (2026-05-24 00:51)
-32ad07c auto: nsga2.py 編集前 (2026-05-24 00:49)
-8727f85 fix(evolution): rosenbrock_fitness 空 genome ガード (B-EDGE-1)
-99030d0 auto: fitness.py 編集前 (2026-05-24 00:45)
-38e8867 fix(evolution): P-1 完遂 + backend_select テストを mock 固定に追従
-343ea51 auto: test_evolutionary_backend_select.py 編集前 (2026-05-24 00:41)
-caab35b auto: test_evolutionary_backend_select.py 編集前 (2026-05-24 00:41)
-e2df1aa fix(evolution): LlmFitnessConfig.backend_factory default を on-prem fail-closed に (P-1)
+5d51f3b feat(evolution): 組み合わせ PoC Combo-A/C (llive synergy)
+b3b3358 auto: combo_bench.py 編集前 (2026-05-24 12:29)
+6227264 auto: combo_bench.py 編集前 (2026-05-24 12:29)
+d64e852 auto: combo_bench.py 編集前 (2026-05-24 12:29)
+e9c2164 auto: combo_bench.py 編集前 (2026-05-24 12:29)
+459b206 auto: combo_bench.py 編集前 (2026-05-24 12:29)
+dae728f auto: combo_bench.py 編集前 (2026-05-24 12:29)
+9f84f77 auto: combo_bench.py 編集前 (2026-05-24 12:29)
+d9113ae feat(evolution): 予測検証メタゲート 定量比較 PoC (Gemini#1)
+81212a8 feat(perf): 適応推論予算 (IBPO/early-exit) 定量比較 PoC
 ```
 
 ## 現在の git status
 
 ```
-M docs/SESSION_SUMMARY.md
+(clean)
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-11:59 docs/SESSION_SUMMARY.md
-10:55 .mypy_cache/3.11/cache.9.db
-10:55 .mypy_cache/3.11/cache.8.db
-10:55 .mypy_cache/3.11/cache.7.db
-10:55 .mypy_cache/3.11/cache.6.db
-10:55 .mypy_cache/3.11/cache.5.db
-10:55 .mypy_cache/3.11/cache.4.db
-10:55 .mypy_cache/3.11/cache.3.db
-10:55 .mypy_cache/3.11/cache.2.db
-10:55 .mypy_cache/3.11/cache.15.db
-10:55 .mypy_cache/3.11/cache.14.db
-10:55 .mypy_cache/3.11/cache.13.db
-10:55 .mypy_cache/3.11/cache.12.db
-10:55 .mypy_cache/3.11/cache.11.db
-10:55 .mypy_cache/3.11/cache.10.db
+12:36 .pytest_cache/v/cache/nodeids
+12:29 .mypy_cache/3.11/cache.3.db
+12:29 .mypy_cache/3.11/cache.2.db
+12:29 .ruff_cache/0.15.12/10638194744700293557
+12:29 src/llive/evolution/combo_bench.py
+12:28 .mypy_cache/3.11/cache.9.db
+12:28 .mypy_cache/3.11/cache.6.db
+12:28 .ruff_cache/0.15.12/12334922619133000292
+12:27 tests/unit/test_combo_bench.py
+12:24 tests/unit/test_predictive_gate_bench.py
+12:23 src/llive/evolution/predictive_gate_bench.py
+12:22 tests/unit/test_adaptive_budget_bench.py
+12:21 src/llive/perf/adaptive_budget_bench.py
+12:20 docs/perf_comparison/antifragile_escape_2026_05_24.md
+12:19 src/llive/evolution/antifragile_bench.py
 ```
 
 ---
