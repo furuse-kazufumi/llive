@@ -210,16 +210,18 @@ def llm_fitness_factory(
     def _fitness(genome: Genome) -> FitnessReport:
         try:
             backend = _resolve_backend(genome, config)
-        except ValueError as exc:
-            # measurement purity 違反 (cloud backend を選んだ個体) は例外で
-            # loop を止めず fitness=0 で淘汰する (extensibility 契約: 走行中の
-            # 進化を壊さない). architecture (factory 拒否) と evolution (低
-            # fitness) の二重で purity を担保する.
+        except (ValueError, ImportError) as exc:
+            # ValueError = measurement purity 違反 (cloud backend を選んだ個体)。
+            # ImportError/ModuleNotFoundError = optional 依存未インストールの backend
+            # (mamba/rwkv/jamba 等, openai 等を要求) を選んだ個体。いずれも例外で loop を
+            # 止めず fitness=0 で淘汰する (extensibility 契約: 走行中の進化を壊さない)。
+            # architecture (factory 拒否 / 依存欠如) と evolution (低 fitness) の二重で守る。
+            reason = "purity_violation" if isinstance(exc, ValueError) else "backend_unavailable"
             return FitnessReport(
                 score=0.0,
-                breakdown={"purity_violation": 1.0},
+                breakdown={reason: 1.0},
                 n_samples=0,
-                notes=f"purity violation (culled): {exc}",
+                notes=f"{reason} (culled): {exc}",
             )
         backend_id = max(
             0, min(len(_BACKEND_NAMES) - 1, int(_genome_field(genome, "backend_id", 0)))
