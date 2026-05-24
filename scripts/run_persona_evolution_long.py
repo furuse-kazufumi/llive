@@ -208,29 +208,44 @@ def main() -> int:
         f"resume={'yes' if args.resume else 'no'} out={args.out}"
     )
 
-    res = run_persona_evolution(
-        args.personas,
-        fitness_fn=fitness_fn,
-        population_size=args.population,
-        generations=args.generations,
-        seed=args.seed,
-        out_dir=args.out,
-        inject_persona_ids=args.inject,
-        patience=patience,
-        diversity_floor=0.0,  # 多様性枯渇でも止めない (長期研究)
-        checkpoint_every=args.checkpoint_every,
-        resume_from=resume_from,
-        persist_generation_log=True,  # generations.jsonl + snapshot (SVG材料 + resume)
-        log_progress=True,
-    )
+    # トレーサビリティ: 条件を run 前に記録 (失敗しても「どう走らせたか」は必ず残る)。
+    _write_run_manifest(args.out, args)
+
+    try:
+        res = run_persona_evolution(
+            args.personas,
+            fitness_fn=fitness_fn,
+            population_size=args.population,
+            generations=args.generations,
+            seed=args.seed,
+            out_dir=args.out,
+            inject_persona_ids=args.inject,
+            patience=patience,
+            diversity_floor=0.0,  # 多様性枯渇でも止めない (長期研究)
+            checkpoint_every=args.checkpoint_every,
+            resume_from=resume_from,
+            persist_generation_log=True,  # generations.jsonl + snapshot (SVG材料 + resume)
+            log_progress=True,
+        )
+    except Exception as exc:  # noqa: BLE001 - 失敗も実験結果として残す
+        # 「失敗してもいいが結果が残らないと意味がない」: 失敗理由を run_summary に記録。
+        _write_run_summary(args.out, status="failed", error=exc)
+        print(f"[FAILED] {exc!r}", file=sys.stderr)
+        print("  → 条件は run_manifest.json、失敗理由は run_summary.json に記録済", file=sys.stderr)
+        return 1
+
+    _write_run_summary(args.out, status="completed", res=res)
     if res.injected_persona_ids:
         print(f"[immigration] injected mid-run: {list(res.injected_persona_ids)}")
     er = res.evolution_result
-    print("---- result (honest: proxy fitness, NOT real LLM eval) ----")
+    label = "proxy fitness, NOT real LLM eval" if res.used_proxy_fitness else "real LLM fitness"
+    print(f"---- result (honest: {label}) ----")
     print(f"final_generation = {er.final_population.generation}")
     print(f"best_score       = {er.best_score:.6f}")
     print(f"stopped_reason   = {er.stopped_reason}")
     print(f"elapsed_seconds  = {er.elapsed_seconds:.2f}")
+    print(f"manifest         = {args.out / 'run_manifest.json'}")
+    print(f"summary          = {args.out / 'run_summary.json'}")
     print(f"winners          = {res.winners_path}")
     print(f"lineage          = {res.lineage_path}")
     print(f"generations.jsonl= {args.out / 'generations.jsonl'}")
