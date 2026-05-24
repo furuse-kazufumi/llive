@@ -46,6 +46,11 @@ from llive.perf.evolutionary.persona import (  # noqa: E402
     PERSONA_ONTOLOGY,
     RESEARCH_METHODOLOGY_PERSONA_IDS,
 )
+from llive.benchmark.runtime_metadata import collect_runtime_metadata  # noqa: E402
+from llive.perf.evolutionary.llive_variant import (  # noqa: E402
+    LIVE_VARIANT_GENOME_BOUNDS,
+    LIVE_VARIANT_GENOME_LABELS,
+)
 from llive.perf.evolutionary.persona_evolution import run_persona_evolution  # noqa: E402
 
 # 既定 roster = 研究方法論ペルソナ 4 名 + 多様性のため歴史人物 4 名。
