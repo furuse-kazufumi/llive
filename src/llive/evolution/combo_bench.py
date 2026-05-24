@@ -133,7 +133,7 @@ def main() -> None:
         r = combo_a(parallel_width=w)
         g = f"{r.mean_gens_to_escape:.1f}" if r.mean_gens_to_escape else "n/a"
         print(f"| {w} | {r.escape_rate:.0%} | {g} | {r.walltime_speedup:.2f}x |")
-    print("\n## Combo-C: Antifragile × 予測検証ゲート (panic burst を filter)\n")
+    print("\n## Combo-C: Antifragile x 予測検証ゲート (panic burst を filter)\n")
     c = combo_c()
     print(f"- 平均 panic 世代: {c.mean_panic_gens:.1f} / {c.n_gen}")
     print(f"- panic 区間のみの削減: {c.panic_only_saving:.0%} (invalid {c.panic_invalid_rate:.0%})")
