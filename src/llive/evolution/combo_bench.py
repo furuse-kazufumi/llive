@@ -4,7 +4,7 @@
 単体 PoC (antifragile_bench / predictive_gate_bench) を **合成**して、ブレストで
 指摘された組み合わせ効果を測る:
 
-* **Combo-A — Antifragile × Speculative Mesh**: panic mode の探索候補を idle mesh peer へ
+* **Combo-A — Antifragile x Speculative Mesh**: panic mode の探索候補を idle mesh peer へ
   **並行投機**すると、同じ脱出世代でも 1 世代あたりの **wall-clock が ~並行度分の 1** に
   なる。antifragile が「脱出を可能にし」、mesh が「各 panic 世代を高速化する」二段効果。
 * **Combo-C — Antifragile × 予測検証ゲート**: panic は変異を爆発させ **無効 ChangeOp の
