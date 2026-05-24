@@ -311,3 +311,9 @@ WebSearch 6 件 + llive 実装在庫の交差から見えた発見:
 - [Top LLMs and AI Trends for 2026 (Clarifai)](https://www.clarifai.com/blog/llms-and-ai-trends)
 - [LLM News (May 2026)](https://llm-stats.com/ai-news)
 - [Toward Large Reasoning Models (ScienceDirect 2025)](https://www.sciencedirect.com/science/article/pii/S2666389925002181)
+
+### 高速化レンズ (ユーザー提供 Perplexity, 2026-05-24)
+- [AI 高速化アルゴリズムの主戦場 (Sky tech-blog)](https://www.skygroup.jp/tech-blog/article/1846/)
+- [高速スパースモデリング技術 最大 73 倍 (NTT R&D)](https://www.rd.ntt/research/JN202501_31214.html)
+- [Speculative Decoding 推論高速化ガイド 2025 (introl)](https://introl.com/ja/blog/speculative-decoding-llm-inference-speedup-guide-2025)
+- [IBPO 推論予算制約付き最適化 (note ainest)](https://note.com/ainest/n/n82abaef6a253)
