@@ -95,8 +95,8 @@ def combo_c(
     n_gen = results[0].n_gen
     mean_normal = max(0.0, n_gen - mean_panic)
 
-    panic_ops = max(1, int(round(mean_panic * ops_per_gen)))
-    normal_ops = max(1, int(round(mean_normal * ops_per_gen)))
+    panic_ops = max(1, round(mean_panic * ops_per_gen))
+    normal_ops = max(1, round(mean_normal * ops_per_gen))
 
     g_panic = simulate(GateModel(invalid_rate=panic_invalid_rate, n_candidates=panic_ops), seed=0)
     g_normal = simulate(GateModel(invalid_rate=normal_invalid_rate, n_candidates=normal_ops), seed=0)
