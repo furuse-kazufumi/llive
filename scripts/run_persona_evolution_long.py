@@ -29,6 +29,7 @@ import argparse
 import json
 import subprocess
 import sys
+import traceback
 from datetime import UTC, datetime
 from pathlib import Path
 
