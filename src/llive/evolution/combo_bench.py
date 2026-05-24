@@ -24,7 +24,7 @@ from llive.evolution.antifragile_bench import run_ga
 from llive.evolution.predictive_gate_bench import GateModel, simulate
 
 # ---------------------------------------------------------------------------
-# Combo-A: Antifragile × Speculative Mesh (並行投機で panic 世代を高速化)
+# Combo-A: Antifragile x Speculative Mesh (並行投機で panic 世代を高速化)
 # ---------------------------------------------------------------------------
 
 
