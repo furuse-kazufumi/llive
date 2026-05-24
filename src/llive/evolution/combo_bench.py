@@ -126,7 +126,7 @@ def _ensure_utf8_stdout() -> None:
 def main() -> None:
     _ensure_utf8_stdout()
     print("# 組み合わせ PoC (llive 側)\n")
-    print("## Combo-A: Antifragile × Speculative Mesh (並行投機で panic 高速化)\n")
+    print("## Combo-A: Antifragile x Speculative Mesh (並行投機で panic 高速化)\n")
     print("| 並行度 W | 脱出率 | 平均脱出世代 | wall-clock speedup |")
     print("|---|---|---|---|")
     for w in (1, 2, 4, 8):
