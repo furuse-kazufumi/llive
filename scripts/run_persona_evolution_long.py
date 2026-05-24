@@ -21,6 +21,8 @@ fitness は **proxy** (LLM を呼ばない決定論的 heuristic)。proxy は数
     # 多層ゲノム (Genome3D) で走る:
     py -3.11 scripts/run_persona_evolution_long.py --genome3d --generations 100 --out out/persona_evo_3d
     py -3.11 scripts/run_persona_evolution_long.py --genome3d --crossover-mode cross --generations 1000 --resume
+    # 実 LLM fitness を ollama 固定で走る (ollama 起動が前提):
+    py -3.11 scripts/run_persona_evolution_long.py --fitness llm --backend ollama --generations 100 --out out/persona_evo_llm
 
 ``--resume`` 指定時は ``out_dir`` の最新 snapshot から再開する (ずっと回せる)。
 出力: ``out_dir/generations.jsonl`` (世代ごと best/mean/std/diversity = SVG 時系列材料),
@@ -98,6 +100,7 @@ def _write_run_manifest(out_dir: Path, args: argparse.Namespace) -> None:
         "eval_timeout_seconds": (
             args.eval_timeout if (args.fitness == "llm" and args.eval_timeout and args.eval_timeout > 0) else None
         ),
+        "fixed_backend": (args.backend if args.fitness == "llm" else None),
         "personas": list(args.personas),
         "population": args.population,
         "generations": args.generations,
@@ -219,6 +222,13 @@ def main() -> int:
         help="--fitness llm 時の 1 個体評価の hang guard 秒数 (無応答 backend を打ち切り淘汰)。"
         "0 で無効。既定 120。proxy では無視。",
     )
+    ap.add_argument(
+        "--backend",
+        choices=["mock", "ollama", "mamba", "rwkv", "jamba"],
+        default=None,
+        help="--fitness llm 時に全個体をこの on-prem backend に固定する (genome の backend_id を無視)。"
+        "実 ollama run は `--backend ollama`。既定 None=genome の backend_id で選択。cloud は不可。",
+    )
     # ---- Genome3D (多層ゲノム) モード ----
     ap.add_argument(
         "--genome3d",
@@ -270,6 +280,7 @@ def main() -> int:
             LlmFitnessConfig(
                 backend_factory=on_prem_backend_factory(),
                 eval_timeout_seconds=eval_timeout,
+                fixed_backend=args.backend,  # None=genome選択 / "ollama"=実 ollama 固定
             )
         )
 

@@ -93,6 +93,13 @@ class LlmFitnessConfig:
     """backend を作る factory. **default は on-prem only factory** (cloud backend を
     fail-closed 拒否; P-1 measurement purity)。明示的に ``None`` を渡すと従来の
     MockBackend 固定にフォールバック (低レベルテスト用)。"""
+    fixed_backend: str | None = None
+    """**実 LLM run 用 backend 固定**: 設定すると genome の ``backend_id`` を無視して
+    全個体をこの backend で評価する (例 ``"ollama"``)。real run では「実 backend を固定し、
+    思考因子 / sampler 等の他次元を進化させる」のが自然 — genome の backend 進化空間
+    (``_BACKEND_NAMES``) に ollama が無い問題を、genome semantics / 凍結点を触らずに回避する。
+    ``backend_factory`` (既定 on-prem fail-closed) を通すので cloud は拒否される。
+    ``None`` (default) で従来どおり genome の backend_id で選択 (後方互換)。"""
     eval_timeout_seconds: float | None = None
     """**per-evaluation hang guard**: 1 個体の LLM 評価がこの秒数を超えたら打ち切り、
     ``eval_timeout`` で fitness=0 淘汰して走行を継続する。実 LLM backend (ollama 等) が
@@ -113,7 +120,13 @@ def _genome_field(genome: Genome, label: str, fallback_index: int) -> float:
 
 
 def _resolve_backend(genome: Genome, config: LlmFitnessConfig) -> LLMBackend:
-    """Genome の backend_id を実 backend に解決. Phase 4 mock では MockBackend 固定."""
+    """Genome の backend_id を実 backend に解決. Phase 4 mock では MockBackend 固定.
+
+    ``config.fixed_backend`` が設定されていれば genome を無視してそれを使う
+    (実 LLM run で backend を ollama 等に固定する経路)。
+    """
+    if config.fixed_backend is not None and config.backend_factory is not None:
+        return config.backend_factory(config.fixed_backend)
     backend_idx = int(_genome_field(genome, "backend_id", 0))
     backend_idx = max(0, min(len(_BACKEND_NAMES) - 1, backend_idx))
     backend_name = _BACKEND_NAMES[backend_idx]
@@ -263,12 +276,14 @@ def llm_fitness_factory(
             }
             score = _compute_aggregate(breakdown, config.weights)
             md = collect_runtime_metadata()
+            # 実効 backend: fixed_backend 指定時はそれ、無ければ genome の backend_id 由来。
+            effective_backend = config.fixed_backend or _BACKEND_NAMES[backend_id]
             return FitnessReport(
                 score=float(score),
                 breakdown=breakdown,
                 runtime_metadata=dict(md),
                 n_samples=len(config.prompts) * config.n_stability_samples,
-                notes=f"llm_fitness (5-axis, backend={_BACKEND_NAMES[backend_id]})",
+                notes=f"llm_fitness (5-axis, backend={effective_backend})",
             )
 
         # per-evaluation hang guard: timeout 未設定なら従来どおり inline 実行。
