@@ -236,8 +236,10 @@ def main() -> int:
             log_progress=True,
         )
     except Exception as exc:  # noqa: BLE001 - 失敗も実験結果として残す
-        # 「失敗してもいいが結果が残らないと意味がない」: 失敗理由を run_summary に記録。
-        _write_run_summary(args.out, status="failed", error=exc)
+        # 「失敗してもいいが結果が残らないと意味がない」: 失敗理由 + traceback を run_summary に記録。
+        _write_run_summary(
+            args.out, status="failed", error=exc, traceback_str=traceback.format_exc()
+        )
         print(f"[FAILED] {exc!r}", file=sys.stderr)
         print("  → 条件は run_manifest.json、失敗理由は run_summary.json に記録済", file=sys.stderr)
         return 1
