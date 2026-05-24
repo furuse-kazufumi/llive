@@ -42,6 +42,10 @@ from llive.benchmark.runtime_metadata import collect_runtime_metadata
 from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.genome import Genome
 from llive.perf.evolutionary.genome_3d import Genome3D
+from llive.perf.evolutionary.genome_3d_operators import (
+    Genome3DCrossover,
+    Genome3DMutation,
+)
 from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.lineage import (
     load_winners_jsonl,
@@ -271,6 +275,23 @@ def build_founder_genome_3d(
     )
 
 
+def _random_genome3d(rng: np.random.Generator) -> Genome3D:
+    """gen0 padding 用のランダム Genome3D.
+
+    c_factors のみ random ([0,1] uniform) にし、impl/prompt/meta は default から
+    始める。多様性/novelty は c_factors の flat view で測る (genome_flat_vector)
+    ため、padding の多様性は c_factors random で十分。impl/prompt/meta は進化の
+    mutation (sample_neighborhood) が探索する。
+    """
+    base = Genome3D.default()
+    return Genome3D(
+        c_impl=base.c_impl,
+        c_prompt=base.c_prompt,
+        c_meta=base.c_meta,
+        c_factors=ThoughtFactorPerLayerChromosome.random(rng),
+    )
+
+
 def build_founder_individuals_3d(
     persona_ids: Sequence[str],
     *,
@@ -360,6 +381,10 @@ def run_persona_evolution(
     out_dir: Path | None = None,
     fitness_fn: Fitness | None = None,
     log_progress: bool = False,
+    # ---- Genome3D (多層ゲノム) モード: founder/padding/operator を Genome3D に切替 ----
+    genome3d: bool = False,
+    crossover_mode: str = "intra",
+    mutation_step: float = 0.1,
     # ---- 段階的追加 (immigration): 走行中の集団に新 persona founder を移民 ----
     inject_persona_ids: Sequence[str] | None = None,
     # ---- 長期運用パラメータ (2026-05-23 環境整備: 100→1000 世代研究用) ----
@@ -369,6 +394,8 @@ def run_persona_evolution(
     resume_from: Path | None = None,
     max_wallclock_seconds: float | None = None,
     persist_generation_log: bool = False,
+    # ---- 安全弁 (長時間 run で「全個体同一→同じ結果を吐き続ける空回り」を止める) ----
+    max_stall_generations: int | None = 25,
 ) -> PersonaEvolutionResult:
     """ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバ.
 
@@ -397,6 +424,20 @@ def run_persona_evolution(
     log_progress : bool
         EvolutionLoop の世代ごと print を有効化するか。default False (テストを
         静かにするため)。
+    genome3d : bool
+        多層ゲノム (:class:`Genome3D`) モード。True で founder/padding を Genome3D
+        に、operator を :class:`Genome3DCrossover` / :class:`Genome3DMutation` に
+        切り替える。default False (flat 19-dim Genome、後方互換)。
+    crossover_mode : str
+        genome3d 時の crossover 戦略 ("intra" 層内 / "cross" 層間)。default "intra"。
+    mutation_step : float
+        genome3d 時の mutation neighborhood step_size。default 0.1。
+    max_stall_generations : int | None
+        **安全弁**: 全個体が同一 genome に収束 (distinct==1) した状態が連続でこの
+        世代数続いたら ``population_collapsed`` で停止する。patience を無効化する
+        長時間 run でも「同じ結果を吐き続ける空回り」を断つ。default 25。``None``
+        で無効。EvolutionLoop は ``max_generations`` で必ず有界 (真の無限ループは
+        起きない) が、本ガードは無駄な長時間空回りを早期に止める。
 
     Returns
     -------
@@ -421,23 +462,34 @@ def run_persona_evolution(
     effective_fitness: Fitness = fitness_fn if fitness_fn is not None else _proxy_fitness
 
     # ---- gen0 個体: founders + random padding ----
-    founders = build_founder_individuals(founder_ids)
     rng = np.random.default_rng(seed)
     n_random = population_size - n_founders
-    random_individuals = [
-        Individual.from_genome(
-            Genome.random(
-                LIVE_VARIANT_GENOME_BOUNDS, rng, labels=LIVE_VARIANT_GENOME_LABELS
-            ),
-            birth_generation=0,
-        )
-        for _ in range(n_random)
-    ]
+    if genome3d:
+        # 多層ゲノム: founder は c_factors に persona affinity、padding は random
+        # Genome3D、bounds は None (Genome3D は単一 GenomeBounds を持たない)。
+        founders = build_founder_individuals_3d(founder_ids)
+        random_individuals = [
+            Individual.from_genome(_random_genome3d(rng), birth_generation=0)
+            for _ in range(n_random)
+        ]
+        population_bounds = None
+    else:
+        founders = build_founder_individuals(founder_ids)
+        random_individuals = [
+            Individual.from_genome(
+                Genome.random(
+                    LIVE_VARIANT_GENOME_BOUNDS, rng, labels=LIVE_VARIANT_GENOME_LABELS
+                ),
+                birth_generation=0,
+            )
+            for _ in range(n_random)
+        ]
+        population_bounds = LIVE_VARIANT_GENOME_BOUNDS
     individuals = founders + random_individuals
 
     population = Population(
         individuals=individuals,
-        bounds=LIVE_VARIANT_GENOME_BOUNDS,
+        bounds=population_bounds,
         generation=0,
         seed=seed,
         generation_seeds=[seed],
@@ -464,7 +516,11 @@ def run_persona_evolution(
                 f"inject_persona_ids 指定だが resume_from={resume_from!r} の "
                 "snapshot を読めない。snapshot パスを確認。"
             )
-        immigrants = build_founder_individuals(inject_persona_ids)
+        immigrants = (
+            build_founder_individuals_3d(inject_persona_ids)
+            if genome3d
+            else build_founder_individuals(inject_persona_ids)
+        )
         k = len(immigrants)
         if k >= snap.size:
             raise ValueError(
@@ -506,11 +562,15 @@ def run_persona_evolution(
             with metrics_path.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(stats.to_dict(), ensure_ascii=False) + "\n")
 
-    # ---- EvolutionLoop (default operators) ----
-    loop = EvolutionLoop(
-        fitness_fn=effective_fitness,
-        on_generation_end=on_generation_end,
-    )
+    # ---- EvolutionLoop (flat=default operators / genome3d=Genome3D operators) ----
+    loop_kwargs: dict = {
+        "fitness_fn": effective_fitness,
+        "on_generation_end": on_generation_end,
+    }
+    if genome3d:
+        loop_kwargs["crossover"] = Genome3DCrossover(mode=crossover_mode)
+        loop_kwargs["mutation"] = Genome3DMutation(step_size=mutation_step)
+    loop = EvolutionLoop(**loop_kwargs)
     # 長期運用 (100→1000 世代) 対応: 後方互換のため新パラメータは None default で、
     # 指定時のみ EvolutionConfig に渡す (None → 既存の EvolutionConfig 既定値)。
     # - persist_generation_log + out_dir → generations.jsonl / snapshot_gen_*.json を
@@ -532,6 +592,10 @@ def run_persona_evolution(
         cfg_kwargs["resume_from"] = loop_resume_from
     if max_wallclock_seconds is not None:
         cfg_kwargs["max_wallclock_seconds"] = max_wallclock_seconds
+    # 安全弁: 全個体同一 (distinct==1) が連続したら停止。長時間 run で patience/
+    # diversity_floor を無効化していても「同じ結果を吐き続ける空回り」を断つ。
+    if max_stall_generations is not None:
+        cfg_kwargs["max_stall_generations"] = max_stall_generations
     config = EvolutionConfig(**cfg_kwargs)
     result = loop.run(population, config)
 

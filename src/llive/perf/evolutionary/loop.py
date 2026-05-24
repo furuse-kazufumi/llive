@@ -74,6 +74,14 @@ class EvolutionConfig:
     """N 世代ごとに snapshot を書く (out_dir が設定されているとき)."""
     resume_from: Path | None = None
     """snapshot_gen_NNNN.json から再開. out_dir/snapshot_gen_*.json を想定."""
+    max_stall_generations: int | None = None
+    """**hard collapse guard**: 集団が完全収束 (distinct genome 数 == 1) した状態が
+    連続でこの世代数続いたら ``population_collapsed`` で停止する。patience (best 停滞)
+    や diversity_floor (float 閾値) とは **独立** の最終安全弁で、長時間 run でそれら
+    を無効化していても「全個体が同一になって同じ結果を吐き続ける空回り」を確実に止める
+    (ユーザー要望 2026-05-24)。``None`` で無効 (後方互換)。EvolutionLoop 自体は
+    ``max_generations`` で必ず有界なので真の無限ループにはならないが、本ガードは
+    無駄な長時間空回りを早期に断つ。"""
 
 
 @dataclass
@@ -134,6 +142,7 @@ class EvolutionLoop:
         stopped_reason = "max_generations"
         best_so_far = float("-inf")
         stagnation = 0
+        collapse_streak = 0  # 連続で全個体同一だった世代数 (hard collapse guard)
 
         # ---- resume_from が指定されていれば snapshot から再開 ----
         if config.resume_from is not None:
@@ -213,6 +222,20 @@ class EvolutionLoop:
             if stats.diversity_l2 < config.diversity_floor:
                 stopped_reason = f"diversity_collapsed ({stats.diversity_l2:.2e})"
                 break
+
+            # 4.5. hard collapse guard (patience/diversity_floor とは独立)。
+            #      全個体が literally 同一 genome (distinct==1) の状態が連続したら停止。
+            #      長時間 run で patience/diversity_floor を無効化していても「同じ結果を
+            #      吐き続ける空回り」を確実に断つ最終安全弁 (ユーザー要望 2026-05-24)。
+            #      frozen genome は hashable なので set で distinct 数を数えられる。
+            if config.max_stall_generations is not None:
+                distinct = len({ind.genome for ind in population.individuals})
+                collapse_streak = collapse_streak + 1 if distinct <= 1 else 0
+                if collapse_streak >= config.max_stall_generations:
+                    stopped_reason = (
+                        f"population_collapsed ({collapse_streak} gens all-identical)"
+                    )
+                    break
 
             # 5. 終了世代なら break (評価のみして次世代生成は不要)
             if gen >= config.max_generations:

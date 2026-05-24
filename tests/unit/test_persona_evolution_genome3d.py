@@ -28,6 +28,7 @@ from llive.perf.evolutionary.persona_evolution import (
     build_founder_genome_3d,
     build_founder_individuals_3d,
     is_founder,
+    run_persona_evolution,
 )
 from llive.perf.evolutionary.population import Population
 
@@ -105,3 +106,85 @@ def test_genome3d_persona_evolution_composes(tmp_path) -> None:
     assert np.isfinite(result.best_score)
     assert isinstance(result.best_individual.genome, Genome3D)
     assert len(result.stats_history) >= 1
+
+
+# --- turnkey driver: run_persona_evolution(genome3d=True) -------------------
+
+
+def test_turnkey_genome3d_run_produces_genome3d(tmp_path) -> None:
+    res = run_persona_evolution(
+        population_size=10,
+        generations=5,
+        seed=0,
+        out_dir=tmp_path,
+        genome3d=True,
+        patience=99,
+        diversity_floor=0.0,
+    )
+    assert isinstance(res.evolution_result.best_individual.genome, Genome3D)
+    assert res.used_proxy_fitness is True
+    assert res.winners_path is not None and res.winners_path.exists()
+    assert res.lineage_path is not None and res.lineage_path.exists()
+
+
+def test_turnkey_flat_mode_unchanged_by_default(tmp_path) -> None:
+    # genome3d defaults to False → flat Genome population (regression).
+    from llive.perf.evolutionary.genome import Genome
+
+    res = run_persona_evolution(population_size=8, generations=3, seed=0)
+    assert isinstance(res.evolution_result.best_individual.genome, Genome)
+
+
+def test_turnkey_genome3d_resume(tmp_path) -> None:
+    common = dict(population_size=8, seed=1, genome3d=True, patience=99, diversity_floor=0.0)
+    run_persona_evolution(
+        generations=3, out_dir=tmp_path, persist_generation_log=True,
+        checkpoint_every=1, **common,
+    )
+    res = run_persona_evolution(generations=1, resume_from=tmp_path, **common)
+    final = res.evolution_result.final_population
+    assert all(isinstance(ind.genome, Genome3D) for ind in final.individuals)
+    assert final.generation >= 3
+
+
+def test_collapse_guard_stops_identical_population() -> None:
+    # No-op operators model "evolution produces no change": the population stays a
+    # single identical genome (distinct==1) every generation. With patience and
+    # diversity_floor both disabled, only the hard collapse guard can stop the run.
+    from llive.perf.evolutionary.loop import EvolutionConfig, EvolutionLoop
+
+    clone = Genome3D.default()
+    pop = Population(
+        individuals=[Individual.from_genome(clone) for _ in range(6)],
+        bounds=None,
+        seed=0,
+    )
+
+    def _no_op_crossover(a, b, rng):  # noqa: ANN001 - returns a parent unchanged
+        return a
+
+    def _no_op_mutation(g, rng):  # noqa: ANN001 - returns the genome unchanged
+        return g
+
+    loop = EvolutionLoop(
+        fitness_fn=_proxy_fitness,
+        crossover=_no_op_crossover,
+        mutation=_no_op_mutation,
+    )
+    result = loop.run(
+        pop,
+        EvolutionConfig(
+            max_generations=1000, patience=10**9, diversity_floor=0.0,
+            max_stall_generations=5, log_progress=False,
+        ),
+    )
+    assert "population_collapsed" in result.stopped_reason
+    assert result.final_population.generation < 1000  # stopped early, not the cap
+
+
+def test_collapse_guard_off_by_default_in_loop() -> None:
+    # EvolutionConfig.max_stall_generations defaults to None → guard disabled
+    # (backward compatible; existing EvolutionLoop tests unaffected).
+    from llive.perf.evolutionary.loop import EvolutionConfig
+
+    assert EvolutionConfig().max_stall_generations is None
