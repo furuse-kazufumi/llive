@@ -159,6 +159,30 @@ def test_llm_fitness_cloud_genome_scores_zero_without_crashing() -> None:
     assert "purity" in report.notes.lower()
 
 
+def test_llm_fitness_unavailable_backend_culled_not_crashing() -> None:
+    """optional 依存未インストールの backend (ImportError) を選んだ個体は、
+    クラッシュせず fitness=0 で淘汰される (extensibility 契約: 走行中の進化を壊さない)。
+
+    実機で発覚: backend_id が mamba/rwkv/jamba を選ぶと内部で openai 等の重依存を要求し
+    ModuleNotFoundError を投げる。これを catch しないと進化 run 全体が落ちる。
+    """
+
+    def _failing_factory(name: str):
+        raise ImportError("optional dependency missing")
+
+    cfg = LlmFitnessConfig(
+        prompts=("hi",),
+        n_stability_samples=1,
+        danger_prompts=(),
+        backend_factory=_failing_factory,
+    )
+    fn = llm_fitness_factory(cfg)
+    report = fn(_make_genome(backend_id=3.0))  # factory がどの名前でも ImportError
+    assert report.score == 0.0
+    assert report.breakdown.get("backend_unavailable") == 1.0
+    assert "purity_violation" not in report.breakdown
+
+
 def test_llm_fitness_on_prem_mock_genome_still_scores_normally() -> None:
     """on_prem factory 下でも mock backend (id=0) は通常どおり評価される
     (purity 違反でないので淘汰されない)."""
