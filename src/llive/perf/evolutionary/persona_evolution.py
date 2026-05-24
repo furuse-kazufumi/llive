@@ -41,6 +41,7 @@ import numpy as np
 from llive.benchmark.runtime_metadata import collect_runtime_metadata
 from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.genome import Genome
+from llive.perf.evolutionary.genome_3d import Genome3D
 from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.lineage import (
     load_winners_jsonl,
@@ -66,6 +67,9 @@ from llive.perf.evolutionary.persona import (
     get_persona,
 )
 from llive.perf.evolutionary.population import Population
+from llive.perf.evolutionary.thought_factor_per_layer import (
+    ThoughtFactorPerLayerChromosome,
+)
 
 #: founder の ``individual_id`` に付けるプレフィックス. 世代交代後も parent_ids を
 #: 辿れば founder 由来かどうか判別できる. 既存 Individual 機構を壊さない
@@ -99,7 +103,20 @@ if tuple(THOUGHT_FACTORS) != tuple(THOUGHT_FACTOR_LABELS):
 # ---------------------------------------------------------------------------
 
 
-def _proxy_fitness(genome: Genome) -> FitnessReport:
+def _thought_factor_vector(genome: Genome | Genome3D) -> np.ndarray:
+    """両 genome 型から 10-dim 思考因子ベクトルを取り出す (G3 fitness adapter).
+
+    - flat :class:`Genome` — 思考因子 dim 0..9 (``as_array()[:10]``, 既存挙動を
+      完全保持)。
+    - :class:`Genome3D` — ``c_factors`` (10×層 matrix) の **層平均** で 10-dim に
+      集約 (proxy は全体傾向しか見ないため層平均が妥当)。
+    """
+    if isinstance(genome, Genome3D):
+        return genome.c_factors.as_array().mean(axis=1)
+    return genome.as_array()[:_FACTOR_DIM_COUNT]
+
+
+def _proxy_fitness(genome: Genome | Genome3D) -> FitnessReport:
     """**proxy fitness** — 決定論的・on-prem 純度維持 (LLM を呼ばない).
 
     .. warning::
@@ -126,15 +143,14 @@ def _proxy_fitness(genome: Genome) -> FitnessReport:
         ``breakdown`` に balance / provenance / 各因子平均を入れ、``notes`` に
         proxy である旨を明記する。
     """
-    arr = genome.as_array()
-    factors = arr[:_FACTOR_DIM_COUNT]
+    factors = _thought_factor_vector(genome)
 
     mean = float(factors.mean())
     std = float(factors.std())
     balance = float(max(0.0, min(1.0, mean * (1.0 - std))))
 
     provenance_idx = THOUGHT_FACTOR_LABELS.index("factor_provenance")
-    provenance = float(max(0.0, min(1.0, arr[provenance_idx])))
+    provenance = float(max(0.0, min(1.0, factors[provenance_idx])))
 
     score = 0.7 * balance + 0.3 * provenance
 
@@ -208,6 +224,67 @@ def build_founder_individuals(persona_ids: Sequence[str]) -> list[Individual]:
     founders: list[Individual] = []
     for pid in persona_ids:
         genome = build_founder_genome(pid)
+        ind = Individual.from_genome(genome, parent_ids=(), birth_generation=0)
+        ind.individual_id = f"{FOUNDER_ID_PREFIX}:{pid}"
+        founders.append(ind)
+    return founders
+
+
+def build_founder_genome_3d(
+    persona_id: str,
+    *,
+    broadcast_strategy: str = "uniform",
+) -> Genome3D:
+    """1 persona から founder 用 :class:`Genome3D` を構築する (多層版, G4).
+
+    persona の ``factor_affinity`` (10 思考因子) を **c_factors** 層に
+    :meth:`ThoughtFactorPerLayerChromosome.from_persona_affinity` で書き込み、
+    残り 3 層 (impl / prompt / meta) は default (中立) から始める。因子層が
+    persona の同一性を担い、他層は進化が探索する — flat founder の「思考因子 dim に
+    affinity, 残りは bounds 中点」と同じ思想を多層に持ち上げたもの。
+
+    Parameters
+    ----------
+    persona_id : str
+        :data:`PERSONA_ONTOLOGY` のキー。
+    broadcast_strategy : str
+        affinity を層へ broadcast する戦略 ("uniform" / "working_heavy" /
+        "episodic_heavy")。default は全層複製。
+
+    Returns
+    -------
+    Genome3D
+        c_factors = persona affinity 由来、他 3 chromosome = default。
+    """
+    persona = get_persona(persona_id)
+    affinity = tuple(float(v) for v in persona.factor_affinity)
+    c_factors = ThoughtFactorPerLayerChromosome.from_persona_affinity(
+        affinity, broadcast_strategy=broadcast_strategy
+    )
+    base = Genome3D.default()
+    # frozen dataclass: 因子層のみ差し替えた新インスタンスを作る。
+    return Genome3D(
+        c_impl=base.c_impl,
+        c_prompt=base.c_prompt,
+        c_meta=base.c_meta,
+        c_factors=c_factors,
+    )
+
+
+def build_founder_individuals_3d(
+    persona_ids: Sequence[str],
+    *,
+    broadcast_strategy: str = "uniform",
+) -> list[Individual]:
+    """各 persona を gen0 の Genome3D founder :class:`Individual` にする (G4).
+
+    flat 版 :func:`build_founder_individuals` と同じ founder-id 規約
+    (``"founder:<persona_id>"``) なので :func:`is_founder` /
+    :func:`founder_persona_id` がそのまま使える。
+    """
+    founders: list[Individual] = []
+    for pid in persona_ids:
+        genome = build_founder_genome_3d(pid, broadcast_strategy=broadcast_strategy)
         ind = Individual.from_genome(genome, parent_ids=(), birth_generation=0)
         ind.individual_id = f"{FOUNDER_ID_PREFIX}:{pid}"
         founders.append(ind)
@@ -550,7 +627,9 @@ __all__ = [
     "FOUNDER_ID_PREFIX",
     "PersonaEvolutionResult",
     "build_founder_genome",
+    "build_founder_genome_3d",
     "build_founder_individuals",
+    "build_founder_individuals_3d",
     "compare_against_llm_baselines",
     "founder_persona_id",
     "is_founder",

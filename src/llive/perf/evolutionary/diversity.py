@@ -30,6 +30,7 @@ import numpy as np
 from scipy.stats import qmc
 
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
+from llive.perf.evolutionary.genome_3d import genome_flat_vector
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.population import Population, PopulationStats
 
@@ -127,7 +128,7 @@ class NoveltyScorer:
 
     def add_population(self, pop: Population) -> None:
         for ind in pop.individuals:
-            self.add_to_archive(ind.genome.as_array())
+            self.add_to_archive(genome_flat_vector(ind.genome))
 
     def novelty(self, values: np.ndarray) -> float:
         """1 個体の novelty score を返す.
@@ -149,7 +150,7 @@ class NoveltyScorer:
         """集団全員の novelty score を一括計算 (shape: (size,))."""
         scores = np.zeros(pop.size, dtype=np.float64)
         for i, ind in enumerate(pop.individuals):
-            scores[i] = self.novelty(ind.genome.as_array())
+            scores[i] = self.novelty(genome_flat_vector(ind.genome))
         return scores
 
 
@@ -222,7 +223,7 @@ class DiversityPreservingBreedFilter:
         pool_vectors: list[np.ndarray] = []
         if self.novelty_pool in ("parents", "both"):
             for p in parents.individuals:
-                pool_vectors.append(p.genome.as_array())
+                pool_vectors.append(genome_flat_vector(p.genome))
         if self.novelty_pool in ("archive", "both"):
             pool_vectors.extend(self.scorer.archive)
 
@@ -243,7 +244,7 @@ class DiversityPreservingBreedFilter:
             candidate = child
             attempts = 0
             while attempts < self.max_attempts and _novelty(
-                candidate.genome.as_array()
+                genome_flat_vector(candidate.genome)
             ) < self.min_novelty:
                 candidate = resample_fn()
                 attempts += 1
@@ -333,7 +334,7 @@ class DiversityMonitor:
                 bounding_volume_log=0.0,
             )
         else:
-            values = np.stack([ind.genome.as_array() for ind in pop.individuals])
+            values = np.stack([genome_flat_vector(ind.genome) for ind in pop.individuals])
             # pairwise L2
             diffs = values[:, None, :] - values[None, :, :]
             dists = np.linalg.norm(diffs, axis=-1)
