@@ -29,6 +29,13 @@ from llive.evolution.change_op import (
     apply_diff,
     build_change_op,
 )
+from llive.evolution.change_op_log import (
+    ChangeOpLogError,
+    ChangeOpRecord,
+    ChangeOpSequenceLog,
+    op_action_label,
+    op_action_labels,
+)
 
 __all__ = [
     "CHANGE_OP_ACTIONS",
@@ -40,6 +47,9 @@ __all__ = [
     "BenchResult",
     "BranchPredictor",
     "ChangeOp",
+    "ChangeOpLogError",
+    "ChangeOpRecord",
+    "ChangeOpSequenceLog",
     "ConflictPair",
     "FrequencyPredictor",
     "HitRateResult",
@@ -52,6 +62,8 @@ __all__ = [
     "apply_diff",
     "build_change_op",
     "evaluate_hit_rate",
+    "op_action_label",
+    "op_action_labels",
     "predicted_manifest_branches",
     "to_manifest_branch",
 ]

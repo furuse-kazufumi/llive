@@ -62,15 +62,38 @@ Speculative Mesh の ROI は **予測精度 (hit_rate) が支配** する。idle
 - baseline (frequency) を全数値に併記したのは [[feedback_benchmark_honest_disclosure]] に
   従うため。iid 行が「baseline が崩れていない」ことの証拠。
 
+## 実測経路 (2026-05-24 実装済 — 合成値を実測で上書きする仕組み)
+
+§次ステップ 1 の「実 ChangeOp 系列のログ化」を実装した。これで合成値を実測で上書きする
+**仕組みは完成**し、残るは実運用ログの蓄積だけになった (mechanism ready, data pending)。
+
+- **ログ化**: `llive/src/llive/evolution/change_op_log.py` — `ChangeOpSequenceLog`
+  (append-only JSONL)。`apply_diff` が materialize した ChangeOp 列を action label
+  (`op_action_label`: instance → 4 種ラベル) に落として 1 diff = 1 burst で永続化。
+  `applied` で static gate 通過可否を記録 (emitted / promotable の 2 系列を測れる)。
+- **配線**: `triz/self_reflection.py` の `SelfReflectionSession(change_op_log=...)`。
+  `_verify` で `apply_diff` 成功時にその burst を記録 (失敗 diff は記録しない)。
+  既定 None = オフ (運用時に渡せば自動蓄積)。bench / 将来の多世代ループにも同じ log を
+  通せば、進化が実際に走る場所すべてで実系列が貯まる。
+- **実測**: `llive/src/llive/evolution/branch_predictor_real.py` — ログを読み
+  frequency vs markov-1 の hit_rate を測る。`py -3.11 -m llive.evolution.branch_predictor_real <log.jsonl>`。
+
+**honest disclosure (実測ガード)**: scored steps < `MIN_PREDICTIONS` (=30) のとき
+`insufficient_data` を立て、**数値を一切出さず**「実測データ不足」と表示する。少数ステップの
+hit_rate はノイズであり、それを本番値として引用するのは [[feedback_benchmark_honest_disclosure]]
+が戒める「変に高速 = 良い結果」の罠そのもの。ゆえに合成上限は実ログが十分貯まるまで降ろさない。
+burst 間の継ぎ目は within-diff の因果ステップではないが、origin が実際に連続して emit する
+operational transition なので連結を採用 (この注記つき)。
+
 ## 次ステップ
 
-1. 実 ChangeOp 系列のログ化 (BriefLedger / `apply_diff` の ops_list を時系列で永続化)。
-   → 合成値を実測で上書き。
-   **前提ブロック (2026-05-24 調査)**: ChangeOp を *系列的* に適用する稼働進化ループが
-   現状未稼働 — `evolution/bench.py` の `BenchHarness` は単発 candidate diff を 1 回
-   `apply_diff` する A/B 評価のみで ops を捨てている (`_ops`)。よって実 hit_rate の測定は
-   「container を多世代で進化させ ChangeOp 系列を出すループ」の稼働が前提であり、それまで
-   合成系列が到達上限。この前提が満たされるまで SPEC-MESH-01 の実測値は得られない。
+1. ~~実 ChangeOp 系列のログ化~~ **完了 (上記「実測経路」)**。残作業 = 稼働進化ループを
+   `ChangeOpSequenceLog` 付きで回し、実ログを `MIN_PREDICTIONS` 以上まで蓄積 → 実測で
+   合成値を上書き。
+   **依然の前提 (2026-05-24)**: ChangeOp を *系列的* に大量に出す多世代進化ループは
+   現状まだ常時稼働していない (`evolution/bench.py` の `BenchHarness` は単発 A/B、
+   self-reflection は 1 cycle で短い burst)。仕組みは入ったので、ログを貯める運用が回れば
+   実測値が得られる。
 2. 実 hit_rate が成功基準 (≥ 0.5) を満たすなら SPEC-MESH-02/03 (transport + executor) へ。
    満たさないなら次数/粒度を上げる or 投機対象を「重い分岐」に絞る (SPEC-MESH-06)。
 3. SPEC-MESH-04 fast-fallback は最初から組み込む (後付け不可・最高優先)。
@@ -78,6 +101,9 @@ Speculative Mesh の ROI は **予測精度 (hit_rate) が支配** する。idle
 ## Sources / 関連
 
 - 予測器: `llive/src/llive/evolution/branch_predictor.py` (+ tests, bench)
+- 実系列ログ: `llive/src/llive/evolution/change_op_log.py` (+ `tests/unit/test_change_op_log.py`)
+- 実測: `llive/src/llive/evolution/branch_predictor_real.py` (+ `tests/unit/test_branch_predictor_real.py`)
+- 配線: `llive/src/llive/triz/self_reflection.py` (`SelfReflectionSession(change_op_log=...)`)
 - 要件: `llmesh/docs/requirements_speculative_mesh.md` (SPEC-MESH-01 / §5)
 - manifest 契約: `llmesh/llmesh/speculative/manifest.py` (`SpeculativeManifest.branch` = opaque dict)
 - 上流: memory `project_idea_speculative_mesh_execution` / `project_fullsense_expression_realtime_marathon`
