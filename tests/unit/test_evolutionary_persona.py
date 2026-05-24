@@ -30,9 +30,12 @@ from llive.perf.evolutionary.thought_factor_per_layer import (
 
 
 def test_ontology_has_historical_and_research_personas() -> None:
-    # 歴史人物 10 名 + 研究方法論ペルソナ 4 名 (2026-05-23 追加) = 14
-    assert len(PERSONA_ONTOLOGY) == 14
+    # 研究方法論ペルソナは固定 4 名、歴史人物は拡張中 (古典 10 + 拡張)。
+    # 数百人規模への拡張を見据え、総数は下限でチェックする (hard-code しない)。
     assert len(RESEARCH_METHODOLOGY_PERSONA_IDS) == 4
+    historical = set(PERSONA_ONTOLOGY) - set(RESEARCH_METHODOLOGY_PERSONA_IDS)
+    assert len(historical) >= 10  # 古典 10 名以上
+    assert len(PERSONA_ONTOLOGY) >= 14
     for pid in RESEARCH_METHODOLOGY_PERSONA_IDS:
         assert pid in PERSONA_ONTOLOGY
 
