@@ -248,6 +248,22 @@ WebSearch 6 件 + llive 実装在庫の交差から見えた発見:
 5. **FlashAttention-3 / PagedAttention 検討** — llmesh 側で 5-8x 効率. 1 週間.
 6. **Constitutional AI / Debate** — llive Approval Bus の理論裏付け. 1 週間+.
 
+## 高速化レンズ — adopt vs 自前実装 (2026-05-24)
+
+ユーザー提供の Perplexity「AI 高速化アルゴリズム」サーベイは、本 doc の **§3 推論最適化 +
+§4 reasoning を高速化レンズで切り直したもの** (ほぼ台帳化済)。運用方針はユーザー確定
+([[feedback_originality_over_imitation]]):
+
+> 現状の構造が破綻しないレベルで、使えるものを使えば良い。
+
+- **in-model カーネル系** (FlashAttention / PagedAttention / 量子化+LUT / 演算子融合) は
+  **自前再実装せず engine (vLLM / llama.cpp / TRT) 経由で adopt**。現状構造を触らない。
+- **独自実装は構造非破壊な層に限定** — 生成・推論戦略を mesh / 進化 / 予測符号化へ持ち上げる:
+  Speculative Decoding → mesh (llmesh `speculative/` 着地)、適応推論予算 (`RecursionDepthGene`
+  = L2 / IBPO / early-exit)、KV-cache の mesh 差分共有 (予定)。
+- 判断基準 = 優先度ランキングのフィルタを「現状構造を壊すか」で読む。壊さず genuine な
+  価値があれば KEEP、in-model は adopt に回す。
+
 ## Sources (WebSearch 2026-05-23)
 
 ### 後学習・整列
