@@ -66,6 +66,11 @@ Speculative Mesh の ROI は **予測精度 (hit_rate) が支配** する。idle
 
 1. 実 ChangeOp 系列のログ化 (BriefLedger / `apply_diff` の ops_list を時系列で永続化)。
    → 合成値を実測で上書き。
+   **前提ブロック (2026-05-24 調査)**: ChangeOp を *系列的* に適用する稼働進化ループが
+   現状未稼働 — `evolution/bench.py` の `BenchHarness` は単発 candidate diff を 1 回
+   `apply_diff` する A/B 評価のみで ops を捨てている (`_ops`)。よって実 hit_rate の測定は
+   「container を多世代で進化させ ChangeOp 系列を出すループ」の稼働が前提であり、それまで
+   合成系列が到達上限。この前提が満たされるまで SPEC-MESH-01 の実測値は得られない。
 2. 実 hit_rate が成功基準 (≥ 0.5) を満たすなら SPEC-MESH-02/03 (transport + executor) へ。
    満たさないなら次数/粒度を上げる or 投機対象を「重い分岐」に絞る (SPEC-MESH-06)。
 3. SPEC-MESH-04 fast-fallback は最初から組み込む (後付け不可・最高優先)。
