@@ -190,6 +190,9 @@ def build_founder_genome(persona_id: str) -> Genome:
     values = _bounds_midpoint()
     affinity = np.asarray(persona.factor_affinity, dtype=np.float64)
     values[:_FACTOR_DIM_COUNT] = affinity
+    # backend_id を on-prem (mock=0) で初期化。bounds 中点 (≈anthropic=cloud) のままだと
+    # 実 LLM fitness の fail-closed で全 founder が淘汰されるため (進化が mutate で他 on-prem を探索)。
+    values[_BACKEND_ID_DIM] = float(_ON_PREM_FOUNDER_BACKEND_ID)
     return Genome.from_values(
         values, LIVE_VARIANT_GENOME_BOUNDS, labels=LIVE_VARIANT_GENOME_LABELS
     )
