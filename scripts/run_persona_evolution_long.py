@@ -33,6 +33,12 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+from llive.perf.evolutionary import persona_extended as _persona_extended  # noqa: E402,F401  (import 副作用で拡張ペルソナを PERSONA_ONTOLOGY に登録)
+from llive.perf.evolutionary.fitness_llm import (  # noqa: E402
+    LlmFitnessConfig,
+    llm_fitness_factory,
+    on_prem_backend_factory,
+)
 from llive.perf.evolutionary.persona import (  # noqa: E402
     PERSONA_ONTOLOGY,
     RESEARCH_METHODOLOGY_PERSONA_IDS,
