@@ -86,6 +86,12 @@ def main() -> int:
         default=None,
         help="早期停止 patience。既定 None → generations+1 (= 無効化, 完走)",
     )
+    ap.add_argument(
+        "--fitness",
+        choices=["proxy", "llm"],
+        default="proxy",
+        help="proxy=決定論 heuristic (既定, LLM 呼ばない) / llm=実 LLM fitness (on-prem fail-closed)",
+    )
     args = ap.parse_args()
 
     unknown = [p for p in args.personas if p not in PERSONA_ONTOLOGY]
