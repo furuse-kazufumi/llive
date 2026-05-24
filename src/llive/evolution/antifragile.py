@@ -54,9 +54,10 @@ consult する形を取る。
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from llive.memory.bayesian_surprise import BayesianSurpriseGate
