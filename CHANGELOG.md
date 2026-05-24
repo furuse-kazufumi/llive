@@ -4,6 +4,34 @@
 
 ## [Unreleased]
 
+### Added — Antifragile Mutation controller (EVO-ANTIFRAGILE, opt-in)
+
+Nassim Taleb の *Antifragile* を進化計算に持ち込む **opt-in / fail-closed**
+controller。高 surprise を「守り」でなく「学習機会」と捉え、panic mode で
+探索を一時増幅する (Gemini 発ブレスト #3, 2026-05-22)。
+
+- `src/llive/evolution/antifragile.py`:
+  - `AntifragileController` — surprise 駆動の panic state machine。
+    `observe_surprise` / `tick` (cooldown 経過) / `stop` (Approval Bus user
+    停止) で NORMAL ⇄ PANIC を遷移。panic 中のみ `exploration_constant` を
+    `exploration_multiplier` 倍 (既定 10x, `ucb_clip` で UCB bound へ clamp 可)、
+    `unlocked_conflict_pairs` で相反 TRIZ 原理の同時適用を解放、
+    `record_change_op` で全 ChangeOp を `AuditTrail` の SHA-256 hash chain へ
+    署名記録。
+  - `AntifragileConfig` — **`enabled=False` の fail-closed が既定**。
+    `from_env()` が `LLIVE_ANTIFRAGILE_AUTO` を解決 (明示 override 優先)。
+    `recovery_ratio` で surprise 回復の hysteresis、`cooldown_s` で panic の
+    最長滞在 (risk 上限, 既定 300s) を保証。
+  - `ConflictPair` / `DEFAULT_CONFLICT_PAIRS` — 対立 pair の正本
+    (#1 分割×#40 複合材料 / #14 球面化×#2 取り出し / #1 分割×#5 併合)。
+  - `AntifragileEpisode` + `disclosure()` — honest disclosure: panic episode
+    ごとの ops/成功/損失/滞在時間を時系列集計。**効果は未検証**で内訳を疑う
+    前提の計測基盤。無効時に panic し得た回数 (`suppressed_triggers`) も記録。
+- 既存進化 driver には**配線せず**疎結合 (gem-critic 指摘の driver genome
+  不整合は本機構の対象外)。`llive.evolution` から re-export。
+- `tests/unit/test_antifragile.py`: 28 ケース PASS (fail-closed / cooldown /
+  surprise 回復 / user_stop / 探索増幅 / 対立 pair / audit / disclosure / gate 連携)。
+
 ### Planned
 
 - v0.7 Rust 高速化 (`docs/rust_hotspot_v0E_addendum.md` の RUST-15〜18).
