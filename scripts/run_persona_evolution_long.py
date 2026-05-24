@@ -26,7 +26,10 @@ fitness は **proxy** (LLM を呼ばない決定論的 heuristic)。proxy は数
 from __future__ import annotations
 
 import argparse
+import json
+import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 # UTF-8 stdout (Windows cp932 対策, feedback_cli_utf8_stdout_pattern)
