@@ -259,6 +259,13 @@ def main() -> int:
         help="全個体が同一に収束した状態が連続でこの世代数続いたら停止 (空回り防止)。"
         "0 で無効。既定 25。patience/diversity_floor を無効化した長期 run でも効く。",
     )
+    ap.add_argument(
+        "--selection",
+        choices=["default", "lldarwin"],
+        default="default",
+        help="選択圧。default=Tournament(既定) / lldarwin=複数選択圧の多目的淘汰 "
+        "(ε-lexicase, rich-proxy の breakdown を pressure として独立評価し monoculture を回避)。",
+    )
     args = ap.parse_args()
 
     unknown = [p for p in args.personas if p not in PERSONA_ONTOLOGY]
