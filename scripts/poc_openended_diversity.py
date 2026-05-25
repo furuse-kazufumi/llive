@@ -19,8 +19,17 @@ the production EvolutionLoop. Habit: always PoC (feedback_poc_feasibility_first)
 from __future__ import annotations
 
 import argparse
+import sys
 
 import numpy as np
+
+
+def _utf8_stdout() -> None:
+    """cp932 console safety: emit UTF-8 (feedback_cli_utf8_stdout_pattern)."""
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 
 def _diversity(G: np.ndarray) -> float:
