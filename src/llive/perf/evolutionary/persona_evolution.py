@@ -399,6 +399,8 @@ def run_persona_evolution(
     max_stall_generations: int | None = 25,
     # ---- 選択圧 (lldarwin): None なら EvolutionLoop 既定 TournamentSelection (後方互換) ----
     selection: Callable | None = None,
+    # ---- lldarwin Stage1.5: lineage-niched 中立貯蔵庫 (絶滅 founder 系統を毎世代 re-inject) ----
+    lineage_reservoir: bool = False,
 ) -> PersonaEvolutionResult:
     """ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバ.
 
