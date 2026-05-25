@@ -397,6 +397,8 @@ def run_persona_evolution(
     persist_generation_log: bool = False,
     # ---- 安全弁 (長時間 run で「全個体同一→同じ結果を吐き続ける空回り」を止める) ----
     max_stall_generations: int | None = 25,
+    # ---- 選択圧 (lldarwin): None なら EvolutionLoop 既定 TournamentSelection (後方互換) ----
+    selection: Callable | None = None,
 ) -> PersonaEvolutionResult:
     """ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバ.
 
