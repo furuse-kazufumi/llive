@@ -52,6 +52,11 @@ class LineageReservoir:
     reservoir: dict[str, tuple[float, object]] = field(default_factory=dict)
     protected_lineages: frozenset[str] = frozenset()
     max_lineage_map: int = 200_000
+    reinject_interval: int = 1
+    """再投入を行う世代間隔。1 = 毎世代 (既定, 系統を最大限保つ)。大きいほど絶滅系統を
+    長く放置でき行動多様性を保ちやすいが、系統が長期欠落するリスク。系統保持 vs
+    行動多様性のトレードオフ knob (honest 留保: frozen elite 再投入は genome spread を
+    やや下げる)。"""
 
     # -- setup -------------------------------------------------------------
 
