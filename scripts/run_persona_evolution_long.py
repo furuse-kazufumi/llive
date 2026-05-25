@@ -60,6 +60,7 @@ from llive.perf.evolutionary.llive_variant import (  # noqa: E402
     LIVE_VARIANT_GENOME_LABELS,
 )
 from llive.perf.evolutionary.persona_evolution import run_persona_evolution  # noqa: E402
+from llive.perf.evolutionary.lldarwin import MultiPressureSelector  # noqa: E402
 
 # 既定 roster = 研究方法論ペルソナ 4 名 + 多様性のため歴史人物 4 名。
 # 「段階的に定期追加」= この list に ID を足すだけ。
