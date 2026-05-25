@@ -3,35 +3,39 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-25 12:31:48
+- **最終更新**: 2026-05-25 13:11:04
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
+5e4ca27 feat(evolutionary): multi-modal rich proxy fitness + founder-lineage provenance + P2 lineage viz
+1f3f2b0 auto: run_persona_evolution_long.py 編集前 (2026-05-25 13:03)
+d454b52 auto: persona_evolution.py 編集前 (2026-05-25 13:03)
+d201271 auto: persona_evolution.py 編集前 (2026-05-25 13:03)
+ea29579 auto: run_persona_evolution_long.py 編集前 (2026-05-25 13:03)
+90c54db auto: run_persona_evolution_long.py 編集前 (2026-05-25 13:02)
+14582d3 auto: fitness_rich.py 編集前 (2026-05-25 13:01)
+6075f3e auto: evolution_lineage_viz.py 編集前 (2026-05-25 12:45)
+1782d17 auto: persona_evolution.py 編集前 (2026-05-25 12:42)
 8bc3ad6 feat(viz): self-contained animated SVG for evolution-run status
-06758c6 feat(persona-fx): 文化的ペルソナ獲得 PoC (隔離・合成・自己検証 U/M/D/H)
-c43a4fe feat(evolutionary): 実 LLM run 用 backend 固定 (fixed_backend) — ollama 実走を可能に
-d25d8fa feat(evolutionary): 実 LLM fitness に per-evaluation hang guard (eval_timeout)
-5dfca68 feat(evolutionary): Genome3D turnkey driver + 収束空回り安全弁
-c21ca06 feat(evolutionary): Genome3D founder + proxy fitness + diversity 対応 (G3+G4+G5+G6)
-53ffea4 feat(evolutionary): Genome3D operator 注入 + EvolutionLoop smoke (G2+G8)
-84d41a8 feat(evolutionary): Genome3D を進化インフラに一般化 (凍結点 G1+G7)
-c7e7643 feat(evolution): 実 ChangeOp 系列ログ化 + 実測 hit_rate 経路 (SPEC-MESH-01)
-092ab17 fix(evolution): run_summary に traceback 追加 + driver stderr を UTF-8 化
 ```
 
 ## 現在の git status
 
 ```
-M docs/SESSION_SUMMARY.md
+(clean)
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-12:29 docs/SESSION_SUMMARY.md
+13:03 scripts/run_persona_evolution_long.py
+13:03 src/llive/perf/evolutionary/persona_evolution.py
+13:01 src/llive/perf/evolutionary/fitness_rich.py
+12:45 scripts/evolution_lineage_viz.py
+12:32 docs/SESSION_SUMMARY.md
 ```
 
 ---
