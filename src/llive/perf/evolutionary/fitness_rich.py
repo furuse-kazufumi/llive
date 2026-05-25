@@ -59,13 +59,11 @@ from llive.benchmark.runtime_metadata import collect_runtime_metadata
 from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.genome_3d import Genome3D
 from llive.perf.evolutionary.individual import FitnessReport
-from llive.perf.evolutionary.persona import (
-    NUM_THOUGHT_FACTORS,
-    get_persona,
-)
+from llive.perf.evolutionary.persona import get_persona
 from llive.perf.evolutionary.thought_factor_per_layer import (
     DEFAULT_MEMORY_LAYER_NAMES,
     NUM_MEMORY_LAYERS,
+    NUM_THOUGHT_FACTORS,
 )
 
 #: rule_set tokens that FullSense treats as load-bearing (rewarded for coherence).
