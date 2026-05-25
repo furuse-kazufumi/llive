@@ -19,13 +19,23 @@ argmax（``fitness_rich`` の ``nearest=max(sims)`` 単一化 = best=1.0 飽和�
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
+from llive.perf.evolutionary.diversity import NoveltyScorer
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.mating import LexicaseSelection
 from llive.perf.evolutionary.population import Population
+
+#: 個体ごとの導出値・カテゴリ index で、独立した選択圧 (pressure) ではないため
+#: lexicase の case から既定で除外するキー。``factor_score`` は max-archetype の
+#: 単一スカラー (= argmax, SEL-2 違反 → best=1.0 飽和の真因) を再導入してしまい、
+#: ``nearest_persona_idx`` は順序に意味のないカテゴリ index を「大きいほど良い」と
+#: 誤解釈させる。どちらも淘汰圧から外す (Stage1, 設計 §1.1 SEL-2)。
+DEFAULT_EXCLUDED_CRITERIA: frozenset[str] = frozenset(
+    {"factor_score", "nearest_persona_idx"}
+)
 
 
 def _numeric_breakdown(ind: Individual) -> dict[str, float]:
