@@ -458,7 +458,7 @@ def run_persona_evolution(
             "founders would be dropped. Increase population_size."
         )
 
-    used_proxy = fitness_fn is None
+    used_proxy = (fitness_fn is None) if is_proxy is None else bool(is_proxy)
     effective_fitness: Fitness = fitness_fn if fitness_fn is not None else _proxy_fitness
 
     # ---- gen0 個体: founders + random padding ----
