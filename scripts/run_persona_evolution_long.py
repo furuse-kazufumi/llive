@@ -272,6 +272,12 @@ def main() -> int:
         help="lldarwin に novelty pressure を加える (k-NN 探索圧で空きニッチを埋め戻す, "
         "Stage1)。--selection lldarwin と併用。default は OFF (criteria 除外のみ)。",
     )
+    ap.add_argument(
+        "--lineage-reservoir",
+        action="store_true",
+        help="lldarwin Stage1.5: lineage-niched 中立貯蔵庫。絶滅した founder 系統を毎世代 "
+        "貯蔵庫 elite で再投入し系統絶滅を防ぐ (PoC で全8系統生存・fixation 0.31 実証)。",
+    )
     args = ap.parse_args()
 
     unknown = [p for p in args.personas if p not in PERSONA_ONTOLOGY]
