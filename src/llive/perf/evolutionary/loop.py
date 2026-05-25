@@ -255,6 +255,15 @@ class EvolutionLoop:
 
             # 6. 次世代生成
             next_individuals = self._breed_next_generation(population, rng)
+            # Stage1.5: bred 直後の population 変換 hook (lineage 中立貯蔵庫の re-inject 等)。
+            if self.on_population_bred is not None:
+                try:
+                    transformed = self.on_population_bred(next_individuals, population, rng)
+                    if transformed:
+                        next_individuals = transformed
+                except Exception as exc:  # hook 失敗で run 全体を止めない
+                    if config.log_progress:
+                        print(f"[gen {stats.generation:03d}] on_population_bred hook failed: {exc}")
             next_seed = int(rng.integers(0, 2**31 - 1))
             population.replace(next_individuals, new_seed=next_seed)
 
