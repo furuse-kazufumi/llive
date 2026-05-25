@@ -278,6 +278,13 @@ def main() -> int:
         help="lldarwin Stage1.5: lineage-niched 中立貯蔵庫。絶滅した founder 系統を毎世代 "
         "貯蔵庫 elite で再投入し系統絶滅を防ぐ (PoC で全8系統生存・fixation 0.31 実証)。",
     )
+    ap.add_argument(
+        "--reinject-interval",
+        type=int,
+        default=1,
+        help="貯蔵庫の再投入を行う世代間隔 (1=毎世代)。大きいほど行動多様性を保ちやすいが "
+        "系統が長期欠落するリスク (系統保持 vs 行動多様性のトレードオフ knob)。",
+    )
     args = ap.parse_args()
 
     unknown = [p for p in args.personas if p not in PERSONA_ONTOLOGY]
