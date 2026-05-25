@@ -118,6 +118,10 @@ class LineageReservoir:
         self.register(bred)
         if not bred:
             return bred
+        # 再投入間隔: interval>1 なら該当世代以外は貯蔵庫更新のみで再投入しない。
+        interval = max(1, self.reinject_interval)
+        if interval > 1 and int(getattr(population, "generation", 0)) % interval != 0:
+            return bred
         present = {self.lineage(i) for i in bred}
         extinct = [
             lin
