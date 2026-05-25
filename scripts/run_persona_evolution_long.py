@@ -372,7 +372,7 @@ def main() -> int:
         res = run_persona_evolution(
             args.personas,
             fitness_fn=fitness_fn,
-            is_proxy=(args.fitness != "llm"),
+            is_proxy=(args.fitness not in ("llm", "real-pressure")),
             population_size=args.population,
             generations=args.generations,
             seed=args.seed,
