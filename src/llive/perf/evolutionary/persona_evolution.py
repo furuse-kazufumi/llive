@@ -544,15 +544,39 @@ def run_persona_evolution(
     # → snapshot は粗く (checkpoint_every)、metrics は毎世代、と分離する。
     winners_path: Path | None = None
     metrics_path: Path | None = None
+    founder_lineage_path: Path | None = None
     on_generation_end = None
+
+    # ---- founder lineage (provenance) 追跡 ----
+    # winners.jsonl は各世代 top3 + その親 id しか残さないため、後付けで全個体を
+    # founder へ遡れない (非勝者祖先が dead-end する)。そこで **走行中に全集団を見る**
+    # on_generation_end フックで root-founder を伝播し、毎世代の全個体 founder 分布を
+    # founder_lineage.jsonl に書く。来歴 (factor_provenance) を進化自身に適用する形。
+    # 解決規則: founder は自身の persona、それ以外は parent_ids[0] の founder を継承、
+    # 親不明/padding は "(random)"。gen0 を seed し、以後は前世代が必ず map 済 (親は
+    # 前世代集団のメンバ) なので O(1) で確定する。
+    founder_map: dict[str, str] = {}
+    for _ind in population.individuals:  # gen0 (immigration 適用後)
+        _pid = founder_persona_id(_ind)
+        founder_map[_ind.individual_id] = _pid if _pid else "(random)"
+
+    def _resolve_origin(ind: Individual) -> str:
+        pid = founder_persona_id(ind)
+        if pid is not None:  # 走行中 immigration で投入された founder も拾う
+            return pid
+        if ind.parent_ids:
+            return founder_map.get(ind.parent_ids[0], "(random)")
+        return "(random)"
+
     if out_dir is not None:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         winners_path = out_dir / "winners.jsonl"
         metrics_path = out_dir / "metrics.jsonl"
+        founder_lineage_path = out_dir / "founder_lineage.jsonl"
         # 過去 run の追記混入を防ぐため新規 run 開始時に消す (resume 時は残す)。
         if resume_from is None:
-            for p in (winners_path, metrics_path):
+            for p in (winners_path, metrics_path, founder_lineage_path):
                 if p.exists():
                     p.unlink()
 
@@ -561,6 +585,21 @@ def run_persona_evolution(
             # 毎世代の集計 (best/mean/std/diversity) を append = SVG 時系列材料。
             with metrics_path.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(stats.to_dict(), ensure_ascii=False) + "\n")
+            # 全個体の root-founder 分布を append (P2 支配ストリームの素材)。
+            counts: dict[str, int] = {}
+            for ind in pop.individuals:
+                origin = founder_map.get(ind.individual_id)
+                if origin is None:
+                    origin = _resolve_origin(ind)
+                    founder_map[ind.individual_id] = origin
+                counts[origin] = counts.get(origin, 0) + 1
+            rec = {
+                "generation": int(pop.generation),
+                "n_individuals": len(pop.individuals),
+                "founder_counts": counts,
+            }
+            with founder_lineage_path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
     # ---- EvolutionLoop (flat=default operators / genome3d=Genome3D operators) ----
     loop_kwargs: dict = {
