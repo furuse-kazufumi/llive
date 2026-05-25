@@ -310,6 +310,11 @@ def main() -> int:
         from llive.perf.evolutionary.fitness_rich import make_rich_proxy_fitness
 
         fitness_fn = make_rich_proxy_fitness(args.personas)
+    elif args.fitness == "pressure-proxy":
+        # LLM 苦手軸 proxy pressure (Stage2 mechanism feasibility, 決定論・LLM 呼ばない)。
+        from llive.perf.evolutionary.pressures import make_pressure_fitness
+
+        fitness_fn = make_pressure_fitness()
     elif args.fitness == "llm":
         # per-eval hang guard: 無応答 backend で run 全体が止まらないよう打ち切り淘汰。
         eval_timeout = args.eval_timeout if args.eval_timeout and args.eval_timeout > 0 else None
