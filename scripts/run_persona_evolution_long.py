@@ -303,6 +303,10 @@ def main() -> int:
     # 0 → 無効化 (None) として run_persona_evolution に渡す。
     max_stall = args.max_stall if args.max_stall and args.max_stall > 0 else None
 
+    # lldarwin 選択圧 (複数選択圧の多目的淘汰)。default なら EvolutionLoop 既定 Tournament。
+    # criteria=() = rich-proxy の breakdown (archetype::*/factor_score/...) を動的に pressure 化。
+    selection_obj = MultiPressureSelector(epsilon=0.01) if args.selection == "lldarwin" else None
+
     print(
         f"[run] personas={len(args.personas)} pop={args.population} "
         f"generations={args.generations} patience={patience} fitness={args.fitness} "
