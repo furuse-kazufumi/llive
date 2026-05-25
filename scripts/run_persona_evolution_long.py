@@ -266,6 +266,12 @@ def main() -> int:
         help="選択圧。default=Tournament(既定) / lldarwin=複数選択圧の多目的淘汰 "
         "(ε-lexicase, rich-proxy の breakdown を pressure として独立評価し monoculture を回避)。",
     )
+    ap.add_argument(
+        "--novelty",
+        action="store_true",
+        help="lldarwin に novelty pressure を加える (k-NN 探索圧で空きニッチを埋め戻す, "
+        "Stage1)。--selection lldarwin と併用。default は OFF (criteria 除外のみ)。",
+    )
     args = ap.parse_args()
 
     unknown = [p for p in args.personas if p not in PERSONA_ONTOLOGY]
