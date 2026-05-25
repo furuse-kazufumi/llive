@@ -212,10 +212,12 @@ def main() -> int:
     )
     ap.add_argument(
         "--fitness",
-        choices=["proxy", "rich-proxy", "llm"],
+        choices=["proxy", "rich-proxy", "pressure-proxy", "llm"],
         default="proxy",
         help="proxy=旧 layer-平均10次元 heuristic (baseline) / "
         "rich-proxy=全40次元 c_factors + persona 多峰 + 染色体コヒーレンス (決定論, LLM 呼ばない) / "
+        "pressure-proxy=LLM 苦手軸 proxy pressure (typo/polysemy/multistep/calibration/context, "
+        "Stage2 mechanism feasibility, 決定論) / "
         "llm=実 LLM fitness (on-prem fail-closed)",
     )
     ap.add_argument(
