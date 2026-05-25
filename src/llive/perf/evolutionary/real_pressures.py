@@ -285,7 +285,7 @@ def make_real_pressure_fitness(
         breakdown: dict[str, float] = {}
         all_scores: list[float] = []
         for axis in cfg.axes:
-            for i, task in enumerate(_AXIS_TASKS[axis]):
+            for i, task in enumerate(_AXIS_TASKS[axis][: max(1, cfg.tasks_per_axis)]):
                 s = _eval_task(system, task)
                 breakdown[f"{axis}::t{i}"] = s
                 all_scores.append(s)
