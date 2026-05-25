@@ -51,15 +51,22 @@ def _numeric_breakdown(ind: Individual) -> dict[str, float]:
     return out
 
 
-def _infer_numeric_criteria(individuals: list[Individual]) -> tuple[str, ...]:
-    """集団全体の breakdown から数値 criterion キーを出現順で抽出."""
+def _infer_numeric_criteria(
+    individuals: list[Individual],
+    exclude: frozenset[str] = frozenset(),
+) -> tuple[str, ...]:
+    """集団全体の breakdown から数値 criterion キーを出現順で抽出.
+
+    ``exclude`` のキー (導出スカラー / カテゴリ index 等) は淘汰圧から外す。
+    """
     keys: list[str] = []
     seen: set[str] = set()
     for ind in individuals:
         for key in _numeric_breakdown(ind):
-            if key not in seen:
-                seen.add(key)
-                keys.append(key)
+            if key in exclude or key in seen:
+                continue
+            seen.add(key)
+            keys.append(key)
     return tuple(keys)
 
 
