@@ -72,9 +72,11 @@ class EvoEnv:
         vals = np.array(list(self.archive.values()), dtype=np.float64) if self.archive else np.zeros((0,), np.float64)
         np.savez(self._ckpt_path(), G=self.G, origin=self.origin, P=self.P,
                  gen=self.gen, cells=cells, vals=vals,
-                 rng=self.rng.bit_generator.state["state"]["state"],
-                 rng_inc=self.rng.bit_generator.state["state"]["inc"],
                  elapsed=self.elapsed_prev + (time.time() - self.t0))
+        # PCG64 state holds 128-bit ints → can't go in npz (object array). Use JSON (Python
+        # json round-trips arbitrary-precision ints) so --resume is bit-exact deterministic.
+        (self.out / "rng_state.json").write_text(
+            json.dumps(self.rng.bit_generator.state), encoding="utf-8")
         (self.out / "checkpoint_meta.json").write_text(
             json.dumps({"gen": self.gen, "pop": int(self.G.shape[0]), "gdim": self.gdim,
                         "archive_cells": len(self.archive)}, indent=2), encoding="utf-8")
