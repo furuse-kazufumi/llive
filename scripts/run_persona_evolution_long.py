@@ -339,6 +339,7 @@ def main() -> int:
             # 安全弁: diversity_floor=0.0 で多様性停止を無効化しているため、全個体同一に
             # 収束した場合の空回りはこの hard guard で止める (ユーザー要望 2026-05-24)。
             max_stall_generations=max_stall,
+            selection=selection_obj,
         )
     except Exception as exc:  # noqa: BLE001 - 失敗も実験結果として残す
         # 「失敗してもいいが結果が残らないと意味がない」: 失敗理由 + traceback を run_summary に記録。
