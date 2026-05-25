@@ -212,13 +212,21 @@ def main() -> int:
     )
     ap.add_argument(
         "--fitness",
-        choices=["proxy", "rich-proxy", "pressure-proxy", "llm"],
+        choices=["proxy", "rich-proxy", "pressure-proxy", "real-pressure", "llm"],
         default="proxy",
         help="proxy=旧 layer-平均10次元 heuristic (baseline) / "
         "rich-proxy=全40次元 c_factors + persona 多峰 + 染色体コヒーレンス (決定論, LLM 呼ばない) / "
         "pressure-proxy=LLM 苦手軸 proxy pressure (typo/polysemy/multistep/calibration/context, "
         "Stage2 mechanism feasibility, 決定論) / "
+        "real-pressure=Stage2 後半: 実 on-prem LLM 苦手軸評価 (個体 c_prompt→system prompt, "
+        "固定 LLM を実タスクで採点, temp=0+cache) / "
         "llm=実 LLM fitness (on-prem fail-closed)",
+    )
+    ap.add_argument(
+        "--ollama-model",
+        type=str,
+        default="llama3.2:latest",
+        help="--fitness real-pressure で使う固定 on-prem ollama モデル (既定 llama3.2:latest)。",
     )
     ap.add_argument(
         "--eval-timeout",
