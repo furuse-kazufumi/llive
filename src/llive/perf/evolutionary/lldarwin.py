@@ -135,26 +135,80 @@ class MultiPressureSelector:
     ----------
     criteria:
         breakdown のキー（pressure 名）。空 tuple なら集団の breakdown から数値キーを
-        動的抽出（例 ``fitness_rich`` の ``archetype::*`` / ``factor_score`` / ...）。
+        動的抽出（例 ``fitness_rich`` の ``archetype::*`` 等）。``exclude_criteria`` の
+        キーは自動抽出時に淘汰圧から外す。
     epsilon:
         ε-lexicase の許容範囲（同点扱い）。
     gate:
         :class:`MinimalCriterionGate`（None なら gate 無し）。全個体が落ちる場合は無視。
     higher_is_better:
         True なら各軸とも大きいほど良い。
+    exclude_criteria:
+        自動抽出時に除外するキー。既定 :data:`DEFAULT_EXCLUDED_CRITERIA`
+        (``factor_score`` = argmax / ``nearest_persona_idx`` = カテゴリ index)。
+        明示 ``criteria`` 指定時は適用しない（呼び出し側の指定を尊重）。
+    use_novelty:
+        True なら毎世代 k-NN novelty（過去世代 archive との平均距離）を z-score 化して
+        ``breakdown['novelty']`` に書き、追加の lexicase case にする。停滞時に集団から
+        外れた個体へ探索圧をかけ、空いたニッチを埋め戻す（``poc_evolution_env`` で
+        行動 monoculture 0.05 を実証した核機構, 設計 §6 Stage1）。
+    novelty_k:
+        novelty の k-NN 近傍数。
     """
 
     criteria: tuple[str, ...] = ()
     epsilon: float = 0.01
     gate: MinimalCriterionGate | None = None
     higher_is_better: bool = True
+    exclude_criteria: frozenset[str] = DEFAULT_EXCLUDED_CRITERIA
+    use_novelty: bool = False
+    novelty_k: int = 5
+    _scorer: NoveltyScorer | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+    _pop_sig: tuple[int, tuple[str, ...]] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    def _ensure_novelty(self, population: Population) -> None:
+        """集団（世代）ごとに 1 回だけ novelty を計算し z-score 化して書き込む.
+
+        novelty = 過去世代 archive との k-NN 平均距離（Lehman-Stanley 2008/2011）。
+        集団内で z-score 化（STD-1）して「集団から外れた個体ほど高 novelty」を
+        相対量にし、``breakdown['novelty']`` へ書く。``__call__`` は 1 世代に
+        個体数ぶん呼ばれるため、population の (generation, ids) 署名で 1 回だけ計算。
+        """
+        ids = tuple(ind.individual_id for ind in population.individuals)
+        sig = (int(getattr(population, "generation", 0)), ids)
+        if sig == self._pop_sig:
+            return
+        self._pop_sig = sig
+        if self._scorer is None:
+            self._scorer = NoveltyScorer(k=self.novelty_k)
+        raw = self._scorer.novelty_batch(population)  # 過去世代 archive との距離
+        mu = float(raw.mean())
+        sd = float(raw.std())
+        for ind, value in zip(population.individuals, raw):
+            if ind.fitness is None:
+                continue
+            ind.fitness.breakdown["novelty"] = (
+                (float(value) - mu) / sd if sd > 1e-12 else 0.0
+            )
+        # 採点後に今世代を archive へ追加（novelty は「過去との差」を測る）。
+        self._scorer.add_population(population)
 
     def __call__(self, population: Population, rng: np.random.Generator) -> Individual:
         candidates = list(population.individuals)
         if not candidates:
             raise ValueError("population is empty")
 
-        criteria = self.criteria or _infer_numeric_criteria(candidates)
+        if self.use_novelty:
+            # novelty を breakdown に書いてから criteria を抽出（case に含める）。
+            self._ensure_novelty(population)
+
+        criteria = self.criteria or _infer_numeric_criteria(
+            candidates, self.exclude_criteria
+        )
         if not criteria:
             # pressure が一つも無い → random fallback（全滅回避の最終手段）。
             return candidates[int(rng.integers(len(candidates)))]
