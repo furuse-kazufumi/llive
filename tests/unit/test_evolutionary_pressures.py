@@ -83,7 +83,7 @@ def test_lexicase_preserves_axis_specialists() -> None:
         c_impl=g_calib.c_impl,
         c_prompt=g_calib.c_prompt,
         c_meta=g_calib.c_meta,
-        c_factors=ThoughtFactorPerLayerChromosome.from_matrix(fac_c),
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(fac_c),
     )
     x = Individual(genome=g_multistep)
     y = Individual(genome=g_calib)
