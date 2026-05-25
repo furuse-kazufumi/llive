@@ -110,9 +110,10 @@ class EvoEnv:
         return nov
 
     def _update_archive(self, D: np.ndarray, nov: np.ndarray) -> None:
-        coords = D @ self.P  # 2-D map
-        lo, hi = coords.min(0), coords.max(0) + 1e-9
-        ix = np.clip(((coords - lo) / (hi - lo) * self.cells).astype(int), 0, self.cells - 1)
+        # 2-D map with FIXED bounds (not per-gen min-max, which trivially fills all cells).
+        # D is per-dim z-scored (unit var) and P ~ N(0,1); (D@P)/sqrt(gdim) ~ N(0,1) → bin [-4,4].
+        coords = (D @ self.P) / np.sqrt(self.gdim)
+        ix = np.clip(((coords + 4.0) / 8.0 * self.cells).astype(int), 0, self.cells - 1)
         for i in range(len(D)):
             cell = (int(ix[i, 0]), int(ix[i, 1]))
             if nov[i] > self.archive.get(cell, -1.0):
