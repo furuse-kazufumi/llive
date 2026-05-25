@@ -60,6 +60,10 @@ import numpy as np
 from llive.perf.evolutionary.impl_chromosome import ImplChromosome
 from llive.perf.evolutionary.meta_chromosome import MetaChromosome
 from llive.perf.evolutionary.prompt_chromosome import PromptChromosome
+from llive.perf.evolutionary.latent_reservoir import (
+    LatentReservoirChromosome,
+    crossover_uniform_genes as _latent_crossover_genes,
+)
 from llive.perf.evolutionary.thought_factor_per_layer import (
     ThoughtFactorPerLayerChromosome,
     crossover_per_factor as _factor_crossover_per_factor,
