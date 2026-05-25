@@ -393,6 +393,9 @@ def main() -> int:
             selection=selection_obj,
             lineage_reservoir=args.lineage_reservoir,
             reinject_interval=args.reinject_interval,
+            max_wallclock_seconds=(
+                args.max_wallclock_seconds if args.max_wallclock_seconds and args.max_wallclock_seconds > 0 else None
+            ),
         )
     except Exception as exc:  # noqa: BLE001 - 失敗も実験結果として残す
         # 「失敗してもいいが結果が残らないと意味がない」: 失敗理由 + traceback を run_summary に記録。
