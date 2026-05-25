@@ -126,12 +126,20 @@ class EvoEnv:
         nov = self._novelty(D, arch_D)
         self._update_archive(D, nov)
 
-        # metrics
+        # metrics. monoculture = BEHAVIORAL concentration (max archive-cell occupancy this gen),
+        # NOT the lineage label: the founder-origin label is selectively NEUTRAL, so it fixes by
+        # neutral drift (Kimura) regardless of mechanism — that is expected, not collapse. The OE
+        # signal is behavioral spread. lineage_fixation is kept separately (informational; to keep
+        # it <1 needs QD niching on lineage / PERSONA-FX, not pure novelty).
         diversity = float(np.mean(np.std(self.G, axis=0)))
-        uniq, counts = np.unique(self.origin, return_counts=True)
-        monoculture = float(counts.max() / self.G.shape[0])
+        coords = (D @ self.P) / np.sqrt(self.gdim)
+        ix = np.clip(((coords + 4.0) / 8.0 * self.cells).astype(int), 0, self.cells - 1)
+        flat = ix[:, 0] * self.cells + ix[:, 1]
+        monoculture = float(np.bincount(flat).max() / self.G.shape[0])
+        lineage_fix = float(np.unique(self.origin, return_counts=True)[1].max() / self.G.shape[0])
         rec = {"generation": self.gen, "diversity": diversity, "monoculture": monoculture,
-               "archive_cells": len(self.archive), "mean_novelty": float(nov.mean())}
+               "lineage_fixation": lineage_fix, "archive_cells": len(self.archive),
+               "mean_novelty": float(nov.mean())}
 
         # minimal-criterion: cull bottom MC% by novelty (ineligible to reproduce)
         floor = np.quantile(nov, a.mc_cull)
