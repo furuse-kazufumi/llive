@@ -231,9 +231,10 @@ class RealPressureConfig:
     """実 LLM 苦手軸評価の設定."""
 
     model: str = "llama3.2:latest"
-    max_tokens: int = 64
+    max_tokens: int = 128  # CoT の最終答まで出せる程度 (長すぎると遅い)
     temperature: float = 0.0  # 決定論 (greedy) → キャッシュ可
     axes: tuple[str, ...] = tuple(_AXIS_TASKS.keys())
+    tasks_per_axis: int = 2  # 軸あたり評価問数 (throughput 用; <=3)。12h で世代を稼ぐ。
 
 
 def make_real_pressure_fitness(
