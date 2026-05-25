@@ -573,6 +573,19 @@ def run_persona_evolution(
             return founder_map.get(ind.parent_ids[0], "(random)")
         return "(random)"
 
+    # lldarwin Stage1.5: 中立貯蔵庫。founder_map を **共有** し、貯蔵庫が再投入した
+    # 個体の系統も founder_lineage.jsonl ログと整合させる (revived は parent 無しでも
+    # 貯蔵庫が founder_map に正しい系統を登録するため、on_generation_end の
+    # founder_map.get(id) で先に解決される)。protected = "(random)" を除く persona founders。
+    reservoir_hook: Callable | None = None
+    if lineage_reservoir:
+        from llive.perf.evolutionary.lineage_reservoir import LineageReservoir
+
+        protected = frozenset(v for v in founder_map.values() if v != "(random)")
+        reservoir_hook = LineageReservoir(
+            lineage_of=founder_map, protected_lineages=protected
+        )
+
     if out_dir is not None:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
