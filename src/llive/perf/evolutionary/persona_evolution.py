@@ -609,6 +609,9 @@ def run_persona_evolution(
         "fitness_fn": effective_fitness,
         "on_generation_end": on_generation_end,
     }
+    # lldarwin: 多目的選択圧 (MultiPressureSelector 等) を注入。None なら既定 Tournament。
+    if selection is not None:
+        loop_kwargs["selection"] = selection
     if genome3d:
         loop_kwargs["crossover"] = Genome3DCrossover(mode=crossover_mode)
         loop_kwargs["mutation"] = Genome3DMutation(step_size=mutation_step)
