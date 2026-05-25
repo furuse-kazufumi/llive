@@ -315,6 +315,19 @@ def main() -> int:
         from llive.perf.evolutionary.pressures import make_pressure_fitness
 
         fitness_fn = make_pressure_fitness()
+    elif args.fitness == "real-pressure":
+        # Stage2 後半: 実 on-prem LLM 苦手軸評価。個体 c_prompt→system prompt を固定 LLM に
+        # 被せ実タスクを解かせ採点 (temp=0 決定論+キャッシュ)。measurement purity=on-prem only。
+        from llive.llm.backend import OllamaBackend
+        from llive.perf.evolutionary.real_pressures import (
+            RealPressureConfig,
+            make_real_pressure_fitness,
+        )
+
+        rp_backend = OllamaBackend(model=args.ollama_model, timeout=args.eval_timeout or 120.0)
+        fitness_fn = make_real_pressure_fitness(
+            rp_backend, RealPressureConfig(model=args.ollama_model)
+        )
     elif args.fitness == "llm":
         # per-eval hang guard: 無応答 backend で run 全体が止まらないよう打ち切り淘汰。
         eval_timeout = args.eval_timeout if args.eval_timeout and args.eval_timeout > 0 else None
