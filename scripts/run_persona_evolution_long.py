@@ -229,6 +229,13 @@ def main() -> int:
         help="--fitness real-pressure で使う固定 on-prem ollama モデル (既定 llama3.2:latest)。",
     )
     ap.add_argument(
+        "--max-wallclock-seconds",
+        type=float,
+        default=None,
+        help="実時間予算 (秒)。超過で safely 停止 (snapshot 済なので --resume で継続可)。"
+        "12h 連続ランは 43200。既定 None=無制限。",
+    )
+    ap.add_argument(
         "--eval-timeout",
         type=float,
         default=120.0,
