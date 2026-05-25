@@ -104,3 +104,41 @@ def test_empty_breakdown_random_fallback() -> None:
     sel = MultiPressureSelector()
     chosen = sel(Population(individuals=[x, y]), rng)
     assert chosen.individual_id in {x.individual_id, y.individual_id}
+
+
+def test_excludes_argmax_and_categorical_criteria() -> None:
+    """factor_score (argmax) と nearest_persona_idx (カテゴリ index) は自動抽出時に
+    淘汰圧から外す (Stage1, SEL-2 = best=1.0 飽和の真因の除去)."""
+    rng = np.random.default_rng(0)
+    # y は nearest_persona_idx / factor_score だけ高い。これらが除外されないと
+    # lexicase が y を不当に優遇してしまう。実 pressure (archetype::a) は x が上。
+    x = _ind(0.5, {"archetype::a": 1.0, "factor_score": 0.5, "nearest_persona_idx": 0.0})
+    y = _ind(0.5, {"archetype::a": 0.0, "factor_score": 1.0, "nearest_persona_idx": 7.0})
+    sel = MultiPressureSelector()  # criteria=() → 自動抽出 + 既定除外
+    chosen = {sel(Population(individuals=[x, y]), rng).individual_id for _ in range(40)}
+    # 除外が効けば pressure 軸 archetype::a だけが残り、specialist x が常に勝つ。
+    assert chosen == {x.individual_id}
+
+
+def test_novelty_pressure_preserves_outlier() -> None:
+    """use_novelty=True で集団から外れた個体 (高 novelty) が specialist として保存される.
+
+    全個体の archetype 軸が同値 (= fitness 飽和) でも、genome が外れ値の個体は
+    novelty case で生き残れる (空きニッチへの探索圧, poc_evolution_env の核機構)."""
+    rng = np.random.default_rng(0)
+    # archetype 軸は全員同値 (飽和) → novelty が無ければ全員同点で淘汰圧ゼロ。
+    near = [
+        Individual(genome=Genome(values=(0.50,), bounds=_BOUNDS)) for _ in range(5)
+    ]
+    outlier = Individual(genome=Genome(values=(0.99,), bounds=_BOUNDS))
+    for ind in [*near, outlier]:
+        ind.record_fitness(FitnessReport(score=0.5, breakdown={"archetype::a": 1.0}))
+    pop = Population(individuals=[*near, outlier])
+    sel = MultiPressureSelector(use_novelty=True)
+    # 1 世代目は archive 空で novelty=neutral だが、archive 蓄積後は外れ値が高 novelty。
+    sel(pop, rng)  # gen 0: archive へ集団を蓄積
+    pop2 = Population(individuals=[*near, outlier], generation=1)
+    chosen = {sel(pop2, rng).individual_id for _ in range(60)}
+    assert outlier.individual_id in chosen  # 外れ値が novelty 圧で生存
+    # novelty が breakdown に書かれている (監査可能性)。
+    assert "novelty" in outlier.fitness.breakdown
