@@ -211,9 +211,11 @@ def main() -> int:
     )
     ap.add_argument(
         "--fitness",
-        choices=["proxy", "llm"],
+        choices=["proxy", "rich-proxy", "llm"],
         default="proxy",
-        help="proxy=決定論 heuristic (既定, LLM 呼ばない) / llm=実 LLM fitness (on-prem fail-closed)",
+        help="proxy=旧 layer-平均10次元 heuristic (baseline) / "
+        "rich-proxy=全40次元 c_factors + persona 多峰 + 染色体コヒーレンス (決定論, LLM 呼ばない) / "
+        "llm=実 LLM fitness (on-prem fail-closed)",
     )
     ap.add_argument(
         "--eval-timeout",
