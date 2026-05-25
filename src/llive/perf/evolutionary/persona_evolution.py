@@ -584,7 +584,9 @@ def run_persona_evolution(
 
         protected = frozenset(v for v in founder_map.values() if v != "(random)")
         reservoir_hook = LineageReservoir(
-            lineage_of=founder_map, protected_lineages=protected
+            lineage_of=founder_map,
+            protected_lineages=protected,
+            reinject_interval=reinject_interval,
         )
 
     if out_dir is not None:
