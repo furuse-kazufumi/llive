@@ -98,6 +98,7 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--sparse", type=float, default=0.05)
     args = ap.parse_args()
+    _utf8_stdout()
 
     kw = dict(gens=args.gens, pop=args.pop, latent=args.latent, seed=args.seed, sparse=args.sparse)
     sc = run("scalar", **kw)
