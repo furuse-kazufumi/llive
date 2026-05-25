@@ -311,7 +311,11 @@ def main() -> int:
 
     # lldarwin 選択圧 (複数選択圧の多目的淘汰)。default なら EvolutionLoop 既定 Tournament。
     # criteria=() = rich-proxy の breakdown (archetype::*/factor_score/...) を動的に pressure 化。
-    selection_obj = MultiPressureSelector(epsilon=0.01) if args.selection == "lldarwin" else None
+    selection_obj = (
+        MultiPressureSelector(epsilon=0.01, use_novelty=args.novelty)
+        if args.selection == "lldarwin"
+        else None
+    )
 
     print(
         f"[run] personas={len(args.personas)} pop={args.population} "
