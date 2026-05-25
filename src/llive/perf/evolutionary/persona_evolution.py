@@ -401,6 +401,7 @@ def run_persona_evolution(
     selection: Callable | None = None,
     # ---- lldarwin Stage1.5: lineage-niched 中立貯蔵庫 (絶滅 founder 系統を毎世代 re-inject) ----
     lineage_reservoir: bool = False,
+    reinject_interval: int = 1,
 ) -> PersonaEvolutionResult:
     """ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバ.
 
