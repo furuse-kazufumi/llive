@@ -120,10 +120,17 @@ def _contains(expected: str) -> Callable[[str], float]:
     return lambda resp: 1.0 if exp and exp in _norm(resp) else 0.0
 
 
-def _first_number_is(expected: str) -> Callable[[str], float]:
+def _last_number_is(expected: str) -> Callable[[str], float]:
+    """応答中の **最後の数値** が期待値か (CoT の最終答を拾う; 推論を許す採点)."""
+    exp = (expected.lstrip("0") or "0")
+
     def score(resp: str) -> float:
-        m = re.search(r"-?\d+(?:\.\d+)?", resp)
-        return 1.0 if (m and m.group().lstrip("0") or "0") == (expected.lstrip("0") or "0") else 0.0
+        nums = re.findall(r"-?\d+(?:\.\d+)?", resp)
+        if not nums:
+            return 0.0
+        got = (nums[-1].lstrip("0") or "0")
+        return 1.0 if got == exp else 0.0
+
     return score
 
 
@@ -148,7 +155,7 @@ class _Task:
 _AXIS_TASKS: dict[str, tuple[_Task, ...]] = {
     "typo_robustness": (
         _Task("Wht is teh captial of Japan? Answer with one word only.", _contains("tokyo")),
-        _Task("Calcualte: 7 tims 8. Output the numbr only.", _first_number_is("56")),
+        _Task("Calcualte: 7 tims 8. Output the numbr only.", _last_number_is("56")),
         _Task("Waht color is teh clear daytime sky? One word only.", _contains("blue")),
     ),
     "polysemy_wsd": (
@@ -172,17 +179,17 @@ _AXIS_TASKS: dict[str, tuple[_Task, ...]] = {
         _Task(
             "I have 3 boxes with 4 apples each. I eat 2 apples. "
             "How many apples remain? Output the number only.",
-            _first_number_is("10"),
+            _last_number_is("10"),
         ),
         _Task(
             "A book has 200 pages. I read 40 pages a day for 3 days. "
             "How many pages are left? Output the number only.",
-            _first_number_is("80"),
+            _last_number_is("80"),
         ),
         _Task(
             "Start with 5. Double it, then subtract 3. "
             "What is the result? Output the number only.",
-            _first_number_is("7"),
+            _last_number_is("7"),
         ),
     ),
     "calibration": (
@@ -196,19 +203,19 @@ _AXIS_TASKS: dict[str, tuple[_Task, ...]] = {
         ),
         _Task(
             "How many sides does a triangle have? Output the number only.",
-            _first_number_is("3"),
+            _last_number_is("3"),
         ),
     ),
     "context_management": (
         _Task(
             "Irrelevant: the sky is purple and cats bark loudly. "
             "Question: what is 5 + 3? Output the number only.",
-            _first_number_is("8"),
+            _last_number_is("8"),
         ),
         _Task(
             "Background (ignore this): Paris is the capital of Asia. "
             "Question: what is 10 divided by 2? Output the number only.",
-            _first_number_is("5"),
+            _last_number_is("5"),
         ),
         _Task(
             "Note (unrelated): bananas are blue on Tuesdays. "
