@@ -90,9 +90,7 @@ class EvoEnv:
         self.gen = int(d["gen"])
         self.archive = {(int(c[0]), int(c[1])): float(v) for c, v in zip(d["cells"], d["vals"])}
         self.rng = np.random.default_rng(self.a.seed)
-        st = self.rng.bit_generator.state
-        st["state"]["state"] = int(d["rng"]); st["state"]["inc"] = int(d["rng_inc"])
-        self.rng.bit_generator.state = st
+        self.rng.bit_generator.state = json.loads((self.out / "rng_state.json").read_text(encoding="utf-8"))
         self.elapsed_prev = float(d["elapsed"]); self.t0 = time.time()
         return True
 
