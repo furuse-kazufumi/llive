@@ -627,6 +627,9 @@ def run_persona_evolution(
     # lldarwin: 多目的選択圧 (MultiPressureSelector 等) を注入。None なら既定 Tournament。
     if selection is not None:
         loop_kwargs["selection"] = selection
+    # lldarwin Stage1.5: 中立貯蔵庫を on_population_bred に注入 (絶滅 founder 系統を再投入)。
+    if reservoir_hook is not None:
+        loop_kwargs["on_population_bred"] = reservoir_hook
     if genome3d:
         loop_kwargs["crossover"] = Genome3DCrossover(mode=crossover_mode)
         loop_kwargs["mutation"] = Genome3DMutation(step_size=mutation_step)
