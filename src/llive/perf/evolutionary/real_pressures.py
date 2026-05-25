@@ -100,8 +100,9 @@ def genome_to_system_prompt(genome: object) -> str:
     style = _STYLE_INSTRUCTIONS.get(getattr(c_prompt, "language_style", "terse"), "")
     if style:
         parts.append(style)
-    # 末尾に出力形式の固定指示 (採点を安定させる)。
-    parts.append("When asked for a specific format, output only that and nothing else.")
+    # 末尾に「最終答を明示」だけ促す (推論は template に委ねる。CoT を抑制しないことで
+    # multistep に勾配が生まれる — 採点は最終答を拾う _last_number_is)。
+    parts.append("End with the final answer clearly.")
     return " ".join(parts)
 
 
