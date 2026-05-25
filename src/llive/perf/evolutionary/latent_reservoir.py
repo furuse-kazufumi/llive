@@ -43,7 +43,14 @@ from typing import Any
 import numpy as np
 
 #: 中立貯蔵庫のデフォルト遺伝子数。意味は持たない自由次元。
-DEFAULT_RESERVOIR_SIZE: int = 16
+#: 生物の比率に倣い **ゲノムは大きく** 取る (ヒトは個体間で ~99.9% 同一、差は ~0.1%、
+#: コード領域は ~1-2%)。個体差は限られた可変座位からしか生まれない → 大規模貯蔵庫 +
+#: 疎変異 (sample_neighborhood が毎世代ごく一部だけ変異) でこの比率を再現する。
+DEFAULT_RESERVOIR_SIZE: int = 256
+#: 1 回の mutation で変異する座位の割合 (「個体差を決めるのは限られた部分」)。
+#: 大半の座位は各世代で不変 = 保守的に共有され、差別化は疎に集中する。稀に可変窓が動くので
+#: 貯蔵庫全体は時間をかけて探索可能 (= evolvability を担保)。
+DEFAULT_MUTATION_DENSITY: float = 0.05
 GENE_LO: float = 0.0
 GENE_HI: float = 1.0
 
