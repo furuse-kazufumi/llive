@@ -53,11 +53,10 @@ class EvoEnv:
         a = self.a
         self.rng = np.random.default_rng(a.seed)
         # founders = distinct archetype seeds; padding = random. origin tracks lineage.
-        n_found = min(a.founders, a.pop)
-        founders = self.rng.uniform(0, 1, (n_found, self.gdim))
-        pad = self.rng.uniform(0, 1, (a.pop - n_found, self.gdim))
-        self.G = np.vstack([founders, pad])
-        self.origin = np.array(list(range(n_found)) + [-1] * (a.pop - n_found))  # -1 = (random)
+        self.G = self.rng.uniform(0, 1, (a.pop, self.gdim))
+        # each gen0 individual is its OWN lineage → monoculture metric measures takeover
+        # (gen0 monoculture = 1/pop). Lumping padding into one id made it trivially ~1.0.
+        self.origin = np.arange(a.pop)
         # fixed JL projection matrix (deterministic from seed) for the archive map
         self.P = np.random.default_rng(a.seed + 7).normal(0, 1, (self.gdim, self.proj_dim))
         self.archive: dict[tuple[int, int], float] = {}  # cell -> best novelty
