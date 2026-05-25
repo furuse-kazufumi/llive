@@ -77,7 +77,7 @@ def test_lexicase_preserves_axis_specialists() -> None:
         c_impl=g_multistep.c_impl,
         c_prompt=g_multistep.c_prompt,
         c_meta=g_multistep.c_meta,
-        c_factors=ThoughtFactorPerLayerChromosome.from_matrix(fac_m),
+        c_factors=ThoughtFactorPerLayerChromosome.from_array(fac_m),
     )
     g_calib = Genome3D(
         c_impl=g_calib.c_impl,
