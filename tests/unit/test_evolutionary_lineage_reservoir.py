@@ -72,6 +72,24 @@ def test_no_reinject_when_lineage_present() -> None:
     assert out is bred  # 変更なし (素通し)
 
 
+def test_reinject_interval_skips_offbeat_generations() -> None:
+    """reinject_interval>1 では該当世代以外は再投入しない (トレードオフ knob)."""
+    rng = np.random.default_rng(0)
+    res = LineageReservoir(reinject_interval=5)
+    oka = _ind(0.9, 0.7)
+    res.seed_founders({oka.individual_id: "oka"}, {"oka"})
+    parent_pop = Population(individuals=[oka])
+    other = _ind(0.1, 0.0)
+    # generation=3 (3 % 5 != 0) → 再投入しない (oka 絶滅のまま)。
+    parent_pop.generation = 3
+    out = res([other], parent_pop, rng)
+    assert "oka" not in {res.lineage(i) for i in out}
+    # generation=5 (5 % 5 == 0) → 再投入する。
+    parent_pop.generation = 5
+    out = res([_ind(0.1, 0.0)], parent_pop, rng)
+    assert "oka" in {res.lineage(i) for i in out}
+
+
 def test_loop_hook_is_optional_and_backward_compatible() -> None:
     """on_population_bred=None (既定) なら従来通り動く."""
     from llive.perf.evolutionary.loop import EvolutionConfig, EvolutionLoop
