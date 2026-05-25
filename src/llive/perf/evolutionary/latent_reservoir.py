@@ -117,11 +117,25 @@ class LatentReservoirChromosome:
     # ----- evolution operators -------------------------------------------
 
     def sample_neighborhood(
-        self, rng: np.random.Generator, step_size: float = 0.1
+        self,
+        rng: np.random.Generator,
+        step_size: float = 0.1,
+        *,
+        density: float = DEFAULT_MUTATION_DENSITY,
     ) -> LatentReservoirChromosome:
-        """Gaussian noise を加えて [0, 1] にクリップ。中立ドリフトの自由を担保する。"""
+        """**疎変異**: 毎回ごく一部の座位 (≈``density``) だけに Gaussian noise を加える。
+
+        「個体差を決めているのは遺伝子のごく限られた部分」(ユーザー 2026-05-25) を再現する。
+        大半の座位は世代を跨いで不変 = 保守的に共有され、差別化は疎に集中する。変異する座位は
+        毎回ランダムに選ばれるので可変窓が移動し、貯蔵庫全体は時間をかけて探索可能 (evolvability)。
+        """
         arr = self.as_array()
-        return self.from_array(arr + rng.normal(0.0, step_size, size=arr.shape))
+        n = arr.shape[0]
+        k = max(1, int(round(density * n)))
+        idx = rng.choice(n, size=k, replace=False)
+        noise = np.zeros(n)
+        noise[idx] = rng.normal(0.0, step_size, size=k)
+        return self.from_array(arr + noise)
 
     # ----- complexity ------------------------------------------------------
 
