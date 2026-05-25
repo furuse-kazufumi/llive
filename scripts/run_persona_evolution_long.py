@@ -275,7 +275,13 @@ def main() -> int:
     # cloud backend を選んだ個体は実体化で拒否され fitness=0 で淘汰される
     # (backend_id は B1 修正で label 解決済 = position 誤読なし)。
     fitness_fn = None
-    if args.fitness == "llm":
+    if args.fitness == "rich-proxy":
+        # 多峰 proxy: 全40次元 + persona archetype。fitness_fn 非 None だが proxy なので
+        # is_proxy=True を明示し honest disclosure (used_proxy_fitness) を保つ。
+        from llive.perf.evolutionary.fitness_rich import make_rich_proxy_fitness
+
+        fitness_fn = make_rich_proxy_fitness(args.personas)
+    elif args.fitness == "llm":
         # per-eval hang guard: 無応答 backend で run 全体が止まらないよう打ち切り淘汰。
         eval_timeout = args.eval_timeout if args.eval_timeout and args.eval_timeout > 0 else None
         fitness_fn = llm_fitness_factory(
