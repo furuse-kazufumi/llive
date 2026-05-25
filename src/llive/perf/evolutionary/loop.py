@@ -133,6 +133,17 @@ class EvolutionLoop:
     write_winners_jsonl("out/winners.jsonl", pop, top_n=3)`` で世代ごとに
     上位 3 体を JSONL に追記できる.
     """
+    on_population_bred: (
+        Callable[[list[Individual], Population, np.random.Generator], list[Individual]]
+        | None
+    ) = None
+    """次世代を breed した直後 (population.replace の前) に呼ばれる任意 hook.
+
+    bred 個体リスト・親世代 population・rng を受け取り、変換した個体リストを返す
+    (None なら no-op で素通し)。lldarwin Stage1.5 の lineage-niched 中立貯蔵庫
+    (絶滅系統の re-inject) はここで bred リストの一部を貯蔵庫 elite に置換する。
+    返り値の個体数は population.size と一致させること (呼び出し側責務)。
+    """
 
     # -- main loop ---------------------------------------------------------
 
