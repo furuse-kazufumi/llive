@@ -380,6 +380,7 @@ def run_persona_evolution(
     seed: int = 0,
     out_dir: Path | None = None,
     fitness_fn: Fitness | None = None,
+    is_proxy: bool | None = None,
     log_progress: bool = False,
     # ---- Genome3D (多層ゲノム) モード: founder/padding/operator を Genome3D に切替 ----
     genome3d: bool = False,
