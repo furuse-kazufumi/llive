@@ -65,13 +65,13 @@ from pathlib import Path
 
 import numpy as np
 
-# 既存 engine を additive に再利用 (改変なし)。
-from poc_openended_sweep import OpenEndedRun, RunConfig, _utf8  # noqa: E402
-
 # scripts/ を sys.path に載せて poc_openended_sweep を import できるようにする
 _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
+
+# 既存 engine を additive に再利用 (改変なし)。
+from poc_openended_sweep import OpenEndedRun, RunConfig, _utf8  # noqa: E402
 
 
 class ScaleupRun(OpenEndedRun):
