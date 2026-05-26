@@ -531,6 +531,45 @@ def build_sweep(base: RunConfig) -> list[RunConfig]:
     ]
 
 
+def build_sweep_round2(base: RunConfig) -> list[RunConfig]:
+    """Round 2: 崩壊/飽和/borderline 構成のパラメータを調整して再検証.
+
+    Round 1 の学び (smoke + full) を踏まえた調整軸:
+    - **scale 軸 (GENOME-1/POP-1/DESC-1)**: 記述子容量 latent 256→1024、QD cell 数 32→48
+      を上げ「容量を増やすと多様性持続が質的に変わるか」を検証 (本プロジェクト核仮説)。
+    - **lexicase の genome 収束対策**: variance floor として sparse 変異率を 0.05→0.10 に上げ、
+      genome-std 崩壊を緩和できるか (behavioral spread は元々高い)。
+    - **baseline_scalar の飽和**: 変異率を上げても scalar argmax は飽和回避できないことを再確認
+      (negative control の頑健性)。
+    """
+    from dataclasses import replace as dc_replace
+
+    def mk(label: str, **kw) -> RunConfig:
+        c = dc_replace(base, label=label)
+        for k, v in kw.items():
+            setattr(c, k, v)
+        return c
+
+    return [
+        # baseline 再確認 (変異率↑でも飽和する = negative control 頑健性)
+        mk("r2_baseline_hi_mut", selection="scalar", standardize=False,
+           archive="none", sparse=0.10, step=0.15),
+        # novelty の scale-up: 記述子容量 latent 1024 + cells 48
+        mk("r2_novelty_latent1024", selection="novelty", standardize=True,
+           archive="map-elites", latent=1024, cells=48),
+        # lexicase の genome 収束対策: sparse 変異率 floor↑
+        mk("r2_lexicase_himut", selection="lexicase", standardize=True,
+           archive="map-elites", sparse=0.10, step=0.12),
+        # full_oe scale-up + 変異 floor↑ (round1 borderline だった diversity を救えるか)
+        mk("r2_full_oe_latent1024", selection="novelty", standardize=True,
+           minimal_criterion=True, reservoir=1024, archive="map-elites",
+           latent=1024, cells=48, sparse=0.08),
+        # novelty + MC + QD (reservoir なし) を scale-up で
+        mk("r2_novelty_mc_qd_latent1024", selection="novelty", standardize=True,
+           minimal_criterion=True, archive="map-elites", latent=1024, cells=48),
+    ]
+
+
 def main() -> int:
     _utf8()
     ap = argparse.ArgumentParser(description="open-ended evolution PoC sweep (proxy, deterministic)")
