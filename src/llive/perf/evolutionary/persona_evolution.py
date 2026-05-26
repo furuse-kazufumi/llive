@@ -623,7 +623,10 @@ def run_persona_evolution(
     if genome3d:
         # 多層ゲノム: founder は c_factors に persona affinity、padding は random
         # Genome3D、bounds は None (Genome3D は単一 GenomeBounds を持たない)。
-        founders = build_founder_individuals_3d(founder_ids)
+        # diverse_founder_prompts=True で c_prompt も affinity 由来に多様化 (opt-in)。
+        founders = build_founder_individuals_3d(
+            founder_ids, diverse_prompt=diverse_founder_prompts
+        )
         random_individuals = [
             Individual.from_genome(_random_genome3d(rng), birth_generation=0)
             for _ in range(n_random)
