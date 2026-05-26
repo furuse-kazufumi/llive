@@ -268,6 +268,13 @@ def main() -> int:
         default=0.1,
         help="genome3d 時の mutation neighborhood step_size。既定 0.1。",
     )
+    ap.add_argument(
+        "--diverse-founder-prompts",
+        action="store_true",
+        help="genome3d 時に各 founder の c_prompt を affinity 由来に多様化する (opt-in)。"
+        "全 founder が同一 PromptChromosome.default から始まる初期探索分散の低さ "
+        "(12h ランで best が gen35 で天井 1.0 張り付き) を是正。既定 OFF (後方互換)。",
+    )
     # ---- 安全弁 (長時間 run で「全個体同一→空回り」を止める) ----
     ap.add_argument(
         "--max-stall",
