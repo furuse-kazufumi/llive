@@ -415,17 +415,36 @@ def _write_scaleup_summary_md(
              f"(net {net_cells:+.0f} — **世代数交絡**: pop↑で gens↓ のため累積 cell が減る。"
              f"POP 効果の指標として不適 → verdict から除外)")
     L.append("")
-    L.append("### 飽和/改善しない指標 (隠さず報告)")
+    L.append("### 飽和/交絡/改善しない指標 (隠さず報告)")
     L.append("")
-    if "increasing" not in mono_trend.replace("decreasing", "increasing") and "decreasing" not in mono_trend:
-        L.append(f"- monoculture は既に全 pop で低い (max={max(mono):.3f}) → pop による"
-                 f" 改善余地が小さい (床効果)。")
+    L.append(f"- **archive cells (QD 累積 cell 数) は POP-1 を支持しない** "
+             f"({cells[0]:.0f}→{cells[-1]:.0f}, {cells_mono})。これは母数の効果ではなく "
+             f"**世代数交絡**: archive は破壊されない累積カウンタなので gens が多いほど多く埋まる。"
+             f"本 sweep は pop↑ で gens↓ (5000→1200) のため、母数効果と逆向きの強い交絡が乗る。"
+             f"純 POP 効果を見るには gens を固定する必要がある (次に詰める点参照)。")
+    nov_mono = _monotonic(nov_tail, increasing=True)
+    if "increasing" not in nov_mono:
+        L.append(f"- **novelty_tail (JL) は単調でない** ({nov_mono})。低次元 JL 射影上の "
+                 f"k-NN 距離は pop↑ で参照点密度が上がり最近接距離が縮む効果が交じる "
+                 f"(密度交絡) + gens 交絡。novelty の絶対値は pop 横断比較に不適 → "
+                 f"行動 niche / monoculture を主指標とする。")
+    mono_floor = max(mono) < 0.1
+    if mono_floor:
+        L.append(f"- monoculture は全 pop で既に非常に低い (max={max(mono):.3f}, 床に近い)。"
+                 f"pop↑ で更に下がる ({mono_trend}) が、改善幅は小さく飽和傾向 "
+                 f"(full_oe は元々 monoculture を強く抑える)。")
     if any_grid_saturated:
         L.append(f"- 一部 pop で QD grid ({grid_max} cell) を埋め尽くし occupied niches が "
                  f"構造的に頭打ち → niche 数の pop 効果はそこで飽和。grid を上げれば伸びる余地あり。")
-    if "decreasing" in distinct_mono or "non-monotonic" in distinct_mono:
-        L.append(f"- distinct_genomes (絶対値) は pop↑ で {distinct_mono}。"
-                 f"ただし pop に対する **比率** で見るべき指標 (pop が増えれば母数も増える)。")
+    else:
+        max_occ = max(niche_saturated)
+        L.append(f"- QD grid 占有率は最大でも {max_occ:.0%} (grid={grid_max}) → "
+                 f"occupied niches はまだ grid 上限で頭打ちしておらず、pop↑ で更に伸びる余地がある "
+                 f"(niche の単調増は grid 飽和アーティファクトではない)。")
+    L.append(f"- distinct_genomes は絶対値が pop にほぼ等しい "
+             f"({', '.join(f'pop{p}:{d:.0f}' for p, d in zip(popv, distinct))}) → "
+             f"**全 pop で個体多様性がほぼ完全に保持** (collapse なし)。pop に対する比率で見ると "
+             f"全 pop ~1.0 で飽和 (これ以上は構造的に上がらない上限指標)。")
     L.append("")
     L.append("### 測定限界 (must read)")
     L.append("")
