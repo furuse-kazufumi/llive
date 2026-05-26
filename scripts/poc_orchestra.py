@@ -586,11 +586,18 @@ def main(argv: list[str] | None = None) -> int:
                     help="real モードで HARD バッテリ拡張を含める (de-saturation)")
     ap.add_argument("--always-on", action="store_true",
                     help="常時オン orchestrate の時間分離デモも出力")
+    ap.add_argument("--summary", action="store_true",
+                    help="既存 orchestra_*.json から SUMMARY.md を組むだけ (評価しない)")
     ap.add_argument("--out", type=Path,
                     default=Path(r"D:/projects/llive/out/poc_orchestra_2026_05_26"))
     args = ap.parse_args(argv)
 
     args.out.mkdir(parents=True, exist_ok=True)
+
+    if args.summary:
+        out = build_summary(args.out)
+        print(f"[poc_orchestra] wrote {out}")
+        return 0
 
     snapshot = args.snapshot
     if snapshot is None:
