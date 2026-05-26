@@ -71,6 +71,10 @@ from llive.perf.evolutionary.persona import (
     get_persona,
 )
 from llive.perf.evolutionary.population import Population
+from llive.perf.evolutionary.prompt_chromosome import (
+    KNOWN_PROMPT_SKILLS,
+    PromptChromosome,
+)
 from llive.perf.evolutionary.thought_factor_per_layer import (
     ThoughtFactorPerLayerChromosome,
 )

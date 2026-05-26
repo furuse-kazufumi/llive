@@ -3,7 +3,7 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-26 20:26:14
+- **最終更新**: 2026-05-26 20:42:29
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
@@ -31,7 +31,10 @@ M docs/SESSION_SUMMARY.md
 ## 直近 2 時間に変更されたファイル
 
 ```
-20:25 docs/SESSION_SUMMARY.md
+20:43 src/llive/perf/evolutionary/persona_evolution.py
+20:42 tests/unit/test_evolutionary_diverse_founder_prompt.py
+20:41 .pytest_cache/v/cache/nodeids
+20:26 docs/SESSION_SUMMARY.md
 20:15 scripts/llive_evolution_demo.ps1
 20:13 scripts/evolution_tree.py
 20:05 scripts/evolution_swarm.py
