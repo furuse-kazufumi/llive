@@ -479,7 +479,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="単一 k (--ks より優先しない; always-on 用)")
     ap.add_argument("--model", default="llama3.2:latest")
     ap.add_argument("--tasks-per-axis", type=int, default=3,
-                    help="real モードで軸あたり評価問数 (<=3)")
+                    help="real モードで軸あたり評価問数 (<=3; --hard 時は無視)")
+    ap.add_argument("--hard", action="store_true",
+                    help="real モードで HARD バッテリ拡張を含める (de-saturation)")
     ap.add_argument("--always-on", action="store_true",
                     help="常時オン orchestrate の時間分離デモも出力")
     ap.add_argument("--out", type=Path,
