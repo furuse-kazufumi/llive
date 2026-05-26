@@ -572,6 +572,14 @@ def build_sweep_round2(base: RunConfig) -> list[RunConfig]:
         return c
 
     return [
+        # 真の単峰 baseline (単一固定ものさし) = 最悪 collapse の faithful 再現。
+        # round1 の learning: max-over-8-archetypes の multi-modal scalar は pop=256 だと
+        # 8 peak に分散して mono<0.8 に留まる (collapse しきらない)。単一 peak に変えると
+        # lldarwin 同様に集団が 1 点へ吸い寄せられ monoculture / 多様性崩壊するはず。
+        mk("r2_baseline_unimodal", selection="scalar", standardize=False,
+           archive="none", unimodal=True),
+        mk("r2_baseline_unimodal_mc", selection="scalar", standardize=False,
+           archive="none", unimodal=True, minimal_criterion=True),
         # baseline 再確認 (変異率↑でも飽和する = negative control 頑健性)
         mk("r2_baseline_hi_mut", selection="scalar", standardize=False,
            archive="none", sparse=0.10, step=0.15),
