@@ -90,6 +90,7 @@ class RunConfig:
     step: float = 0.1
     seed: int = 0
     eps_lexicase: float = 0.05
+    unimodal: bool = False  # True: scalar fitness を単一 archetype への類似度に (真の単峰=最悪 collapse)
 
     def gdim(self) -> int:
         return self.factors + self.sat_noise + self.latent
