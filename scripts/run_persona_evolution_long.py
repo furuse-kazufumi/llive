@@ -448,8 +448,8 @@ def main() -> int:
             # 収束した場合の空回りはこの hard guard で止める (ユーザー要望 2026-05-24)。
             max_stall_generations=max_stall,
             selection=selection_obj,
-            lineage_reservoir=args.lineage_reservoir,
-            reinject_interval=args.reinject_interval,
+            lineage_reservoir=effective_lineage_reservoir,
+            reinject_interval=effective_reinject_interval,
             max_wallclock_seconds=(
                 args.max_wallclock_seconds if args.max_wallclock_seconds and args.max_wallclock_seconds > 0 else None
             ),
