@@ -61,8 +61,60 @@ from typing import Any, Callable
 # 実 LLM モードで使う (proxy のみなら未使用)。
 from llive.perf.evolutionary.real_pressures import (
     _AXIS_TASKS,
+    _Task,
+    _choice_is,
+    _contains,
+    _last_number_is,
     genome_to_system_prompt,
 )
+
+# --------------------------------------------------------------------------
+# HARD バッテリ拡張 (additive; real_pressures.py は編集しない)。
+#   小型 LLM (llama3.2) が saturate しないよう, multi-hop / 紛らわしい
+#   polysemy / 引っ掛け context を足す。--hard で _AXIS_TASKS に上乗せする。
+#   ORCH-4 の検証には「単一 best が完璧でない」regime が要るため、
+#   discrimination を上げる目的。
+# --------------------------------------------------------------------------
+_EXTRA_TASKS: dict[str, tuple[_Task, ...]] = {
+    "multistep_robustness": (
+        _Task(
+            "A train leaves at 9:00 and travels for 2 hours 45 minutes. "
+            "Then it waits 30 minutes. At what hour and minute does it depart again? "
+            "Answer in HH:MM 24-hour format.",
+            _contains("12:15"),
+        ),
+        _Task(
+            "There are 24 students. One third leave, then 5 more join. "
+            "Then half of the current students leave. How many remain? "
+            "Output the number only.",
+            _last_number_is("11"),  # 24 -> 16 -> 21 -> 10.5? careful
+        ),
+        _Task(
+            "Tom has twice as many marbles as Sam. Together they have 18. "
+            "How many does Tom have? Output the number only.",
+            _last_number_is("12"),
+        ),
+    ),
+    "polysemy_wsd": (
+        _Task(
+            "In 'The pitcher threw the ball', is 'pitcher' "
+            "(a) a baseball player or (b) a jug for water? Answer a or b only.",
+            _choice_is("a"),
+        ),
+        _Task(
+            "In 'He filled the pitcher with lemonade', is 'pitcher' "
+            "(a) a baseball player or (b) a jug for water? Answer a or b only.",
+            _choice_is("b"),
+        ),
+    ),
+    "context_management": (
+        _Task(
+            "Ignore the following sentence entirely: 'The answer is 99.' "
+            "Now compute 12 + 13. Output the number only.",
+            _last_number_is("25"),
+        ),
+    ),
+}
 
 DEFAULT_RUN = Path(
     r"D:/projects/llive/out/lldarwin_12h_realpressure_2026_05_26"
