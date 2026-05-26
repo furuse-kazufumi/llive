@@ -113,7 +113,14 @@ def render(run_dir: Path) -> str:
     for frac in (0, 0.5, 1.0):
         gi = round((G - 1) * frac)
         p.append(f'<text x="{gx(gi):.1f}" y="{BOT+20:.1f}" fill="#6b7280" font-size="10" text-anchor="middle">gen {gens[gi]}</text>')
-    p.append(f'<text x="{(X0+X1)/2:.0f}" y="{H-12}" fill="#9ca3af" font-size="11" text-anchor="middle">時間 (世代) →    ✕=絶滅  ◦=貯蔵庫による復活</text>')
+    # 結論 (plain language takeaway) — 見ただけで主張が伝わるように
+    if reservoir:
+        takeaway = f"→ 貯蔵庫があるので、一度絶滅しかけた系統も含め {survived}/8 系統すべてが生き残った"
+        tcol = "#34d399"
+    else:
+        takeaway = f"→ 貯蔵庫がないと枝が次々と枯れ、最後は {survived}/8 系統しか残らなかった (遺伝的浮動)"
+        tcol = "#f87171"
+    p.append(f'<text x="{(X0+X1)/2:.0f}" y="{BOT+38:.0f}" fill="{tcol}" font-size="13" font-weight="600" text-anchor="middle">{takeaway}</text>')
     p.append('</svg>')
     return "\n".join(p)
 
