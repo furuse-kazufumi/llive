@@ -446,6 +446,9 @@ class OpenEndedRun:
         div_tail = float(np.mean([r["diversity"] for r in tail]))
         bspread0 = rows[0].get("behavioral_spread", div0)
         bspread_tail = float(np.mean([r.get("behavioral_spread", r["diversity"]) for r in tail]))
+        # factor_spread: fitness が読む dim のみの多様性 (neutral drift を除外, 真の collapse 検出)。
+        fspread0 = rows[0].get("factor_spread", div0)
+        fspread_tail = float(np.mean([r.get("factor_spread", r["diversity"]) for r in tail]))
 
         # monoculture: 全世代 max
         mono_max = float(max(r["monoculture"] for r in rows))
