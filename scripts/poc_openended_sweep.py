@@ -511,6 +511,8 @@ class OpenEndedRun:
             "diversity_tail": round(div_tail, 4),
             "bspread_init": round(bspread0, 4),
             "bspread_tail": round(bspread_tail, 4),
+            "fspread_init": round(fspread0, 4),
+            "fspread_tail": round(fspread_tail, 4),
             "monoculture_max": round(mono_max, 4),
             "monoculture_tail": round(mono_tail, 4),
             "novelty_head": round(nov_head, 4),
@@ -522,6 +524,7 @@ class OpenEndedRun:
                 "archive_growth>=1": ok_archive,
                 "monoculture<0.8": ok_monoculture,
                 "diversity_held": ok_diversity,
+                "factor_diversity_held": ok_factor_diversity,  # 意味ある次元の多様性 (真の collapse 検出)
                 "diversity_held_genome": ok_diversity_genome,  # 参考 (raw genome variance)
                 "novelty_not_depleted": ok_novelty,
                 "alive_behavioral": ok_alive,
