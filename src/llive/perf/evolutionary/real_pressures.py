@@ -240,11 +240,54 @@ class RealPressureConfig:
     tasks_per_axis: int = 2  # 軸あたり評価問数 (throughput 用; <=3)。12h で世代を稼ぐ。
 
 
+#: response sink record (observability; what each individual answered for one task).
+#: 注意: score は task 採点値 ((0|1) の case score)。breakdown total ではない。
+ResponseRecord = dict  # {"system","user","axis","response","score"}
+
+#: response sink: list (append-record) / callable (record を渡す) / path|str (JSONL 追記)。
+ResponseSink = Union[list, Callable[[ResponseRecord], None], str, "Path"]
+
+
+def _make_sink_writer(sink: ResponseSink | None) -> Callable[[ResponseRecord], None] | None:
+    """response sink を「record を 1 件受け取る callable」に正規化する.
+
+    - ``None`` → ``None`` (記録しない; 従来挙動)。
+    - ``list`` → ``list.append``。
+    - ``callable`` → そのまま。
+    - ``str`` / ``Path`` → JSONL 追記 writer (UTF-8, 1 record/line)。
+
+    additive: 未指定なら writer を作らず、評価は従来通り LLM 応答テキストを保持しない。
+    """
+    if sink is None:
+        return None
+    if isinstance(sink, list):
+        return sink.append
+    if callable(sink):
+        return sink  # type: ignore[return-value]
+    if isinstance(sink, (str, Path)):
+        path = Path(sink)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        def _write(record: ResponseRecord) -> None:
+            try:
+                with path.open("a", encoding="utf-8") as fh:
+                    fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+            except Exception:
+                # observability sink failure は評価本体を止めない (12h 堅牢性)。
+                pass
+
+        return _write
+    raise TypeError(
+        f"response_log must be list / callable / str / Path, got {type(sink).__name__}"
+    )
+
+
 def make_real_pressure_fitness(
     backend: LLMBackend,
     config: RealPressureConfig | None = None,
     *,
     cache: dict[tuple[str, str], float] | None = None,
+    response_log: ResponseSink | None = None,
 ) -> Fitness:
     """実 LLM 苦手軸 fitness を作る (Stage2 後半).
 
@@ -258,14 +301,23 @@ def make_real_pressure_fitness(
     cache:
         ``(system_prompt, task_user)`` → score の決定論キャッシュ (省略時は内部生成)。
         temp=0 で決定論なので同一 prompt 戦略は LLM を再呼出ししない。
+    response_log:
+        **オプションの response sink** (observability)。省略時は従来通り何も記録しない。
+        ``(system_prompt, task.user, axis, response_text, score)`` を 1 task 1 record で
+        ``{"system","user","axis","response","score"}`` として記録する。型は
+        ``list`` (append) / ``callable`` (record を渡す) / ``str``|``Path`` (JSONL 追記)。
+        キャッシュヒット時は LLM を再呼出ししないため **記録しない** (実応答が無いため;
+        過去の record を重複させない)。新しい必須引数ではない — 既存 run と完全後方互換。
     """
     cfg = config or RealPressureConfig()
     score_cache: dict[tuple[str, str], float] = cache if cache is not None else {}
+    sink = _make_sink_writer(response_log)
 
-    def _eval_task(system: str, task: _Task) -> float:
+    def _eval_task(system: str, task: _Task, axis: str | None = None) -> float:
         key = (system, task.user)
         if key in score_cache:
             return score_cache[key]
+        response_text = ""
         try:
             resp = backend.generate(
                 GenerateRequest(
@@ -276,11 +328,23 @@ def make_real_pressure_fitness(
                     model=cfg.model,
                 )
             )
-            value = float(task.score_fn(resp.text or ""))
+            response_text = resp.text or ""
+            value = float(task.score_fn(response_text))
         except Exception:
             # backend hang / error は task 失点 (0) として走行継続 (12h 堅牢性)。
             value = 0.0
         score_cache[key] = value
+        if sink is not None:
+            # 実応答 (キャッシュミス時のみ到達) を記録。time order = 評価順 = 世代×個体順。
+            sink(
+                {
+                    "system": system,
+                    "user": task.user,
+                    "axis": axis,
+                    "response": response_text,
+                    "score": value,
+                }
+            )
         return value
 
     def fitness(genome: object) -> FitnessReport:
