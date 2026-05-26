@@ -526,6 +526,8 @@ def run_persona_evolution(
     genome3d: bool = False,
     crossover_mode: str = "intra",
     mutation_step: float = 0.1,
+    # ---- founder 初期分散向上 (lldarwin 天井早期飽和の是正, opt-in) ----
+    diverse_founder_prompts: bool = False,
     # ---- 段階的追加 (immigration): 走行中の集団に新 persona founder を移民 ----
     inject_persona_ids: Sequence[str] | None = None,
     # ---- 長期運用パラメータ (2026-05-23 環境整備: 100→1000 世代研究用) ----
