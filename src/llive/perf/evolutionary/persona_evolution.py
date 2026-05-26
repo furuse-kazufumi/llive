@@ -676,7 +676,9 @@ def run_persona_evolution(
                 "snapshot を読めない。snapshot パスを確認。"
             )
         immigrants = (
-            build_founder_individuals_3d(inject_persona_ids)
+            build_founder_individuals_3d(
+                inject_persona_ids, diverse_prompt=diverse_founder_prompts
+            )
             if genome3d
             else build_founder_individuals(inject_persona_ids)
         )
