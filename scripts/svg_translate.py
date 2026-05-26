@@ -255,10 +255,10 @@ def process(src_dir: Path, out_dir: Path, check_only: bool) -> int:
                 failures.append(f"{out_path.name}: invalid XML: {exc}")
                 continue
 
-            leaks = find_residual_japanese(variant)
+            leaks = find_residual_japanese(variant, lang)
             if leaks:
                 for s in leaks:
-                    failures.append(f"{out_path.name}: residual Japanese: {s!r}")
+                    failures.append(f"{out_path.name}: residual untranslated text: {s!r}")
 
     action = "verified" if check_only else "generated"
     print(f"{action} {generated if not check_only else len(SOURCE_SVGS)*len(LANGS)} variant(s) "
