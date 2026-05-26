@@ -105,6 +105,111 @@ if tuple(THOUGHT_FACTORS) != tuple(THOUGHT_FACTOR_LABELS):
         f"一致しません: {THOUGHT_FACTORS!r} != {THOUGHT_FACTOR_LABELS!r}"
     )
 
+# diverse founder c_prompt の前提: persona 側 10 思考因子 (THOUGHT_FACTORS) と
+# prompt skill 側 (KNOWN_PROMPT_SKILLS) は **index 一対一対応** している。
+#   factor_structurize↔structurize / factor_recompose↔recompose /
+#   factor_closed_loop↔loop / factor_self_extend↔self_extend /
+#   factor_uncertainty↔uncertainty / factor_exploration↔explore /
+#   factor_consistency↔align / factor_provenance↔provenance /
+#   factor_multiview↔perspective / factor_reality_link↔ground
+# 同長でなければ affinity index を skill にそのまま使えないので fail-closed。
+if len(THOUGHT_FACTORS) != len(KNOWN_PROMPT_SKILLS):
+    raise RuntimeError(
+        "THOUGHT_FACTORS と KNOWN_PROMPT_SKILLS の長さが一致しません "
+        f"({len(THOUGHT_FACTORS)} != {len(KNOWN_PROMPT_SKILLS)}); "
+        "affinity 由来 diverse founder prompt の index 写像が成立しない。"
+    )
+
+#: diverse founder c_prompt が affinity 上位から拾う prompt skill 数 (k)。
+#: 既定 PromptChromosome.default().skill_set は 2 個 (structurize/ground) だが、
+#: 初期探索分散を上げるため k=3 で「ペルソナの強み 3 因子」を skill 化する。
+_DIVERSE_PROMPT_TOP_K = 3
+
+#: affinity の最大値が突出している (集中度が高い) ときに選ぶ template の写像。
+#: 「最も強い思考因子が推論スタイルを示すなら導く」原理的写像のみ採用し、明確な
+#: 対応が無い因子は base 据え置き (恣意的な手調整・gaming を避ける honest disclosure)。
+#: - factor_structurize → chain_of_thought (段階分解 = step-by-step)
+#: - factor_exploration → tree_of_thought (複数案を広げて選ぶ)
+#: - factor_multiview   → debate (賛否/多視点を並べる)
+#: - factor_closed_loop → socratic (前提を問い直し閉じる)
+_DOMINANT_FACTOR_TEMPLATE: dict[str, str] = {
+    "factor_structurize": "chain_of_thought",
+    "factor_exploration": "tree_of_thought",
+    "factor_multiview": "debate",
+    "factor_closed_loop": "socratic",
+}
+
+#: 最大 affinity がこの値以上のとき「集中度が高い = 支配因子が明瞭」とみなし
+#: template を導く。これ未満なら平坦とみなし base 据え置き。
+_DOMINANT_AFFINITY_THRESHOLD = 0.9
+
+
+def _diverse_c_prompt_from_affinity(
+    affinity: tuple[float, ...],
+    *,
+    top_k: int = _DIVERSE_PROMPT_TOP_K,
+) -> PromptChromosome:
+    """ペルソナの ``factor_affinity`` から founder 用 :class:`PromptChromosome` を導く.
+
+    内部整合の設計思想: c_factors (思考因子層) と c_prompt (prompt skill 層) を
+    **同一の affinity 源**から導くことで、founder の同一性を両層で一貫させる。
+    affinity 上位 ``top_k`` 因子に index 一対一対応する prompt skill を ``skill_set``
+    にする (対応は :data:`THOUGHT_FACTORS` ↔ :data:`KNOWN_PROMPT_SKILLS` の同 index)。
+
+    ``prompt_template_id`` は最大 affinity 因子が推論スタイルを明確に示す場合のみ
+    導く (:data:`_DOMINANT_FACTOR_TEMPLATE`)。明確でなければ base 据え置き。
+    ``language_style`` / ``historical_quote_density`` / ``persona_set`` / ``rule_set``
+    は affinity から原理的に導けないため default 据え置き (恣意的手調整を避ける)。
+
+    .. note:: HONEST DISCLOSURE
+
+        これは affinity からの **原理的写像** であり、一般能力やこの prompt 戦略が
+        弱点を緩和するという主張ではない。目的は単一で、評価天井の低い小型 on-prem
+        LLM 上で **founder の初期探索分散を上げる** こと (全 founder が同一
+        ``PromptChromosome.default`` から始まると探索が早期飽和するため)。skill と
+        因子の対応は index 同順の構造的事実に基づき、スコアを上げるための手調整は
+        していない。
+
+    Parameters
+    ----------
+    affinity : tuple[float, ...]
+        ペルソナの 10 次元 factor_affinity (:data:`THOUGHT_FACTORS` 順)。
+    top_k : int
+        skill_set に採用する上位因子数。既定 :data:`_DIVERSE_PROMPT_TOP_K`。
+
+    Returns
+    -------
+    PromptChromosome
+        skill_set = affinity 上位 top_k 因子に対応する skill (subset, 重複なし)。
+        他 gene は default (template のみ支配因子が明確なら導出)。
+    """
+    aff = np.asarray(affinity, dtype=np.float64)
+    base = PromptChromosome.default()
+
+    # 上位 top_k 因子の index を安定降順で取り出す (同値は index 昇順 = 決定論的)。
+    k = max(1, min(int(top_k), len(KNOWN_PROMPT_SKILLS)))
+    order = np.argsort(-aff, kind="stable")
+    top_idx = order[:k]
+    skill_set = tuple(KNOWN_PROMPT_SKILLS[int(i)] for i in top_idx)
+
+    # template: 最大 affinity 因子が支配的 (>= 閾値) かつ明確な推論スタイルを示すなら導く。
+    template_id = base.prompt_template_id
+    dominant_idx = int(order[0])
+    if float(aff[dominant_idx]) >= _DOMINANT_AFFINITY_THRESHOLD:
+        dominant_factor = THOUGHT_FACTORS[dominant_idx]
+        template_id = _DOMINANT_FACTOR_TEMPLATE.get(
+            dominant_factor, base.prompt_template_id
+        )
+
+    return PromptChromosome(
+        persona_set=base.persona_set,
+        skill_set=skill_set,
+        rule_set=base.rule_set,
+        prompt_template_id=template_id,
+        language_style=base.language_style,
+        historical_quote_density=base.historical_quote_density,
+    )
+
 
 # ---------------------------------------------------------------------------
 # proxy fitness (honest disclosure: 実 LLM 評価ではない)
