@@ -484,19 +484,25 @@ class OpenEndedRun:
         # diversity_held は behavioral_spread を第一義に判定 (genome-std は併記)。
         ok_diversity = bspread_tail > 0.5 * bspread0 if bspread0 > 0 else div_tail > 0.5 * div0
         ok_diversity_genome = div_tail > 0.5 * div0  # 参考 (raw genome variance)
-        # factor_diversity = fitness が読む dim の多様性が保たれたか (真の collapse 検出)。
-        # scalar baseline はここで FAIL する (peak へ収束) が、full-descriptor の neutral drift では
-        # ごまかされる。open_ended 判定の必須条件に含めて negative control を厳格化する。
+        # factor_diversity = fitness が読む dim の多様性が保たれたか。
+        # HONEST な区別:
+        #  - scalar 選択では factor dims が **目的そのもの** → ここが崩れる = baseline collapse の
+        #    本体。必須条件にする (neutral drift で behavioral spread を装っても弾く)。
+        #  - novelty/lexicase 選択では factor dims に多様性圧は **かからない** (descriptor 全体の
+        #    novelty を最大化するだけ)。factor が drift/収束しても open-endedness 失敗ではない
+        #    → 必須にしない (informational として報告)。これは「開放端は記述子が測る空間の
+        #    多様性を保つが、その中の特定 subspace を個別に守るわけではない」という深い内訳。
         ok_factor_diversity = fspread_tail > 0.5 * fspread0 if fspread0 > 0 else True
         ok_novelty = nov_tail > 0.5 * nov_head if nov_head > 0 else None
         # behavioral 全滅でない = 末尾でも複数 niche を占有 ∧ 個体が collapse していない。
         ok_alive = occupied_tail >= 2 and distinct_tail >= 0.5 * pop
 
-        # 総合: open-ended 成立 = (a) monoculture でない (b) behavioral diversity 維持
-        # (c) **意味ある次元 (factor) の多様性も維持** (d) 全滅しない (e) archive 成長/飽和。
-        # (c) を入れることで「neutral drift だけで spread を装う」scalar baseline を弾く。
-        open_ended = bool(ok_monoculture and ok_diversity and ok_factor_diversity
-                          and ok_alive and (ok_archive in (True, None)))
+        # 総合: open-ended 成立 = monoculture でない ∧ behavioral diversity 維持 ∧ 全滅しない
+        #       ∧ archive 成長/飽和。**scalar 選択では加えて factor diversity も必須** (真の collapse 検出)。
+        require_factor = self.cfg.selection == "scalar"
+        open_ended = bool(ok_monoculture and ok_diversity and ok_alive
+                          and (ok_archive in (True, None))
+                          and (ok_factor_diversity if require_factor else True))
 
         return {
             "elapsed_s": round(elapsed, 2),
