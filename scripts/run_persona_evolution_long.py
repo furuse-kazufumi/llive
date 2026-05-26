@@ -293,10 +293,13 @@ def main() -> int:
     )
     ap.add_argument(
         "--selection",
-        choices=["default", "lldarwin"],
+        choices=["default", "lldarwin", "lldarwin-v2"],
         default="default",
         help="選択圧。default=Tournament(既定) / lldarwin=複数選択圧の多目的淘汰 "
-        "(ε-lexicase, rich-proxy の breakdown を pressure として独立評価し monoculture を回避)。",
+        "(ε-lexicase, rich-proxy の breakdown を pressure として独立評価し monoculture を回避) / "
+        "lldarwin-v2=overnight マラソン確定 S1 選択核プリセット "
+        "(ε-lexicase + novelty(z-score) + minimal-criterion + 中立貯蔵庫を既定 on, "
+        "既存部品の合成配線。後方互換のため opt-in)。",
     )
     ap.add_argument(
         "--novelty",
