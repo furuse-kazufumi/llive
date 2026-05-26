@@ -594,7 +594,7 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
     lines.append("")
     lines.append("## §2 チェック内訳")
     lines.append("")
-    lines.append("| 構成 | archive_growth≥1 | monoculture<0.8 | diversity_held | novelty_not_depleted | alive(lineages≥2) | archive_growth(tail20%) |")
+    lines.append("| 構成 | archive_growth≥1 | monoculture<0.8 | diversity_held | novelty_not_depleted | alive(behavioral) | archive_growth(tail20%) |")
     lines.append("|---|---|---|---|---|---|---|")
     for s in summaries:
         ch = s["checks"]
@@ -602,9 +602,13 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
             return "—" if v is None else ("PASS" if v else "FAIL")
         lines.append(
             f"| {s['config']['label']} | {m(ch['archive_growth>=1'])} | {m(ch['monoculture<0.8'])} "
-            f"| {m(ch['diversity_held'])} | {m(ch['novelty_not_depleted'])} | {m(ch['alive(lineages>=2)'])} "
+            f"| {m(ch['diversity_held'])} | {m(ch['novelty_not_depleted'])} | {m(ch['alive_behavioral'])} "
             f"| {s['archive_growth_tail20pct']:+d} |"
         )
+    lines.append("")
+    lines.append("> 注: `lineage_fixation` は全構成で中立浮動 (Kimura) により ~1.0 に固定するため "
+                 "**全滅判定には使わない** (informational のみ)。open-endedness の operative signal は "
+                 "behavioral 量 (occupied niches / monoculture / diversity / archive growth) — §0 と整合。")
     lines.append("")
     # 自動判定: baseline vs open-ended
     base_runs = [s for s in summaries if s["config"]["selection"] == "scalar"]
