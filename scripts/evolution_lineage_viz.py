@@ -179,7 +179,9 @@ def render_dominance_svg(
         parts.append(f'<text x="{x0-8}" y="{y+4:.1f}" fill="#6b7280" font-size="10" text-anchor="end">{int(v*100)}%</text>')
 
     parts.append(
-        f'<clipPath id="revealdom"><rect x="{x0}" y="0" width="0" height="{H}">'
+        # 静的フォールバック: authored width=full で SMIL 非実行環境でも見える
+        # (animation as enhancement, [[feedback_animated_svg_static_fallback]])。
+        f'<clipPath id="revealdom"><rect x="{x0}" y="0" width="{x1-x0:.0f}" height="{H}">'
         f'<animate attributeName="width" from="0" to="{x1-x0:.0f}" dur="3.4s" fill="freeze"/>'
         f'</rect></clipPath>'
     )
