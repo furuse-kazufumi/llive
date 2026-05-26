@@ -442,7 +442,9 @@ class OpenEndedRun:
         # 判定 (§2 合格条件)
         ok_archive = archive_growth_tail >= 1 if self.cfg.archive == "map-elites" else None
         ok_monoculture = mono_max < 0.8
-        ok_diversity = div_tail > 0.5 * div0
+        # diversity_held は behavioral_spread を第一義に判定 (genome-std は併記)。
+        ok_diversity = bspread_tail > 0.5 * bspread0 if bspread0 > 0 else div_tail > 0.5 * div0
+        ok_diversity_genome = div_tail > 0.5 * div0  # 参考 (raw genome variance)
         ok_novelty = nov_tail > 0.5 * nov_head if nov_head > 0 else None
         # behavioral 全滅でない = 末尾でも複数 niche を占有 ∧ 個体が collapse していない。
         # 「pop の半分以上が distinct な個体」かつ「2 niche 以上」を生存条件とする。
