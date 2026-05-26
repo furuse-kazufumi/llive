@@ -477,6 +477,7 @@ class OpenEndedRun:
                 "archive_growth>=1": ok_archive,
                 "monoculture<0.8": ok_monoculture,
                 "diversity_held": ok_diversity,
+                "diversity_held_genome": ok_diversity_genome,  # 参考 (raw genome variance)
                 "novelty_not_depleted": ok_novelty,
                 "alive_behavioral": ok_alive,
             },
