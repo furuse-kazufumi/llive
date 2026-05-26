@@ -92,7 +92,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     },
     "reinject_interval (世代)": {
         "en": "reinject_interval (generations)",
-        "zh": "reinject_interval (世代)",
+        "zh": "reinject_interval (代)",
         "ko": "reinject_interval (세대)",
     },
     "named 系統生存 (/8)": {
@@ -100,13 +100,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "zh": "named 谱系存活 (/8)",
         "ko": "named 계통 생존 (/8)",
     },
-    "diversity_l2 (max14)": {
-        # ascii-only but kept here so the legend pair stays explicit; identical
-        # across languages.
-        "en": "diversity_l2 (max14)",
-        "zh": "diversity_l2 (max14)",
-        "ko": "diversity_l2 (max14)",
-    },
+    # NOTE: "diversity_l2 (max14)" is ascii-only (no Japanese) and identical
+    # across all languages, so it has no entry and is passed through verbatim.
 
     # --- lldarwin_stage2_real_llm_axes.svg ---
     "lldarwin — LLM 苦手軸スコアの進化 (per-axis)": {
