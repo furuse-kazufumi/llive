@@ -3,13 +3,15 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-26 20:42:29
+- **最終更新**: 2026-05-26 20:43:50
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
+5478bd4 auto: persona_evolution.py 編集前 (2026-05-26 20:43)
+d5fc7ef auto: persona_evolution.py 編集前 (2026-05-26 20:43)
 3925e88 feat(viz): 進化の樹に読み方パネル+結論を追加 / GitHub取得可能なデモ .ps1 同梱
 964d2c3 auto: evolution_tree.py 編集前 (2026-05-26 20:13)
 0d80e2a auto: evolution_tree.py 編集前 (2026-05-26 20:12)
@@ -18,23 +20,22 @@
 1fbb704 auto: evolution_genome_heatmap.py 編集前 (2026-05-26 19:46)
 e76057a auto: evolution_axes_viz.py 編集前 (2026-05-26 19:46)
 a538290 auto: evolution_lineage_viz.py 編集前 (2026-05-26 19:46)
-8736237 auto: evolution_viz.py 編集前 (2026-05-26 19:46)
-c602bfb feat(viz): evolution_genome_heatmap — 勝者の思考因子×層 heatmap (P3)
 ```
 
 ## 現在の git status
 
 ```
-M docs/SESSION_SUMMARY.md
+M src/llive/perf/evolutionary/persona_evolution.py
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-20:43 src/llive/perf/evolutionary/persona_evolution.py
+20:44 src/llive/perf/evolutionary/persona_evolution.py
+20:43 docs/SESSION_SUMMARY.md
+20:43 .pytest_cache/v/cache/nodeids
+20:43 .pytest_cache/v/cache/lastfailed
 20:42 tests/unit/test_evolutionary_diverse_founder_prompt.py
-20:41 .pytest_cache/v/cache/nodeids
-20:26 docs/SESSION_SUMMARY.md
 20:15 scripts/llive_evolution_demo.ps1
 20:13 scripts/evolution_tree.py
 20:05 scripts/evolution_swarm.py

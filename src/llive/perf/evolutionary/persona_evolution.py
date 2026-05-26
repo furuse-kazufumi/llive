@@ -428,16 +428,24 @@ def build_founder_individuals_3d(
     persona_ids: Sequence[str],
     *,
     broadcast_strategy: str = "uniform",
+    diverse_prompt: bool = False,
 ) -> list[Individual]:
     """各 persona を gen0 の Genome3D founder :class:`Individual` にする (G4).
 
     flat 版 :func:`build_founder_individuals` と同じ founder-id 規約
     (``"founder:<persona_id>"``) なので :func:`is_founder` /
     :func:`founder_persona_id` がそのまま使える。
+
+    ``diverse_prompt=True`` (opt-in) で各 founder の c_prompt を affinity 由来に
+    多様化する (:func:`build_founder_genome_3d` へ貫通)。default False で従来挙動。
     """
     founders: list[Individual] = []
     for pid in persona_ids:
-        genome = build_founder_genome_3d(pid, broadcast_strategy=broadcast_strategy)
+        genome = build_founder_genome_3d(
+            pid,
+            broadcast_strategy=broadcast_strategy,
+            diverse_prompt=diverse_prompt,
+        )
         ind = Individual.from_genome(genome, parent_ids=(), birth_generation=0)
         ind.individual_id = f"{FOUNDER_ID_PREFIX}:{pid}"
         founders.append(ind)
