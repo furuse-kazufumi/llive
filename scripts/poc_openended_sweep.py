@@ -181,13 +181,25 @@ class OpenEndedRun:
         if self.reservoir:
             res_D = np.array([self._project_descriptor(g) for _, g in self.reservoir.values()])
             ref = np.vstack([D, res_D])
+        kk = max(1, min(self.cfg.k, len(ref) - 1))
+        # vectorized k-NN: ||a-b||^2 = |a|^2 + |b|^2 - 2 a·b。自己距離 (対角) を除外し
+        # 各行で最近接 kk 個 (自己の次から) の平均を取る。pop≤数千で十分高速 (chunk で OOM 防止)。
+        ref_sq = np.einsum("ij,ij->i", ref, ref)
         nov = np.empty(len(D))
-        kk = min(self.cfg.k, len(ref) - 1)
-        kk = max(1, kk)
-        for i in range(len(D)):
-            dd = np.linalg.norm(ref - D[i], axis=1)
-            dd.sort()
-            nov[i] = dd[1 : kk + 1].mean()
+        chunk = 512
+        for start in range(0, len(D), chunk):
+            end = min(start + chunk, len(D))
+            d_chunk = D[start:end]
+            d_sq = np.einsum("ij,ij->i", d_chunk, d_chunk)[:, None]
+            # squared dist (chunk, n_ref); 数値誤差で僅かに負になりうるので clip(0)
+            dsq = d_sq + ref_sq[None, :] - 2.0 * (d_chunk @ ref.T)
+            np.maximum(dsq, 0.0, out=dsq)
+            dist = np.sqrt(dsq)
+            # 自己 (= start..end 行に対応する ref 列) を inf にして除外
+            for r in range(end - start):
+                dist[r, start + r] = np.inf
+            part = np.partition(dist, kk, axis=1)[:, :kk]
+            nov[start:end] = part.mean(axis=1)
         return nov
 
     def _project_descriptor(self, genome: np.ndarray) -> np.ndarray:
