@@ -464,6 +464,8 @@ class OpenEndedRun:
             "archive_growth_tail20pct": archive_growth_tail,
             "diversity_init": round(div0, 4),
             "diversity_tail": round(div_tail, 4),
+            "bspread_init": round(bspread0, 4),
+            "bspread_tail": round(bspread_tail, 4),
             "monoculture_max": round(mono_max, 4),
             "monoculture_tail": round(mono_tail, 4),
             "novelty_head": round(nov_head, 4),
