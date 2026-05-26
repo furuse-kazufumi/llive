@@ -117,7 +117,9 @@ def render(run_dir: Path) -> str:
 
     # reveal clip (SMIL): rect grows left→right
     parts.append(
-        f'<clipPath id="reveal"><rect x="{x0}" y="0" width="0" height="{H}">'
+        # 静的フォールバック: authored width=full なので SMIL 非実行環境でも全内容が見える。
+        # SMIL 実行時は 0→full の wipe 演出 (animation as enhancement, [[feedback_animated_svg_static_fallback]])。
+        f'<clipPath id="reveal"><rect x="{x0}" y="0" width="{x1 - x0:.0f}" height="{H}">'
         f'<animate attributeName="width" from="0" to="{x1 - x0:.0f}" '
         f'dur="{ANIM_S}s" fill="freeze"/></rect></clipPath>'
     )
