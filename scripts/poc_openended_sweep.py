@@ -408,9 +408,13 @@ class OpenEndedRun:
         cells_final = rows[-1]["archive_cells"]
         archive_growth_tail = cells_final - cells_at_tail_start
 
-        # behavioral diversity: 末尾平均 / 初期との比
+        # behavioral diversity: 末尾平均 / 初期との比。
+        # 第一義は behavioral_spread (記述子 2D 射影 std) — reservoir 再注入に公正。
+        # genome-std (diversity) は raw 参考値として併記。
         div0 = rows[0]["diversity"]
         div_tail = float(np.mean([r["diversity"] for r in tail]))
+        bspread0 = rows[0].get("behavioral_spread", div0)
+        bspread_tail = float(np.mean([r.get("behavioral_spread", r["diversity"]) for r in tail]))
 
         # monoculture: 全世代 max
         mono_max = float(max(r["monoculture"] for r in rows))
