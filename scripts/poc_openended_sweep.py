@@ -652,8 +652,8 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
     lines.append("")
     lines.append("## 比較表 (§2 受入メトリクス, 末尾世代判定)")
     lines.append("")
-    lines.append("| 構成 | 選択 | std | MC | res | QD | best@飽和gen | div(init→tail) | mono_max | cells | nov(head→tail) | niches(tail) | 判定 |")
-    lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    lines.append("| 構成 | 選択 | std | MC | res | QD | best@飽和gen | bspread(init→tail) | div_genome(init→tail) | mono_max | cells | nov(head→tail) | niches(tail) | 判定 |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for s in summaries:
         c = s["config"]
         verdict = "OPEN-ENDED" if s.get("open_ended") else "BOUNDED/COLLAPSED"
@@ -662,16 +662,20 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
             f"| {'Y' if c['minimal_criterion'] else '-'} | {c['reservoir'] or '-'} "
             f"| {'Y' if c['archive']=='map-elites' else '-'} "
             f"| {s['scalar_best_final']:.3f}@g{s['scalar_saturation_gen']} "
+            f"| {s.get('bspread_init', 0):.3f}→{s.get('bspread_tail', 0):.3f} "
             f"| {s['diversity_init']:.3f}→{s['diversity_tail']:.3f} "
             f"| {s['monoculture_max']:.2f} | {s['archive_cells_final']} "
             f"| {s['novelty_head']:.2f}→{s['novelty_tail']:.2f} "
             f"| {s['occupied_cells_tail']:.0f} | {verdict} |"
         )
     lines.append("")
+    lines.append("> bspread = 記述子 2D 射影座標の std (behavioral diversity, 判定の第一義)。"
+                 "div_genome = raw genome-std (参考)。")
+    lines.append("")
     lines.append("## §2 チェック内訳")
     lines.append("")
-    lines.append("| 構成 | archive_growth≥1 | monoculture<0.8 | diversity_held | novelty_not_depleted | alive(behavioral) | archive_growth(tail20%) |")
-    lines.append("|---|---|---|---|---|---|---|")
+    lines.append("| 構成 | archive_growth≥1 | monoculture<0.8 | diversity_held(behav) | (参考)diversity_genome | novelty_not_depleted | alive(behavioral) | archive_growth(tail20%) |")
+    lines.append("|---|---|---|---|---|---|---|---|")
     for s in summaries:
         ch = s["checks"]
         def m(v):
