@@ -102,9 +102,11 @@ def render(run_dir: Path) -> str:
         for j in range(n_layers):
             v = matrix[i][j] if j < len(matrix[i]) else 0.0
             x = ML + j * CELL
+            # 静的フォールバック: authored opacity=1 で SMIL 非実行環境でも cell が見える。
+            # SMIL 実行時のみ波状フェードイン ([[feedback_animated_svg_static_fallback]])。
             parts.append(
                 f'<rect x="{x}" y="{y:.0f}" width="{CELL-3}" height="{CELL*0.6-3:.0f}" '
-                f'fill="{_heat(v)}" opacity="0"><animate attributeName="opacity" from="0" to="1" '
+                f'fill="{_heat(v)}" opacity="1"><animate attributeName="opacity" from="0" to="1" '
                 f'dur="0.8s" begin="{(i*n_layers+j)*0.02:.2f}s" fill="freeze"/></rect>'
             )
             parts.append(f'<text x="{x + (CELL-3)/2:.0f}" y="{y + CELL*0.3 + 3:.0f}" fill="#e5e7eb" '
