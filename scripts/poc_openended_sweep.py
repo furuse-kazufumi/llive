@@ -484,15 +484,19 @@ class OpenEndedRun:
         # diversity_held は behavioral_spread を第一義に判定 (genome-std は併記)。
         ok_diversity = bspread_tail > 0.5 * bspread0 if bspread0 > 0 else div_tail > 0.5 * div0
         ok_diversity_genome = div_tail > 0.5 * div0  # 参考 (raw genome variance)
+        # factor_diversity = fitness が読む dim の多様性が保たれたか (真の collapse 検出)。
+        # scalar baseline はここで FAIL する (peak へ収束) が、full-descriptor の neutral drift では
+        # ごまかされる。open_ended 判定の必須条件に含めて negative control を厳格化する。
+        ok_factor_diversity = fspread_tail > 0.5 * fspread0 if fspread0 > 0 else True
         ok_novelty = nov_tail > 0.5 * nov_head if nov_head > 0 else None
         # behavioral 全滅でない = 末尾でも複数 niche を占有 ∧ 個体が collapse していない。
-        # 「pop の半分以上が distinct な個体」かつ「2 niche 以上」を生存条件とする。
         ok_alive = occupied_tail >= 2 and distinct_tail >= 0.5 * pop
 
-        # 総合: open-ended 成立 = 飽和して停止せず多様性持続 + behavioral に全滅しない
-        # baseline (scalar) は飽和し monoculture / behavioral 全滅しやすい。
-        open_ended = bool(ok_monoculture and ok_diversity and ok_alive
-                          and (ok_archive in (True, None)))
+        # 総合: open-ended 成立 = (a) monoculture でない (b) behavioral diversity 維持
+        # (c) **意味ある次元 (factor) の多様性も維持** (d) 全滅しない (e) archive 成長/飽和。
+        # (c) を入れることで「neutral drift だけで spread を装う」scalar baseline を弾く。
+        open_ended = bool(ok_monoculture and ok_diversity and ok_factor_diversity
+                          and ok_alive and (ok_archive in (True, None)))
 
         return {
             "elapsed_s": round(elapsed, 2),
