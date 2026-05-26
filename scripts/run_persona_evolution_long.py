@@ -398,6 +398,7 @@ def main() -> int:
             genome3d=args.genome3d,
             crossover_mode=args.crossover_mode,
             mutation_step=args.mutation_step,
+            diverse_founder_prompts=args.diverse_founder_prompts,
             inject_persona_ids=args.inject,
             patience=patience,
             diversity_floor=0.0,  # 多様性枯渇でも止めない (長期研究)
