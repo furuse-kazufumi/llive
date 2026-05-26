@@ -3,13 +3,15 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-26 21:55:40
+- **最終更新**: 2026-05-26 21:59:51
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
+c297844 auto: poc_openended_sweep.py 編集前 (2026-05-26 21:59)
+616f50e auto: poc_openended_sweep.py 編集前 (2026-05-26 21:56)
 9cd6051 auto: poc_openended_sweep.py 編集前 (2026-05-26 21:53)
 6ac98b0 auto: poc_openended_sweep.py 編集前 (2026-05-26 21:48)
 9cd4330 auto: poc_openended_sweep.py 編集前 (2026-05-26 21:48)
@@ -18,8 +20,6 @@
 2fb5403 auto: poc_openended_sweep.py 編集前 (2026-05-26 21:47)
 b1346f1 auto: poc_openended_sweep.py 編集前 (2026-05-26 21:47)
 c94b69d auto: poc_orchestra.py 編集前 (2026-05-26 21:40)
-5625260 auto: poc_orchestra.py 編集前 (2026-05-26 21:39)
-abba51f auto: poc_orchestra.py 編集前 (2026-05-26 21:39)
 ```
 
 ## 現在の git status
@@ -31,8 +31,8 @@ M scripts/poc_openended_sweep.py
 ## 直近 2 時間に変更されたファイル
 
 ```
-21:53 scripts/poc_openended_sweep.py
-21:51 docs/SESSION_SUMMARY.md
+21:59 scripts/poc_openended_sweep.py
+21:56 docs/SESSION_SUMMARY.md
 21:44 .pytest_cache/v/cache/nodeids
 21:40 scripts/evolution_response_viewer.py
 21:40 scripts/poc_orchestra.py

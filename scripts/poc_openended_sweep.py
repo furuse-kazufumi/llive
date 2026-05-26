@@ -179,7 +179,13 @@ class OpenEndedRun:
         # 中立貯蔵庫を参照集合に含める (絶滅 niche の記憶 → novelty 枯渇防止)
         ref = D
         if self.reservoir:
-            res_D = np.array([self._project_descriptor(g) for _, g in self.reservoir.values()])
+            # 全 reservoir genome を一括で記述子空間へ写す (per-entry 呼び出しを避け高速化)
+            res_G = np.array([g for _, g in self.reservoir.values()])
+            if self.cfg.standardize:
+                mu, sd = self.G.mean(0), self.G.std(0) + 1e-9
+                res_D = (res_G - mu) / sd
+            else:
+                res_D = res_G
             ref = np.vstack([D, res_D])
         kk = max(1, min(self.cfg.k, len(ref) - 1))
         # vectorized k-NN: ||a-b||^2 = |a|^2 + |b|^2 - 2 a·b。自己距離 (対角) を除外し
