@@ -324,9 +324,13 @@ class OpenEndedRun:
         rec: dict | None = None
         if record:
             # --- metrics (§2) ---
-            diversity = float(np.mean(np.std(self.G, axis=0)))  # genome-space std (raw)
-            # behavioral_spread = 記述子 2D map 射影座標の std 平均。reservoir 再注入で raw
-            # variance が縮んでも behavioral niche の広がりを公正に測る (§0)。
+            diversity = float(np.mean(np.std(self.G, axis=0)))  # genome-space std (raw, 全 dim)
+            # factor_spread = fitness が読む factor dims (最初の factors 個) のみの std。
+            # 中立 latent/sat_noise の自由浮動を除外し「意味ある次元の多様性」を測る。
+            # scalar baseline は factor dims を 1 peak へ収束させる → factor_spread が崩壊して
+            # 「真の collapse」が見える (full-genome descriptor は neutral drift で誤魔化される)。
+            factor_spread = float(np.mean(np.std(self.G[:, : c.factors], axis=0)))
+            # behavioral_spread = 記述子 2D map 射影座標の std 平均 (全 gdim, QD/novelty 機構が読む空間)。
             coords_b = (D @ self.P) / np.sqrt(self.gdim)
             behavioral_spread = float(np.mean(np.std(coords_b, axis=0)))
             ix = self._map_coords(D)
