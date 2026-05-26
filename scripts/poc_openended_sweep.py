@@ -493,6 +493,8 @@ class OpenEndedRun:
             "scalar_saturation_gen": sat_gen,
             "archive_cells_final": cells_final,
             "archive_growth_tail20pct": archive_growth_tail,
+            "archive_coverage": round(archive_coverage, 3),
+            "archive_saturated": archive_saturated,
             "diversity_init": round(div0, 4),
             "diversity_tail": round(div_tail, 4),
             "bspread_init": round(bspread0, 4),
