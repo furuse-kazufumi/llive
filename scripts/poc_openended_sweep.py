@@ -290,53 +290,64 @@ class OpenEndedRun:
 
         raise ValueError(f"unknown selection: {c.selection!r}")
 
+    def _need_novelty(self) -> bool:
+        """この構成が毎世代 novelty を必要とするか (selection / criterion / reservoir)."""
+        c = self.cfg
+        if c.selection == "novelty":
+            return True
+        if c.minimal_criterion and c.selection != "scalar":
+            return True
+        if c.reservoir > 0:
+            return True
+        return False
+
     # ---- one generation ----------------------------------------------------
-    def step(self) -> dict:
+    def step(self, record: bool = True) -> dict | None:
+        """1 世代進める。record=False の世代は重い metric 計算をスキップして高速化."""
         c = self.cfg
         scalar = self._scalar_fitness()
         cases = self._archetype_cases() if c.selection == "lexicase" else np.zeros((c.pop, 1))
         D = self._descriptor()
-        nov = self._novelty(D)
+        # novelty は「毎世代必要 (selection/criterion/reservoir)」or「記録世代」のみ計算。
+        need_nov = self._need_novelty() or record
+        nov = self._novelty(D) if need_nov else np.zeros(c.pop)
 
         self._update_archive(D, scalar)
-        self._update_reservoir(D, nov)
+        if c.reservoir > 0:
+            self._update_reservoir(D, nov)
 
-        # --- metrics (§2) ---
-        diversity = float(np.mean(np.std(self.G, axis=0)))  # genome-space std (raw 多様性)
-        # behavioral_spread = 記述子を 2D map 射影した座標の std 平均。
-        # genome-std と違い reservoir elite 再注入で raw variance が縮んでも
-        # behavioral niche の広がりを公正に測る (§0: open-endedness の signal は behavioral)。
-        coords_b = (D @ self.P) / np.sqrt(self.gdim)
-        behavioral_spread = float(np.mean(np.std(coords_b, axis=0)))
-        ix = self._map_coords(D)
-        flat = ix[:, 0] * c.cells + ix[:, 1]
-        # monoculture = 行動集中 (最大占有 map cell の割合)。OE-3。
-        monoculture = float(np.bincount(flat).max() / c.pop)
-        # occupied_cells = この世代で集団が占有する distinct な behavioral niche 数。
-        # これが「全滅検査」の正しい操作的量 (§0: open-endedness の signal は behavioral)。
-        occupied_cells = int(len(np.unique(flat)))
-        # n_distinct_genomes = この世代の distinct な個体数 (behavioral 全滅 = ほぼ全部同一)。
-        n_distinct = int(np.unique(self.G.round(6), axis=0).shape[0])
-        # lineage_fixation は INFORMATIONAL のみ。founder-origin label は selectively
-        # NEUTRAL なので機構に関係なく中立浮動 (Kimura) で固定する → 全滅判定には使わない。
-        # 系統 label を <1 に保つには QD niching on lineage / PERSONA-FX が要る
-        # (poc_evolution_env.py 著者コメントと整合)。ここでは behavioral 量で全滅を測る。
-        uniq_lineages = int(len(np.unique(self.origin)))
-        lineage_fix = float(np.unique(self.origin, return_counts=True)[1].max() / c.pop)
-        rec = {
-            "generation": self.gen,
-            "scalar_best": float(scalar.max()),
-            "scalar_mean": float(scalar.mean()),
-            "diversity": diversity,
-            "behavioral_spread": behavioral_spread,
-            "monoculture": monoculture,
-            "occupied_cells": occupied_cells,
-            "mean_novelty": float(nov.mean()),
-            "archive_cells": len(self.archive),
-            "uniq_lineages": uniq_lineages,
-            "lineage_fixation": lineage_fix,
-            "n_distinct_genomes": n_distinct,
-        }
+        rec: dict | None = None
+        if record:
+            # --- metrics (§2) ---
+            diversity = float(np.mean(np.std(self.G, axis=0)))  # genome-space std (raw)
+            # behavioral_spread = 記述子 2D map 射影座標の std 平均。reservoir 再注入で raw
+            # variance が縮んでも behavioral niche の広がりを公正に測る (§0)。
+            coords_b = (D @ self.P) / np.sqrt(self.gdim)
+            behavioral_spread = float(np.mean(np.std(coords_b, axis=0)))
+            ix = self._map_coords(D)
+            flat = ix[:, 0] * c.cells + ix[:, 1]
+            monoculture = float(np.bincount(flat).max() / c.pop)  # 行動集中 (OE-3)
+            occupied_cells = int(len(np.unique(flat)))  # distinct behavioral niche 数 (全滅検査)
+            # n_distinct: void-view trick で高速 unique-rows (round で量子化)
+            q = np.ascontiguousarray((self.G * 1e6).astype(np.int64))
+            n_distinct = int(len(np.unique(q.view(np.dtype((np.void, q.dtype.itemsize * q.shape[1]))))))
+            # lineage_fixation は INFORMATIONAL のみ (中立浮動で ~1.0 に固定 → 全滅判定に使わない)。
+            uniq_lineages = int(len(np.unique(self.origin)))
+            lineage_fix = float(np.unique(self.origin, return_counts=True)[1].max() / c.pop)
+            rec = {
+                "generation": self.gen,
+                "scalar_best": float(scalar.max()),
+                "scalar_mean": float(scalar.mean()),
+                "diversity": diversity,
+                "behavioral_spread": behavioral_spread,
+                "monoculture": monoculture,
+                "occupied_cells": occupied_cells,
+                "mean_novelty": float(nov.mean()),
+                "archive_cells": len(self.archive),
+                "uniq_lineages": uniq_lineages,
+                "lineage_fixation": lineage_fix,
+                "n_distinct_genomes": n_distinct,
+            }
 
         # --- breed ---
         parents = self._select_parents(scalar, nov, cases)
