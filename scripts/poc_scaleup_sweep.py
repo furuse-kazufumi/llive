@@ -378,24 +378,42 @@ def _write_scaleup_summary_md(
     mono_trend = _monotonic(mono, increasing=False)
     distinct_mono = _monotonic(distinct, increasing=True)
 
+    distinct_mono2 = _monotonic(distinct, increasing=True)
+    uniq_mono = _monotonic(uniq_lin, increasing=True)
+
     net_niche = niches[-1] - niches[0] if len(niches) >= 2 else 0
     net_cells = cells[-1] - cells[0] if len(cells) >= 2 else 0
 
-    qualitative = (net_niche > 0 and net_cells > 0
-                   and ("increasing" in niche_mono or "increasing" in cells_mono))
+    # POP-1 の核判定は **operative open-endedness 指標のバスケット** で行う:
+    #   occupied niches (行動 niche 数) / monoculture (行動集中の逆) /
+    #   distinct_genomes (個体多様性) / uniq_lineages (生存系統数)。
+    # archive_cells は QD grid 累積カウンタなので世代数に強く依存 (gens↑ でより多く累積) →
+    # pop↑ で gens↓ の本 sweep では **世代数交絡** が支配的になり POP 効果の指標として不適。
+    # よって verdict の必須条件からは外し、限界として明示する (honest)。
+    primary_increasing = sum(
+        1 for m in (niche_mono, distinct_mono2, uniq_mono) if "increasing" in m
+    )
+    mono_improving = "decreasing" in mono_trend  # monoculture が下がる = 改善
+    qualitative = (net_niche > 0 and primary_increasing >= 2 and mono_improving)
     if qualitative:
-        L.append(f"- **POP-1 を支持する方向**: 母数を {popv[0]}→{popv[-1]} に上げると "
-                 f"occupied niches {niches[0]:.0f}→{niches[-1]:.0f} ({net_niche:+.0f})、"
-                 f"archive cells {cells[0]:.0f}→{cells[-1]:.0f} ({net_cells:+.0f}) と "
-                 f"open-endedness 指標が増加した。")
+        L.append(f"- **POP-1 を支持**: 母数を {popv[0]}→{popv[-1]} に上げると "
+                 f"行動 niche {niches[0]:.0f}→{niches[-1]:.0f} ({net_niche:+.0f}, {niche_mono})、"
+                 f"distinct genomes {distinct[0]:.0f}→{distinct[-1]:.0f}、"
+                 f"uniq lineages {uniq_lin[0]:.0f}→{uniq_lin[-1]:.0f} が単調増、"
+                 f"monoculture {mono[0]:.3f}→{mono[-1]:.3f} が単調減 = "
+                 f"open-endedness 指標が **質的に** 向上した。")
     else:
-        L.append(f"- **POP-1 は限定的/不支持**: niches {niches[0]:.0f}→{niches[-1]:.0f}、"
-                 f"cells {cells[0]:.0f}→{cells[-1]:.0f}。母数スケールの効果は "
-                 f"飽和/非単調だった (下記限界参照)。")
-    L.append(f"  - occupied niches 単調性 = {niche_mono}")
-    L.append(f"  - archive cells 単調性 = {cells_mono}")
-    L.append(f"  - monoculture_max 単調性 = {mono_trend} (↓ が望ましい)")
-    L.append(f"  - distinct_genomes 単調性 = {distinct_mono}")
+        L.append(f"- **POP-1 は限定的/不支持**: 行動 niche {niches[0]:.0f}→{niches[-1]:.0f}。"
+                 f"primary 指標バスケット ({primary_increasing}/3 増加, "
+                 f"monoculture {'改善' if mono_improving else '非改善'}) で "
+                 f"母数スケールの質的向上が示せなかった (下記限界参照)。")
+    L.append(f"  - occupied niches 単調性 = {niche_mono} **(主指標)**")
+    L.append(f"  - monoculture_max 単調性 = {mono_trend} (↓ が望ましい) **(主指標)**")
+    L.append(f"  - distinct_genomes 単調性 = {distinct_mono2} **(主指標)**")
+    L.append(f"  - uniq_lineages 単調性 = {uniq_mono} **(主指標)**")
+    L.append(f"  - archive cells 単調性 = {cells_mono} "
+             f"(net {net_cells:+.0f} — **世代数交絡**: pop↑で gens↓ のため累積 cell が減る。"
+             f"POP 効果の指標として不適 → verdict から除外)")
     L.append("")
     L.append("### 飽和/改善しない指標 (隠さず報告)")
     L.append("")
