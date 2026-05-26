@@ -387,8 +387,12 @@ class OpenEndedRun:
         rows: list[dict] = []
         t0 = time.time()
         while self.gen < c.gens:
-            rec = self.step()
-            if self.gen % log_every == 0 or self.gen == 1:
+            # この世代を記録するか (重い metric を計算するか) を step 前に決める。
+            # gen0 / gen1 / log_every の倍数 / 最終世代を記録する。
+            g = self.gen
+            do_record = (g % log_every == 0) or (g == 1) or (g == c.gens - 1)
+            rec = self.step(record=do_record)
+            if rec is not None:
                 rows.append(rec)
         elapsed = time.time() - t0
 
