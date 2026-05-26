@@ -359,8 +359,19 @@ def main() -> int:
         )
 
         rp_backend = OllamaBackend(model=args.ollama_model, timeout=args.eval_timeout or 120.0)
+        # observability (opt-in): --response-log で実応答を JSONL 記録 (既定 off = 従来挙動)。
+        # '@out' は out_dir/responses.jsonl に解決 (viewer の既定探索先)。
+        response_log = None
+        if args.response_log is not None:
+            response_log = (
+                args.out / "responses.jsonl"
+                if str(args.response_log) == "@out"
+                else args.response_log
+            )
         fitness_fn = make_real_pressure_fitness(
-            rp_backend, RealPressureConfig(model=args.ollama_model)
+            rp_backend,
+            RealPressureConfig(model=args.ollama_model),
+            response_log=response_log,
         )
     elif args.fitness == "llm":
         # per-eval hang guard: 無応答 backend で run 全体が止まらないよう打ち切り淘汰。

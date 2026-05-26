@@ -1,0 +1,517 @@
+# SPDX-License-Identifier: Apache-2.0
+"""PoC: 進化集団を **オーケストラ (MoA アンサンブル)** して 1 答を出す (ORCH-4).
+
+ユーザー構想 (2026-05): 「集団が進化を継続しつつ, その都度オーケストラして
+一つの回答を出す」。本 PoC が検証する falsifiable 命題 (ORCH-4):
+
+    **「QD 的に多様な個体群を Mixture-of-Agents (MoA) で集約した回答は,
+      単一 best 個体を上回る」**
+
+上回らなければオーケストラの価値は無い → 正直にそう報告する
+([[feedback_benchmark_honest_disclosure]]).
+
+何を比較するか
+--------------
+既存 lldarwin 12h real-pressure run の最終世代スナップショットから個体群を取り出し,
+各個体の system prompt を ``genome_to_system_prompt`` で復元 (Promptbreeder 系の
+「固定 LLM × 進化 prompt 戦略」)。5 苦手軸バッテリ上で:
+
+1. **単一 best**: total score 最高の個体.
+2. **MoA アンサンブル** (集約戦略 3 種):
+   - ``majority``  : 各タスクで個体回答の多数決.
+   - ``best_of``   : 各タスクで正答した個体が 1 体でもいれば正解 (oracle 上限).
+   - ``weighted``  : 個体 score を重みにした重み付き投票.
+3. **選抜基準 2 種**:
+   - ``redundant`` : score 上位 top-k (署名が被りやすい = 冗長).
+   - ``diverse``   : 異なる c_prompt 署名 / 異なる QD cell から top-k (多様).
+
+評価モード
+----------
+- ``proxy``   : LLM を呼ばず, **既存スナップショットに記録済みの per-task 正誤**
+  (``fitness.breakdown``) を使う。配線・集約ロジック・選抜ロジックの mechanism
+  feasibility を高速に検証する。ただしバッテリは記録済みの軸あたり 2 問のみ。
+- ``real``    : 同一 5 軸タスクを **実 on-prem LLM** (ollama, temp=0 決定論+キャッシュ)
+  で再採点。軸あたり 3 問全部を使う (記録は 2 問だったので multistep の追加問で
+  さらに discrimination を得る)。measurement purity = on-prem only.
+
+常時オン orchestrate
+--------------------
+``--always-on`` で「進化は止めず, 任意時点の snapshot から orchestrate する」流れを
+最小コードで実演 (時間分離: 進化=background, 回答=現在 snapshot)。
+
+使い方
+------
+::
+
+    py -3.11 scripts/poc_orchestra.py --mode proxy --out out/poc_orchestra_2026_05_26
+    py -3.11 scripts/poc_orchestra.py --mode real  --out out/poc_orchestra_2026_05_26 --k 5
+    py -3.11 scripts/poc_orchestra.py --always-on  --out out/poc_orchestra_2026_05_26
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable
+
+# 実 LLM モードで使う (proxy のみなら未使用)。
+from llive.perf.evolutionary.real_pressures import (
+    _AXIS_TASKS,
+    genome_to_system_prompt,
+)
+
+DEFAULT_RUN = Path(
+    r"D:/projects/llive/out/lldarwin_12h_realpressure_2026_05_26"
+)
+
+
+def _ensure_utf8_stdout() -> None:
+    # Windows cp932 console で em-dash / 日本語を出力する CLI 規約。
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    except Exception:
+        pass
+
+
+# --------------------------------------------------------------------------
+# snapshot → 個体の軽量ビュー
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class IndView:
+    """1 個体の評価に必要な最小ビュー (snapshot dict から復元)。"""
+
+    iid: str
+    score: float
+    breakdown: dict[str, float]
+    c_prompt: dict[str, Any]
+    system_prompt: str
+
+    @property
+    def signature(self) -> tuple:
+        """c_prompt の「署名」。同一署名 = 同じ system prompt = 冗長個体。"""
+        cp = self.c_prompt
+        return (
+            cp.get("prompt_template_id", "base"),
+            cp.get("language_style", "terse"),
+            tuple(sorted(cp.get("skill_set", []) or [])),
+        )
+
+
+class _DuckPrompt:
+    """genome_to_system_prompt が読む属性だけ持つダックタイプ。"""
+
+    def __init__(self, cp: dict[str, Any]) -> None:
+        for k, v in cp.items():
+            setattr(self, k, v)
+
+
+class _DuckGenome:
+    def __init__(self, cp: dict[str, Any]) -> None:
+        self.c_prompt = _DuckPrompt(cp)
+
+
+def load_population(snapshot_path: Path) -> tuple[list[IndView], int]:
+    """snapshot から個体ビュー列と世代番号を返す。"""
+    data = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    inds: list[IndView] = []
+    for raw in data["individuals"]:
+        fit = raw.get("fitness") or {}
+        cp = raw["genome"].get("c_prompt", {}) or {}
+        sysp = genome_to_system_prompt(_DuckGenome(cp))
+        inds.append(
+            IndView(
+                iid=raw["individual_id"],
+                score=float(fit.get("score", 0.0)),
+                breakdown=dict(fit.get("breakdown", {})),
+                c_prompt=cp,
+                system_prompt=sysp,
+            )
+        )
+    return inds, int(data.get("generation", 0))
+
+
+# --------------------------------------------------------------------------
+# 選抜: redundant (score top-k) vs diverse (異署名 top-k)
+# --------------------------------------------------------------------------
+
+
+def select_redundant(pop: list[IndView], k: int) -> list[IndView]:
+    """score 上位 k (タイブレークは iid で決定論)。署名重複を許す = 冗長。"""
+    return sorted(pop, key=lambda x: (-x.score, x.iid))[:k]
+
+
+def select_diverse(pop: list[IndView], k: int) -> list[IndView]:
+    """異なる c_prompt 署名から greedy に上位を 1 体ずつ拾う (QD 多様選抜)。
+
+    各署名グループから best を 1 体ずつ, score 降順に拾う。k 体に満たなければ
+    残りを score 順で埋める (現実的劣化)。
+    """
+    by_sig: dict[tuple, list[IndView]] = defaultdict(list)
+    for ind in pop:
+        by_sig[ind.signature].append(ind)
+    # 各署名の代表 = その署名内 best
+    reps = [max(group, key=lambda x: (x.score, x.iid)) for group in by_sig.values()]
+    reps.sort(key=lambda x: (-x.score, x.iid))
+    chosen = reps[:k]
+    if len(chosen) < k:
+        # 署名数 < k: 残りを未選択個体から score 順で補充
+        chosen_ids = {c.iid for c in chosen}
+        rest = [i for i in sorted(pop, key=lambda x: (-x.score, x.iid))
+                if i.iid not in chosen_ids]
+        chosen += rest[: k - len(chosen)]
+    return chosen
+
+
+# --------------------------------------------------------------------------
+# タスク採点抽象: 個体 × タスク → {0.0, 1.0}
+# --------------------------------------------------------------------------
+
+#: タスク鍵の正準順序 (proxy / real で共通の並び)。
+def _task_keys(axes: tuple[str, ...], tasks_per_axis: int) -> list[str]:
+    keys: list[str] = []
+    for axis in axes:
+        n = min(tasks_per_axis, len(_AXIS_TASKS[axis]))
+        for i in range(n):
+            keys.append(f"{axis}::t{i}")
+    return keys
+
+
+ScoreFn = Callable[[IndView, str], float]
+"""(個体, タスク鍵) -> 正誤 {0.0, 1.0}。proxy はキャッシュ参照, real は LLM 呼出。"""
+
+
+def make_proxy_scorer(pop: list[IndView]) -> tuple[ScoreFn, list[str]]:
+    """snapshot の breakdown を引く scorer。記録済みタスク鍵のみ使える。"""
+    # 全個体共通で記録されている鍵 (= 軸あたり 2 問)。
+    common = None
+    for ind in pop:
+        ks = set(ind.breakdown.keys())
+        common = ks if common is None else (common & ks)
+    keys = sorted(common or set())
+
+    def scorer(ind: IndView, key: str) -> float:
+        return float(ind.breakdown.get(key, 0.0))
+
+    return scorer, keys
+
+
+def make_real_scorer(
+    model: str = "llama3.2:latest",
+    max_tokens: int = 128,
+    tasks_per_axis: int = 3,
+    cache: dict[tuple[str, str], float] | None = None,
+) -> tuple[ScoreFn, list[str], dict[tuple[str, str], float]]:
+    """実 on-prem LLM で (system_prompt, task) を採点する scorer。
+
+    決定論 (temp=0) + ``(system_prompt, task.user)`` キャッシュ。同一署名は
+    一度しか LLM を叩かない。on-prem only (measurement purity)。
+    """
+    from llive.llm.backend import GenerateRequest, OllamaBackend
+
+    backend = OllamaBackend(model=model)
+    score_cache: dict[tuple[str, str], float] = cache if cache is not None else {}
+    axes = tuple(_AXIS_TASKS.keys())
+    keys = _task_keys(axes, tasks_per_axis)
+
+    # 鍵 -> _Task
+    key_to_task = {}
+    for axis in axes:
+        for i, task in enumerate(_AXIS_TASKS[axis][:tasks_per_axis]):
+            key_to_task[f"{axis}::t{i}"] = task
+
+    def scorer(ind: IndView, key: str) -> float:
+        task = key_to_task[key]
+        ck = (ind.system_prompt, task.user)
+        if ck in score_cache:
+            return score_cache[ck]
+        try:
+            resp = backend.generate(
+                GenerateRequest(
+                    prompt=task.user,
+                    system=ind.system_prompt,
+                    max_tokens=max_tokens,
+                    temperature=0.0,
+                    model=model,
+                )
+            )
+            val = float(task.score_fn(resp.text or ""))
+        except Exception as exc:  # noqa: BLE001 - 12h 堅牢性: 失点で続行
+            print(f"  [warn] LLM eval failed ({type(exc).__name__}): {exc}",
+                  file=sys.stderr)
+            val = 0.0
+        score_cache[ck] = val
+        return val
+
+    return scorer, keys, score_cache
+
+
+# --------------------------------------------------------------------------
+# MoA 集約戦略 (各タスクで個体の正誤から 1 答の正誤を決める)
+# --------------------------------------------------------------------------
+#
+# このバッテリは採点が二値 (正/誤) なので「回答テキスト」を直接持たず, 各個体の
+# 「そのタスクで正答したか」で代理する。集約戦略:
+#   majority : 正答した個体数が過半 → アンサンブル正答 (= 正しい多数派に乗れるか)
+#   best_of  : 1 体でも正答 → アンサンブル正答 (oracle 上限; ルーティング理想)
+#   weighted : 個体 score を重みに, 正答側の重み和 > 0.5 → 正答
+#
+# 注意: best_of は「正答個体を完璧にルーティングできた場合」の上限。majority/weighted
+# は実際に投票で 1 答に畳む現実的戦略。両者の差が「ルーティングの取りこぼし」。
+
+
+def aggregate_task(
+    members: list[IndView],
+    key: str,
+    scorer: ScoreFn,
+    strategy: str,
+) -> float:
+    correct = [scorer(m, key) >= 0.5 for m in members]
+    if strategy == "best_of":
+        return 1.0 if any(correct) else 0.0
+    if strategy == "majority":
+        n_yes = sum(correct)
+        return 1.0 if n_yes * 2 > len(members) else 0.0
+    if strategy == "weighted":
+        w_yes = sum(m.score for m, c in zip(members, correct) if c)
+        w_tot = sum(m.score for m in members) or 1e-12
+        return 1.0 if (w_yes / w_tot) > 0.5 else 0.0
+    raise ValueError(f"unknown strategy: {strategy!r}")
+
+
+def battery_score(member_or_members, keys: list[str], scorer: ScoreFn,
+                  strategy: str | None = None) -> dict[str, Any]:
+    """単一個体 (strategy=None) または MoA (strategy 指定) のバッテリ成績。
+
+    Returns dict: total, per_axis (軸平均), per_key (鍵別 0/1)。
+    """
+    per_key: dict[str, float] = {}
+    if strategy is None:
+        ind: IndView = member_or_members
+        for k in keys:
+            per_key[k] = scorer(ind, k)
+    else:
+        members: list[IndView] = member_or_members
+        for k in keys:
+            per_key[k] = aggregate_task(members, k, scorer, strategy)
+    # 軸平均
+    by_axis: dict[str, list[float]] = defaultdict(list)
+    for k, v in per_key.items():
+        axis = k.split("::")[0]
+        by_axis[axis].append(v)
+    per_axis = {a: sum(vs) / len(vs) for a, vs in by_axis.items()}
+    total = sum(per_key.values()) / len(per_key) if per_key else 0.0
+    return {"total": total, "per_axis": per_axis, "per_key": per_key}
+
+
+# --------------------------------------------------------------------------
+# 1 巡 = 1 (k, 評価モード) の比較を実行
+# --------------------------------------------------------------------------
+
+
+def run_round(
+    pop: list[IndView],
+    keys: list[str],
+    scorer: ScoreFn,
+    k: int,
+) -> dict[str, Any]:
+    """single-best vs MoA(各戦略×選抜) を 1 巡比較。"""
+    # single best (= score 最高個体; タイブレーク iid)
+    best = sorted(pop, key=lambda x: (-x.score, x.iid))[0]
+    best_res = battery_score(best, keys, scorer)
+
+    selections = {
+        "redundant": select_redundant(pop, k),
+        "diverse": select_diverse(pop, k),
+    }
+    strategies = ["majority", "best_of", "weighted"]
+    moa: dict[str, dict[str, Any]] = {}
+    for sel_name, members in selections.items():
+        for strat in strategies:
+            res = battery_score(members, keys, scorer, strategy=strat)
+            moa[f"{sel_name}/{strat}"] = {
+                "members": [m.iid for m in members],
+                "member_signatures": [list(m.signature) for m in members],
+                "distinct_signatures": len({m.signature for m in members}),
+                **res,
+            }
+    return {
+        "k": k,
+        "single_best": {
+            "iid": best.iid,
+            "score_recorded": best.score,
+            **best_res,
+        },
+        "moa": moa,
+        "population_distinct_signatures": len({i.signature for i in pop}),
+        "population_size": len(pop),
+    }
+
+
+# --------------------------------------------------------------------------
+# 常時オン orchestrate デモ (進化 background / 回答 current snapshot)
+# --------------------------------------------------------------------------
+
+
+def always_on_demo(run_dir: Path, keys: list[str], scorer: ScoreFn,
+                   k: int) -> dict[str, Any]:
+    """時間分離の実演: 複数世代スナップショットを「進化の時間進行」と見立て,
+    各時点の現在集団から **即座に** 1 答 (MoA) を出せることを示す。
+
+    実運用では進化は別スレッド/プロセスで継続し, orchestrate は最新 snapshot を
+    読むだけ (進化を止めない)。ここではファイル化済みの世代列で代用。
+    """
+    snaps = sorted(run_dir.glob("snapshot_gen_*.json"))
+    timeline = []
+    for sp in snaps[::2]:  # 間引き (5,15,25,... 程度)
+        pop, gen = load_population(sp)
+        best = sorted(pop, key=lambda x: (-x.score, x.iid))[0]
+        best_res = battery_score(best, keys, scorer)
+        members = select_diverse(pop, k)
+        moa_res = battery_score(members, keys, scorer, strategy="best_of")
+        timeline.append({
+            "generation": gen,
+            "single_best_total": round(best_res["total"], 4),
+            "moa_diverse_best_of_total": round(moa_res["total"], 4),
+            "delta": round(moa_res["total"] - best_res["total"], 4),
+        })
+    return {
+        "description": (
+            "時間分離: 進化は background で継続する想定。各世代 snapshot を "
+            "'現在集団' と見立て, その時点で即座に MoA orchestrate して 1 答を出す。"
+            "進化を止めずに任意時点で answer-on-demand が成立する。"
+        ),
+        "timeline": timeline,
+    }
+
+
+# --------------------------------------------------------------------------
+# main
+# --------------------------------------------------------------------------
+
+
+def main(argv: list[str] | None = None) -> int:
+    _ensure_utf8_stdout()
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--run-dir", type=Path, default=DEFAULT_RUN,
+                    help="lldarwin run dir (snapshot_gen_*.json を含む)")
+    ap.add_argument("--snapshot", type=Path, default=None,
+                    help="特定 snapshot (省略時は run-dir の最終世代)")
+    ap.add_argument("--mode", choices=["proxy", "real"], default="proxy")
+    ap.add_argument("--ks", type=int, nargs="+", default=[3, 5, 7],
+                    help="比較する top-k 値 (複数で反復)")
+    ap.add_argument("--k", type=int, default=None,
+                    help="単一 k (--ks より優先しない; always-on 用)")
+    ap.add_argument("--model", default="llama3.2:latest")
+    ap.add_argument("--tasks-per-axis", type=int, default=3,
+                    help="real モードで軸あたり評価問数 (<=3)")
+    ap.add_argument("--always-on", action="store_true",
+                    help="常時オン orchestrate の時間分離デモも出力")
+    ap.add_argument("--out", type=Path,
+                    default=Path(r"D:/projects/llive/out/poc_orchestra_2026_05_26"))
+    args = ap.parse_args(argv)
+
+    args.out.mkdir(parents=True, exist_ok=True)
+
+    snapshot = args.snapshot
+    if snapshot is None:
+        snaps = sorted(args.run_dir.glob("snapshot_gen_*.json"))
+        if not snaps:
+            print(f"ERROR: no snapshots in {args.run_dir}", file=sys.stderr)
+            return 2
+        snapshot = snaps[-1]
+    print(f"[poc_orchestra] mode={args.mode} snapshot={snapshot.name}")
+
+    pop, gen = load_population(snapshot)
+    print(f"[poc_orchestra] population={len(pop)} gen={gen} "
+          f"distinct_signatures={len({i.signature for i in pop})}")
+
+    # scorer 準備
+    cache: dict[tuple[str, str], float] = {}
+    if args.mode == "proxy":
+        scorer, keys = make_proxy_scorer(pop)
+        scorer_meta = {"mode": "proxy", "task_keys": keys,
+                       "note": "snapshot breakdown 参照 (軸あたり 2 問)"}
+    else:
+        scorer, keys, cache = make_real_scorer(
+            model=args.model, tasks_per_axis=args.tasks_per_axis, cache=cache
+        )
+        scorer_meta = {"mode": "real", "model": args.model,
+                       "tasks_per_axis": args.tasks_per_axis,
+                       "task_keys": keys,
+                       "note": "on-prem ollama temp=0 deterministic+cached"}
+
+    print(f"[poc_orchestra] task_keys ({len(keys)}): {keys}")
+
+    ks = [args.k] if args.k is not None else args.ks
+    t0 = time.time()
+    rounds = []
+    for k in ks:
+        print(f"[poc_orchestra] round k={k} ...")
+        rounds.append(run_round(pop, keys, scorer, k))
+    elapsed = time.time() - t0
+
+    result: dict[str, Any] = {
+        "schema": "poc_orchestra/v1",
+        "proposition": (
+            "ORCH-4: QD 多様個体群を MoA 集約した回答は単一 best 個体を上回るか。"
+        ),
+        "run_dir": str(args.run_dir),
+        "snapshot": str(snapshot),
+        "generation": gen,
+        "scorer": scorer_meta,
+        "ks": ks,
+        "rounds": rounds,
+        "llm_calls": len(cache) if args.mode == "real" else 0,
+        "elapsed_seconds": round(elapsed, 2),
+    }
+
+    if args.always_on:
+        print("[poc_orchestra] always-on timeline demo ...")
+        result["always_on"] = always_on_demo(
+            args.run_dir, keys, scorer, k=(ks[0] if ks else 3)
+        )
+
+    out_json = args.out / f"orchestra_{args.mode}.json"
+    out_json.write_text(json.dumps(result, ensure_ascii=False, indent=2),
+                        encoding="utf-8")
+    print(f"[poc_orchestra] wrote {out_json}  ({elapsed:.1f}s, "
+          f"{result['llm_calls']} llm calls)")
+
+    # 端末に要約表を出す
+    _print_summary(result)
+    return 0
+
+
+def _print_summary(result: dict[str, Any]) -> None:
+    print("\n===== ORCHESTRA SUMMARY =====")
+    for rnd in result["rounds"]:
+        k = rnd["k"]
+        sb = rnd["single_best"]["total"]
+        print(f"\n-- k={k}  (single-best total = {sb:.3f}, "
+              f"pop_distinct_sig={rnd['population_distinct_signatures']}) --")
+        rows = []
+        for name, m in rnd["moa"].items():
+            rows.append((name, m["total"], m["total"] - sb,
+                         m["distinct_signatures"]))
+        rows.sort(key=lambda r: -r[1])
+        print(f"  {'strategy':24s} {'total':>7s} {'vs_best':>8s} {'#sig':>5s}")
+        for name, tot, delta, nsig in rows:
+            flag = "+" if delta > 1e-9 else ("=" if abs(delta) <= 1e-9 else "-")
+            print(f"  {name:24s} {tot:7.3f} {delta:+8.3f} {nsig:5d}  {flag}")
+    if "always_on" in result:
+        print("\n-- always-on timeline (diverse/best_of vs single-best) --")
+        for t in result["always_on"]["timeline"]:
+            print(f"  gen {t['generation']:4d}: best={t['single_best_total']:.3f} "
+                  f"moa={t['moa_diverse_best_of_total']:.3f} "
+                  f"delta={t['delta']:+.3f}")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
