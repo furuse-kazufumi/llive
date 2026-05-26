@@ -465,6 +465,108 @@ def always_on_demo(run_dir: Path, keys: list[str], scorer: ScoreFn,
 # --------------------------------------------------------------------------
 
 
+def build_summary(out_dir: Path) -> Path:
+    """out_dir の orchestra_{proxy,real}.json から SUMMARY.md を組み立てる。
+
+    PoC の成果物 (JSON と同列の artifact)。proxy/real どちらか欠けても可。
+    """
+    proxy_p = out_dir / "orchestra_proxy.json"
+    real_p = out_dir / "orchestra_real.json"
+    proxy = json.loads(proxy_p.read_text(encoding="utf-8")) if proxy_p.exists() else None
+    real = json.loads(real_p.read_text(encoding="utf-8")) if real_p.exists() else None
+
+    lines: list[str] = []
+    lines.append("# PoC: 進化集団を「オーケストラ (MoA アンサンブル)」して 1 答 — ORCH-4\n")
+    lines.append("検証日: 2026-05-26 / スクリプト: `scripts/poc_orchestra.py`\n")
+    lines.append("## 命題 (falsifiable)\n")
+    lines.append("**ORCH-4: QD 的に多様な個体群を MoA 集約した回答は、単一 best 個体を上回る。**")
+    lines.append("上回らなければオーケストラの価値は無い → 正直に報告する。\n")
+    lines.append("検証2軸: (1) MoA は単一 best を上回るか / (2) 多様性選抜は冗長選抜を上回るか。\n")
+
+    def _round_table(res: dict, label: str) -> None:
+        lines.append(f"### {label} (gen {res['generation']}, "
+                     f"pop_distinct_sig={res['rounds'][0]['population_distinct_signatures']}, "
+                     f"task_keys={len(res['scorer']['task_keys'])})\n")
+        lines.append("| k | strategy | total | vs_best | #sig |")
+        lines.append("|--:|----------|------:|--------:|-----:|")
+        for rnd in res["rounds"]:
+            k = rnd["k"]
+            sb = rnd["single_best"]["total"]
+            lines.append(f"| {k} | **single_best** | {sb:.3f} | (base) | - |")
+            for name, m in sorted(rnd["moa"].items(), key=lambda x: -x[1]["total"]):
+                d = m["total"] - sb
+                lines.append(f"| {k} | {name} | {m['total']:.3f} | "
+                             f"{d:+.3f} | {m['distinct_signatures']} |")
+        lines.append("")
+
+    if proxy is not None:
+        lines.append("## 結果1: proxy モード (snapshot 記録の正誤参照)\n")
+        _round_table(proxy, "proxy")
+        # battery 飽和の注記
+        if all(r["single_best"]["total"] >= 0.999 for r in proxy["rounds"]):
+            lines.append("> 注: 記録済みバッテリは進化が飽和し単一 best が満点 → "
+                         "MoA に伸びしろが無く ORCH-4 は proxy では検証不能。"
+                         "配線/集約/選抜の mechanism feasibility のみ確認。\n")
+        if "always_on" in proxy:
+            lines.append("### 常時オン orchestrate (always-on timeline)\n")
+            lines.append(proxy["always_on"]["description"] + "\n")
+            lines.append("| gen | single_best | moa(diverse/best_of) | delta |")
+            lines.append("|----:|------------:|---------------------:|------:|")
+            for t in proxy["always_on"]["timeline"]:
+                lines.append(f"| {t['generation']} | {t['single_best_total']:.3f} | "
+                             f"{t['moa_diverse_best_of_total']:.3f} | {t['delta']:+.3f} |")
+            lines.append("")
+
+    if real is not None:
+        lines.append("## 結果2: real LLM モード (on-prem ollama, temp=0, "
+                     f"{real['llm_calls']} calls / {real['elapsed_seconds']:.0f}s)\n")
+        sm = real["scorer"]
+        lines.append(f"model={sm.get('model')} hard_battery={sm.get('hard_battery')} "
+                     f"task_keys={len(sm['task_keys'])}\n")
+        _round_table(real, "real")
+        # 差分の出所を抽出
+        sb_fail = [k for k, v in real["rounds"][0]["single_best"]["per_key"].items() if v < 0.5]
+        lines.append(f"単一 best の失敗タスク: `{sb_fail}`。"
+                     "MoA の改善は全てこの軸由来。\n")
+
+    lines.append("## 正直な数値結論\n")
+    lines.append("- **MoA vs 単一 best**: real モードで `best_of` 集約 + k>=5 のときのみ "
+                 "+0.067 (0.933->1.000)。ただし `best_of` は **oracle 上限** "
+                 "(正答個体を完璧にルーティングできた場合)。実投票の `majority`/`weighted` は "
+                 "**一度も上回らなかった** (少数派の正答が多数決で潰れる)。"
+                 "→ 集団に答えは在るが、投票で 1 答に畳むと取りこぼす。回答ルーター/検証ゲートが必要。")
+    lines.append("- **多様性選抜 vs 冗長選抜**: `best_of` 下で diverse が勝つ "
+                 "(k=5 で diverse=1.000 vs redundant=0.933)。多様選抜は異 QD cell の "
+                 "補完的 specialist を **少ない k で先に拾える**。冗長選抜は支配署名に密集し "
+                 "同じ盲点を共有、より大きい k が要る。")
+    lines.append("- **multistep 軸**: 改善源は丸ごと multistep の難問1つ。"
+                 "他軸は単一 best が既に満点で寄与なし。")
+    lines.append("- **常時オン**: answer-on-demand は構造的に成立 "
+                 "(進化=background、回答=最新 snapshot を読むだけ)。\n")
+
+    lines.append("## 制約 (honest disclosure)\n")
+    lines.append("- バッテリは小さく (15問)、+0.067 は 1問差。推定はノイジー。")
+    lines.append("- `best_of` は oracle 上限でデプロイ不可。実用価値は majority/weighted が "
+                 "示すべきだが本 regime では示せていない。")
+    lines.append("- on-prem llama3.2 単一モデル × prompt 戦略進化のみ。一般能力主張ではない。")
+    lines.append("- 採点は二値正誤。テキスト合議 MoA は未評価 (次段階)。\n")
+
+    lines.append("## 次に詰める点\n")
+    lines.append("1. 回答ルーター/検証ゲートで best_of の oracle 上限に実戦略を近づける "
+                 "(self-consistency / 軸別ルーティング / Z3 検証フィルタ)。")
+    lines.append("2. multistep に勾配が残るバッテリで再走 (他軸の飽和を解消)。")
+    lines.append("3. 実テキスト合議 MoA (expert_council.deliberate の実 LLM 化)。")
+    lines.append("4. 常時オン本実装 (進化 background process + orchestrator が最新 snapshot を poll)。\n")
+
+    lines.append("## 出力ファイル\n")
+    lines.append("- `orchestra_proxy.json` / `orchestra_real.json` — 全 round + per-task breakdown")
+    lines.append("- `SUMMARY.md` — 本書")
+
+    out = out_dir / "SUMMARY.md"
+    out.write_text("\n".join(lines), encoding="utf-8")
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     _ensure_utf8_stdout()
     ap = argparse.ArgumentParser(description=__doc__)
