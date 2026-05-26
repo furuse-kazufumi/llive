@@ -255,29 +255,45 @@ def make_proxy_scorer(pop: list[IndView]) -> tuple[ScoreFn, list[str]]:
     return scorer, keys
 
 
+def _effective_axis_tasks(hard: bool) -> dict[str, tuple[_Task, ...]]:
+    """--hard 指定時は _EXTRA_TASKS を _AXIS_TASKS に上乗せした軸辞書を返す。"""
+    if not hard:
+        return dict(_AXIS_TASKS)
+    merged: dict[str, tuple[_Task, ...]] = {}
+    for axis, tasks in _AXIS_TASKS.items():
+        merged[axis] = tasks + _EXTRA_TASKS.get(axis, ())
+    return merged
+
+
 def make_real_scorer(
     model: str = "llama3.2:latest",
     max_tokens: int = 128,
     tasks_per_axis: int = 3,
     cache: dict[tuple[str, str], float] | None = None,
+    hard: bool = False,
 ) -> tuple[ScoreFn, list[str], dict[tuple[str, str], float]]:
     """実 on-prem LLM で (system_prompt, task) を採点する scorer。
 
     決定論 (temp=0) + ``(system_prompt, task.user)`` キャッシュ。同一署名は
     一度しか LLM を叩かない。on-prem only (measurement purity)。
+    ``hard=True`` で HARD バッテリ拡張を含める。
     """
     from llive.llm.backend import GenerateRequest, OllamaBackend
 
     backend = OllamaBackend(model=model)
     score_cache: dict[tuple[str, str], float] = cache if cache is not None else {}
-    axes = tuple(_AXIS_TASKS.keys())
-    keys = _task_keys(axes, tasks_per_axis)
+    axis_tasks = _effective_axis_tasks(hard)
+    axes = tuple(axis_tasks.keys())
 
-    # 鍵 -> _Task
+    # 鍵 -> _Task (hard 時は軸あたり問数が増えるので全問使う)
     key_to_task = {}
+    keys: list[str] = []
     for axis in axes:
-        for i, task in enumerate(_AXIS_TASKS[axis][:tasks_per_axis]):
-            key_to_task[f"{axis}::t{i}"] = task
+        limit = len(axis_tasks[axis]) if hard else min(tasks_per_axis, len(axis_tasks[axis]))
+        for i, task in enumerate(axis_tasks[axis][:limit]):
+            k = f"{axis}::t{i}"
+            key_to_task[k] = task
+            keys.append(k)
 
     def scorer(ind: IndView, key: str) -> float:
         task = key_to_task[key]
