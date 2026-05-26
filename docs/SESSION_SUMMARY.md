@@ -3,36 +3,36 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-26 20:57:23
+- **最終更新**: 2026-05-26 21:27:07
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
+7e38d9f feat(viz): svg_translate.py — SVG内テキスト ja->en/zh/ko 翻訳で言語別変種生成
+dc4c903 auto: svg_translate.py 編集前 (2026-05-26 21:00)
+b2ac562 auto: svg_translate.py 編集前 (2026-05-26 21:00)
+14ccde0 auto: svg_translate.py 編集前 (2026-05-26 21:00)
+a613a31 auto: svg_translate.py 編集前 (2026-05-26 20:59)
 e340972 auto: run_persona_evolution_long.py 編集前 (2026-05-26 20:45)
 1663506 auto: run_persona_evolution_long.py 編集前 (2026-05-26 20:45)
 338cbb9 auto: run_persona_evolution_long.py 編集前 (2026-05-26 20:45)
 176d8bd auto: persona_evolution.py 編集前 (2026-05-26 20:44)
 c5838f0 auto: persona_evolution.py 編集前 (2026-05-26 20:44)
-995df44 auto: persona_evolution.py 編集前 (2026-05-26 20:44)
-614ecba auto: persona_evolution.py 編集前 (2026-05-26 20:44)
-f1be830 auto: persona_evolution.py 編集前 (2026-05-26 20:44)
-42843c5 auto: persona_evolution.py 編集前 (2026-05-26 20:44)
-5478bd4 auto: persona_evolution.py 編集前 (2026-05-26 20:43)
 ```
 
 ## 現在の git status
 
 ```
 M docs/SESSION_SUMMARY.md
- M scripts/run_persona_evolution_long.py
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-20:56 docs/SESSION_SUMMARY.md
+21:19 docs/SESSION_SUMMARY.md
+21:00 scripts/svg_translate.py
 20:47 .pytest_cache/v/cache/nodeids
 20:45 scripts/run_persona_evolution_long.py
 20:45 .pytest_cache/v/cache/lastfailed
