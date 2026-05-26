@@ -113,6 +113,10 @@ def _write_run_manifest(out_dir: Path, args: argparse.Namespace) -> None:
         "resume": bool(args.resume),
         "inject": list(args.inject) if args.inject else [],
         "max_stall_generations": (args.max_stall if args.max_stall and args.max_stall > 0 else None),
+        "selection": args.selection,
+        "novelty": bool(args.novelty),
+        "lineage_reservoir": bool(args.lineage_reservoir),
+        "reinject_interval": args.reinject_interval,
     }
     # diverse-founder-prompts は genome3d 経路のみ有効だが、後付けの追跡性のため
     # フラグ値は常に manifest top-level に additive で残す (既存キーは不変)。
