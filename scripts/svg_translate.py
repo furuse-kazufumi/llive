@@ -190,15 +190,28 @@ def translate_svg(svg_text: str, lang: str) -> tuple[str, list[str]]:
     return _TEXT_RE.sub(_repl, svg_text), missing
 
 
-def find_residual_japanese(svg_text: str) -> list[str]:
-    """Return inner-text fragments still containing Japanese after translation.
+def find_residual_japanese(svg_text: str, lang: str) -> list[str]:
+    """Return inner-text fragments that still leak the wrong script for *lang*.
 
     Only inspects <text>/<tspan> inner content (geometry never has text).
+
+    Rules per target language:
+    * Any lang: Hiragana/Katakana (uniquely Japanese) is always a leak.
+    * Any lang: an inner string that exactly equals a known ja dictionary key
+      means the substitution didn't fire (untranslated) -> leak.
+    * en only: CJK ideographs are a leak too (English must be pure ASCII).
+    * zh/ko: CJK ideographs are legitimate (Hanzi / Hanja), so allowed.
     """
     leaks: list[str] = []
     for m in _TEXT_RE.finditer(svg_text):
         inner = m.group(2)
-        if _contains_japanese(inner):
+        if any(_is_kana(ch) for ch in inner):
+            leaks.append(inner)
+            continue
+        if inner in TRANSLATIONS:  # exact ja key survived -> not translated
+            leaks.append(inner)
+            continue
+        if lang == "en" and any(_is_cjk_ideograph(ch) for ch in inner):
             leaks.append(inner)
     return leaks
 
