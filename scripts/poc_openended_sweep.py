@@ -437,13 +437,14 @@ class OpenEndedRun:
             "novelty_head": round(nov_head, 4),
             "novelty_tail": round(nov_tail, 4),
             "distinct_genomes_tail": round(distinct_tail, 1),
-            "uniq_lineages_tail": round(uniq_lineages_tail, 1),
+            "occupied_cells_tail": round(occupied_tail, 1),
+            "uniq_lineages_tail": round(uniq_lineages_tail, 1),  # informational (neutral drift)
             "checks": {
                 "archive_growth>=1": ok_archive,
                 "monoculture<0.8": ok_monoculture,
                 "diversity_held": ok_diversity,
                 "novelty_not_depleted": ok_novelty,
-                "alive(lineages>=2)": ok_alive,
+                "alive_behavioral": ok_alive,
             },
             "open_ended": open_ended,
         }
