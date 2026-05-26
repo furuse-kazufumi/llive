@@ -72,8 +72,14 @@ def render(run_dir: Path) -> str:
     p.append('<defs><radialGradient id="bg" cx="20%" cy="50%" r="90%">'
              '<stop offset="0%" stop-color="#0e1530"/><stop offset="100%" stop-color="#06090f"/></radialGradient></defs>')
     p.append(f'<rect width="{W}" height="{H}" fill="url(#bg)"/>')
-    p.append(f'<text x="{ROOTX}" y="34" fill="#e5e7eb" font-size="21" font-weight="700">進化の樹 — 系統が枝分かれし、絶滅し、甦る</text>')
-    p.append(f'<text x="{ROOTX}" y="54" fill="{"#34d399" if reservoir else "#f87171"}" font-size="12.5" font-weight="600">{sub}</text>')
+    p.append(f'<text x="{ROOTX}" y="30" fill="#e5e7eb" font-size="21" font-weight="700">進化の樹 — どの「始祖」の子孫が生き残るか</text>')
+    p.append(f'<text x="{ROOTX}" y="50" fill="{"#34d399" if reservoir else "#f87171"}" font-size="12.5" font-weight="600">{sub}</text>')
+    # 読み方パネル (自己説明: 何を見ているか)
+    p.append(f'<text x="{ROOTX}" y="68" fill="#cbd5e1" font-size="11.5">'
+             f'読み方: <tspan fill="#fbbf24">横=世代(時間→)</tspan> / '
+             f'<tspan fill="#fbbf24">縦の色帯=8始祖の系統</tspan> / '
+             f'<tspan fill="#fbbf24">帯の太さ=その系統の個体数</tspan> / '
+             f'<tspan fill="#fca5a5">✕=絶滅</tspan> / <tspan fill="#fff">◦=貯蔵庫が復活させた瞬間</tspan></text>')
 
     p.append(f'<clipPath id="grow"><rect x="0" y="0" width="{W}" height="{H}">'
              f'<animate attributeName="width" from="{ROOTX}" to="{W}" dur="4.5s" fill="freeze"/></rect></clipPath>')
