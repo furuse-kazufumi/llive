@@ -84,10 +84,11 @@ _EXTRA_TASKS: dict[str, tuple[_Task, ...]] = {
             _contains("12:15"),
         ),
         _Task(
-            "There are 24 students. One third leave, then 5 more join. "
-            "Then half of the current students leave. How many remain? "
+            # 24 -> 1/3 leave (8 leave, 16 remain) -> 4 join (20) -> half leave (10)
+            "There are 24 students. One third of them leave, then 4 more join. "
+            "Then half of the current students leave. How many students remain? "
             "Output the number only.",
-            _last_number_is("11"),  # 24 -> 16 -> 21 -> 10.5? careful
+            _last_number_is("10"),
         ),
         _Task(
             "Tom has twice as many marbles as Sam. Together they have 18. "
