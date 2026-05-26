@@ -110,12 +110,16 @@ def _write_run_manifest(out_dir: Path, args: argparse.Namespace) -> None:
         "inject": list(args.inject) if args.inject else [],
         "max_stall_generations": (args.max_stall if args.max_stall and args.max_stall > 0 else None),
     }
+    # diverse-founder-prompts は genome3d 経路のみ有効だが、後付けの追跡性のため
+    # フラグ値は常に manifest top-level に additive で残す (既存キーは不変)。
+    manifest["diverse_founder_prompts"] = bool(args.diverse_founder_prompts)
     if args.genome3d:
         manifest["genome"] = {
             "kind": "Genome3D",
             "chromosomes": ["c_impl", "c_prompt", "c_meta", "c_factors(10x4)"],
             "crossover_mode": args.crossover_mode,
             "mutation_step": args.mutation_step,
+            "diverse_founder_prompts": bool(args.diverse_founder_prompts),
         }
         manifest["operators"] = (
             f"genome3d: TournamentSelection / Genome3DCrossover({args.crossover_mode}) / "
