@@ -402,19 +402,24 @@ class OpenEndedRun:
                 sat_gen = r["generation"]
                 break
 
-        # 全滅検査: 末尾の有効個体数 (distinct genome) と lineage 生存
+        # 全滅検査 (BEHAVIORAL, §0): 末尾世代で集団が占有する distinct niche 数 と
+        # distinct genome 数。lineage label は中立浮動するので全滅判定に使わない。
         distinct_tail = float(np.mean([r["n_distinct_genomes"] for r in tail]))
-        uniq_lineages_tail = float(np.mean([r["uniq_lineages"] for r in tail]))
+        occupied_tail = float(np.mean([r["occupied_cells"] for r in tail]))
+        uniq_lineages_tail = float(np.mean([r["uniq_lineages"] for r in tail]))  # informational
+        pop = self.cfg.pop
 
         # 判定 (§2 合格条件)
         ok_archive = archive_growth_tail >= 1 if self.cfg.archive == "map-elites" else None
         ok_monoculture = mono_max < 0.8
         ok_diversity = div_tail > 0.5 * div0
         ok_novelty = nov_tail > 0.5 * nov_head if nov_head > 0 else None
-        ok_alive = uniq_lineages_tail >= 2
+        # behavioral 全滅でない = 末尾でも複数 niche を占有 ∧ 個体が collapse していない。
+        # 「pop の半分以上が distinct な個体」かつ「2 niche 以上」を生存条件とする。
+        ok_alive = occupied_tail >= 2 and distinct_tail >= 0.5 * pop
 
-        # 総合: open-ended 成立 = 飽和して停止せず多様性持続 + 全滅しない
-        # baseline (scalar) は飽和し monoculture/全滅しやすい。
+        # 総合: open-ended 成立 = 飽和して停止せず多様性持続 + behavioral に全滅しない
+        # baseline (scalar) は飽和し monoculture / behavioral 全滅しやすい。
         open_ended = bool(ok_monoculture and ok_diversity and ok_alive
                           and (ok_archive in (True, None)))
 
