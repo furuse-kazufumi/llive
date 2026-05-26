@@ -551,7 +551,7 @@ def main() -> int:
               f"div {summ['diversity_init']:.3f}->{summ['diversity_tail']:.3f} "
               f"mono_max={summ['monoculture_max']:.2f} "
               f"cells={summ['archive_cells_final']} "
-              f"lineages={summ['uniq_lineages_tail']:.0f} => {verdict}")
+              f"niches={summ['occupied_cells_tail']:.0f} => {verdict}")
 
     (out / "all_summaries.json").write_text(
         json.dumps(summaries, indent=2), encoding="utf-8"
