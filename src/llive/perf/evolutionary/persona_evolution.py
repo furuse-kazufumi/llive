@@ -580,6 +580,14 @@ def run_persona_evolution(
         genome3d 時の crossover 戦略 ("intra" 層内 / "cross" 層間)。default "intra"。
     mutation_step : float
         genome3d 時の mutation neighborhood step_size。default 0.1。
+    diverse_founder_prompts : bool
+        **opt-in** (genome3d 経路のみ有効)。True で各 founder の c_prompt を
+        affinity 由来に多様化する (:func:`_diverse_c_prompt_from_affinity`)。全
+        founder が同一 ``PromptChromosome.default`` から始まると初期探索分散が低く、
+        12h 実 LLM ランで best_score が早期 (gen35) に天井 1.0 へ張り付く事象が出た。
+        本フラグはその是正で、honest disclosure: affinity からの原理的写像であり
+        一般能力の主張ではない。default False で従来挙動 (後方互換)。flat 経路
+        (genome3d=False) には c_prompt 層が無いため無効 (silent no-op)。
     max_stall_generations : int | None
         **安全弁**: 全個体が同一 genome に収束 (distinct==1) した状態が連続でこの
         世代数続いたら ``population_collapsed`` で停止する。patience を無効化する
