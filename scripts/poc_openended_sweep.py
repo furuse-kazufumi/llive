@@ -289,7 +289,15 @@ class OpenEndedRun:
         flat = ix[:, 0] * c.cells + ix[:, 1]
         # monoculture = 行動集中 (最大占有 map cell の割合)。OE-3。
         monoculture = float(np.bincount(flat).max() / c.pop)
-        # lineage 生存: ユニーク origin 数 (全滅検査 — 2 以上で生存)
+        # occupied_cells = この世代で集団が占有する distinct な behavioral niche 数。
+        # これが「全滅検査」の正しい操作的量 (§0: open-endedness の signal は behavioral)。
+        occupied_cells = int(len(np.unique(flat)))
+        # n_distinct_genomes = この世代の distinct な個体数 (behavioral 全滅 = ほぼ全部同一)。
+        n_distinct = int(np.unique(self.G.round(6), axis=0).shape[0])
+        # lineage_fixation は INFORMATIONAL のみ。founder-origin label は selectively
+        # NEUTRAL なので機構に関係なく中立浮動 (Kimura) で固定する → 全滅判定には使わない。
+        # 系統 label を <1 に保つには QD niching on lineage / PERSONA-FX が要る
+        # (poc_evolution_env.py 著者コメントと整合)。ここでは behavioral 量で全滅を測る。
         uniq_lineages = int(len(np.unique(self.origin)))
         lineage_fix = float(np.unique(self.origin, return_counts=True)[1].max() / c.pop)
         rec = {
@@ -298,11 +306,12 @@ class OpenEndedRun:
             "scalar_mean": float(scalar.mean()),
             "diversity": diversity,
             "monoculture": monoculture,
+            "occupied_cells": occupied_cells,
             "mean_novelty": float(nov.mean()),
             "archive_cells": len(self.archive),
             "uniq_lineages": uniq_lineages,
             "lineage_fixation": lineage_fix,
-            "n_distinct_genomes": int(np.unique(self.G.round(6), axis=0).shape[0]),
+            "n_distinct_genomes": n_distinct,
         }
 
         # --- breed ---
