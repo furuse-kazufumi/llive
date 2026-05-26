@@ -588,6 +588,8 @@ def main() -> int:
     ap.add_argument("--out", type=str, default="out/poc_openended_sweep")
     ap.add_argument("--only", type=str, default="", help="comma-separated labels to run (subset)")
     ap.add_argument("--quick", action="store_true", help="smoke: gens=2000, pop=64")
+    ap.add_argument("--round2", action="store_true",
+                    help="round-2 sweep (scale-up latent/cells + mutation floor 調整)")
     args = ap.parse_args()
 
     if args.quick:
@@ -604,7 +606,7 @@ def main() -> int:
         n_archetypes=args.n_archetypes, cells=args.cells, k=args.k,
         sparse=args.sparse, step=args.step, mc_cull=args.mc_cull, seed=args.seed,
     )
-    configs = build_sweep(base)
+    configs = build_sweep_round2(base) if args.round2 else build_sweep(base)
     if args.only:
         wanted = {s.strip() for s in args.only.split(",") if s.strip()}
         configs = [c for c in configs if c.label in wanted]
