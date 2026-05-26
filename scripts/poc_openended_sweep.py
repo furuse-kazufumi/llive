@@ -708,8 +708,8 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
     lines.append("")
     lines.append("## 比較表 (§2 受入メトリクス, 末尾世代判定)")
     lines.append("")
-    lines.append("| 構成 | 選択 | std | MC | res | QD | best@飽和gen | bspread(init→tail) | div_genome(init→tail) | mono_max | cells | nov(head→tail) | niches(tail) | 判定 |")
-    lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    lines.append("| 構成 | 選択 | std | MC | res | QD | best@飽和gen | bspread(i→t) | fspread(i→t) | div_genome(i→t) | mono_max | cells | nov(h→t) | niches | 判定 |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for s in summaries:
         c = s["config"]
         verdict = "OPEN-ENDED" if s.get("open_ended") else "BOUNDED/COLLAPSED"
@@ -719,14 +719,16 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
             f"| {'Y' if c['archive']=='map-elites' else '-'} "
             f"| {s['scalar_best_final']:.3f}@g{s['scalar_saturation_gen']} "
             f"| {s.get('bspread_init', 0):.3f}→{s.get('bspread_tail', 0):.3f} "
+            f"| {s.get('fspread_init', 0):.3f}→{s.get('fspread_tail', 0):.3f} "
             f"| {s['diversity_init']:.3f}→{s['diversity_tail']:.3f} "
             f"| {s['monoculture_max']:.2f} | {s['archive_cells_final']} "
             f"| {s['novelty_head']:.2f}→{s['novelty_tail']:.2f} "
             f"| {s['occupied_cells_tail']:.0f} | {verdict} |"
         )
     lines.append("")
-    lines.append("> bspread = 記述子 2D 射影座標の std (behavioral diversity, 判定の第一義)。"
-                 "div_genome = raw genome-std (参考)。")
+    lines.append("> bspread = 記述子 2D 射影 std (全 gdim, QD/novelty 機構が読む)。"
+                 "fspread = fitness が読む factor dim のみの std (**真の collapse 検出**: scalar はここで崩壊)。"
+                 "div_genome = raw 全 genome-std (参考)。")
     lines.append("")
     lines.append("## §2 チェック内訳")
     lines.append("")
