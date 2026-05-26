@@ -412,6 +412,7 @@ class OpenEndedRun:
             "archive": c.archive, "pop": c.pop, "gens": c.gens, "gdim": self.gdim,
             "factors": c.factors, "sat_noise": c.sat_noise, "latent": c.latent,
             "n_archetypes": c.n_archetypes, "seed": c.seed,
+            "unimodal": c.unimodal, "sparse": c.sparse, "step": c.step, "cells": c.cells,
         }
         return summary
 
