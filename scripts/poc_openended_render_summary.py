@@ -40,7 +40,18 @@ def main() -> int:
     ap.add_argument("out_dir", type=str)
     args = ap.parse_args()
     out = Path(args.out_dir)
-    summaries = json.loads((out / "all_summaries.json").read_text(encoding="utf-8"))
+    all_path = out / "all_summaries.json"
+    if all_path.exists():
+        summaries = json.loads(all_path.read_text(encoding="utf-8"))
+    else:
+        # all_summaries.json が無い (run が中断された) 場合は per-config summary_*.json を集約。
+        summaries = []
+        for f in sorted(out.glob("summary_*.json")):
+            summaries.append(json.loads(f.read_text(encoding="utf-8")))
+        # 集約版を all_summaries.json として保存しておく
+        all_path.write_text(json.dumps(summaries, indent=2), encoding="utf-8")
+    # config.label 順で安定ソート (任意)
+    summaries.sort(key=lambda s: s.get("config", {}).get("label", ""))
     _write_summary_md(out, summaries, _Args(summaries))
     print(f"regenerated {out / 'SUMMARY.md'} from {len(summaries)} summaries")
     return 0
