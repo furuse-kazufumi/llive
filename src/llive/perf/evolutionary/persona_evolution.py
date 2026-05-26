@@ -347,6 +347,7 @@ def build_founder_genome_3d(
     persona_id: str,
     *,
     broadcast_strategy: str = "uniform",
+    diverse_prompt: bool = False,
 ) -> Genome3D:
     """1 persona から founder 用 :class:`Genome3D` を構築する (多層版, G4).
 
@@ -356,6 +357,20 @@ def build_founder_genome_3d(
     persona の同一性を担い、他層は進化が探索する — flat founder の「思考因子 dim に
     affinity, 残りは bounds 中点」と同じ思想を多層に持ち上げたもの。
 
+    ``diverse_prompt=True`` (opt-in) のときは **c_prompt 層も同じ affinity 源から導く**
+    (:func:`_diverse_c_prompt_from_affinity`)。affinity 上位 k 因子に index 一対一
+    対応する prompt skill を skill_set にし、founder ごとに異なる prompt 戦略から
+    探索を始める。default ``False`` では従来通り c_prompt=base.c_prompt のまま
+    (後方互換完全維持)。
+
+    .. note:: HONEST DISCLOSURE (``diverse_prompt=True`` 時)
+
+        c_factors と c_prompt を同一 affinity 源から導く = founder の内部整合。これは
+        affinity からの **原理的写像** であり一般能力の主張ではない。目的は評価天井の
+        低い小型 on-prem LLM 上で **founder の初期探索分散を上げる** ことのみ
+        (全 founder が同一 ``PromptChromosome.default`` から始まると探索が早期飽和し、
+        12h 実 LLM ランで best_score が gen35 で 1.0 に天井張り付きした事象への是正)。
+
     Parameters
     ----------
     persona_id : str
@@ -363,11 +378,15 @@ def build_founder_genome_3d(
     broadcast_strategy : str
         affinity を層へ broadcast する戦略 ("uniform" / "working_heavy" /
         "episodic_heavy")。default は全層複製。
+    diverse_prompt : bool
+        True で c_prompt も affinity 由来に多様化する (opt-in)。default False で
+        従来挙動 (c_prompt=base.c_prompt)。
 
     Returns
     -------
     Genome3D
-        c_factors = persona affinity 由来、他 3 chromosome = default。
+        c_factors = persona affinity 由来、他 3 chromosome = default
+        (``diverse_prompt=True`` のとき c_prompt のみ affinity 由来)。
     """
     persona = get_persona(persona_id)
     affinity = tuple(float(v) for v in persona.factor_affinity)
@@ -375,10 +394,14 @@ def build_founder_genome_3d(
         affinity, broadcast_strategy=broadcast_strategy
     )
     base = Genome3D.default()
-    # frozen dataclass: 因子層のみ差し替えた新インスタンスを作る。
+    # diverse_prompt 時のみ c_prompt を affinity 由来に差し替える (default は base 据え置き)。
+    c_prompt = (
+        _diverse_c_prompt_from_affinity(affinity) if diverse_prompt else base.c_prompt
+    )
+    # frozen dataclass: 因子層 (と任意で prompt 層) を差し替えた新インスタンスを作る。
     return Genome3D(
         c_impl=base.c_impl,
-        c_prompt=base.c_prompt,
+        c_prompt=c_prompt,
         c_meta=base.c_meta,
         c_factors=c_factors,
     )
