@@ -155,6 +155,10 @@ class OpenEndedRun:
         diff = F[:, None, :] - self.archetypes[None, :, :]
         dist = np.linalg.norm(diff, axis=2) / np.sqrt(self.cfg.factors)
         sim = 1.0 - dist
+        if self.cfg.unimodal:
+            # 単一 archetype への類似度のみ = 「人手の単一固定ものさし」。
+            # 集団全体が 1 peak に吸い寄せられ最悪の monoculture / 多様性崩壊を起こす。
+            return sim[:, 0]
         return sim.max(axis=1)  # max over archetypes → multi-modal だが各 peak は 1.0 飽和
 
     def _archetype_cases(self) -> np.ndarray:
