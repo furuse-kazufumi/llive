@@ -576,7 +576,7 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
     lines.append("")
     lines.append("## 比較表 (§2 受入メトリクス, 末尾世代判定)")
     lines.append("")
-    lines.append("| 構成 | 選択 | std | MC | res | QD | best@飽和gen | div(init→tail) | mono_max | cells | nov(head→tail) | lineages(tail) | 判定 |")
+    lines.append("| 構成 | 選択 | std | MC | res | QD | best@飽和gen | div(init→tail) | mono_max | cells | nov(head→tail) | niches(tail) | 判定 |")
     lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for s in summaries:
         c = s["config"]
@@ -589,7 +589,7 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
             f"| {s['diversity_init']:.3f}→{s['diversity_tail']:.3f} "
             f"| {s['monoculture_max']:.2f} | {s['archive_cells_final']} "
             f"| {s['novelty_head']:.2f}→{s['novelty_tail']:.2f} "
-            f"| {s['uniq_lineages_tail']:.0f} | {verdict} |"
+            f"| {s['occupied_cells_tail']:.0f} | {verdict} |"
         )
     lines.append("")
     lines.append("## §2 チェック内訳")
