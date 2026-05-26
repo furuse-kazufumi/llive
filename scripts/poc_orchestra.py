@@ -511,10 +511,12 @@ def main(argv: list[str] | None = None) -> int:
                        "note": "snapshot breakdown 参照 (軸あたり 2 問)"}
     else:
         scorer, keys, cache = make_real_scorer(
-            model=args.model, tasks_per_axis=args.tasks_per_axis, cache=cache
+            model=args.model, tasks_per_axis=args.tasks_per_axis,
+            cache=cache, hard=args.hard,
         )
         scorer_meta = {"mode": "real", "model": args.model,
                        "tasks_per_axis": args.tasks_per_axis,
+                       "hard_battery": args.hard,
                        "task_keys": keys,
                        "note": "on-prem ollama temp=0 deterministic+cached"}
 
