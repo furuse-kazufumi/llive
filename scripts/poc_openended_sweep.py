@@ -682,7 +682,8 @@ def _write_summary_md(out: Path, summaries: list[dict], args: argparse.Namespace
             return "—" if v is None else ("PASS" if v else "FAIL")
         lines.append(
             f"| {s['config']['label']} | {m(ch['archive_growth>=1'])} | {m(ch['monoculture<0.8'])} "
-            f"| {m(ch['diversity_held'])} | {m(ch['novelty_not_depleted'])} | {m(ch['alive_behavioral'])} "
+            f"| {m(ch['diversity_held'])} | {m(ch.get('diversity_held_genome'))} "
+            f"| {m(ch['novelty_not_depleted'])} | {m(ch['alive_behavioral'])} "
             f"| {s['archive_growth_tail20pct']:+d} |"
         )
     lines.append("")
