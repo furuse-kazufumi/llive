@@ -428,6 +428,11 @@ class OpenEndedRun:
         cells_at_tail_start = tail[0]["archive_cells"]
         cells_final = rows[-1]["archive_cells"]
         archive_growth_tail = cells_final - cells_at_tail_start
+        # QD grid 総 cell 数 (cells×cells)。grid がほぼ埋まると growth は構造的に止まる
+        # (新 cell の余地が無い) → これは「全被覆」= 成功であり、停滞 (collapse) ではない。
+        grid_total = self.cfg.cells * self.cfg.cells
+        archive_coverage = cells_final / grid_total if grid_total else 0.0
+        archive_saturated = archive_coverage >= 0.95  # grid の 95%+ を被覆 = 飽和成功
 
         # behavioral diversity: 末尾平均 / 初期との比。
         # 第一義は behavioral_spread (記述子 2D 射影 std) — reservoir 再注入に公正。
