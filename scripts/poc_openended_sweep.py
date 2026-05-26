@@ -348,6 +348,7 @@ class OpenEndedRun:
                 "scalar_best": float(scalar.max()),
                 "scalar_mean": float(scalar.mean()),
                 "diversity": diversity,
+                "factor_spread": factor_spread,
                 "behavioral_spread": behavioral_spread,
                 "monoculture": monoculture,
                 "occupied_cells": occupied_cells,
