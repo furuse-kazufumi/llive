@@ -375,6 +375,8 @@ def make_real_pressure_fitness(
 
 __all__ = [
     "RealPressureConfig",
+    "ResponseRecord",
+    "ResponseSink",
     "genome_to_system_prompt",
     "make_real_pressure_fitness",
 ]
