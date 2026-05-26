@@ -418,6 +418,7 @@ def main() -> int:
         f"[run] personas={len(args.personas)} pop={args.population} "
         f"generations={args.generations} patience={patience} fitness={args.fitness} "
         f"genome={'Genome3D/' + args.crossover_mode if args.genome3d else 'flat'} "
+        f"selection={args.selection} reservoir={'yes' if effective_lineage_reservoir else 'no'} "
         f"max_stall={max_stall} resume={'yes' if args.resume else 'no'} out={args.out}"
     )
 
