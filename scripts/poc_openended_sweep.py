@@ -466,7 +466,12 @@ class OpenEndedRun:
         pop = self.cfg.pop
 
         # 判定 (§2 合格条件)
-        ok_archive = archive_growth_tail >= 1 if self.cfg.archive == "map-elites" else None
+        # archive: 末尾20%でも新 cell≥1 が成長中。ただし grid を 95%+ 被覆して飽和した場合は
+        # 「成長が止まった」のではなく「埋め尽くした」= 成功なので PASS 扱い (honest)。
+        if self.cfg.archive == "map-elites":
+            ok_archive = (archive_growth_tail >= 1) or archive_saturated
+        else:
+            ok_archive = None
         ok_monoculture = mono_max < 0.8
         # diversity_held は behavioral_spread を第一義に判定 (genome-std は併記)。
         ok_diversity = bspread_tail > 0.5 * bspread0 if bspread0 > 0 else div_tail > 0.5 * div0
