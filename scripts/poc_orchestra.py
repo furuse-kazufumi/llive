@@ -668,6 +668,13 @@ def main(argv: list[str] | None = None) -> int:
 
     # 端末に要約表を出す
     _print_summary(result)
+
+    # SUMMARY.md を (両 JSON が揃っていれば) 更新する
+    try:
+        sm = build_summary(args.out)
+        print(f"[poc_orchestra] wrote {sm}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[poc_orchestra] summary build skipped: {exc}", file=sys.stderr)
     return 0
 
 
