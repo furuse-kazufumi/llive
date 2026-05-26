@@ -336,16 +336,18 @@ class OpenEndedRun:
         self.G = np.clip(child, 0, 1)
         self.origin = porigin
 
-        # 中立貯蔵庫からの re-inject: 絶滅した map cell の elite を最低 novelty 個体に差し戻し
-        # (lineage-niched QD の核, 開放端を支える)。
+        # 中立貯蔵庫からの re-inject: 絶滅した map cell の elite を「親が低 novelty だった子」
+        # に差し戻す (lineage-niched QD の核, 開放端を支える)。
+        # NOTE: 差し替え対象は **親 novelty (nov[parents])** の昇順で選ぶ。子の novelty を
+        # 再計算 (高コスト) せずに「最も平凡な系統」を置換でき、再計算 1 回ぶん高速化する。
+        # map coords (present 判定) は安価なので post-breed の D2 で行う。
         if c.reservoir > 0 and self.reservoir:
             D2 = self._descriptor()
             ix2 = self._map_coords(D2)
             present = set(int(r[0] * c.cells + r[1]) for r in ix2)
             extinct = [cell for cell in self.reservoir if cell not in present]
             if extinct:
-                nov2 = self._novelty(D2)
-                order = np.argsort(nov2)  # 低 novelty から差し替え
+                order = np.argsort(nov[parents])  # 親が低 novelty の子から差し替え
                 n_reinj = min(len(extinct), max(1, c.pop // 20))  # 最大 5% re-inject
                 for j in range(n_reinj):
                     cell = extinct[j % len(extinct)]
