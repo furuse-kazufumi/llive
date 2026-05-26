@@ -313,6 +313,14 @@ def main() -> int:
         help="貯蔵庫の再投入を行う世代間隔 (1=毎世代)。大きいほど行動多様性を保ちやすいが "
         "系統が長期欠落するリスク (系統保持 vs 行動多様性のトレードオフ knob)。",
     )
+    ap.add_argument(
+        "--response-log",
+        type=Path,
+        default=None,
+        help="(observability, opt-in) real-pressure 評価の実 LLM 応答を JSONL で記録する先。"
+        "未指定なら記録しない (従来挙動)。'@out' を渡すと out_dir/responses.jsonl に保存。"
+        "scripts/evolution_response_viewer.py が実応答テキストの併記に使う。",
+    )
     args = ap.parse_args()
 
     unknown = [p for p in args.personas if p not in PERSONA_ONTOLOGY]
