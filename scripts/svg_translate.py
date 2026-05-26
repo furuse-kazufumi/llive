@@ -134,14 +134,25 @@ SOURCE_SVGS = (
 _TEXT_RE = re.compile(r"(<(?:text|tspan)\b[^>]*>)([^<]*)(</(?:text|tspan)>)")
 
 
-def _is_japanese_char(ch: str) -> bool:
-    """True for Hiragana, Katakana, or CJK Unified Ideographs (Kanji)."""
+def _is_kana(ch: str) -> bool:
+    """True for Hiragana or Katakana — *uniquely* Japanese scripts.
+
+    (Kanji share the CJK Unified Ideographs block with Chinese Hanzi and
+    Korean Hanja, so a codepoint there cannot by itself prove the text is
+    Japanese. Kana are unambiguous.)
+    """
     code = ord(ch)
     if 0x3040 <= code <= 0x309F:  # Hiragana
         return True
     if 0x30A0 <= code <= 0x30FF:  # Katakana
         return True
-    if 0x4E00 <= code <= 0x9FFF:  # CJK Unified Ideographs (incl. Kanji)
+    return False
+
+
+def _is_cjk_ideograph(ch: str) -> bool:
+    """True for CJK Unified Ideographs (Kanji / Hanzi / Hanja)."""
+    code = ord(ch)
+    if 0x4E00 <= code <= 0x9FFF:
         return True
     if 0x3400 <= code <= 0x4DBF:  # CJK Ext A
         return True
@@ -149,7 +160,14 @@ def _is_japanese_char(ch: str) -> bool:
 
 
 def _contains_japanese(text: str) -> bool:
-    return any(_is_japanese_char(ch) for ch in text)
+    """Heuristic for 'this string still has Japanese in it'.
+
+    Used to spot *source* (ja) strings that lack a translation entry. Kana is
+    a reliable signal; bare ideographs (which a kana-free ja string could
+    still contain) are caught because every ja key in this corpus contains at
+    least one kana — and untranslated keys are also reported by exact match.
+    """
+    return any(_is_kana(ch) for ch in text)
 
 
 def translate_svg(svg_text: str, lang: str) -> tuple[str, list[str]]:
