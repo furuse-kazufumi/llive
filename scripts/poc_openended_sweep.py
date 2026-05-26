@@ -302,7 +302,12 @@ class OpenEndedRun:
         self._update_reservoir(D, nov)
 
         # --- metrics (§2) ---
-        diversity = float(np.mean(np.std(self.G, axis=0)))  # behavioral diversity (genome std)
+        diversity = float(np.mean(np.std(self.G, axis=0)))  # genome-space std (raw 多様性)
+        # behavioral_spread = 記述子を 2D map 射影した座標の std 平均。
+        # genome-std と違い reservoir elite 再注入で raw variance が縮んでも
+        # behavioral niche の広がりを公正に測る (§0: open-endedness の signal は behavioral)。
+        coords_b = (D @ self.P) / np.sqrt(self.gdim)
+        behavioral_spread = float(np.mean(np.std(coords_b, axis=0)))
         ix = self._map_coords(D)
         flat = ix[:, 0] * c.cells + ix[:, 1]
         # monoculture = 行動集中 (最大占有 map cell の割合)。OE-3。
