@@ -127,3 +127,76 @@ def test_config_axes_subset() -> None:
     report = fit(Genome3D.default())
     axes = {k.split("::")[0] for k in report.breakdown}
     assert axes == {"typo_robustness", "calibration"}
+
+
+def test_response_log_default_off_preserves_behavior() -> None:
+    """response_log 未指定なら従来挙動 (記録なし・スコア不変・追加副作用なし)."""
+    backend = _StubBackend({"captial of Japan": "tokyo"})
+    fit_no_sink = make_real_pressure_fitness(backend)
+    report = fit_no_sink(Genome3D.default())
+    # additive: 既存 report 形状 (score / breakdown / notes) は不変。
+    assert isinstance(report.score, float)
+    assert report.breakdown  # 軸別 case score が入る
+    assert "REAL on-prem LLM" in report.notes
+
+
+def test_response_log_list_sink_captures_records() -> None:
+    """list sink を渡すと (system, user, axis, response, score) が記録される."""
+    answers = {"captial of Japan": "tokyo", "7 tims 8": "56"}
+    backend = _StubBackend(answers)
+    log: list = []
+    fit = make_real_pressure_fitness(
+        backend,
+        RealPressureConfig(axes=("typo_robustness",), tasks_per_axis=3),
+        response_log=log,
+    )
+    fit(Genome3D.default())
+    # typo_robustness の 3 task 分が記録される。
+    assert len(log) == 3
+    rec = log[0]
+    assert set(rec) == {"system", "user", "axis", "response", "score"}
+    assert rec["axis"] == "typo_robustness"
+    # 実応答テキストが復元できる (これまで失われていた情報)。
+    assert rec["response"] == "tokyo"
+    assert rec["score"] == 1.0
+    # system prompt は genome.c_prompt 由来で非空。
+    assert rec["system"]
+
+
+def test_response_log_jsonl_path_sink(tmp_path) -> None:
+    """str/Path sink を渡すと JSONL ファイルに 1 record/line で追記される."""
+    import json
+
+    backend = _StubBackend({"captial of Japan": "tokyo"})
+    out = tmp_path / "responses.jsonl"
+    fit = make_real_pressure_fitness(
+        backend,
+        RealPressureConfig(axes=("typo_robustness",), tasks_per_axis=1),
+        response_log=str(out),
+    )
+    fit(Genome3D.default())
+    assert out.exists()
+    lines = [ln for ln in out.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert len(lines) == 1
+    rec = json.loads(lines[0])
+    assert rec["response"] == "tokyo"
+    assert rec["axis"] == "typo_robustness"
+
+
+def test_response_log_skips_cache_hits() -> None:
+    """キャッシュヒット時は LLM を再呼出ししないため record を重複させない."""
+    backend = _StubBackend({"captial of Japan": "tokyo"})
+    log: list = []
+    cache: dict = {}
+    fit = make_real_pressure_fitness(
+        backend,
+        RealPressureConfig(axes=("typo_robustness",), tasks_per_axis=2),
+        cache=cache,
+        response_log=log,
+    )
+    g = Genome3D.default()
+    fit(g)
+    n_after_first = len(log)
+    assert n_after_first == 2
+    fit(g)  # 同一 system prompt → 全キャッシュヒット → 新規記録ゼロ
+    assert len(log) == n_after_first
