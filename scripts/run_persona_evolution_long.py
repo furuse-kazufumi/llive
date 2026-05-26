@@ -396,11 +396,23 @@ def main() -> int:
 
     # lldarwin 選択圧 (複数選択圧の多目的淘汰)。default なら EvolutionLoop 既定 Tournament。
     # criteria=() = rich-proxy の breakdown (archetype::*/factor_score/...) を動的に pressure 化。
-    selection_obj = (
-        MultiPressureSelector(epsilon=0.01, use_novelty=args.novelty)
-        if args.selection == "lldarwin"
-        else None
-    )
+    # lldarwin-v2 = overnight マラソン確定 S1 選択核プリセット (合成配線, opt-in)。
+    selection_obj = None
+    # 中立貯蔵庫 (Stage1.5) / 再投入間隔は CLI 値を出発点に、v2 プリセットが既定 on にする。
+    effective_lineage_reservoir = args.lineage_reservoir
+    effective_reinject_interval = args.reinject_interval
+    if args.selection == "lldarwin":
+        selection_obj = MultiPressureSelector(epsilon=0.01, use_novelty=args.novelty)
+    elif args.selection == "lldarwin-v2":
+        # 確定既定構成 (novelty(z-score) on / minimal-criterion gate は軸指定時のみ /
+        # 中立貯蔵庫 既定 on)。--novelty を明示 off にしたい場合は v2 構成では既定 on を採用
+        # (S1 で novelty は必須核)。reservoir は CLI で明示 on でも v2 既定 on でも有効化。
+        v2_cfg = LLDarwinV2Config()
+        selection_obj = build_lldarwin_v2_selector(v2_cfg)
+        effective_lineage_reservoir = bool(args.lineage_reservoir) or v2_cfg.lineage_reservoir
+        # reinject-interval は CLI 既定 (1) のままなら v2 既定を採用、明示変更があれば尊重。
+        if args.reinject_interval == 1:
+            effective_reinject_interval = v2_cfg.reinject_interval
 
     print(
         f"[run] personas={len(args.personas)} pop={args.population} "
