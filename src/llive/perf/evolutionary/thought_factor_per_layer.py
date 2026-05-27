@@ -70,7 +70,7 @@ from typing import Any
 
 import numpy as np
 
-from llive.perf.evolutionary.persona import THOUGHT_FACTORS
+from llive.perf.evolutionary.persona import PERSONA_ONTOLOGY, THOUGHT_FACTORS
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -88,6 +88,13 @@ NUM_MEMORY_LAYERS: int = len(DEFAULT_MEMORY_LAYER_NAMES)  # 4
 # 各 (factor, layer) cell の値域
 FACTOR_WEIGHT_LO: float = 0.0
 FACTOR_WEIGHT_HI: float = 1.0
+
+
+def _canonical_persona_ids() -> tuple[str, ...]:
+    """persona-index の **正準順**. 小 PoC ``poc_persona_indexed_genome`` と同一の
+    ``sorted(PERSONA_ONTOLOGY.keys())``. index → persona id の写像を固定するため
+    モジュール読み込み毎に同じ並びを返す."""
+    return tuple(sorted(PERSONA_ONTOLOGY.keys()))
 
 
 # ---------------------------------------------------------------------------
