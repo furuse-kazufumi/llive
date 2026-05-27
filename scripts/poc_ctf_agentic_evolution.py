@@ -260,7 +260,7 @@ _CANNED_CODE: dict[str, str] = {
     "base64": "import base64\nprint(base64.b64decode('ZmxhZ3tiYXNlNjR9').decode())\n",
     "hex": "print(bytes.fromhex('666c61677b6865787d').decode())\n",
     "rot13": "import codecs\nprint(codecs.decode('synt{ebg13}', 'rot_13'))\n",
-    "reverse": "print('}}esrever{{galf'[::-1])\n".replace("}}", "}").replace("{{", "{"),
+    "reverse": "s = '}esrever{galf'\nprint(s[::-1])\n",
     # url: 無害な urllib.parse.unquote (v2 filter で通る = タスク1 修正点)。
     "url": "from urllib.parse import unquote\nprint(unquote('flag%7Ba%26b%7D'))\n",
     # caesar には危険メンバ呼び出しを注入 (v2 filter で refusal を踏ませる; honest)。
