@@ -752,9 +752,13 @@ def main(argv: list[str] | None = None) -> int:
             "オラクルは flag_oracle (正規化部分文字列一致, case-insensitive)。submit された "
             "flag を gold と照合。intercode 本家 exact match より緩いが picoCTF{...} は偶然一致 "
             "ほぼゼロ。設計 §10-1 指示どおりオラクル不変。",
-            "mock は canned 軌跡 (ideal=ls→観察→submit / naive=ls せず誤 submit) で Docker/LLM "
-            "ゼロ。ループ制御・コマンド軌跡記録・submit 採点・max_turns 打ち切りの検証専用 = "
+            "mock は canned 軌跡 (ideal=ls→観察/検証→submit / naive=ls せず誤 submit / "
+            "inhead=頭で誤 submit→gate 却下→verify 訂正) で Docker/LLM ゼロ。ループ制御・"
+            "コマンド軌跡記録・submit 採点・self-check gate・max_turns 打ち切りの検証専用 = "
             "実機予言ではない。",
+            "Task1 submit self-check: submit する flag 本文が過去コマンド stdout に未出現なら "
+            "未検証とみなし max_self_checks 回まで却下→強制 verify nudge を注入。算術/decode の "
+            "頭で解く実行誤りを ic18 の成功パターン (echo $((...)) で計算→観察→submit) に誘導。",
             "弱 on-prem モデルが multi-turn でも実 picoCTF を多く解けない可能性は十分ある "
             "([[feedback_benchmark_honest_disclosure]])。1 タスクでも file-backed が解ければ "
             "1-turn 0/7 からの前進 = 非飽和帯の確認。",
