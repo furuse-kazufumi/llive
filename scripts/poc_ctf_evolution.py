@@ -781,6 +781,7 @@ class ConditionResult:
     name: str                         # "single_family" / "cross_family"
     gen_curve: list[PopCoverage]
     evolved_pop_cov: float            # 最終世代 best-of-pop coverage
+    peak_pop_cov: float               # 全世代を通じた最良 best-of-pop coverage (deployable)
     best_single_cov: float            # 全世代最良 single 個体 coverage
     gen0_cov: float                   # 選択圧前 (gen0) 集団 coverage
     final_family_dist: dict           # 最終世代のモデル分布 (measure_family_distribution)
