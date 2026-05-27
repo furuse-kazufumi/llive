@@ -221,6 +221,11 @@ _SKILL_BUDGET: float = 3.0  # この数を超えて skill を積むと unlock �
 def _mock_solves(system_prompt: str, task: CTFTask, salt: str) -> bool:
     """system prompt 特徴 × タスクで「解けたか」を決定論的に返す (inference ゼロ).
 
+    .. note:: PoC-CTF-1 (モデル非依存) の合成 responder。**PoC-CTF-1b では非配線**
+        (cross/single 両条件とも model aware な :func:`_mock_solves_model` を使うため)。
+        旧 regime の参照実装として残置 (constants は ``_mock_solves_model`` の非ロック
+        タスク経路が共有する)。
+
     確率 p を組み立て、``sha256(system_prompt | tid | salt)`` 由来の決定論的 roll < p で
     解ける。temp=0 決定論キャッシュと同じく、同一 (system_prompt, task) は常に同結果。
 
