@@ -484,9 +484,17 @@ _HONEST_NOTES = [
     "activity distribution; the SAME threshold is applied to all regimes for fairness.",
     "HONEST CAVEAT: A_new (the supra-neutral ACTIVITY SUM) grows monotonically for ANY "
     "persistent component, so a trivially-fixed saturated regime can also accumulate large "
-    "A_new. The cleaner open-ended discriminator is supra_count (NUMBER of components above "
-    "the shadow): it keeps rising only when NEW components keep crossing the threshold. The "
-    "verdict separates adaptive from saturated via supra_count, not A_new magnitude alone.",
+    "A_new — at some seeds saturated A_new even exceeds adaptive A_new. Therefore A_new "
+    "magnitude alone CANNOT separate 'keeps acquiring novelty' (adaptive) from 'fixed on a "
+    "trivial optimum' (saturated).",
+    "The SEED-STABLE discriminator vs saturation is the COLLAPSE of present-component "
+    "diversity: saturated converges to a tiny trivial vocabulary (D_sat ~= trivial vocab) "
+    "while adaptive sustains broad diversity by chasing a moving target. The verdict separates "
+    "adaptive from saturated via this diversity collapse (D_sat < 0.5*D_adapt); supra_count "
+    "(number of components above the shadow) is reported as corroborating signal.",
+    "So the instrument distinguishes the three regimes by COMBINING signals: supra-neutral "
+    "A_new vs the neutral shadow (adaptive vs neutral) AND diversity collapse (adaptive vs "
+    "saturated). No single scalar suffices — this is itself a finding for wiring to real llive.",
 ]
 
 
