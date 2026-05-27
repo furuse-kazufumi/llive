@@ -453,6 +453,15 @@ def _mock_solves_model(
 # ---------------------------------------------------------------------------
 
 
+#: breakdown に「この個体が使ったモデル / 写像 source」を運ぶ非数値キー。
+#: MultiPressureSelector は **数値**キーのみを lexicase case に抽出する
+#: (factor_score / nearest_persona_idx / novelty 等は別扱い) ため、文字列値の
+#: breakdown キーは case として扱われず、ε-lexicase の選択に副作用を与えない
+#: (= 観測専用の安全な配線)。snapshot から family 分布を再構成するのに使う。
+_MODEL_BREAKDOWN_KEY = "ctf_model::name"
+_MODEL_SOURCE_BREAKDOWN_KEY = "ctf_model::source"
+
+
 def make_ctf_fitness(
     tasks: list[CTFTask],
     *,
@@ -461,7 +470,8 @@ def make_ctf_fitness(
     real_responder: RealResponder | None = None,
     real_temperature: float = 0.0,
     real_model: str = "qwen2.5:14b",
-    cache: dict[tuple[str, str], bool] | None = None,
+    cache: dict[tuple[str, str, str], bool] | None = None,
+    model_resolver: Callable[[object, str], tuple[str, str]] | None = None,
 ) -> Callable[[object], FitnessReport]:
     """CTF バッテリを per-case fitness にする (real_pressures.make_real_pressure_fitness パターン).
 
@@ -470,34 +480,57 @@ def make_ctf_fitness(
     breakdown に ``ctf::<tid> -> {0.0, 1.0}`` を入れる → ε-lexicase が各タスク=1 case
     として specialist を保つ。score (集約スカラー) は全タスク平均 (pass@1 相当の素能力)。
 
-    ``(system_prompt, task)`` キャッシュで temp=0 決定論サンプルを再利用 (compute 節約)。
-    """
-    score_cache: dict[tuple[str, str], bool] = cache if cache is not None else {}
+    ``(system_prompt, model, task)`` キャッシュで temp=0 決定論サンプルを再利用 (compute 節約)。
 
-    def _solve(system: str, task: CTFTask) -> bool:
-        key = (system, task.tid)
+    クロスファミリ拡張 (PoC-CTF-1b)
+    -------------------------------
+    ``model_resolver`` を渡すと、各個体の ``(genome, system_prompt)`` から **使用モデル**を
+    決定し (= :func:`genome_to_model`)、そのモデルで採点する (mock は
+    :func:`_mock_solves_model`, real は ollama にそのモデルを指定)。``None`` なら
+    single-family: 全個体が固定モデル (``real_model`` / mock は model 非依存の
+    :func:`_mock_solves`) を使う = クロスファミリ配線前の従来挙動。breakdown に使用
+    モデル名と写像 source を **非数値**キーで記録する (lexicase case には混ぜない;
+    観測専用)。
+    """
+    score_cache: dict[tuple[str, str, str], bool] = cache if cache is not None else {}
+
+    def _solve(system: str, task: CTFTask, model: str) -> bool:
+        key = (system, model, task.tid)
         if key in score_cache:
             return score_cache[key]
         if mock:
-            ok = _mock_solves(system, task, salt)
+            if model_resolver is None:
+                # single-family mock: モデル非依存の従来 skill→task 構造。
+                ok = _mock_solves(system, task, salt)
+            else:
+                # cross-family mock: モデル aware (per-model decorrelated specialty)。
+                ok = _mock_solves_model(system, task, model, salt)
         else:
             assert real_responder is not None
-            sampler = Sampler(real_model, real_temperature, "terse")
             # RealResponder は Sampler.persona で PERSONAS を引くが、進化個体の真の
             # system prompt は c_prompt 由来。persona 固定だと c_prompt 多様性が死ぬので
-            # responder を直接呼ばず backend を temp=0 で叩く薄いラッパにする。
-            ok = _real_solve(real_responder, system, task, real_temperature, real_model)
+            # responder を直接呼ばず backend を temp=0 で個体のモデルで叩く薄いラッパ。
+            ok = _real_solve(real_responder, system, task, real_temperature, model)
         score_cache[key] = ok
         return ok
 
     def fitness(genome: object) -> FitnessReport:
         system = genome_to_system_prompt(genome)
+        # ---- 個体のモデルファミリを決定 (cross-family) / 固定 (single-family) ----
+        if model_resolver is not None:
+            model, source = model_resolver(genome, system)
+        else:
+            model, source = real_model, "fixed"
         breakdown: dict[str, float] = {}
         solved = 0
         for task in tasks:
-            ok = _solve(system, task)
+            ok = _solve(system, task, model)
             breakdown[_case_key(task)] = 1.0 if ok else 0.0
             solved += int(ok)
+        # 観測専用 (非数値) breakdown: 使用モデル名 + 写像 source。lexicase case には
+        # 抽出されない (MultiPressureSelector は数値キーのみ case 化) → 選択に無影響。
+        breakdown[_MODEL_BREAKDOWN_KEY] = model  # type: ignore[assignment]
+        breakdown[_MODEL_SOURCE_BREAKDOWN_KEY] = source  # type: ignore[assignment]
         score = solved / len(tasks) if tasks else 0.0
         return FitnessReport(
             score=float(score),
@@ -505,7 +538,8 @@ def make_ctf_fitness(
             runtime_metadata=dict(collect_runtime_metadata()),
             n_samples=len(tasks),
             notes=(
-                f"CTF deterministic-oracle fitness ({'mock' if mock else 'real'}). "
+                f"CTF deterministic-oracle fitness ({'mock' if mock else 'real'}, "
+                f"model={model}, family_src={source}). "
                 "genome.c_prompt -> system prompt; per-task flag oracle -> per-case "
                 "breakdown (ctf::<tid>) for epsilon-lexicase specialist preservation. "
                 "score = mean per-task pass (pass@1-like). temp=0 deterministic+cached; "
