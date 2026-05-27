@@ -476,7 +476,8 @@ _HONEST_NOTES = [
 def _trace_to_json(tr: ModeTrace, *, keep_series: bool = True) -> dict:
     d = asdict(tr)
     if not keep_series:
-        for k in ("diversity", "total_activity", "mean_cumulative_activity", "new_activity"):
+        for k in ("diversity", "total_activity", "mean_cumulative_activity",
+                  "new_activity", "supra_count"):
             d.pop(k, None)
     # final_activity は per-component 配列 (長い) → そのまま残す (語彙=64 程度で許容)。
     return d
