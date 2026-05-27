@@ -33,7 +33,7 @@ from llive.perf.evolutionary.meta_chromosome import (
     MetaChromosome,
     ucb1_score,
 )
-from llive.perf.evolutionary.meta_loop import (
+from llive.perf.evolutionary.experimental.meta_loop import (
     MetaEvolutionLoop,
 )
 
