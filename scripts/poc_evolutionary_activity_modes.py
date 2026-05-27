@@ -465,6 +465,11 @@ _HONEST_NOTES = [
     "activity) and measure there.",
     "The neutral shadow threshold (a_shadow) is taken from a no-selection run's final "
     "activity distribution; the SAME threshold is applied to all regimes for fairness.",
+    "HONEST CAVEAT: A_new (the supra-neutral ACTIVITY SUM) grows monotonically for ANY "
+    "persistent component, so a trivially-fixed saturated regime can also accumulate large "
+    "A_new. The cleaner open-ended discriminator is supra_count (NUMBER of components above "
+    "the shadow): it keeps rising only when NEW components keep crossing the threshold. The "
+    "verdict separates adaptive from saturated via supra_count, not A_new magnitude alone.",
 ]
 
 
