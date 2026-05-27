@@ -389,10 +389,12 @@ def run(
                 "grid_occupied_niches": r["grid_occupied_niches"],
                 "grid_coverage": round(r["grid_coverage"], 8),
                 "grid_qd_score": round(r["grid_qd_score"], 4),
+                "grid_mean_elite_fitness": round(r["grid_mean_elite_fitness"], 6),
                 "cvt_total_niches": r["cvt_total_niches"],     # fixed k
                 "cvt_occupied_niches": r["cvt_occupied_niches"],
                 "cvt_coverage": round(r["cvt_coverage"], 6),
                 "cvt_qd_score": round(r["cvt_qd_score"], 4),
+                "cvt_mean_elite_fitness": round(r["cvt_mean_elite_fitness"], 6),
                 "cvt_coverage_over_grid_ratio": (
                     round(r["cvt_coverage"] / (r["grid_coverage"] + 1e-15), 2)
                 ),
