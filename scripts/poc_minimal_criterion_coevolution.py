@@ -93,27 +93,23 @@ def task_band_mask(solve_mat: np.ndarray, lo: int, hi: int) -> np.ndarray:
 # ---------------------------------------------------------------------------
 # frontier metric — identical fair probe for both arms
 # ---------------------------------------------------------------------------
-def capability_frontier(solvers: np.ndarray, probe: np.ndarray) -> float:
-    """Frontier = max over solvers of the hardest probe-task difficulty (sum) it solves.
+def capability_frontier(solvers: np.ndarray, probe: np.ndarray | None = None) -> float:
+    """Frontier = the hardest UNIFORM task any solver can dominate (UNBOUNDED metric).
 
-    `probe` is a fixed, dense battery of difficulty vectors used identically for BOTH
-    arms so the comparison is fair (the MCC arm is NOT graded on its own easy tasks).
-    Returns 0.0 if no solver solves any probe task.
+    A solver dominates the uniform difficulty vector (t,...,t) iff t <= min(capability)
+    in every dim (dominance is gated by the weakest dim). So the hardest uniform task a
+    solver clears is exactly its min-dim capability, and the population frontier is
+
+        max_i  min_d  capability[i, d].
+
+    This is the *same fair metric* for both arms (it depends only on the solver
+    capabilities, not on either arm's own task population) AND it is unbounded above, so
+    a non-saturating arm can keep climbing through it indefinitely. `probe` is accepted
+    for API symmetry but unused (kept so callers/tests can pass it harmlessly).
     """
-    sm = solve_matrix(solvers, probe)            # (S, P)
-    probe_hardness = probe.sum(axis=1)           # (P,)
-    best = 0.0
-    for i in range(sm.shape[0]):
-        solved = probe_hardness[sm[i]]
-        if solved.size:
-            best = max(best, float(solved.max()))
-    return best
-
-
-def _make_probe(d: int, n: int, hi: float, rng: np.random.Generator) -> np.ndarray:
-    """Dense difficulty probe spanning [0, hi]^d, sorted by total hardness."""
-    p = rng.uniform(0.0, hi, (n, d))
-    return p[np.argsort(p.sum(axis=1))]
+    if solvers.size == 0:
+        return 0.0
+    return float(np.max(np.min(solvers, axis=1)))
 
 
 # ---------------------------------------------------------------------------
