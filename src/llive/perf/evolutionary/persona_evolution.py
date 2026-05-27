@@ -495,6 +495,8 @@ class PersonaEvolutionResult:
     used_proxy_fitness: bool
     #: immigration で走行中に追加投入した persona id (resume + inject 時のみ非空)。
     injected_persona_ids: tuple[str, ...] = ()
+    #: QD-1/QD-2 成果アーカイブ (map_elites=True 時のみ非 None)。各世代評価後に submit 済。
+    map_elites_archive: "MAPElitesGrid | None" = None
 
     def to_dict(self) -> dict:
         return {
@@ -504,6 +506,11 @@ class PersonaEvolutionResult:
             "founder_ids": list(self.founder_ids),
             "used_proxy_fitness": self.used_proxy_fitness,
             "injected_persona_ids": list(self.injected_persona_ids),
+            "map_elites_archive": (
+                self.map_elites_archive.to_dict()
+                if self.map_elites_archive is not None
+                else None
+            ),
         }
 
 
@@ -544,6 +551,8 @@ def run_persona_evolution(
     # ---- lldarwin Stage1.5: lineage-niched 中立貯蔵庫 (絶滅 founder 系統を毎世代 re-inject) ----
     lineage_reservoir: bool = False,
     reinject_interval: int = 1,
+    # ---- lldarwin v2 QD-1/2: MAP-Elites 成果アーカイブを各世代 submit (単調成長) ----
+    map_elites: bool = False,
 ) -> PersonaEvolutionResult:
     """ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバ.
 
@@ -777,6 +786,32 @@ def run_persona_evolution(
             with founder_lineage_path.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
+    # ---- lldarwin v2 (QD-1/QD-2): MAP-Elites 成果アーカイブ ----
+    # 各世代評価後に全個体を submit し、cell 別 elite で多様性崩壊が構造的に起きない
+    # 単調成長アーカイブを作る (QD-2: 新 cell は既存 elite を消さない)。features は個体
+    # genome の思考因子 (factor_vector) から導出 = 個体フォーマットを拡張しない additive 配線。
+    map_elites_grid = None
+    if map_elites:
+        from llive.perf.evolutionary.pressures import factor_vector
+        from llive.perf.evolutionary.quality_diversity import (
+            MAPElitesGrid,
+            factor_map_elites_features,
+        )
+
+        map_elites_grid = MAPElitesGrid()
+        _base_on_gen_end = on_generation_end
+
+        def on_generation_end(pop: Population, stats) -> None:  # noqa: ANN001
+            if _base_on_gen_end is not None:
+                _base_on_gen_end(pop, stats)
+            for ind in pop.individuals:
+                if ind.fitness is None:
+                    continue
+                feats = factor_map_elites_features(factor_vector(ind.genome))
+                map_elites_grid.submit(
+                    ind, ind.score, feats, generation=int(pop.generation)
+                )
+
     # ---- EvolutionLoop (flat=default operators / genome3d=Genome3D operators) ----
     loop_kwargs: dict = {
         "fitness_fn": effective_fitness,
@@ -838,6 +873,7 @@ def run_persona_evolution(
         founder_ids=founder_ids,
         used_proxy_fitness=used_proxy,
         injected_persona_ids=injected_ids,
+        map_elites_archive=map_elites_grid,
     )
 
 

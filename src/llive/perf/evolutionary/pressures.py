@@ -21,14 +21,20 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
 from llive.benchmark.runtime_metadata import collect_runtime_metadata
 from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.individual import FitnessReport
+from llive.perf.evolutionary.lldarwin import (
+    DEFAULT_EXCLUDED_CRITERIA,
+    _infer_numeric_criteria,
+    _numeric_breakdown,
+)
 from llive.perf.evolutionary.llive_variant import THOUGHT_FACTOR_LABELS
+from llive.perf.evolutionary.population import Population
 from llive.perf.evolutionary.thought_factor_per_layer import NUM_THOUGHT_FACTORS
 
 _LABEL_IDX: dict[str, int] = {label: i for i, label in enumerate(THOUGHT_FACTOR_LABELS)}
@@ -48,6 +54,18 @@ def _factor_vector(genome: object) -> np.ndarray:
     if callable(as_array):
         return np.asarray(as_array(), dtype=np.float64)[:NUM_THOUGHT_FACTORS]
     raise TypeError(f"unsupported genome type for pressure proxy: {type(genome).__name__}")
+
+
+def factor_vector(genome: object) -> np.ndarray:
+    """個体 genome の思考因子ベクトル（公開 API; factor-subspace QD で使う）.
+
+    :class:`Genome3D` → ``c_factors`` を層平均した 10-vector / flat ``Genome`` →
+    ``as_array()`` の dims 0..9。
+    :class:`~llive.perf.evolutionary.quality_diversity.FactorSubspaceNovelty` の
+    ``factor_extractor`` に注入する（lldarwin_v2 経由）。循環 import を避けるため
+    selector でなく合成側 (lldarwin_v2) がこの関数を渡す。
+    """
+    return _factor_vector(genome)
 
 
 @dataclass(frozen=True)
@@ -158,8 +176,126 @@ def make_pressure_fitness(
     return fitness
 
 
+# ---------------------------------------------------------------------------
+# Phase 1-③ — 適応難易度 (条件カリキュラム) = パーセンタイル動的 minimal-criterion
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class AdaptivePercentileGate:
+    """パーセンタイル動的 minimal-criterion (適応難易度 / 条件カリキュラム).
+
+    設計正本: fullsense ``docs/research/lldarwin_v2_poc_marathon_2026_05_26.md``
+    §「飽和回避レシピ」① + 自己 PoC #1/#2。
+
+    各 pressure 軸の最低基準 (floor) を毎世代 **集団のその軸スコア分布の指定
+    パーセンタイル** に設定する。固定スカラー quiz が飽和して選択圧を失う 12h 病理
+    (best=1.0 飽和 → 遺伝的浮動 → monoculture) に対し、集団が改善すると floor も
+    追従して上がるため「ものさし」が飽和しない。
+
+    * **PoC #1**: 固定難易度は能力 0.627 で停滞 / 適応難易度 (集団 60 分位) は 0.952。
+    * **PoC #2**: 適応難易度 (勾配維持) と novelty (多様性維持) は **相補で両方必須**
+      (適応難易度×novelty で能力 0.881・多様性 0.316 を両立)。
+
+    :class:`~llive.perf.evolutionary.lldarwin.MinimalCriterionGate` と同じ
+    ``passes(breakdown) -> bool`` インターフェースを持つので
+    :class:`~llive.perf.evolutionary.lldarwin.MultiPressureSelector` が gate として
+    そのまま扱える。加えて ``update(population)`` を実装し、selector が世代ごとに 1 回
+    呼んで floor を再計算する (duck typing; ``MinimalCriterionGate`` は ``update`` を
+    持たないので影響を受けない = 後方互換)。全員 fail の世代は selector が gate を
+    無視するので **全滅は構造的に回避** される (要件 SEL-4)。
+
+    Attributes
+    ----------
+    percentile:
+        floor に使う集団分位 [0, 100]。marathon レシピは「集団 30-60 % 点」。既定 40。
+        大きいほど厳しい (上位ほど生存)。
+    axes:
+        floor を課す breakdown 軸名。空なら集団 breakdown から数値キーを動的抽出
+        (``exclude`` のキーは除外)。
+    higher_is_better:
+        各軸とも大きいほど良いか。既定 True。
+    ratchet:
+        True なら floor は単調非減少 (higher_is_better では上昇のみ)。集団が一時的に
+        退化しても基準が緩まない = 「飽和しない」(レシピ①)。False なら毎世代分位で
+        上書き (集団追従だが退化時に緩む)。既定 True。
+    exclude:
+        ``axes`` 自動抽出時に除外するキー。既定 :data:`DEFAULT_EXCLUDED_CRITERIA`
+        (``factor_score`` = argmax / ``nearest_persona_idx`` = カテゴリ index)。
+    """
+
+    percentile: float = 40.0
+    axes: tuple[str, ...] = ()
+    higher_is_better: bool = True
+    ratchet: bool = True
+    exclude: frozenset[str] = DEFAULT_EXCLUDED_CRITERIA
+    _thresholds: dict[str, float] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
+    _sig: tuple[int, tuple[str, ...]] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    def __post_init__(self) -> None:
+        if not (0.0 <= self.percentile <= 100.0):
+            raise ValueError(
+                f"percentile must be in [0, 100], got {self.percentile}"
+            )
+
+    @property
+    def thresholds(self) -> dict[str, float]:
+        """現在の floor (観測 / 監査可能性用)。update 前は空 = 全通過。"""
+        return dict(self._thresholds)
+
+    def update(self, population: Population) -> None:
+        """集団からこの世代の floor を再計算する (世代ごとに 1 回だけ).
+
+        selector が ``__call__`` のたびに呼んでも、population の (generation, ids)
+        署名で 1 世代 1 回だけ計算する。``ratchet`` のとき floor は前回値と比較して
+        単調側にのみ更新する。
+        """
+        individuals = list(population.individuals)
+        ids = tuple(ind.individual_id for ind in individuals)
+        sig = (int(getattr(population, "generation", 0)), ids)
+        if sig == self._sig:
+            return
+        self._sig = sig
+
+        axes = self.axes or _infer_numeric_criteria(individuals, self.exclude)
+        for axis in axes:
+            vals = [
+                bd[axis]
+                for ind in individuals
+                if axis in (bd := _numeric_breakdown(ind))
+            ]
+            if not vals:
+                continue
+            pct = float(np.percentile(np.asarray(vals, dtype=float), self.percentile))
+            old = self._thresholds.get(axis)
+            if old is None or not self.ratchet:
+                self._thresholds[axis] = pct
+            elif self.higher_is_better:
+                self._thresholds[axis] = max(old, pct)  # 改善で上昇のみ
+            else:
+                self._thresholds[axis] = min(old, pct)
+
+    def passes(self, breakdown: dict[str, float]) -> bool:
+        """``MinimalCriterionGate.passes`` 互換。floor 未確定 (update 前) は全通過."""
+        for axis, threshold in self._thresholds.items():
+            if axis not in breakdown:
+                continue
+            value = breakdown[axis]
+            if self.higher_is_better and value < threshold:
+                return False
+            if not self.higher_is_better and value > threshold:
+                return False
+        return True
+
+
 __all__ = [
     "LLM_WEAKNESS_PRESSURES",
+    "AdaptivePercentileGate",
     "ProxyPressure",
+    "factor_vector",
     "make_pressure_fitness",
 ]

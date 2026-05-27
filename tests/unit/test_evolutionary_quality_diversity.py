@@ -7,11 +7,13 @@ import numpy as np
 import pytest
 
 from llive.perf.evolutionary import (
+    FactorSubspaceNovelty,
     Genome,
     GenomeBounds,
     Individual,
     MAPElitesCell,
     MAPElitesGrid,
+    Population,
     PersonaComposition,
     PersonaOverlapPenalty,
     default_map_elites_features,
@@ -30,6 +32,49 @@ def _make_individual(seed: int = 0) -> Individual:
         rng.uniform(0.0, 1.0, size=3), bounds=bounds, labels=()
     )
     return Individual.from_genome(g)
+
+
+# ---------------------------------------------------------------------------
+# 0. FactorSubspaceNovelty (QD-3, PoC#6)
+# ---------------------------------------------------------------------------
+
+
+class TestFactorSubspaceNovelty:
+    """factor 部分空間 novelty = 意味次元の多様性を個別保護 (PoC#6)."""
+
+    @staticmethod
+    def _fac(genome: object) -> np.ndarray:
+        return np.asarray(genome.values, dtype=float)
+
+    def test_distant_factor_is_more_novel(self) -> None:
+        """factor 部分空間で archive から離れた個体ほど高 novelty."""
+        bounds = GenomeBounds(lower=(0.0,), upper=(1.0,))
+        fsn = FactorSubspaceNovelty(factor_extractor=self._fac, k=2)
+        near = [
+            Individual.from_genome(Genome.from_values([0.5], bounds=bounds, labels=()))
+            for _ in range(3)
+        ]
+        fsn.add_population(Population(individuals=near))
+        outlier = Individual.from_genome(
+            Genome.from_values([0.99], bounds=bounds, labels=())
+        )
+        nov = fsn.novelty_batch(Population(individuals=[*near, outlier]))
+        assert nov[-1] > nov[0]  # outlier は factor 部分空間で archive から遠い
+
+    def test_empty_archive_returns_max(self) -> None:
+        """archive 空なら novelty 1.0 (NoveltyScorer の最大値)."""
+        bounds = GenomeBounds(lower=(0.0,), upper=(1.0,))
+        fsn = FactorSubspaceNovelty(factor_extractor=self._fac)
+        pop = Population(
+            individuals=[
+                Individual.from_genome(Genome.from_values([0.5], bounds=bounds, labels=()))
+            ]
+        )
+        assert fsn.novelty_batch(pop)[0] == 1.0
+
+    def test_k_validation(self) -> None:
+        with pytest.raises(ValueError):
+            FactorSubspaceNovelty(factor_extractor=self._fac, k=0)
 
 
 # ---------------------------------------------------------------------------

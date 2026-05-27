@@ -261,6 +261,7 @@ from llive.perf.evolutionary.prompt_chromosome import (
     PromptChromosome,
 )
 from llive.perf.evolutionary.quality_diversity import (
+    FactorSubspaceNovelty,
     MAPElitesCell,
     MAPElitesGrid,
     PersonaOverlapPenalty,
@@ -400,6 +401,7 @@ __all__ = [
     "ExpertCompositionGenome",
     "ExpertCompositionMutation",
     "ExpertPanel",
+    "FactorSubspaceNovelty",
     "Fitness",
     "FitnessFn",
     "FitnessReport",

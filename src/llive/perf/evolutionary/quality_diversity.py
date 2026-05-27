@@ -36,18 +36,20 @@ CE-25 と CE-26 は同じ集団に対する 2 つの異なる多様性圧:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
 
+from llive.perf.evolutionary.diversity import NoveltyScorer
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.persona import (
     THOUGHT_FACTORS,
     PersonaComposition,
     persona_dissimilarity,
 )
+from llive.perf.evolutionary.population import Population
 
 # ---------------------------------------------------------------------------
 # CE-25 — PersonaOverlapPenalty
@@ -391,11 +393,98 @@ def default_map_elites_features(
     return (p1, p2, t1, t2)
 
 
+def factor_map_elites_features(
+    factor_affinity: Sequence[float] | np.ndarray,
+) -> tuple[float, float, float, float]:
+    """factor (思考因子) ベクトルから 4 軸 MAP-Elites features を導出 (genome 直接版).
+
+    :func:`default_map_elites_features` は :class:`PersonaComposition` 用だが、進化個体は
+    genome を持つ (composition を直接持たない)。本関数は factor 部分空間ベクトル
+    (例 ``pressures.factor_vector`` が返す思考因子 affinity) から persona 2 軸 (mean / std)
+    + thought 2 軸 (structurize / exploration) を計算し、:meth:`MAPElitesGrid.submit` の
+    ``features`` にそのまま渡せる形にする (QD-1/QD-2 成果アーカイブの runner submit 用)。
+
+    ``factor_structurize`` / ``factor_exploration`` の index を持たない短いベクトル
+    (テスト等) では mean で代替する。
+    """
+    aff = np.asarray(factor_affinity, dtype=np.float64)
+    if aff.size == 0:
+        return (0.5, 0.0, 0.5, 0.5)
+    mean = float(aff.mean())
+    std = float(aff.std())
+    struct = float(aff[_FACTOR_STRUCTURIZE_IDX]) if aff.size > _FACTOR_STRUCTURIZE_IDX else mean
+    explor = float(aff[_FACTOR_EXPLORATION_IDX]) if aff.size > _FACTOR_EXPLORATION_IDX else mean
+    return (mean, std, struct, explor)
+
+
+# ---------------------------------------------------------------------------
+# QD-3 — Factor-subspace novelty (意味次元の多様性を個別保護, PoC#6)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class FactorSubspaceNovelty:
+    """factor (意味次元) 部分空間の k-NN novelty (要件 QD-3, PoC#6).
+
+    設計正本: fullsense ``docs/research/lldarwin_v2_poc_marathon_2026_05_26.md`` §QD-3 +
+    ``docs/research/poc_factor_subspace_qd_2026_05_26.py``。
+
+    novelty / ε-lexicase は記述子**全体**の多様性は保つが、巨大 latent (中立次元) の
+    下では**意味次元 (思考因子) の多様性**を保証しない (factor drift; Agent A が挙げた
+    正直な限界)。本機構は ``factor_extractor`` で個体 genome から factor 部分空間ベクトル
+    (例: 思考因子 10-dim) を取り出し、append-only archive との k-NN 平均距離を別途
+    novelty として測る。全体 novelty とブレンドすると意味次元の多様性が個別保護される。
+
+    PoC#6 実証: full のみの novelty では factor_spread retention 49.5% に縮小 /
+    full + factor-subspace では 68.1% に改善 (drift をほぼ半減)。
+
+    内部で :class:`~llive.perf.evolutionary.diversity.NoveltyScorer` を factor 部分空間で
+    運用する (genome 全体でなく factor ベクトルを archive に蓄積する点だけが異なる)。
+    ``MultiPressureSelector`` が全体 novelty とこの factor novelty を各々 z-score 化して
+    ブレンドする (PoC#6 の raw 0.5/0.5 ブレンドを、部分空間ごとの距離 scale 差に頑健な
+    標準化後ブレンドへ改良; STD-1 の精神)。
+
+    Attributes
+    ----------
+    factor_extractor:
+        個体 ``genome`` → factor 部分空間ベクトル (np.ndarray) を返す callable。
+        循環 import 回避のため呼び出し側 (lldarwin_v2) が注入する。
+    k:
+        k-NN 近傍数。既定 5。
+    """
+
+    factor_extractor: Callable[[object], np.ndarray]
+    k: int = 5
+    _scorer: NoveltyScorer = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        if self.k < 1:
+            raise ValueError(f"k must be >= 1, got {self.k}")
+        self._scorer = NoveltyScorer(k=self.k)
+
+    def _vec(self, individual: Individual) -> np.ndarray:
+        return np.asarray(self.factor_extractor(individual.genome), dtype=np.float64)
+
+    def novelty_batch(self, population: Population) -> np.ndarray:
+        """集団全員の factor 部分空間 novelty (過去 archive との k-NN 平均距離)."""
+        return np.array(
+            [self._scorer.novelty(self._vec(ind)) for ind in population.individuals],
+            dtype=np.float64,
+        )
+
+    def add_population(self, population: Population) -> None:
+        """今世代の factor ベクトルを archive へ追加 (novelty は過去との差を測る)."""
+        for ind in population.individuals:
+            self._scorer.add_to_archive(self._vec(ind))
+
+
 __all__ = [
+    "FactorSubspaceNovelty",
     "MAPElitesCell",
     "MAPElitesGrid",
     "PersonaOverlapPenalty",
     "default_map_elites_features",
     "default_persona_features",
     "default_thought_features",
+    "factor_map_elites_features",
 ]

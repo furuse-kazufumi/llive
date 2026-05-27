@@ -142,3 +142,35 @@ def test_novelty_pressure_preserves_outlier() -> None:
     assert outlier.individual_id in chosen  # 外れ値が novelty 圧で生存
     # novelty が breakdown に書かれている (監査可能性)。
     assert "novelty" in outlier.fitness.breakdown
+
+
+def test_factor_subspace_novelty_blends_into_breakdown() -> None:
+    """factor_subspace_weight>0 + factor_extractor で factor 部分空間 novelty が
+    全体 novelty とブレンドされ breakdown['novelty'] に反映される (QD-3, PoC#6)."""
+    rng = np.random.default_rng(0)
+
+    def _fac(genome: object) -> np.ndarray:  # factor 部分空間 = genome.values (テスト用)
+        return np.asarray(genome.values, dtype=float)
+
+    near = [
+        Individual(genome=Genome(values=(0.50,), bounds=_BOUNDS)) for _ in range(5)
+    ]
+    outlier = Individual(genome=Genome(values=(0.99,), bounds=_BOUNDS))
+    for ind in [*near, outlier]:
+        ind.record_fitness(FitnessReport(score=0.5, breakdown={"archetype::a": 1.0}))
+    sel = MultiPressureSelector(
+        use_novelty=True, factor_subspace_weight=0.5, factor_extractor=_fac
+    )
+    pop = Population(individuals=[*near, outlier])
+    sel(pop, rng)  # gen0: archive 蓄積 (全体 + factor 部分空間)
+    pop2 = Population(individuals=[*near, outlier], generation=1)
+    chosen = {sel(pop2, rng).individual_id for _ in range(60)}
+    assert outlier.individual_id in chosen  # factor 外れ値も novelty 圧で生存
+    assert "novelty" in outlier.fitness.breakdown
+
+
+def test_factor_subspace_weight_out_of_range_rejected() -> None:
+    with pytest.raises(ValueError):
+        MultiPressureSelector(factor_subspace_weight=1.5)
+    with pytest.raises(ValueError):
+        MultiPressureSelector(factor_subspace_weight=-0.1)

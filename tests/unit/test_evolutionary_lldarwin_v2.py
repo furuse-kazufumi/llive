@@ -29,7 +29,10 @@ from llive.perf.evolutionary.lldarwin_v2 import (
 from llive.perf.evolutionary.persona import RESEARCH_METHODOLOGY_PERSONA_IDS
 from llive.perf.evolutionary.persona_evolution import run_persona_evolution
 from llive.perf.evolutionary.population import Population
-from llive.perf.evolutionary.pressures import make_pressure_fitness
+from llive.perf.evolutionary.pressures import (
+    AdaptivePercentileGate,
+    make_pressure_fitness,
+)
 
 _BOUNDS = GenomeBounds(lower=(0.0,), upper=(1.0,))
 
@@ -53,9 +56,14 @@ def test_default_config_is_confirmed_s1() -> None:
     assert cfg.novelty_k == 5
     assert cfg.lineage_reservoir is True  # 系統多様性は中立貯蔵庫で別途確保
     assert cfg.map_elites_archive is True  # QD-1/QD-2 成果アーカイブ
-    # factor-subspace QD (QD-3) は Phase 1 では未実装の placeholder = 既定 off (honest)。
-    assert cfg.factor_subspace_qd is False
+    # factor-subspace QD (QD-3, PoC#6) は Phase 1-① で実配線 = S1 完全構成で既定 on。
+    assert cfg.factor_subspace_qd is True
+    assert cfg.factor_subspace_weight == 0.5
     assert cfg.minimal_criterion == DEFAULT_MINIMAL_CRITERION
+    # Phase 1-③: 適応難易度 (条件カリキュラム) は S1 の核 = 既定 on (novelty と相補)。
+    assert cfg.adaptive_difficulty is True
+    assert cfg.difficulty_percentile == 40.0
+    assert cfg.difficulty_ratchet is True
 
 
 def test_build_selector_is_multipressure_with_novelty() -> None:
@@ -64,12 +72,14 @@ def test_build_selector_is_multipressure_with_novelty() -> None:
     assert isinstance(sel, MultiPressureSelector)
     assert sel.use_novelty is True  # novelty 配線
     assert sel.epsilon == 0.01  # ε-lexicase 配線
-    assert sel.gate is None  # 既定は gate なし (軸未指定)
+    # 既定で適応難易度 gate (S1 の核) が配線される (旧: gate なし)。
+    assert isinstance(sel.gate, AdaptivePercentileGate)
 
 
 def test_build_selector_wires_minimal_criterion_gate() -> None:
-    """minimal_criterion_axes を指定すると gate (MinimalCriterionGate) が配線される."""
+    """adaptive_difficulty=False + minimal_criterion_axes で固定 gate が配線される."""
     cfg = LLDarwinV2Config(
+        adaptive_difficulty=False,  # 固定 MinimalCriterionGate を得るため off
         minimal_criterion_axes=("typo_robustness::factor_consistency",),
         minimal_criterion=0.3,
     )
@@ -79,8 +89,55 @@ def test_build_selector_wires_minimal_criterion_gate() -> None:
 
 
 def test_build_gate_none_when_no_axes() -> None:
-    """軸未指定なら gate=None (過剰拘束を避ける既定)."""
-    assert LLDarwinV2Config().build_gate() is None
+    """adaptive_difficulty=False かつ軸未指定なら gate=None (過剰拘束を避ける)."""
+    assert LLDarwinV2Config(adaptive_difficulty=False).build_gate() is None
+
+
+def test_default_build_gate_is_adaptive() -> None:
+    """既定 (adaptive_difficulty=True) で build_gate が AdaptivePercentileGate を返す."""
+    gate = LLDarwinV2Config().build_gate()
+    assert isinstance(gate, AdaptivePercentileGate)
+    assert gate.percentile == 40.0
+    assert gate.ratchet is True
+    assert gate.axes == ()  # 軸未指定 = 集団から動的抽出
+
+
+def test_adaptive_difficulty_off_falls_back_to_fixed_gate() -> None:
+    """adaptive_difficulty=False なら固定 gate (軸指定時) / None (軸なし)."""
+    cfg = LLDarwinV2Config(
+        adaptive_difficulty=False,
+        minimal_criterion_axes=("a",),
+        minimal_criterion=0.5,
+    )
+    assert isinstance(cfg.build_gate(), MinimalCriterionGate)
+
+
+def test_difficulty_percentile_validation() -> None:
+    with pytest.raises(ValueError):
+        LLDarwinV2Config(difficulty_percentile=-1.0)
+    with pytest.raises(ValueError):
+        LLDarwinV2Config(difficulty_percentile=101.0)
+
+
+def test_build_selector_wires_factor_subspace_qd() -> None:
+    """既定 (factor_subspace_qd=True) で weight + extractor が selector に配線される (QD-3)."""
+    sel = build_lldarwin_v2_selector()
+    assert sel.factor_subspace_weight == 0.5
+    assert sel.factor_extractor is not None
+
+
+def test_factor_subspace_qd_off_disables_blend() -> None:
+    """factor_subspace_qd=False で weight 0 + extractor None (ブレンド無効 = 後方互換)."""
+    sel = build_lldarwin_v2_selector(LLDarwinV2Config(factor_subspace_qd=False))
+    assert sel.factor_subspace_weight == 0.0
+    assert sel.factor_extractor is None
+
+
+def test_factor_subspace_weight_validation() -> None:
+    with pytest.raises(ValueError):
+        LLDarwinV2Config(factor_subspace_weight=-0.1)
+    with pytest.raises(ValueError):
+        LLDarwinV2Config(factor_subspace_weight=1.5)
 
 
 def test_config_validation() -> None:
@@ -201,3 +258,33 @@ def test_v2_selector_with_reservoir_smoke() -> None:
     pop = res.evolution_result.final_population
     assert pop.generation >= 2
     assert pop.size == 10
+
+
+def test_run_populates_map_elites_archive() -> None:
+    """map_elites=True で各世代 submit され、成果アーカイブが返る (QD-1/QD-2)."""
+    res = run_persona_evolution(
+        RESEARCH_METHODOLOGY_PERSONA_IDS,
+        fitness_fn=make_pressure_fitness(),
+        is_proxy=True,
+        population_size=10,
+        generations=4,
+        seed=0,
+        selection=build_lldarwin_v2_selector(),
+        map_elites=True,
+    )
+    assert res.map_elites_archive is not None
+    assert res.map_elites_archive.n_filled >= 1  # 少なくとも 1 cell が埋まる
+    assert res.to_dict()["map_elites_archive"] is not None  # 観測 / 永続化可能
+
+
+def test_map_elites_archive_none_by_default() -> None:
+    """map_elites=False (既定) なら archive は None (後方互換)."""
+    res = run_persona_evolution(
+        RESEARCH_METHODOLOGY_PERSONA_IDS,
+        population_size=8,
+        generations=2,
+        seed=0,
+        selection=None,
+    )
+    assert res.map_elites_archive is None
+    assert res.to_dict()["map_elites_archive"] is None

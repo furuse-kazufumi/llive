@@ -19,6 +19,7 @@ argmax（``fitness_rich`` の ``nearest=max(sims)`` 単一化 = best=1.0 飽和�
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -27,6 +28,7 @@ from llive.perf.evolutionary.diversity import NoveltyScorer
 from llive.perf.evolutionary.individual import Individual
 from llive.perf.evolutionary.mating import LexicaseSelection
 from llive.perf.evolutionary.population import Population
+from llive.perf.evolutionary.quality_diversity import FactorSubspaceNovelty
 
 #: 個体ごとの導出値・カテゴリ index で、独立した選択圧 (pressure) ではないため
 #: lexicase の case から既定で除外するキー。``factor_score`` は max-archetype の
@@ -154,6 +156,13 @@ class MultiPressureSelector:
         行動 monoculture 0.05 を実証した核機構, 設計 §6 Stage1）。
     novelty_k:
         novelty の k-NN 近傍数。
+    factor_subspace_weight:
+        factor 部分空間 novelty のブレンド比 [0, 1]（QD-3）。0 で無効（既定）。>0 かつ
+        ``factor_extractor`` 指定時、全体 novelty と factor novelty を各々 z-score 化して
+        ``(1-w)·full + w·factor`` でブレンドし意味次元の多様性を個別保護する（PoC#6）。
+    factor_extractor:
+        個体 ``genome`` → factor 部分空間ベクトルを返す callable。循環 import 回避のため
+        呼び出し側（lldarwin_v2）が注入する。
     """
 
     criteria: tuple[str, ...] = ()
@@ -163,12 +172,33 @@ class MultiPressureSelector:
     exclude_criteria: frozenset[str] = DEFAULT_EXCLUDED_CRITERIA
     use_novelty: bool = False
     novelty_k: int = 5
+    factor_subspace_weight: float = 0.0
+    factor_extractor: Callable[[object], np.ndarray] | None = None
     _scorer: NoveltyScorer | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+    _factor_novelty: FactorSubspaceNovelty | None = field(
         default=None, init=False, repr=False, compare=False
     )
     _pop_sig: tuple[int, tuple[str, ...]] | None = field(
         default=None, init=False, repr=False, compare=False
     )
+
+    def __post_init__(self) -> None:
+        if not (0.0 <= self.factor_subspace_weight <= 1.0):
+            raise ValueError(
+                "factor_subspace_weight must be in [0, 1], got "
+                f"{self.factor_subspace_weight}"
+            )
+
+    @staticmethod
+    def _zscore(raw: np.ndarray) -> np.ndarray:
+        """集団内 z-score（分散ほぼ 0 = 無特徴は 0, SEL-1/STD-1）."""
+        mu = float(raw.mean())
+        sd = float(raw.std())
+        if sd <= 1e-12:
+            return np.zeros_like(raw)
+        return (raw - mu) / sd
 
     def _ensure_novelty(self, population: Population) -> None:
         """集団（世代）ごとに 1 回だけ novelty を計算し z-score 化して書き込む.
@@ -177,6 +207,12 @@ class MultiPressureSelector:
         集団内で z-score 化（STD-1）して「集団から外れた個体ほど高 novelty」を
         相対量にし、``breakdown['novelty']`` へ書く。``__call__`` は 1 世代に
         個体数ぶん呼ばれるため、population の (generation, ids) 署名で 1 回だけ計算。
+
+        ``factor_subspace_weight > 0`` かつ ``factor_extractor`` 指定時は factor 部分空間
+        novelty（QD-3, :class:`FactorSubspaceNovelty`）も計算し、全体 novelty と **各々
+        z-score 化してから** ``(1-w)·full + w·factor`` でブレンドして意味次元の多様性を
+        個別保護する（PoC#6）。部分空間ごとに距離 scale が異なるため raw でなく標準化後に
+        ブレンドする。
         """
         ids = tuple(ind.individual_id for ind in population.individuals)
         sig = (int(getattr(population, "generation", 0)), ids)
@@ -185,15 +221,20 @@ class MultiPressureSelector:
         self._pop_sig = sig
         if self._scorer is None:
             self._scorer = NoveltyScorer(k=self.novelty_k)
-        raw = self._scorer.novelty_batch(population)  # 過去世代 archive との距離
-        mu = float(raw.mean())
-        sd = float(raw.std())
-        for ind, value in zip(population.individuals, raw):
+        z = self._zscore(self._scorer.novelty_batch(population))  # 全体 novelty
+        if self.factor_subspace_weight > 0.0 and self.factor_extractor is not None:
+            if self._factor_novelty is None:
+                self._factor_novelty = FactorSubspaceNovelty(
+                    factor_extractor=self.factor_extractor, k=self.novelty_k
+                )
+            z_factor = self._zscore(self._factor_novelty.novelty_batch(population))
+            w = self.factor_subspace_weight
+            z = (1.0 - w) * z + w * z_factor  # 標準化後ブレンド (PoC#6 改良)
+            self._factor_novelty.add_population(population)
+        for ind, value in zip(population.individuals, z):
             if ind.fitness is None:
                 continue
-            ind.fitness.breakdown["novelty"] = (
-                (float(value) - mu) / sd if sd > 1e-12 else 0.0
-            )
+            ind.fitness.breakdown["novelty"] = float(value)
         # 採点後に今世代を archive へ追加（novelty は「過去との差」を測る）。
         self._scorer.add_population(population)
 
@@ -205,6 +246,12 @@ class MultiPressureSelector:
         if self.use_novelty:
             # novelty を breakdown に書いてから criteria を抽出（case に含める）。
             self._ensure_novelty(population)
+
+        # 適応 gate（例: pressures.AdaptivePercentileGate）は世代ごとに floor を
+        # 集団分位から再計算する。duck typing で ``update`` を持つ gate だけ呼ぶため、
+        # 固定 :class:`MinimalCriterionGate` は影響を受けない（後方互換）。
+        if self.gate is not None and hasattr(self.gate, "update"):
+            self.gate.update(population)
 
         criteria = self.criteria or _infer_numeric_criteria(
             candidates, self.exclude_criteria

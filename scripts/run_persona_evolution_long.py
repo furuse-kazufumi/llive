@@ -405,6 +405,7 @@ def main() -> int:
     # 中立貯蔵庫 (Stage1.5) / 再投入間隔は CLI 値を出発点に、v2 プリセットが既定 on にする。
     effective_lineage_reservoir = args.lineage_reservoir
     effective_reinject_interval = args.reinject_interval
+    effective_map_elites = False  # lldarwin-v2 が QD-1/2 成果アーカイブを既定 on にする
     if args.selection == "lldarwin":
         selection_obj = MultiPressureSelector(epsilon=0.01, use_novelty=args.novelty)
     elif args.selection == "lldarwin-v2":
@@ -417,6 +418,7 @@ def main() -> int:
         # reinject-interval は CLI 既定 (1) のままなら v2 既定を採用、明示変更があれば尊重。
         if args.reinject_interval == 1:
             effective_reinject_interval = v2_cfg.reinject_interval
+        effective_map_elites = v2_cfg.map_elites_archive  # QD-1/2 成果アーカイブ
 
     print(
         f"[run] personas={len(args.personas)} pop={args.population} "
@@ -455,6 +457,7 @@ def main() -> int:
             selection=selection_obj,
             lineage_reservoir=effective_lineage_reservoir,
             reinject_interval=effective_reinject_interval,
+            map_elites=effective_map_elites,
             max_wallclock_seconds=(
                 args.max_wallclock_seconds if args.max_wallclock_seconds and args.max_wallclock_seconds > 0 else None
             ),
@@ -469,6 +472,12 @@ def main() -> int:
         return 1
 
     _write_run_summary(args.out, status="completed", res=res)
+    # lldarwin v2 (QD-1/QD-2): 成果アーカイブを永続化 (観測 + 後段 MoA オーケストラ素材)。
+    map_elites_path = None
+    if res.map_elites_archive is not None and args.out is not None:
+        map_elites_path = args.out / "map_elites_archive.json"
+        with map_elites_path.open("w", encoding="utf-8") as fh:
+            json.dump(res.map_elites_archive.to_dict(), fh, ensure_ascii=False, indent=2)
     if res.injected_persona_ids:
         print(f"[immigration] injected mid-run: {list(res.injected_persona_ids)}")
     er = res.evolution_result
@@ -483,6 +492,11 @@ def main() -> int:
     print(f"winners          = {res.winners_path}")
     print(f"lineage          = {res.lineage_path}")
     print(f"generations.jsonl= {args.out / 'generations.jsonl'}")
+    if map_elites_path is not None:
+        print(
+            f"map_elites       = {map_elites_path} "
+            f"(cells={res.map_elites_archive.n_filled})"
+        )
     return 0
 
 
