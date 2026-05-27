@@ -175,6 +175,62 @@ def _build_turn_prompt(task: IntercodeTask, history: list[dict], max_turns: int,
 
 
 # ---------------------------------------------------------------------------
+# submit 前 self-check (算術退行修正; Task1 2026-05-28)
+# ---------------------------------------------------------------------------
+#
+# 算術/decode タスクの退行は「flag 本文を頭で当てて (誤って) submit」が原因。対策 =
+# **submit しようとした flag の本文 (picoCTF{...} の中身) が、それまでのコマンド stdout に
+# verbatim で現れているか**を確認する self-check gate。現れていなければ「頭で解いた未検証
+# 値」とみなし、submit を 1 度だけ却下して **強制 verify nudge** を注入する。これにより
+# モデルは ic18 の成功パターン (echo $((...)) で計算→stdout 観察→submit) に誘導され、
+# 算術/文字レベルの実行誤りが観察で消える (= tool-exec レバーを算術タスクにも効かせる)。
+#
+# 多層: (1) system prompt の規律 (rule 4/5) + (2) ループ gate (本機構)。gate は
+# ``max_self_checks`` 回だけ却下できる (無限ループ防止)。0 なら gate 無効 = 旧挙動。
+
+
+def _flag_body(flag: str) -> str:
+    """picoCTF{BODY} の BODY を返す (照合用; 無ければ全体)。"""
+    m = _PICO_RE.search(flag or "")
+    s = m.group(0) if m else (flag or "")
+    if "{" in s and s.endswith("}"):
+        return s[s.index("{") + 1: -1]
+    return s
+
+
+def _body_seen_in_history(body: str, history: list[dict]) -> bool:
+    """flag 本文 (BODY) が過去コマンドの stdout に verbatim 出現したか.
+
+    BODY が空 (= ``picoCTF{}``) は「検証不要」とみなさず False (= 未検証扱い)。
+    file-backed タスクは cat/grep の stdout に flag 全体が出るので自然に True になる。
+    算術/decode タスクは echo/python3 -c で BODY を print して初めて True になる。
+    """
+    body = (body or "").strip()
+    if not body:
+        return False
+    for h in history:
+        if body in (h.get("stdout") or ""):
+            return True
+    return False
+
+
+def _verify_nudge_prompt(flag: str, body: str) -> str:
+    """未検証 submit を却下し、flag 本文をコマンドで print させる強制 verify nudge。"""
+    return (
+        f"STOP. You tried to submit `{flag}` but its inner text `{body}` has NOT yet "
+        "appeared in the stdout of any command you ran. Do NOT submit values you worked "
+        "out in your head -- you make conversion/arithmetic mistakes there.\n"
+        "Run ONE shell command now that PRINTS the exact flag body to stdout so you can "
+        "read it, e.g.:\n"
+        "  python3 -c \"print(chr(0x70))\"     (hex -> ascii)\n"
+        "  echo $((0x3D))                       (hex -> decimal)\n"
+        "  python3 -c \"print(bin(42)[2:])\"    (decimal -> binary)\n"
+        "  echo SOME_B64 | base64 -d            (base64 decode)\n"
+        "Output EXACTLY ONE shell command (no submit yet)."
+    )
+
+
+# ---------------------------------------------------------------------------
 # モデル出力 → アクション解析 (submit / shell command)
 # ---------------------------------------------------------------------------
 
