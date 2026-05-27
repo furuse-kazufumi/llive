@@ -236,5 +236,177 @@ def test_retry_nudge_does_not_break_clean_solve():
     assert tr.solved is True
 
 
+# ---------------------------------------------------------------------------
+# persistent-session scaffold (opt-in; 実 Docker 未検証=環境待ち)
+#
+# ここでは subprocess を一切呼ばず、run_fn / exec_fn / rm_fn を差し替えて
+# ライフサイクル (start→複数 exec で状態持続→close で破棄) のロジックのみを検証する。
+# これは実 Docker の予言ではない ([[feedback_benchmark_honest_disclosure]])。
+# ---------------------------------------------------------------------------
+
+from poc_intercode_agentic import DockerExecResult  # noqa: E402
+
+
+class _FakeContainer:
+    """状態を持つ偽コンテナ — exec 間で書込が持続することを表現する (state persistence)。"""
+
+    def __init__(self):
+        self.started = False
+        self.removed = False
+        self.run_calls = []
+        self.exec_calls = []
+        self.fs = {}            # 揮発作業域 (tmpfs 相当)。exec 間で持続する。
+
+    def run_fn(self, argv, timeout):
+        # docker run -d ... が来た = 起動。
+        assert argv[:3] == ["docker", "run", "-d"]
+        assert "--network=none" in argv
+        # 書込が要るので --read-only は付けない (persistent 設計)。
+        assert "--read-only" not in argv
+        assert "--memory" in argv and "--pids-limit" in argv
+        self.started = True
+        self.run_calls.append(argv)
+
+    def exec_fn(self, command, timeout):
+        # ごく簡単なコマンドエミュ: `echo X > f` で書込、`cat f` で読出 (状態持続を示す)。
+        self.exec_calls.append(command)
+        cmd = command.strip()
+        if ">" in cmd and cmd.startswith("echo"):
+            # echo VALUE > NAME
+            value = cmd.split("echo", 1)[1].split(">")[0].strip()
+            name = cmd.split(">", 1)[1].strip()
+            self.fs[name] = value
+            return DockerExecResult(ran=True, stdout="", stderr="", returncode=0,
+                                    timed_out=False)
+        if cmd.startswith("cat "):
+            name = cmd.split(None, 1)[1].strip()
+            return DockerExecResult(ran=True, stdout=self.fs.get(name, ""),
+                                    stderr="", returncode=0, timed_out=False)
+        return DockerExecResult(ran=True, stdout="", stderr="", returncode=0,
+                                timed_out=False)
+
+    def rm_fn(self, name):
+        self.removed = True
+
+
+def _session(task_id=4, **kw):
+    fake = _FakeContainer()
+    sess = mt.PersistentContainerSession(
+        task_id=task_id, run_fn=fake.run_fn, exec_fn=fake.exec_fn,
+        rm_fn=fake.rm_fn, **kw)
+    return sess, fake
+
+
+def test_session_lifecycle_start_exec_close():
+    """start (1 回) → 複数 exec → close で rm。idempotent start も確認。"""
+    sess, fake = _session()
+    assert fake.started is False
+    sess.start()
+    assert fake.started is True
+    sess.start()  # idempotent: 2 回目は run_fn を呼ばない。
+    assert len(fake.run_calls) == 1
+    sess.exec("ls -la")
+    sess.exec("cat flag")
+    assert fake.exec_calls == ["ls -la", "cat flag"]
+    assert fake.removed is False
+    sess.close()
+    assert fake.removed is True
+    sess.close()  # idempotent: 2 回目は no-op。
+    assert fake.removed is True
+
+
+def test_session_state_persists_across_exec():
+    """ターンを跨いだ状態持続: turn t で書いたファイルを turn t+1 で読める。"""
+    sess, fake = _session()
+    sess.start()
+    sess.exec("echo hello_from_turn1 > note.txt")    # turn t: 書込
+    res = sess.exec("cat note.txt")                  # turn t+1: 読出 (持続)
+    assert res.stdout == "hello_from_turn1"
+    sess.close()
+
+
+def test_session_exec_auto_starts():
+    """start を明示しなくても最初の exec で自動起動する。"""
+    sess, fake = _session()
+    assert fake.started is False
+    sess.exec("ls")
+    assert fake.started is True
+    sess.close()
+
+
+def test_session_exec_after_close_is_fail_closed():
+    """close 後の exec は実行せず session_closed エラーを返す (fail-closed)。"""
+    sess, fake = _session()
+    sess.start()
+    sess.close()
+    res = sess.exec("ls")
+    assert res.ran is False
+    assert res.error == "session_closed"
+
+
+def test_session_context_manager_always_closes():
+    """with ブロックを抜けるとき (例外でも) 必ず close (rm) する (fail-closed)。"""
+    sess, fake = _session()
+    with pytest.raises(RuntimeError):
+        with sess:
+            assert fake.started is True
+            raise RuntimeError("boom inside session")
+    assert fake.removed is True
+
+
+def test_session_close_swallows_rm_errors():
+    """rm が例外を投げても close は握り潰す (ttl sleep が二重安全弁; 例外伝播しない)。"""
+    def _boom_rm(name):
+        raise RuntimeError("docker rm failed")
+
+    sess = mt.PersistentContainerSession(
+        task_id=4, run_fn=lambda a, t: None, exec_fn=lambda c, t: None,
+        rm_fn=_boom_rm)
+    sess.start()
+    sess.close()  # 例外を伝播しないこと。
+    assert sess._closed is True
+
+
+def test_run_multiturn_uses_injected_session():
+    """run_multiturn_task に session を注入すると command が session.exec 経由になる。
+
+    mock_script でモデル出力を与えつつ、command 実行のみ session に流す
+    (mock_script is None でないと _mock_exec が優先されるため、None + 注入 exec を使う)。
+    """
+    task = _file_backed_task()
+    fake = _FakeContainer()
+    # flag ファイルを偽コンテナに仕込む (cat flag で読めるように)。
+    fake.fs["flag"] = task.gold
+    sess = mt.PersistentContainerSession(
+        task_id=task.task_id, run_fn=fake.run_fn, exec_fn=fake.exec_fn,
+        rm_fn=fake.rm_fn)
+
+    # mock_script=None で実モデル経路を使うため responder を偽装する。
+    class _FakeResponder:
+        calls = 0
+        _backend = None
+        _max_tokens = 64
+
+    # _real_turn を差し替えて canned なモデル出力を返す (LLM ゼロ)。
+    outputs = iter(["ls -la", "cat flag", f"submit {task.gold}"])
+    orig_real_turn = mt._real_turn
+    mt._real_turn = lambda responder, system, prompt, model: next(outputs, "")
+    try:
+        tr = mt.run_multiturn_task(
+            task, max_turns=8, timeout=1.0, responder=_FakeResponder(),
+            model="fake", mock_script=None, max_self_checks=1,
+            max_retry_nudges=0, session=sess)
+    finally:
+        mt._real_turn = orig_real_turn
+
+    # command (ls/cat) が session.exec を通った。注入 session なので close は呼び出し側責任。
+    assert "ls -la" in fake.exec_calls
+    assert "cat flag" in fake.exec_calls
+    assert tr.solved is True
+    assert tr.stop_reason == "submit_correct"
+    sess.close()
+    assert fake.removed is True
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))
