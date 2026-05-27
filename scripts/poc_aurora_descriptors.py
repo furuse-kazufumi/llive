@@ -99,18 +99,29 @@ def generate_behaviors(
     Returns (behaviors b (n,d), rotation R ((d-2),(d-2)), latent (n,d)).
     """
     rng = np.random.default_rng(seed)
-    behaviors = np.empty((n, d))
-    # dims 0,1 = the handcoded descriptor's axes -> pure low-variance noise (the blind spot).
-    behaviors[:, :2] = rng.normal(0.0, lo_var, (n, 2))
-    # remaining d-2 dims = where the real behavior diversity lives.
     rest = d - 2
-    latent_rest = np.empty((n, rest))
     nf = min(n_factors, rest)
-    latent_rest[:, :nf] = rng.normal(0.0, hi_var, (n, nf))            # high-variance factors
-    latent_rest[:, nf:] = rng.normal(0.0, lo_var, (n, rest - nf))     # low-variance noise
-    R = _random_orthonormal(rest, rng)                               # rotate within the subspace
-    behaviors[:, 2:] = latent_rest @ R.T  # variance is NOT axis-aligned -> PCA must discover it
-    # full-D latent record (for diagnostics): [noise(2) | latent_rest]
+    # latent behavior factors: nf high-variance factors carry the REAL diversity, the rest
+    # are low-variance noise. These live in the (d-2) complementary subspace.
+    latent_rest = np.empty((n, rest))
+    latent_rest[:, :nf] = rng.normal(0.0, hi_var, (n, nf))           # high-variance factors
+    latent_rest[:, nf:] = rng.normal(0.0, lo_var, (n, rest - nf))    # low-variance noise
+
+    behaviors = np.empty((n, d))
+    # dims 0,1 = the handcoded descriptor's axes = the BLIND SPOT. They are a near-DEGENERATE
+    # (collinear) low-variance readout: both are the SAME high-variance factor scaled down by
+    # `lo_var`, plus a touch of independent noise. Result: dims 0,1 are highly correlated and
+    # low-variance, so binning on them collapses individuals onto a near-1D diagonal -> few
+    # occupied cells. This models a human who picked two axes that (a) barely vary and (b) are
+    # redundant with each other — a realistic bad descriptor choice (NOT pure i.i.d. noise,
+    # which would spuriously spread across the grid and inflate coverage).
+    shared = latent_rest[:, 0]                                       # one real factor
+    behaviors[:, 0] = lo_var * shared + rng.normal(0.0, lo_var * 0.1, n)
+    behaviors[:, 1] = lo_var * shared + rng.normal(0.0, lo_var * 0.1, n)
+    # remaining d-2 dims = where the real behavior diversity lives, ROTATED so the variance is
+    # NOT axis-aligned -> PCA (AURORA) must discover the directions, it can't read a coord off.
+    R = _random_orthonormal(rest, rng)
+    behaviors[:, 2:] = latent_rest @ R.T
     latent = np.hstack([behaviors[:, :2], latent_rest])
     return behaviors, R, latent
 
