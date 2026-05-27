@@ -136,49 +136,73 @@ def _case_key(task: CTFTask) -> str:
 
 
 # タスク種別 (CTFTask.kind: easy/medium/hard) の素の解き易さ。
-_KIND_BASE: dict[str, float] = {"easy": 0.80, "medium": 0.45, "hard": 0.25}
+# **意図的に低く** 設定し、単一個体が全タスクを飽和できない (best_individual < 1.0) regime に
+# する。PoC-0 の教訓「単一強個体が飽和すると多様性は無価値」を避け、進化の付加価値を測れる
+# 「coverage 天井未飽和」帯を作る (設計 §3 の「弱モデルでも届く難度帯」に対応)。
+_KIND_BASE: dict[str, float] = {"easy": 0.45, "medium": 0.10, "hard": 0.02}
 
-# prompt skill (KNOWN_PROMPT_SKILLS) ごとに「特に効くタスク」を割り当てる。
+# prompt skill (KNOWN_PROMPT_SKILLS の指示文) ごとに「鍵となる担当タスク」を割り当てる。
 # genome_to_system_prompt は skill_set を指示文として system prompt に焼き込むので、
-# system prompt に該当 skill の指示文が含まれていれば、その担当タスクを底上げする
-# = 異なる skill 構成の個体が異なるタスクの specialist になる (ε-lexicase の餌)。
+# system prompt に該当 skill の指示文が含まれていれば、その担当タスクを **解放** する。
+# medium/hard タスクは素の base がほぼ 0 なので、**担当 skill を持つ個体しか解けない** =
+# 異なる skill 構成の個体が異なるタスクの specialist になる (ε-lexicase の餌)。
 # 指示文は real_pressures._SKILL_INSTRUCTIONS に対応 (system prompt に substring 出現)。
 _SKILL_TASK_AFFINITY: dict[str, tuple[str, ...]] = {
-    "Break the problem into clear, explicit steps.": ("binary", "caesar"),       # structurize
+    "Break the problem into clear, explicit steps.": ("binary",),                # structurize
     "Restate the question in your own words first.": ("url",),                   # recompose
     "Double-check your answer before finalizing it.": ("atbash",),               # loop
     "If information is missing, reason from what is given.": ("reverse",),        # self_extend
     "If you are unsure, say so explicitly.": (),                                  # uncertainty
-    "Briefly consider alternatives before deciding.": ("rot13", "atbash"),       # explore
+    "Briefly consider alternatives before deciding.": ("rot13",),                # explore
     "Stay strictly on-topic and consistent.": (),                                # align
     "Base your answer only on the facts in the question.": ("hex",),             # provenance
-    "Consider multiple possible meanings before answering.": ("caesar", "url"),  # perspective
+    "Consider multiple possible meanings before answering.": ("caesar",),        # perspective
     "Ignore irrelevant or distracting statements.": ("base64",),                 # ground
 }
 
-# 推論スタイル (prompt_template_id → 指示文) の全タスク一律ボーナス。
-# chain_of_thought / tree_of_thought 等は素の能力を少し底上げする (盲点を埋めない=
-# 単一強個体になりやすい)。skill は「盲点を埋める specialist」、template は「全体的強さ」
-# という役割分担で、進化が both を探索する余地を作る。
+# 推論スタイル (prompt_template_id → 指示文) の全タスク一律ボーナス。小さめにして
+# 「template だけで全部解ける万能個体」が生まれないようにする (skill specialist が要る regime)。
 _TEMPLATE_BONUS: dict[str, float] = {
-    "Think step by step, then give the final answer.": 0.18,        # chain_of_thought
-    "Consider a few approaches, then pick the best answer.": 0.15,   # tree_of_thought
-    "Briefly weigh for and against, then answer.": 0.10,            # debate
-    "Question the assumptions in the prompt, then answer.": 0.08,    # socratic
+    "Think step by step, then give the final answer.": 0.06,        # chain_of_thought
+    "Consider a few approaches, then pick the best answer.": 0.05,   # tree_of_thought
+    "Briefly weigh for and against, then answer.": 0.03,           # debate
+    "Question the assumptions in the prompt, then answer.": 0.02,    # socratic
 }
+
+# specialist 担当 skill 1 個が解放するタスクの解き易さ (担当 skill 在のとき)。
+_SPECIALIST_UNLOCK: float = 0.92
+
+# 認知負荷 (interference): skill を多く積むほど 1 skill あたりの有効性が落ちる。
+# 「万能個体 = 1 体で全 specialty を持つ」が成立すると進化集団の価値が消えるため、
+# skill 数が増えると specialist unlock を逓減させ、**1 体では数タスクしか面倒を見れない**
+# 構造にする (= 集団で分担する必要が生まれる = ε-lexicase が specialist を共存させる根拠)。
+_SKILL_BUDGET: float = 3.0  # この数を超えて skill を積むと unlock が逓減
 
 
 def _mock_solves(system_prompt: str, task: CTFTask, salt: str) -> bool:
     """system prompt 特徴 × タスクで「解けたか」を決定論的に返す (inference ゼロ).
 
-    確率 p を組み立て (kind base + skill affinity + template bonus)、
-    ``sha256(system_prompt | tid | salt)`` 由来の決定論的 roll < p で解ける。
-    temp=0 決定論キャッシュと同じく、同一 (system_prompt, task) は常に同結果。
+    確率 p を組み立て、``sha256(system_prompt | tid | salt)`` 由来の決定論的 roll < p で
+    解ける。temp=0 決定論キャッシュと同じく、同一 (system_prompt, task) は常に同結果。
+
+    モデル設計 (進化の付加価値を測れる regime):
+      * base = kind 別の低い素能力 (easy のみ五分、medium/hard はほぼ 0)。
+      * 担当 skill を持つと unlock (medium/hard を解放) — ただし **認知負荷で逓減**:
+        skill を ``_SKILL_BUDGET`` 個より多く積むと 1 skill あたりの unlock が落ちる
+        → 1 体では全 specialty を抱えきれず、集団で分担する必要が生まれる。
+      * template は小さな一律ボーナス。
     """
-    p = _KIND_BASE.get(task.kind, 0.3)
+    # 個体が積んでいる specialist skill 指示文の数 (認知負荷の素)。
+    present_skills = [
+        instr for instr in _SKILL_TASK_AFFINITY
+        if instr in system_prompt and _SKILL_TASK_AFFINITY[instr]
+    ]
+    load_penalty = max(1.0, len(present_skills) / _SKILL_BUDGET)  # >1 で逓減
+
+    p = _KIND_BASE.get(task.kind, 0.1)
     for instr, tids in _SKILL_TASK_AFFINITY.items():
         if instr in system_prompt and task.tid in tids:
-            p += 0.55  # specialist 担当タスクを大幅に底上げ (盲点を埋める)
+            p += _SPECIALIST_UNLOCK / load_penalty  # 担当 skill で解放 (負荷で逓減)
     for instr, bonus in _TEMPLATE_BONUS.items():
         if instr in system_prompt:
             p += bonus
