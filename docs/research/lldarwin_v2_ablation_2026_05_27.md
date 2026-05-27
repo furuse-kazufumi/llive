@@ -47,8 +47,8 @@
 
 ## 4. 破綻しない最小コア候補
 
-削減候補 (寄与率 < 0.005、外しても破綻リスク低): no_adaptive, no_factor_sub, no_map_elites
-最小コア (残すべき要素): no_novelty, no_reservoir
+削減候補 (寄与率 < 0.005 または有害方向、外しても破綻リスク低): adaptive_difficulty, factor_subspace_qd, map_elites_archive
+最小コア (残すべき要素): novelty, lineage_reservoir
 
 > **破綻境界**: 複数要素を同時に外す組み合わせ実験 (combo ablation) は
 > 本実験スコープ外。最小コア候補は 1 要素 off の推定のみ。
@@ -58,7 +58,7 @@
 
 frozen = 「寄与率が一定以上あり、proxy スケールで挙動が安定している = チューニング不要で凍結できる」要素。
 
-frozen 候補: no_novelty, no_reservoir
+frozen 候補 (要素名): novelty, lineage_reservoir
 
 ## 6. Proxy 限界 (Honest Disclosure)
 
@@ -82,71 +82,71 @@ proxy 結果は実 LLM 実験の仮説生成と設計ガイドとして使う。
 ### baseline
 
 ```
-{"best_score_final": 1.0, "best_score_increment": 0.00042710098964404697, "diversity_l2_mean": 15.909040755972471, "diversity_l2_final": 10.804643138588313, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 38, "saturation_gen": 5, "config_name": "baseline", "seed": 0, "elapsed_s": 1.193}
-{"best_score_final": 1.0, "best_score_increment": 0.003790306958189049, "diversity_l2_mean": 7.895619590168291, "diversity_l2_final": 10.990329496215834, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 35, "saturation_gen": 11, "config_name": "baseline", "seed": 1, "elapsed_s": 1.229}
-{"best_score_final": 0.9997683908751853, "best_score_increment": 0.0012239018236958055, "diversity_l2_mean": 8.613892779709717, "diversity_l2_final": 14.47918917293831, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 33, "saturation_gen": 2, "config_name": "baseline", "seed": 2, "elapsed_s": 1.4}
-{"best_score_final": 1.0, "best_score_increment": 2.813881640029159e-05, "diversity_l2_mean": 10.680566925540889, "diversity_l2_final": 6.523697478166955, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 43, "saturation_gen": 3, "config_name": "baseline", "seed": 3, "elapsed_s": 1.175}
-{"best_score_final": 1.0, "best_score_increment": 0.012255756428164788, "diversity_l2_mean": 9.42168308096755, "diversity_l2_final": 10.151452192721, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 29, "saturation_gen": 1, "config_name": "baseline", "seed": 4, "elapsed_s": 1.175}
+{"best_score_final": 1.0, "best_score_increment": 0.00042710098964404697, "diversity_l2_mean": 15.909040755972471, "diversity_l2_final": 10.804643138588313, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 38, "saturation_gen": 5, "config_name": "baseline", "seed": 0, "elapsed_s": 1.298}
+{"best_score_final": 1.0, "best_score_increment": 0.003790306958189049, "diversity_l2_mean": 7.895619590168291, "diversity_l2_final": 10.990329496215836, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 35, "saturation_gen": 11, "config_name": "baseline", "seed": 1, "elapsed_s": 1.349}
+{"best_score_final": 0.9997683908751853, "best_score_increment": 0.0012239018236958055, "diversity_l2_mean": 8.613892779709719, "diversity_l2_final": 14.479189172938312, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 33, "saturation_gen": 2, "config_name": "baseline", "seed": 2, "elapsed_s": 1.259}
+{"best_score_final": 1.0, "best_score_increment": 2.813881640029159e-05, "diversity_l2_mean": 10.680566925540887, "diversity_l2_final": 6.523697478166956, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 43, "saturation_gen": 3, "config_name": "baseline", "seed": 3, "elapsed_s": 1.277}
+{"best_score_final": 1.0, "best_score_increment": 0.012255756428164788, "diversity_l2_mean": 9.42168308096755, "diversity_l2_final": 10.151452192721, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 29, "saturation_gen": 1, "config_name": "baseline", "seed": 4, "elapsed_s": 1.299}
 ```
 
 ### no_novelty
 
 ```
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 21.852063921148353, "diversity_l2_final": 20.30049899776287, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 33, "saturation_gen": 5, "config_name": "no_novelty", "seed": 0, "elapsed_s": 0.729}
-{"best_score_final": 0.9857578909702917, "best_score_increment": 0.016549324241421637, "diversity_l2_mean": 2.8688086775256987, "diversity_l2_final": 7.6662369768946155, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 27, "saturation_gen": 1, "config_name": "no_novelty", "seed": 1, "elapsed_s": 0.694}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 5.790081411310453, "diversity_l2_final": 8.260256685290337, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 28, "saturation_gen": 27, "config_name": "no_novelty", "seed": 2, "elapsed_s": 0.673}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 6.160514447009811, "diversity_l2_final": 8.494588261725484, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 42, "saturation_gen": 2, "config_name": "no_novelty", "seed": 3, "elapsed_s": 0.708}
-{"best_score_final": 0.9945219655797742, "best_score_increment": 0.015607155588759358, "diversity_l2_mean": 1.9268815317273555, "diversity_l2_final": 2.9095515954284283, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 26, "saturation_gen": 1, "config_name": "no_novelty", "seed": 4, "elapsed_s": 0.661}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 21.852063921148357, "diversity_l2_final": 20.300498997762872, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 33, "saturation_gen": 5, "config_name": "no_novelty", "seed": 0, "elapsed_s": 0.77}
+{"best_score_final": 0.9857578909702917, "best_score_increment": 0.016549324241421637, "diversity_l2_mean": 2.8688086775256987, "diversity_l2_final": 7.6662369768946155, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 27, "saturation_gen": 1, "config_name": "no_novelty", "seed": 1, "elapsed_s": 0.737}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 5.790081411310453, "diversity_l2_final": 8.260256685290335, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 28, "saturation_gen": 27, "config_name": "no_novelty", "seed": 2, "elapsed_s": 0.75}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 6.160514447009811, "diversity_l2_final": 8.494588261725484, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 42, "saturation_gen": 2, "config_name": "no_novelty", "seed": 3, "elapsed_s": 0.784}
+{"best_score_final": 0.9945219655797742, "best_score_increment": 0.015607155588759358, "diversity_l2_mean": 1.9268815317273555, "diversity_l2_final": 2.9095515954284283, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 26, "saturation_gen": 1, "config_name": "no_novelty", "seed": 4, "elapsed_s": 0.716}
 ```
 
 ### no_adaptive
 
 ```
-{"best_score_final": 0.9992226493843077, "best_score_increment": 0.00035024962604823795, "diversity_l2_mean": 18.768318814800583, "diversity_l2_final": 11.417148335421018, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 48, "saturation_gen": 5, "config_name": "no_adaptive", "seed": 0, "elapsed_s": 0.942}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 17.533514512098538, "diversity_l2_final": 18.177384315913947, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 56, "saturation_gen": 5, "config_name": "no_adaptive", "seed": 1, "elapsed_s": 0.939}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 16.477962630961592, "diversity_l2_final": 12.729722939308495, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 42, "saturation_gen": 1, "config_name": "no_adaptive", "seed": 2, "elapsed_s": 0.942}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 12.477542601442808, "diversity_l2_final": 10.714311277327607, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 40, "saturation_gen": 3, "config_name": "no_adaptive", "seed": 3, "elapsed_s": 0.957}
-{"best_score_final": 0.9994894240688426, "best_score_increment": 0.0, "diversity_l2_mean": 14.754357672688155, "diversity_l2_final": 6.74490372118303, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 42, "saturation_gen": 2, "config_name": "no_adaptive", "seed": 4, "elapsed_s": 1.014}
+{"best_score_final": 0.9992226493843077, "best_score_increment": 0.00035024962604823795, "diversity_l2_mean": 18.768318814800583, "diversity_l2_final": 11.417148335421018, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 48, "saturation_gen": 5, "config_name": "no_adaptive", "seed": 0, "elapsed_s": 0.924}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 17.533514512098538, "diversity_l2_final": 18.17738431591395, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 56, "saturation_gen": 5, "config_name": "no_adaptive", "seed": 1, "elapsed_s": 0.906}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 16.477962630961592, "diversity_l2_final": 12.729722939308493, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 42, "saturation_gen": 1, "config_name": "no_adaptive", "seed": 2, "elapsed_s": 0.913}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 12.477542601442808, "diversity_l2_final": 10.714311277327605, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 40, "saturation_gen": 3, "config_name": "no_adaptive", "seed": 3, "elapsed_s": 0.909}
+{"best_score_final": 0.9994894240688426, "best_score_increment": 0.0, "diversity_l2_mean": 14.754357672688155, "diversity_l2_final": 6.744903721183029, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 42, "saturation_gen": 2, "config_name": "no_adaptive", "seed": 4, "elapsed_s": 0.912}
 ```
 
 ### no_factor_sub
 
 ```
-{"best_score_final": 0.9996369534400655, "best_score_increment": 0.00035024962604823795, "diversity_l2_mean": 14.980672338058492, "diversity_l2_final": 15.827345704010364, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 38, "saturation_gen": 5, "config_name": "no_factor_sub", "seed": 0, "elapsed_s": 1.035}
-{"best_score_final": 1.0, "best_score_increment": 0.0045498453558778795, "diversity_l2_mean": 13.402846583237213, "diversity_l2_final": 11.495388207371956, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 37, "saturation_gen": 2, "config_name": "no_factor_sub", "seed": 1, "elapsed_s": 0.953}
-{"best_score_final": 1.0, "best_score_increment": 0.0030944682062928885, "diversity_l2_mean": 12.210354637235143, "diversity_l2_final": 15.362665790032718, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 40, "saturation_gen": 2, "config_name": "no_factor_sub", "seed": 2, "elapsed_s": 0.943}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 11.762331725225287, "diversity_l2_final": 9.743100003324061, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 38, "saturation_gen": 3, "config_name": "no_factor_sub", "seed": 3, "elapsed_s": 0.922}
-{"best_score_final": 1.0, "best_score_increment": 0.011463673595695334, "diversity_l2_mean": 10.061369383549033, "diversity_l2_final": 9.213813303373696, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 28, "saturation_gen": 1, "config_name": "no_factor_sub", "seed": 4, "elapsed_s": 0.907}
+{"best_score_final": 0.9996369534400655, "best_score_increment": 0.00035024962604823795, "diversity_l2_mean": 14.980672338058492, "diversity_l2_final": 15.827345704010368, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 38, "saturation_gen": 5, "config_name": "no_factor_sub", "seed": 0, "elapsed_s": 0.896}
+{"best_score_final": 1.0, "best_score_increment": 0.0045498453558778795, "diversity_l2_mean": 13.402846583237213, "diversity_l2_final": 11.495388207371954, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 37, "saturation_gen": 2, "config_name": "no_factor_sub", "seed": 1, "elapsed_s": 0.899}
+{"best_score_final": 1.0, "best_score_increment": 0.0030944682062928885, "diversity_l2_mean": 12.210354637235143, "diversity_l2_final": 15.362665790032718, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 40, "saturation_gen": 2, "config_name": "no_factor_sub", "seed": 2, "elapsed_s": 0.899}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 11.762331725225287, "diversity_l2_final": 9.743100003324061, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 38, "saturation_gen": 3, "config_name": "no_factor_sub", "seed": 3, "elapsed_s": 0.902}
+{"best_score_final": 1.0, "best_score_increment": 0.011463673595695334, "diversity_l2_mean": 10.061369383549033, "diversity_l2_final": 9.213813303373698, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 28, "saturation_gen": 1, "config_name": "no_factor_sub", "seed": 4, "elapsed_s": 0.901}
 ```
 
 ### no_reservoir
 
 ```
-{"best_score_final": 1.0, "best_score_increment": 0.029128412867368447, "diversity_l2_mean": 10.712712242012056, "diversity_l2_final": 1.7989061784024396, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 44, "saturation_gen": 2, "config_name": "no_reservoir", "seed": 0, "elapsed_s": 1.398}
-{"best_score_final": 1.0, "best_score_increment": 0.020885390221394018, "diversity_l2_mean": 3.2886790043336687, "diversity_l2_final": 4.493010246405994, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 31, "saturation_gen": 15, "config_name": "no_reservoir", "seed": 1, "elapsed_s": 1.166}
-{"best_score_final": 1.0, "best_score_increment": 0.0012845724539209957, "diversity_l2_mean": 3.9912288556088535, "diversity_l2_final": 3.8334047601709473, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 26, "saturation_gen": 14, "config_name": "no_reservoir", "seed": 2, "elapsed_s": 1.191}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 5.8700042961966545, "diversity_l2_final": 4.498710411212614, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 35, "saturation_gen": 3, "config_name": "no_reservoir", "seed": 3, "elapsed_s": 1.418}
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 3.508843679784038, "diversity_l2_final": 2.6056770971028733, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 27, "saturation_gen": 1, "config_name": "no_reservoir", "seed": 4, "elapsed_s": 1.16}
+{"best_score_final": 1.0, "best_score_increment": 0.029128412867368447, "diversity_l2_mean": 10.712712242012056, "diversity_l2_final": 1.7989061784024396, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 44, "saturation_gen": 2, "config_name": "no_reservoir", "seed": 0, "elapsed_s": 1.138}
+{"best_score_final": 1.0, "best_score_increment": 0.020885390221394018, "diversity_l2_mean": 3.2886790043336687, "diversity_l2_final": 4.493010246405994, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 31, "saturation_gen": 15, "config_name": "no_reservoir", "seed": 1, "elapsed_s": 1.185}
+{"best_score_final": 1.0, "best_score_increment": 0.0012845724539209957, "diversity_l2_mean": 3.9912288556088535, "diversity_l2_final": 3.8334047601709473, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 26, "saturation_gen": 14, "config_name": "no_reservoir", "seed": 2, "elapsed_s": 1.158}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 5.8700042961966545, "diversity_l2_final": 4.498710411212614, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 35, "saturation_gen": 3, "config_name": "no_reservoir", "seed": 3, "elapsed_s": 1.195}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 3.508843679784038, "diversity_l2_final": 2.6056770971028733, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 27, "saturation_gen": 1, "config_name": "no_reservoir", "seed": 4, "elapsed_s": 1.151}
 ```
 
 ### no_map_elites
 
 ```
-{"best_score_final": 1.0, "best_score_increment": 0.00042710098964404697, "diversity_l2_mean": 15.909040755972471, "diversity_l2_final": 10.804643138588313, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 5, "config_name": "no_map_elites", "seed": 0, "elapsed_s": 1.172}
-{"best_score_final": 1.0, "best_score_increment": 0.003790306958189049, "diversity_l2_mean": 7.895619590168291, "diversity_l2_final": 10.990329496215834, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 11, "config_name": "no_map_elites", "seed": 1, "elapsed_s": 1.49}
-{"best_score_final": 0.9997683908751853, "best_score_increment": 0.0012239018236958055, "diversity_l2_mean": 8.613892779709717, "diversity_l2_final": 14.47918917293831, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 2, "config_name": "no_map_elites", "seed": 2, "elapsed_s": 1.264}
-{"best_score_final": 1.0, "best_score_increment": 2.813881640029159e-05, "diversity_l2_mean": 10.680566925540889, "diversity_l2_final": 6.523697478166955, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 3, "config_name": "no_map_elites", "seed": 3, "elapsed_s": 1.135}
-{"best_score_final": 1.0, "best_score_increment": 0.012255756428164788, "diversity_l2_mean": 9.42168308096755, "diversity_l2_final": 10.151452192721, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 1, "config_name": "no_map_elites", "seed": 4, "elapsed_s": 1.259}
+{"best_score_final": 1.0, "best_score_increment": 0.00042710098964404697, "diversity_l2_mean": 15.909040755972471, "diversity_l2_final": 10.804643138588313, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 5, "config_name": "no_map_elites", "seed": 0, "elapsed_s": 1.119}
+{"best_score_final": 1.0, "best_score_increment": 0.003790306958189049, "diversity_l2_mean": 7.895619590168291, "diversity_l2_final": 10.990329496215836, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 11, "config_name": "no_map_elites", "seed": 1, "elapsed_s": 1.153}
+{"best_score_final": 0.9997683908751853, "best_score_increment": 0.0012239018236958055, "diversity_l2_mean": 8.613892779709719, "diversity_l2_final": 14.479189172938312, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 2, "config_name": "no_map_elites", "seed": 2, "elapsed_s": 1.127}
+{"best_score_final": 1.0, "best_score_increment": 2.813881640029159e-05, "diversity_l2_mean": 10.680566925540887, "diversity_l2_final": 6.523697478166956, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 3, "config_name": "no_map_elites", "seed": 3, "elapsed_s": 1.132}
+{"best_score_final": 1.0, "best_score_increment": 0.012255756428164788, "diversity_l2_mean": 9.42168308096755, "diversity_l2_final": 10.151452192721, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 1, "config_name": "no_map_elites", "seed": 4, "elapsed_s": 1.138}
 ```
 
 ### tournament
 
 ```
-{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 7.482997176223712, "diversity_l2_final": 2.377685572758299, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 3, "config_name": "tournament", "seed": 0, "elapsed_s": 0.179}
-{"best_score_final": 0.982422868230759, "best_score_increment": 0.03990467849039858, "diversity_l2_mean": 7.6061410340677735, "diversity_l2_final": 0.3533311029670953, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 2, "config_name": "tournament", "seed": 1, "elapsed_s": 0.224}
-{"best_score_final": 1.0, "best_score_increment": 0.012531452095094986, "diversity_l2_mean": 7.877301300697762, "diversity_l2_final": 1.2796670534918537, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 5, "config_name": "tournament", "seed": 2, "elapsed_s": 0.23}
-{"best_score_final": 1.0, "best_score_increment": 0.007218071559198513, "diversity_l2_mean": 13.42335697916233, "diversity_l2_final": 7.915108874523356, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 10, "config_name": "tournament", "seed": 3, "elapsed_s": 0.183}
-{"best_score_final": 1.0, "best_score_increment": 0.0027664704392480477, "diversity_l2_mean": 7.221622152415116, "diversity_l2_final": 6.005381863766781, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 4, "config_name": "tournament", "seed": 4, "elapsed_s": 0.17}
+{"best_score_final": 1.0, "best_score_increment": 0.0, "diversity_l2_mean": 7.482997176223712, "diversity_l2_final": 2.377685572758299, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 3, "config_name": "tournament", "seed": 0, "elapsed_s": 0.174}
+{"best_score_final": 0.982422868230759, "best_score_increment": 0.03990467849039858, "diversity_l2_mean": 7.6061410340677735, "diversity_l2_final": 0.3533311029670953, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 2, "config_name": "tournament", "seed": 1, "elapsed_s": 0.158}
+{"best_score_final": 1.0, "best_score_increment": 0.012531452095094986, "diversity_l2_mean": 7.877301300697762, "diversity_l2_final": 1.2796670534918537, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 5, "config_name": "tournament", "seed": 2, "elapsed_s": 0.158}
+{"best_score_final": 1.0, "best_score_increment": 0.007218071559198513, "diversity_l2_mean": 13.42335697916233, "diversity_l2_final": 7.915108874523356, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 10, "config_name": "tournament", "seed": 3, "elapsed_s": 0.155}
+{"best_score_final": 1.0, "best_score_increment": 0.0027664704392480477, "diversity_l2_mean": 7.221622152415116, "diversity_l2_final": 6.005381863766781, "final_pop_size": 24, "stopped_reason": "max_generations", "actual_generations": 40, "map_elites_n_filled": 0, "saturation_gen": 4, "config_name": "tournament", "seed": 4, "elapsed_s": 0.174}
 ```
 
 </details>

@@ -499,14 +499,23 @@ def _generate_report(
         and cfg not in removable
     ]
 
+    _cfg_to_elem_short = {
+        "no_novelty": "novelty",
+        "no_adaptive": "adaptive_difficulty",
+        "no_factor_sub": "factor_subspace_qd",
+        "no_reservoir": "lineage_reservoir",
+        "no_map_elites": "map_elites_archive",
+    }
     if removable:
         lines.append(
-            "削減候補 (寄与率 < 0.005、外しても破綻リスク低): "
-            + ", ".join(removable)
+            "削減候補 (寄与率 < 0.005 または有害方向、外しても破綻リスク低): "
+            + ", ".join(_cfg_to_elem_short.get(c, c) for c in removable)
         )
         lines.append(
             "最小コア (残すべき要素): "
-            + ", ".join(essential if essential else ["— (全要素削減候補)"])
+            + ", ".join(
+                _cfg_to_elem_short.get(c, c) for c in (essential if essential else ["—"])
+            )
         )
     else:
         lines.append("全要素が寄与率 >= 0.005: 最小コアは baseline 全構成が妥当。")
