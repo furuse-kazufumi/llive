@@ -114,6 +114,39 @@ def _ensure_utf8_stdout() -> None:
 
 
 # ---------------------------------------------------------------------------
+# 拡張バッテリ (additive; poc_ctf_coverage.py は編集しない)
+# ---------------------------------------------------------------------------
+#
+# 既定 BATTERY は 8 タスク。だが coverage が「scarce」(= 単一個体も均等多様ミックスも
+# 取りこぼす) regime を作るには **タスク数を specialist skill 数 (10) に近づけ、各タスクが
+# 別々の specialist skill を要する** ようにするのが効く。poc_orchestra.py の _EXTRA_TASKS
+# パターンに倣い、本ファイル内で additive にタスクを足す (オラクルは flag 一致で不変)。
+# 追加タスクは「残りの specialist skill 担当」を埋め、各 skill ↔ 1 タスクの 1 対 1 被覆を作る。
+
+_INSTR_X = "Decode/solve and output the recovered CTF flag in the exact form flag{...}."
+
+_EXTRA_BATTERY: tuple[CTFTask, ...] = (
+    # 残り specialist skill 担当を hard で追加 (素 base ≒0 → 担当 skill 持ちしか解けない)。
+    CTFTask("dec_ascii", "hard",
+            f"{_INSTR_X}\nDecimal ASCII codes: 102 108 97 103 123 100 101 99 125",
+            "flag{dec}"),
+    CTFTask("morse", "hard",
+            f"{_INSTR_X}\nMorse: ..-. .-.. .- --. {{ -- --- .-. ... . }}",
+            "flag{morse}"),
+)
+
+
+def build_battery(include_extra: bool, max_tasks: int | None) -> list[CTFTask]:
+    """評価バッテリを構築する (BATTERY を流用 + 任意で _EXTRA_BATTERY を additive 連結)."""
+    tasks = list(BATTERY)
+    if include_extra:
+        tasks += list(_EXTRA_BATTERY)
+    if max_tasks is not None:
+        tasks = tasks[:max_tasks]
+    return tasks
+
+
+# ---------------------------------------------------------------------------
 # task → lexicase case 名 (breakdown キー)
 # ---------------------------------------------------------------------------
 #
