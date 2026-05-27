@@ -1141,6 +1141,13 @@ def main(argv: list[str] | None = None) -> int:
             "機構ハードニング (binary sanitize): cat した binary の garbage 観察を検出し短い "
             "誘導 note に置換 (strings/file/xxd へ)。ic21 の binary cat→観察汚染→no_action 退行の "
             "真因対処。flag は text なので sanitize で失われない (strings/grep 出力は text=不変)。",
+            "persistent-session (--persistent-session; opt-in/既定 off): 1 タスク=1 長命コンテナを "
+            "docker run -d で起動し各ターン docker exec で状態 (tmpfs 書込/cwd) を持続させる scaffold。"
+            "多段 exploitation (ファイル生成→次ターン利用) 用。**実 Docker 未検証 (GPU/実機進化 "
+            "スケール待ちで保留中)** — start→複数 exec で状態持続→close で破棄のライフサイクル・ロジック "
+            "のみ mock テスト (exec_fn 差替え) で検証済みで、docker run -d/exec/rm -f は未実測。実機投入 "
+            "時は tmpfs のターン跨ぎ持続・network=none 下の exec 隔離・異常終了時の rm -f 確実性 (孤児 "
+            "leak の有無) を必ず実測すること。既定 (stateless) 経路は無改変 ([[feedback_benchmark_honest_disclosure]])。",
             "弱 on-prem モデルが multi-turn でも実 picoCTF を多く解けない可能性は十分ある "
             "([[feedback_benchmark_honest_disclosure]])。1 タスクでも file-backed が解ければ "
             "1-turn 0/7 からの前進 = 非飽和帯の確認。",
