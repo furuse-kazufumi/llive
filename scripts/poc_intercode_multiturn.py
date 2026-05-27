@@ -631,20 +631,27 @@ def main(argv: list[str] | None = None) -> int:
         if not args.no_warmup:
             responder.warmup([args.model])
 
+    _mock_script_for = {
+        "ideal": _mock_ideal_script,
+        "naive": _mock_naive_script,
+        "inhead": _mock_inhead_script,
+    }
+
     t0 = time.time()
     traces: list[TaskTrace] = []
     for task in tasks:
         script = None
         if mock:
-            script = (_mock_ideal_script(task) if args.mock_strategy == "ideal"
-                      else _mock_naive_script(task))
+            script = _mock_script_for[args.mock_strategy](task)
         tr = run_multiturn_task(
             task, max_turns=args.max_turns, timeout=args.timeout,
             responder=responder, model=args.model, mock_script=script,
+            max_self_checks=args.max_self_checks,
         )
         traces.append(tr)
         print(f"  [{tr.tid}] {tr.kind:18s} file_backed={tr.file_backed!s:5s} "
               f"solved={'PASS' if tr.solved else 'fail':4s} turns={tr.n_turns} "
+              f"selfcheck={tr.self_checks_used} "
               f"stop={tr.stop_reason} flag={tr.submitted_flag!r}")
 
     elapsed = time.time() - t0
