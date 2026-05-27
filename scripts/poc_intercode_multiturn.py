@@ -464,6 +464,152 @@ def parse_action(text: str) -> Action:
 
 
 # ---------------------------------------------------------------------------
+# persistent-session scaffold (opt-in; 既定 off=stateless; 後方互換)
+# ---------------------------------------------------------------------------
+#
+# 🔴 実 Docker 未検証 (環境待ち; [[feedback_benchmark_honest_disclosure]])
+# ----------------------------------------------------------------------
+# 既定は stateless (各ターン `docker run --rm`; ファイル冒頭 §「コンテナセッション」参照)。
+# 多段 exploitation (ターン t でファイル生成 → ターン t+1 で利用) には状態持続が要る。
+# 本クラスは **1 タスク = 1 つの長命コンテナ** を起動し、各ターン `docker exec` で同一
+# 名前空間にコマンドを流し、タスク終了時に `docker rm -f` で確実に破棄する scaffold。
+#
+# **このクラスのライフサイクル・ロジックは mock テスト (`exec_fn` 差替え) で検証済みだが、
+# 実 Docker (`docker run -d` / `docker exec` / `docker rm -f`) では未検証** (GPU/実機進化
+# スケール待ちで保留中)。実機投入時は「`docker exec` で tmpfs 書込がターンを跨いで持続
+# するか」「`--network=none` 下で `docker exec` が想定どおり隔離されるか」「異常終了時に
+# `docker rm -f` が確実に走るか (孤児コンテナ leak の有無)」を必ず実測すること。
+#
+# 隔離設計 (RAPTOR fail-closed; stateless 経路と同じ防御を最大限維持)
+# ------------------------------------------------------------------
+#   * `docker run -d`        : detach で長命起動 (`--rm` は exit 時自動破棄だが exec モデル
+#                              では明示 `rm -f` で破棄するため付けない; 代わりに finally で確実 rm)。
+#   * `--network=none`       : ネットワーク完全遮断 (stateless と同じ)。
+#   * `--read-only` は **外す**: 多段で作業ファイル書込が要るため。代わりに rootfs 全体ではなく
+#                              `--tmpfs /tmp` + `--tmpfs /ctf-work` の **揮発・容量制限された
+#                              書込域のみ** を与える (永続ボリュームは mount しない)。
+#   * `--memory/--cpus/--pids-limit` : 資源 DoS 防止 (stateless と同じ)。
+#   * 起動コマンドは `sleep <ttl>` : コンテナを ttl 秒だけ生かす保険 (host 側 rm 失敗時の
+#                              二重安全弁; プロセス無しの detach は即 exit してしまうため)。
+#   * `docker exec` の inner も `cd /ctf/<id>; <command>` を `bash -c (args, shell=False)` で
+#                              **引数として** 渡す (host shell に触れない; stateless と同じ)。
+#   * untrusted code 規律: モデル生成コマンドは exec で渡すのみ。host 直接実行しない。
+
+
+def _new_container_name() -> str:
+    """衝突しない一意なコンテナ名 (rm のターゲット特定用)。"""
+    return f"intercode-mt-{uuid.uuid4().hex[:12]}"
+
+
+@dataclass
+class PersistentContainerSession:
+    """1 タスク = 1 長命コンテナ。各ターン docker exec、終了時に確実に破棄する.
+
+    opt-in scaffold (既定 off=stateless)。**実 Docker 未検証 (環境待ち)** — ライフサイクル
+    (start→複数 exec で状態持続→close で破棄) のロジックのみ mock テスト済み。
+
+    依存注入: ``exec_fn`` を渡すと subprocess を呼ばずそれを使う (テスト用)。本番は
+    ``exec_fn=None`` で内部の docker サブプロセス実装を使う。
+    """
+    task_id: int
+    image: str = _IMAGE
+    timeout: float = 30.0
+    ttl: int = 3600                # コンテナ自動終了の保険 (秒)。host rm 失敗時の二重安全弁。
+    name: str = field(default_factory=_new_container_name)
+    exec_fn: object | None = None  # callable(command:str, timeout:float)->DockerExecResult (DI)
+    run_fn: object | None = None   # callable(argv:list[str], timeout:float)->int (起動 DI)
+    rm_fn: object | None = None    # callable(name:str)->None (破棄 DI)
+    _started: bool = field(default=False, init=False)
+    _closed: bool = field(default=False, init=False)
+
+    # -- ライフサイクル ----------------------------------------------------
+    def start(self) -> None:
+        """長命コンテナを detach 起動する (idempotent)。"""
+        if self._started:
+            return
+        argv = [
+            "docker", "run", "-d",
+            "--name", self.name,
+            "--network=none",
+            "--tmpfs", "/tmp:rw,size=64m",
+            "--tmpfs", "/ctf-work:rw,size=64m",
+            "--memory", "512m",
+            "--cpus", "1.0",
+            "--pids-limit", "128",
+            self.image,
+            # detach はプロセスが無いと即 exit する → sleep で ttl 秒だけ生かす保険。
+            "sleep", str(int(self.ttl)),
+        ]
+        if self.run_fn is not None:
+            self.run_fn(argv, self.timeout)  # type: ignore[operator]
+        else:
+            subprocess.run(argv, capture_output=True, timeout=self.timeout,
+                           shell=False, check=True)
+        self._started = True
+
+    def exec(self, command: str) -> DockerExecResult:
+        """長命コンテナ内でコマンドを実行する (状態は前ターンの exec から持続)。
+
+        ``cd /ctf/<id>; <command>`` を ``bash -c`` の **引数** として渡す (host shell 不可触)。
+        """
+        if self._closed:
+            return DockerExecResult(ran=False, stdout="", stderr="session closed",
+                                    returncode=None, timed_out=False,
+                                    error="session_closed")
+        if not self._started:
+            self.start()
+        if self.exec_fn is not None:
+            return self.exec_fn(command, self.timeout)  # type: ignore[operator]
+        return self._docker_exec(command)
+
+    def _docker_exec(self, command: str) -> DockerExecResult:
+        """実 Docker exec (実機未検証; 環境待ち)。stateless run_shell と同じ防御で渡す。"""
+        inner = f"cd /ctf/{int(self.task_id)} 2>/dev/null; {command}"
+        argv = ["docker", "exec", self.name, "bash", "-c", inner]
+        try:
+            proc = subprocess.run(argv, capture_output=True, timeout=self.timeout,
+                                  shell=False, check=False)
+        except subprocess.TimeoutExpired as exc:
+            out = (exc.stdout or b"")[:64 * 1024]
+            err = (exc.stderr or b"")[:64 * 1024]
+            return DockerExecResult(ran=True, stdout=out.decode("utf-8", "replace"),
+                                    stderr=err.decode("utf-8", "replace"),
+                                    returncode=None, timed_out=True)
+        except Exception as exc:  # noqa: BLE001
+            return DockerExecResult(ran=False, stdout="", stderr=str(exc),
+                                    returncode=None, timed_out=False,
+                                    error=f"{type(exc).__name__}: {exc}")
+        out = proc.stdout[:64 * 1024].decode("utf-8", "replace")
+        err = proc.stderr[:64 * 1024].decode("utf-8", "replace")
+        return DockerExecResult(ran=True, stdout=out, stderr=err,
+                                returncode=proc.returncode, timed_out=False)
+
+    def close(self) -> None:
+        """コンテナを確実に破棄する (fail-closed; idempotent; 例外を握り潰す)。"""
+        if self._closed:
+            return
+        self._closed = True
+        # start していなくても、名前指定 rm は安全 (存在しなければ no-op 扱い)。
+        try:
+            if self.rm_fn is not None:
+                self.rm_fn(self.name)  # type: ignore[operator]
+            else:
+                subprocess.run(["docker", "rm", "-f", self.name],
+                               capture_output=True, timeout=self.timeout,
+                               shell=False, check=False)
+        except Exception:  # noqa: BLE001  (破棄失敗でも ttl の sleep が二重安全弁)
+            pass
+
+    # context manager: with で必ず close (fail-closed)。
+    def __enter__(self) -> "PersistentContainerSession":
+        self.start()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
+
+
+# ---------------------------------------------------------------------------
 # multi-turn ループ本体
 # ---------------------------------------------------------------------------
 
