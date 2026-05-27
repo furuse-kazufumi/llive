@@ -368,10 +368,12 @@ def run(
                 "grid_occupied_niches": grid["occupied_niches"],
                 "grid_coverage": grid["coverage"],
                 "grid_qd_score": grid["qd_score"],
+                "grid_mean_elite_fitness": grid["mean_elite_fitness"],
                 "cvt_total_niches": cvt["total_niches"],
                 "cvt_occupied_niches": cvt["occupied_niches"],
                 "cvt_coverage": cvt["coverage"],
                 "cvt_qd_score": cvt["qd_score"],
+                "cvt_mean_elite_fitness": cvt["mean_elite_fitness"],
             }
         )
 
