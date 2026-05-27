@@ -949,6 +949,9 @@ def _write_summary(path: Path, out: dict) -> None:
             elif r["action"] == "submit_rejected":
                 lines.append(f"- turn {r['turn']}: submit `{r['command']}` "
                              f"**REJECTED by self-check** ({r.get('stderr_head', '')})")
+            elif r["action"] == "retry_nudge":
+                lines.append(f"- turn {r['turn']}: (no parseable action) "
+                             f"**retry-nudge injected**")
             elif r["action"] == "command":
                 head = (r["stdout_head"] or "").replace("\n", " ")[:120]
                 extra = ""
