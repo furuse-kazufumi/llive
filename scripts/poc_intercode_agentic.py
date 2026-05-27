@@ -331,7 +331,9 @@ _MOCK_SHELL: dict[int, str] = {
     23: "grep -ao 'picoCTF{[^}]*}' file | head -1",
     17: "printf 'picoCTF{%s}\\n' \"$(printf '\\x70')\"",
     18: "printf 'picoCTF{%d}\\n' $((0x3D))",
-    19: "printf 'picoCTF{%s}\\n' \"$(echo 'obase=2;42' | bc)\"",
+    # 純 bash で 42 → 2 進 (image に bc が無いため; これ自体が image の実態知見)。
+    19: ("printf 'picoCTF{%s}\\n' "
+         "\"$(D=42; B=; while [ $D -gt 0 ]; do B=$((D%2))$B; D=$((D/2)); done; echo $B)\""),
     22: "echo 'picoCTF{'$(echo bDNhcm5fdGgzX3IwcDM1 | base64 -d)'}'",
 }
 # no_tool で頭の中でも解ける (ファイル不要・ハッシュ接尾辞なし) タスクの mock 正答。
