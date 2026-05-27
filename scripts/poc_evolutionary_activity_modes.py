@@ -349,10 +349,13 @@ class ModesVerdict:
     a_new_neutral: float
     a_new_saturated: float
     a_shadow: float
+    supra_count_adaptive: float        # adaptive: supra-neutral component 種数 (tail)
+    supra_count_neutral: float         # neutral:  supra-neutral component 種数 (tail)
+    supra_count_saturated: float       # saturated: supra-neutral component 種数 (tail)
     adaptive_supra_neutral: bool       # adaptive A_new ≫ neutral A_new
     neutral_near_zero: bool            # neutral A_new ≈ 0
-    adaptive_exceeds_saturated: bool   # adaptive A_new(tail) > saturated, or saturated decayed
-    saturated_decayed: bool            # saturated は初期のみ (ピークから減衰)
+    adaptive_exceeds_saturated: bool   # adaptive supra-count > saturated (新規獲得が続く)
+    saturated_decayed: bool            # saturated A_new はピークから減衰 (補助シグナル)
     modes_detects_openendedness: bool  # 総合判定 = 計器が開放端的活動を区別できるか
 
 
