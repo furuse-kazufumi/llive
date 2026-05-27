@@ -318,7 +318,7 @@ from llive.perf.evolutionary.svg_render import (
     load_metrics_jsonl,
     render_evolution_svg,
 )
-from llive.perf.evolutionary.substrate_adapters import (
+from llive.perf.evolutionary.experimental.substrate_adapters import (
     BciSubstrateAdapter,
     CythonSubstrateAdapter,
     NeuromorphicSubstrateAdapter,
