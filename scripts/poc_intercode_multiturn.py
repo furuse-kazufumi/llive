@@ -792,6 +792,20 @@ def main(argv: list[str] | None = None) -> int:
                      "未検証とみなし submit を却下→強制 verify nudge を注入 (echo/python3 -c "
                      "で本文を print させる)。算術/decode の頭で解く実行誤りを観察で消す。"),
         },
+        "retry_nudge": {
+            "max_retry_nudges": args.max_retry_nudges,
+            "total_nudges": total_retry_nudges,
+            "nudged(tids)": retry_nudged_tids,
+            "rescued_to_pass(tids)": retry_rescued,
+            "note": ("解析不能出力 (no_action) で即終了 (FAIL) せず、「コマンド1つ or submit "
+                     "を1行で出せ」と矯正する nudge を max_retry_nudges 回まで注入。綴り損ない "
+                     "1 ターンで挽回機会を失う退行 (ic21/22) を救済。max_turns で全体は有界。"),
+        },
+        "binary_sanitize": {
+            "note": ("cat した binary (ELF 等) の garbage 観察 (U+FFFD/制御文字) を検出し "
+                     "短い note に置換して strings/file/xxd へ誘導。観察履歴の文脈汚染による "
+                     "no_action 退行 (ic21) の真因対処。テキスト出力はそのまま通す。"),
+        },
         "solved_task_ids": solved_ids,
         "file_backed_solved(tids)": fb_solved,
         "new_solves_vs_no_tool(tids)": new_solves,
