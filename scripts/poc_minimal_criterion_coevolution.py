@@ -361,7 +361,7 @@ def _print(out: dict) -> None:
     print("\n===== Minimal Criterion Coevolution (MCC) PoC — PROXY, deterministic =====")
     print(f"gens={c['gens']} pop={c['pop']} task_pop={c['task_pop']} d={c['d']} "
           f"seed={c['seed']} band=[{c['band_lo']},{c['band_hi']}] mc_solve={c['mc_solve']}")
-    print("\n[capability frontier — hardest fixed-probe difficulty any solver dominates]")
+    print("\n[capability frontier — hardest uniform task any solver dominates = max_i min_d cap]")
     print(f"  {'arm':10s} {'gen0':>8s} {'mid':>8s} {'final':>8s} {'tail20%':>8s} {'tailslope':>10s}")
     mid = len(mf) // 2
     print(f"  {'MCC':10s} {mf[0]:8.3f} {mf[mid]:8.3f} {mf[-1]:8.3f} "
