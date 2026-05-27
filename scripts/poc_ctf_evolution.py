@@ -386,7 +386,10 @@ def even_diverse_baseline(
     inds: list[Individual] = []
     for _ in range(n):
         # c_prompt をランダム近傍サンプリングで多様化 (進化ではなく一発生成)。
-        c_prompt = base.c_prompt.sample_neighborhood(rng, step_size=0.5)
+        # step_size=0.3: 適度な多様化 (PoC-0 の「均等多様化」= 盲点に集中せず広く薄く振る対照)。
+        # 大きすぎる step は 1 体が多 skill を抱える「lucky shotgun」になり進化との差が消えるため、
+        # 現実的な「進化なしで多様な集団を作っただけ」を再現する穏当な step にする。
+        c_prompt = base.c_prompt.sample_neighborhood(rng, step_size=0.3)
         # 念のため最低 1 skill 保証 (空 skill_set は無特徴になりがち)。
         if not c_prompt.skill_set:
             c_prompt = PromptChromosome(
