@@ -499,12 +499,15 @@ def make_ctf_fitness(
         if key in score_cache:
             return score_cache[key]
         if mock:
-            if model_resolver is None:
-                # single-family mock: モデル非依存の従来 skill→task 構造。
-                ok = _mock_solves(system, task, salt)
-            else:
-                # cross-family mock: モデル aware (per-model decorrelated specialty)。
-                ok = _mock_solves_model(system, task, model, salt)
+            # PoC-CTF-1b: single / cross **両条件とも同じモデル aware mock** を使い、
+            # 差分を「使うモデルが固定 1 つか / 個体ごと進化するか」**だけ**に絞る (fair
+            # comparison)。single-family は全個体が同一 fixed model を渡されるので、その
+            # モデルの specialty + kind base + skill unlock しか被覆できない = 他 family の
+            # 盲点 (behavioral entanglement) が残る regime になる。cross-family は個体ごと
+            # モデルが分散し ε-lexicase が別 family specialist を共存させて盲点を埋める。
+            # (旧 PoC-CTF-1 のモデル非依存 _mock_solves は skill→task のみで family 概念が
+            #  無いため、cross-family 命題の対照には使わない。)
+            ok = _mock_solves_model(system, task, model, salt)
         else:
             assert real_responder is not None
             # RealResponder は Sampler.persona で PERSONAS を引くが、進化個体の真の
