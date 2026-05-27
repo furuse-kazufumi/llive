@@ -417,15 +417,17 @@ def _print(out: dict) -> None:
           f"{v['mcc_tail_frontier']:8.3f} {v['mcc_quarter_growth']:+9.4f}")
     print(f"  {'fixed':10s} {xf[0]:8.3f} {xf[mid]:8.3f} {xf[-1]:8.3f} "
           f"{v['fixed_tail_frontier']:8.3f} {v['fixed_quarter_growth']:+9.4f}")
-    print(f"\n  MCC / fixed tail ratio = {v['mcc_over_fixed_ratio']:.2f}x")
-    print(f"  thresholds/quarter ({v['quarter_len_gens']} gens): "
-          f"climb>={v['climb_threshold_per_quarter']:.3f} plateau<{v['plateau_threshold_per_quarter']:.3f}")
-    print(f"  mcc_exceeds_fixed_tail = {v['mcc_exceeds_fixed_tail']}")
-    print(f"  mcc_still_climbing     = {v['mcc_still_climbing']} "
-          f"(quarter growth {v['mcc_quarter_growth']:+.4f})")
-    print(f"  mcc_outpaces_drift     = {v['mcc_outpaces_drift']}")
-    print(f"  fixed_is_plateau       = {v['fixed_is_plateau']} "
-          f"(quarter growth {v['fixed_quarter_growth']:+.4f})")
+    print(f"\n  battery ceiling (fixed static difficulty) = {v['battery_ceiling']:.3f}")
+    print(f"  MCC / fixed tail ratio = {v['mcc_over_fixed_ratio']:.2f}x "
+          f"(divergence threshold >= {v['divergence_ratio_threshold']:.1f}x)")
+    print(f"  fixed_confined_to_battery = {v['fixed_confined_to_battery']} "
+          f"(fixed tail {v['fixed_tail_frontier']:.3f} < 2*ceiling {2 * v['battery_ceiling']:.3f})")
+    print(f"  mcc_broke_ceiling         = {v['mcc_broke_ceiling']} "
+          f"(MCC tail {v['mcc_tail_frontier']:.3f} > 2*ceiling {2 * v['battery_ceiling']:.3f})")
+    print(f"  mcc_diverges              = {v['mcc_diverges']}")
+    print(f"  (transparency) MCC quarter-growth {v['mcc_quarter_growth']:+.4f}  "
+          f"fixed quarter-growth {v['fixed_quarter_growth']:+.4f}  "
+          f"[noisy — NOT a verdict gate]")
     print(f"\n  VERDICT mcc_avoids_saturation = {v['mcc_avoids_saturation']}")
     if v["mcc_avoids_saturation"]:
         print("  → 共進化 (タスク自動カリキュラム) は固定タスク選択が早期に陥る飽和を回避し、"
