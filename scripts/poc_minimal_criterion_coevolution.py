@@ -384,18 +384,28 @@ def run(
         "honest_notes": [
             "proxy toy・実 llive 非接触 (import ゼロ)。共進化が飽和を回避できる『機構の "
             "feasibility』を示すもので、実 LLM 進化での飽和回避を主張するものではない。",
-            "frontier metric = max_i min_d capability (= 解ける最難の uniform task)。"
-            "両 arm の solver capability のみに依存し task 集合に依存しない = fair かつ "
-            "unbounded (非飽和 arm はいくらでも climb 可能)。",
+            "frontier metric = mean top-k (min_d capability) (= cohort が解ける最難の "
+            "uniform task)。両 arm の solver capability のみに依存し task 集合に依存しない "
+            "= fair かつ unbounded (非飽和 arm はいくらでも climb 可能)。",
             "mutation は zero-mean Gaussian。capability の net 上昇は selection のみに由来し "
-            "mutation bias では上がらない。ゆえに選択差が消えた arm (=飽和) は climb が止まる。",
+            "mutation bias では上がらない (clip(0,None) が weakest dim に僅かな上方ドリフトを "
+            "与える点は honest な artifact)。",
+            "HONEST: frontier の instantaneous tail SLOPE / quarter-growth は単一 cohort "
+            "extreme 統計ゆえ seed 毎に符号が揺れる (band reshuffle の stair-step)。実測で "
+            "確認したため verdict は noisy な微分でなく『飽和の OUTCOME』(両 frontier の "
+            "divergence: fixed は battery ceiling 近傍に閉じ込められ MCC はその 2x 超へ拡張) "
+            "で判定する。slope/quarter-growth は透明性のため JSON に残すが gate には使わない。",
             "solve 判定は per-dim dominance の binary。実タスクは graded であり、この "
             "binary minimal criterion は素地のみ。",
+            "fixed arm の『飽和』も完全な平坦ではない: 高次元 dominance + 有限静的 battery "
+            "では全 task 完全制覇が稀で僅かな残留選択ドリフトが残る。ゆえに『平坦 plateau』 "
+            "ではなく『battery ceiling 近傍に閉じ込められ MCC に桁違いに引き離される』が "
+            "正確な記述 (これが falsifiable な contrast)。",
             "次段 = 実 llive の task (苦手軸 / CTF) と個体を共進化させる配線。",
             "既存 AdaptivePercentileGate との違い: gate は固定 task 集合に対する閾値を "
             "適応させるだけ。MCC は task 自体を生成・淘汰して frontier 近傍の難度を "
             "創発させる (= auto-curriculum) 点が本質的に異なる。",
-            "fixed arm が飽和しなければ命題は falsified — その場合 honest にそう報告する "
+            "verdict が False なら命題は inconclusive/falsified — honest にそう報告する "
             "(mcc_avoids_saturation=False で表現)。",
         ],
     }
