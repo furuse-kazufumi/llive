@@ -297,23 +297,18 @@ def run(
     band_lo: int = 1,
     band_hi: int = 12,
     step: float = 0.05,
-    task_step: float = 0.04,
-    probe_n: int = 200,
-    probe_hi: float = 3.0,
+    task_step: float = 0.05,
     battery_hi: float = 0.6,
 ) -> dict:
-    """Run both arms with a shared fair probe and return the full result dict."""
-    probe_rng = np.random.default_rng(seed + 9999)  # probe independent of either arm
-    probe = _make_probe(d, probe_n, probe_hi, probe_rng)
-
+    """Run both arms (shared fair unbounded frontier metric) and return the result dict."""
     mcc = run_mcc(
         gens=gens, pop=pop, task_pop=task_pop, d=d, seed=seed,
         mc_solve=mc_solve, band_lo=band_lo, band_hi=band_hi,
-        step=step, task_step=task_step, probe=probe,
+        step=step, task_step=task_step,
     )
     fixed = run_fixed(
         gens=gens, pop=pop, task_pop=task_pop, d=d, seed=seed,
-        mc_solve=mc_solve, step=step, probe=probe, battery_hi=battery_hi,
+        mc_solve=mc_solve, step=step, battery_hi=battery_hi,
     )
     verdict = build_verdict(mcc, fixed, gens=gens)
 
