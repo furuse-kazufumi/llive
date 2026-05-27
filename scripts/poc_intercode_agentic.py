@@ -79,7 +79,7 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from poc_ctf_coverage import CTFTask, flag_oracle  # noqa: E402
+from poc_ctf_coverage import CTFTask  # noqa: E402  (flag_oracle は CTFTask.__post_init__ 内で使用)
 from poc_ctf_toolexec import RealResponder, extract_code  # noqa: E402
 
 
