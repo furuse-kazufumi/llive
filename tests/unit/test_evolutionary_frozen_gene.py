@@ -30,7 +30,7 @@ from llive.perf.evolutionary.frozen_gene import (
     FreezeReason,
     FrozenGene,
 )
-from llive.perf.evolutionary.frozen_registry import FrozenGeneRegistry
+from llive.perf.evolutionary.experimental.frozen_registry import FrozenGeneRegistry
 
 # ---------------------------------------------------------------------------
 # fixtures / helpers
