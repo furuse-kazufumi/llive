@@ -199,7 +199,7 @@ from llive.perf.evolutionary.nsga2 import (
     crowding_distance,
     non_dominated_sort,
 )
-from llive.perf.evolutionary.parallel_mutation import (
+from llive.perf.evolutionary.experimental.parallel_mutation import (
     KNOWN_AGGREGATIONS,
     FitnessTaskFn,
     ParallelEvaluationResult,
