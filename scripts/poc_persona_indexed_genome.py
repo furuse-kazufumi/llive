@@ -235,10 +235,9 @@ def run(pop: int, gens: int, seed: int, eps: float) -> dict:
     mos = results["mosaic"]["encodings"]
     sin = results["single"]["encodings"]
     floor_mosaic = results["mosaic"]["single_persona_structural_floor"]
-    indexed_gap_filled = round(
-        sin["single"]["best_dist"] if False else floor_mosaic - mos["indexed"]["best_dist"],
-        4,
-    )
+    # single はどの 1 ペルソナでも floor 未満に行けない。indexed がその floor をどれだけ
+    # 下回ったか = indexed が構造的に埋めた headroom。
+    indexed_gap_filled = round(floor_mosaic - mos["indexed"]["best_dist"], 4)
     verdict = {
         "proposition": (
             "indexed(モザイク)は single が構造的に届かない『各因子別専門家』型 target に到達する"),
