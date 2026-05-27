@@ -928,6 +928,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-retry-nudges", type=int, default=2,
                     help="no_action (解析不能出力) を即終了せず矯正 nudge を注入する最大回数 "
                          "(0=即終了=旧挙動; 機構ハードニング ic21/22 救済)")
+    ap.add_argument("--persistent-session", action="store_true",
+                    help="[opt-in/既定 off] 1 タスク=1 長命コンテナを起動し各ターン docker exec "
+                         "で状態を持続 (多段 exploitation 向け)。既定 off=stateless (後方互換)。"
+                         "**実 Docker 未検証 (環境待ち)**: ロジックは mock テスト済みだが "
+                         "docker run -d/exec/rm -f は未実測。real モードでのみ有効。")
     ap.add_argument("--model", default="qwen2.5:14b", help="on-prem ollama model")
     ap.add_argument("--host", default=None, help="ollama host (既定=env/localhost)")
     ap.add_argument("--max-tokens", type=int, default=256)
