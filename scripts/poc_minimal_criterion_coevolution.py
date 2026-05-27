@@ -290,15 +290,20 @@ def build_verdict(mcc: dict, fixed: dict, *, gens: int, step: float) -> dict:
     fixed_tail = _tail_mean(fx)
     mcc_slope = _tail_slope(fm)
     fixed_slope = _tail_slope(fx)
+    mcc_qgrowth = _quarter_growth(fm)
+    fixed_qgrowth = _quarter_growth(fx)
 
-    climb_thresh = 0.05 * step   # per-generation net progress to count as "climbing"
-    plateau_thresh = 0.01 * step  # below this = indistinguishable from drift
+    # "climbing" reference scale = one quarter of the run should net at least a few
+    # mutation steps of progress if selection is genuinely still advancing the frontier.
+    qlen = max(1, len(fm) // 4)
+    climb_thresh = 1.0 * step           # >= ~1 step of net gain per quarter = climbing
+    plateau_thresh = 0.5 * step         # < half a step of net gain per quarter = plateau
 
-    fixed_is_plateau = abs(fixed_slope) < plateau_thresh
-    mcc_still_climbing = mcc_slope > climb_thresh
-    # MCC must beat the fixed tail with margin AND climb faster than the fixed drift floor.
+    fixed_is_plateau = abs(fixed_qgrowth) < plateau_thresh
+    mcc_still_climbing = mcc_qgrowth > climb_thresh
+    # MCC must beat the fixed tail with margin AND grow faster than the fixed drift floor.
     mcc_exceeds = mcc_tail > 1.15 * fixed_tail
-    mcc_outpaces_drift = mcc_slope > max(climb_thresh, 5.0 * abs(fixed_slope))
+    mcc_outpaces_drift = mcc_qgrowth > max(climb_thresh, 3.0 * abs(fixed_qgrowth))
 
     mcc_avoids_saturation = bool(
         mcc_exceeds and mcc_still_climbing and fixed_is_plateau and mcc_outpaces_drift
@@ -309,8 +314,11 @@ def build_verdict(mcc: dict, fixed: dict, *, gens: int, step: float) -> dict:
         "fixed_tail_frontier": round(fixed_tail, 4),
         "mcc_tail_slope_per_gen": round(mcc_slope, 6),
         "fixed_tail_slope_per_gen": round(fixed_slope, 6),
-        "climb_threshold_per_gen": round(climb_thresh, 6),
-        "plateau_threshold_per_gen": round(plateau_thresh, 6),
+        "mcc_quarter_growth": round(mcc_qgrowth, 4),
+        "fixed_quarter_growth": round(fixed_qgrowth, 4),
+        "quarter_len_gens": qlen,
+        "climb_threshold_per_quarter": round(climb_thresh, 4),
+        "plateau_threshold_per_quarter": round(plateau_thresh, 4),
         "mcc_over_fixed_ratio": round(mcc_tail / (fixed_tail + 1e-9), 4),
         "mcc_exceeds_fixed_tail": bool(mcc_exceeds),
         "mcc_still_climbing": bool(mcc_still_climbing),
