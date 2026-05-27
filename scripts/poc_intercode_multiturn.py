@@ -775,6 +775,7 @@ def main(argv: list[str] | None = None) -> int:
         "model": args.model,
         "max_turns": args.max_turns,
         "max_self_checks": args.max_self_checks,
+        "max_retry_nudges": args.max_retry_nudges,
         "n_tasks": len(traces),
         "task_ids": [tr.task_id for tr in traces],
         "coverage": {
