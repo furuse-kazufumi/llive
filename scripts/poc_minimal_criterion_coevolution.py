@@ -336,8 +336,11 @@ def run(
         "honest_notes": [
             "proxy toy・実 llive 非接触 (import ゼロ)。共進化が飽和を回避できる『機構の "
             "feasibility』を示すもので、実 LLM 進化での飽和回避を主張するものではない。",
-            "frontier metric は両 arm 共通の固定 probe battery で測る (MCC を自前の易しい "
-            "task で甘く採点しない = fair)。",
+            "frontier metric = max_i min_d capability (= 解ける最難の uniform task)。"
+            "両 arm の solver capability のみに依存し task 集合に依存しない = fair かつ "
+            "unbounded (非飽和 arm はいくらでも climb 可能)。",
+            "mutation は zero-mean Gaussian。capability の net 上昇は selection のみに由来し "
+            "mutation bias では上がらない。ゆえに選択差が消えた arm (=飽和) は climb が止まる。",
             "solve 判定は per-dim dominance の binary。実タスクは graded であり、この "
             "binary minimal criterion は素地のみ。",
             "次段 = 実 llive の task (苦手軸 / CTF) と個体を共進化させる配線。",
