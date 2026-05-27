@@ -207,10 +207,15 @@ def run_fixed(
     seed: int,
     mc_solve: int,
     step: float,
-    probe: np.ndarray,
     battery_hi: float,
 ) -> dict:
-    """Static task battery; only solvers evolve. Tasks NEVER change -> early ceiling."""
+    """Static task battery; only solvers evolve. Tasks NEVER change -> early ceiling.
+
+    Same ZERO-MEAN mutation as MCC, so the ONLY difference between arms is whether tasks
+    coevolve. Once the best solvers dominate the entire static battery, the minimal
+    criterion stops discriminating -> selection differential vanishes -> the frontier
+    stops climbing (this IS the saturation the 12h run hit).
+    """
     rng = np.random.default_rng(seed)
     solvers = rng.uniform(0.0, 0.3, (pop, d))
     # fixed battery: a static set of difficulties (never regenerated). Once the best
@@ -219,22 +224,16 @@ def run_fixed(
 
     frontier = np.empty(gens)
     for g in range(gens):
-        frontier[g] = capability_frontier(solvers, probe)
+        frontier[g] = capability_frontier(solvers)
         sm = solve_matrix(solvers, tasks)
         counts = sm.sum(axis=1)
         eligible = np.flatnonzero(counts >= mc_solve)
         if eligible.size == 0:
             eligible = np.argsort(counts)[-max(1, pop // 4):]
         parents = solvers[rng.choice(eligible, size=pop)]
-        children = parents + np.abs(rng.normal(0.0, step, parents.shape))
-        # NOTE: even with upward-biased mutation, once every solver solves the WHOLE
-        # static battery the minimal criterion no longer discriminates -> drift only,
-        # and the frontier-on-probe plateaus (no pressure toward the harder probe tail).
-        all_solve = sm.all(axis=1)
-        if all_solve.all():
-            # selection is fully saturated: all parents equally eligible (pure drift).
-            parents = solvers[rng.integers(0, pop, pop)]
-            children = parents + np.abs(rng.normal(0.0, step, parents.shape)) * 0.0
+        # identical zero-mean mutation: with no selection differential this is pure
+        # drift around the current capability -> frontier plateaus (saturation).
+        children = np.clip(parents + rng.normal(0.0, step, parents.shape), 0.0, None)
         solvers = children
 
     return {"frontier": frontier}
