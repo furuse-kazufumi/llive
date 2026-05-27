@@ -263,15 +263,28 @@ def run_islands(
     occ_radius: float,
     occ_min: int,
 ) -> dict:
-    """Evolve a population partitioned into DYNAMIC k-means islands.
+    """Evolve a population partitioned into PERSISTENT, DYNAMICALLY-FORMED islands.
 
-    Every `period` gens: re-cluster -> merge converged islands -> migrate. Within a period
-    each island breeds independently (tournament + mutation), preserving its OWN basin.
+    Mechanism (the falsifiable claim):
+      * FORMATION (dynamic): k-means once at init carves the random cloud into K_max demes.
+        Because the peaks are spread across the search space, different demes start in
+        different basins of attraction.
+      * ISOLATED EVOLUTION: each island breeds ONLY within itself (local tournament). Local
+        selection drives each deme to the peak inside ITS OWN region -> distinct peaks are
+        retained simultaneously (no global best can vacuum the whole population).
+      * MIGRATION (periodic, rare): every `period` gens a few individuals hop to a
+        neighbour island (gene flow) WITHOUT dissolving deme identity.
+      * MERGE (dynamic count): every `period` gens, islands whose CENTROIDS have genuinely
+        converged (within `merge_eps`, i.e. drifted onto the same peak) are fused -> island
+        count shrinks over the run. This is the 'converged islands merge' mechanic.
+
+    Crucially we DO NOT re-cluster the whole population each period (that would destroy deme
+    identity and just reproduce the panmictic collapse) — islands are persistent labels.
     """
     rng = np.random.default_rng(seed)
     pop = rng.uniform(init_lo, init_hi, (pop_size, d))
-    labels, centroids = kmeans(pop, k_max, iters=10, rng=rng)
-    labels = merge_close_centroids(centroids, labels, eps=merge_eps)
+    # DYNAMIC FORMATION: cluster the initial cloud into demes (k_max islands).
+    labels, _ = kmeans(pop, k_max, iters=10, rng=rng)
 
     occ = np.empty(gens, dtype=int)
     spread = np.empty(gens)
@@ -280,6 +293,11 @@ def run_islands(
     migrate_events = 0
     merge_total = 0  # cumulative reduction in island count due to merges
 
+    def _island_centroids(p: np.ndarray, lab: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        ids = np.unique(lab)
+        cents = np.array([p[lab == i].mean(axis=0) for i in ids])
+        return ids, cents
+
     for g in range(gens):
         fit = fitness(pop, centres, heights, sigma)
         occ[g] = peaks_occupied(pop, centres, radius=occ_radius, occ_min=occ_min)
@@ -287,27 +305,29 @@ def run_islands(
         best[g] = float(fit.max())
         island_count[g] = int(len(np.unique(labels)))
 
-        # --- periodic restructure: recluster, merge converged demes, migrate ---
+        # --- periodic migration then merge (deme identity preserved) ---
         if g > 0 and g % period == 0:
-            pre_k, _ = kmeans(pop, k_max, iters=10, rng=rng)
-            labels2, centroids2 = kmeans(pop, k_max, iters=10, rng=rng)
-            before = len(np.unique(labels2))
-            labels = merge_close_centroids(centroids2, labels2, eps=merge_eps)
-            after = len(np.unique(labels))
-            merge_total += max(0, before - after)
-            # migration: move a few random individuals between islands (ring-ish exchange)
-            isl_ids = np.unique(labels)
-            if isl_ids.size >= 2:
+            ids = np.unique(labels)
+            # migration: a few individuals move to a neighbour island in the id ring.
+            if ids.size >= 2:
                 n_mig = max(1, int(migrate_frac * pop_size))
                 mig_idx = rng.choice(pop_size, size=min(n_mig, pop_size), replace=False)
-                # reassign each migrant to a different island id (shift in the id ring)
-                shift = rng.integers(1, isl_ids.size, size=mig_idx.size)
-                cur_pos = np.searchsorted(isl_ids, labels[mig_idx])
-                new_pos = (cur_pos + shift) % isl_ids.size
-                labels[mig_idx] = isl_ids[new_pos]
+                cur_pos = np.searchsorted(ids, labels[mig_idx])
+                shift = rng.integers(1, ids.size, size=mig_idx.size)
+                labels[mig_idx] = ids[(cur_pos + shift) % ids.size]
                 migrate_events += 1
+            # merge: fuse islands whose centroids converged onto the same basin.
+            ids, cents = _island_centroids(pop, labels)
+            if cents.shape[0] >= 2:
+                before = ids.size
+                # map current labels onto contiguous 0..k-1 for merge_close_centroids
+                pos = np.searchsorted(ids, labels)
+                merged_pos = merge_close_centroids(cents, pos, eps=merge_eps)
+                labels = merged_pos
+                after = len(np.unique(labels))
+                merge_total += max(0, before - after)
 
-        # --- independent within-island breeding (each deme keeps its own basin) ---
+        # --- ISOLATED within-island breeding (each deme keeps its own basin) ---
         new_pop_parts = []
         new_label_parts = []
         for isl in np.unique(labels):
@@ -324,7 +344,7 @@ def run_islands(
             new_label_parts.append(np.full(children.shape[0], isl, dtype=int))
         pop = np.vstack(new_pop_parts)
         labels = np.concatenate(new_label_parts)
-        # guard pop_size constant (breeding is per-island n_children=n_isl -> already exact)
+        # breeding is per-island n_children=n_isl -> pop_size stays constant.
 
     return {
         "occupied": occ,
