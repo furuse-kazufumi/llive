@@ -369,10 +369,33 @@ class ThoughtFactorPerLayerChromosome:
         rng: np.random.Generator,
         step_size: float = 0.1,
     ) -> ThoughtFactorPerLayerChromosome:
-        """Gaussian noise を加えて [0, 1] にクリップ. mutation operator として使う."""
+        """Gaussian noise を加えて [0, 1] にクリップ. mutation operator として使う.
+
+        ``persona_index`` が None の個体は **現行挙動を完全維持** (連続 weights のみ摂動,
+        persona_index は None のまま). 設定済の個体は ``mutate_persona_index`` で
+        1 因子の担当ペルソナも別 persona に変える (小 PoC ``i_mut`` と同型) ので,
+        モザイク indexed の進化が連続層と独立に進む.
+        """
         arr = self.as_array()
         noise = rng.normal(0.0, step_size, size=arr.shape)
-        return self.from_array(arr + noise, layer_names=self.layer_names)
+        child = self.from_array(arr + noise, layer_names=self.layer_names)
+        if self.persona_index is None:
+            return child  # additive: None 個体は persona_index を一切持たない.
+        new_index = mutate_persona_index(self.persona_index, rng)
+        return child.with_persona_index(new_index)
+
+    # ----- persona-index helpers ------------------------------------------
+
+    def with_persona_index(
+        self, persona_index: tuple[int, ...] | None
+    ) -> ThoughtFactorPerLayerChromosome:
+        """連続 weights / layer_names を保ったまま ``persona_index`` だけ差し替えた
+        新個体を返す (frozen なので copy). additive 採用用の便利メソッド."""
+        return ThoughtFactorPerLayerChromosome(
+            factor_weights=self.factor_weights,
+            layer_names=self.layer_names,
+            persona_index=persona_index,
+        )
 
     # ----- complexity ------------------------------------------------------
 
