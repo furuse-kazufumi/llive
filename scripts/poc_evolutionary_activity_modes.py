@@ -354,9 +354,12 @@ class ModesVerdict:
     supra_count_adaptive: float        # adaptive: supra-neutral component 種数 (tail)
     supra_count_neutral: float         # neutral:  supra-neutral component 種数 (tail)
     supra_count_saturated: float       # saturated: supra-neutral component 種数 (tail)
+    diversity_adaptive: float          # adaptive: present component 種数 (tail)
+    diversity_saturated: float         # saturated: present component 種数 (tail)
     adaptive_supra_neutral: bool       # adaptive A_new ≫ neutral A_new
     neutral_near_zero: bool            # neutral A_new ≈ 0
-    adaptive_exceeds_saturated: bool   # adaptive supra-count > saturated (新規獲得が続く)
+    adaptive_exceeds_saturated: bool   # saturated は多様性崩壊 (新規獲得が止まる) → adaptive と区別
+    saturated_collapsed_diversity: bool  # saturated は present 多様性が adaptive より大きく崩壊
     saturated_decayed: bool            # saturated A_new はピークから減衰 (補助シグナル)
     modes_detects_openendedness: bool  # 総合判定 = 計器が開放端的活動を区別できるか
 
