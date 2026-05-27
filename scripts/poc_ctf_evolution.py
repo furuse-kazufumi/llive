@@ -983,6 +983,7 @@ def main(argv: list[str] | None = None) -> int:
         final = c.gen_curve[-1] if c.gen_curve else None
         return {
             "evolved_pop_coverage": c.evolved_pop_cov,
+            "peak_pop_coverage": c.peak_pop_cov,
             "best_single_individual_coverage": c.best_single_cov,
             "gen0_diverse_mix_coverage": c.gen0_cov,
             "evolved_beats_single": c.evolved_pop_cov > c.best_single_cov + 1e-9,
