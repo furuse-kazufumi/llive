@@ -358,7 +358,7 @@ def run(
         gens=gens, pop=pop, task_pop=task_pop, d=d, seed=seed,
         mc_solve=mc_solve, step=step, battery_hi=battery_hi,
     )
-    verdict = build_verdict(mcc, fixed, gens=gens, step=step)
+    verdict = build_verdict(mcc, fixed, gens=gens, step=step, battery_hi=battery_hi)
 
     return {
         "schema": "poc_minimal_criterion_coevolution/v1",
