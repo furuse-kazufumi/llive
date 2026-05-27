@@ -889,6 +889,9 @@ def _print_summary(out: dict) -> None:
     sc = out["self_check"]
     print(f"self-check  max={sc['max_self_checks']} rejections={sc['total_rejections']} "
           f"fired={sc['self_checked(tids)'] or '-'} rescued={sc['rescued_to_pass(tids)'] or '-'}")
+    rn = out["retry_nudge"]
+    print(f"retry-nudge max={rn['max_retry_nudges']} nudges={rn['total_nudges']} "
+          f"nudged={rn['nudged(tids)'] or '-'} rescued={rn['rescued_to_pass(tids)'] or '-'}")
 
 
 def _write_summary(path: Path, out: dict) -> None:
