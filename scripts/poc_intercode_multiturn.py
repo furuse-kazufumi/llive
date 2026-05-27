@@ -754,6 +754,11 @@ def main(argv: list[str] | None = None) -> int:
     # gate が効いて正答した = self-check が発火し かつ 解けた (= 未検証 submit を救済)。
     self_check_rescued = [tr.tid for tr in traces
                           if tr.self_checks_used > 0 and tr.solved]
+    # retry-nudge: no_action を矯正した回数 / 矯正後に正答した = 綴り損ないから救済。
+    total_retry_nudges = sum(tr.retry_nudges_used for tr in traces)
+    retry_nudged_tids = [tr.tid for tr in traces if tr.retry_nudges_used > 0]
+    retry_rescued = [tr.tid for tr in traces
+                     if tr.retry_nudges_used > 0 and tr.solved]
 
     out = {
         "schema": "poc_intercode_multiturn/v2",
