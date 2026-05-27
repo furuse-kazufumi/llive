@@ -693,97 +693,81 @@ def run_multiturn_task(
         session = PersistentContainerSession(task_id=task.task_id, timeout=timeout)
         own_session = True
 
-    # ループ本体を _run_turns に委譲し、own_session のときのみ finally で確実に破棄する
-    # (fail-closed: 例外時も孤児コンテナを残さない)。
+    # own_session のときは finally で確実に破棄する (fail-closed: 例外時も孤児を残さない)。
     try:
-        _run_turns_loop(
-            task=task, max_turns=max_turns, timeout=timeout, responder=responder,
-            model=model, mock_script=mock_script, oracle=oracle,
-            max_self_checks=max_self_checks, max_retry_nudges=max_retry_nudges,
-            session=session, history=history, turns=turns,
-            state=_LoopState(),
-        )
+        for t in range(1, max_turns + 1):
+            if forced_verify is not None:
+                prompt = forced_verify
+                forced_verify = None
+            elif forced_retry is not None:
+                prompt = forced_retry
+                forced_retry = None
+            else:
+                prompt = _build_turn_prompt(task, history, max_turns, t)
+            if mock_script is not None:
+                raw = mock_script[mock_idx] if mock_idx < len(mock_script) else ""
+                mock_idx += 1
+            else:
+                raw = _real_turn(responder, _AGENT_SYSTEM, prompt, model)
+
+            act = parse_action(raw)
+
+            if act.kind == "none":
+                # no_action 矯正: 即終了せず「コマンド1つ or submit を1行で出せ」を注入。
+                if max_retry_nudges > 0 and retry_nudges_used < max_retry_nudges:
+                    retry_nudges_used += 1
+                    turns.append(TurnRecord(
+                        turn=t, action_kind="retry_nudge", command="",
+                        stderr_head="no parseable action -> retry nudge"))
+                    forced_retry = _retry_nudge_prompt()
+                    continue
+                turns.append(TurnRecord(turn=t, action_kind="none", command=""))
+                stop = "no_action"
+                break
+
+            if act.kind == "submit":
+                body = _flag_body(act.payload)
+                # self-check gate: 本文が未検証 (stdout 未出現) なら却下して verify を強制。
+                if (max_self_checks > 0 and self_checks_used < max_self_checks
+                        and not _body_seen_in_history(body, history)):
+                    self_checks_used += 1
+                    turns.append(TurnRecord(
+                        turn=t, action_kind="submit_rejected", command=act.payload,
+                        stderr_head=f"self-check: body {body!r} not seen in stdout"))
+                    forced_verify = _verify_nudge_prompt(act.payload, body)
+                    # mock では却下後に verify コマンドを消費させたいので idx を戻さない
+                    # (mock_script は [..., 未検証submit, verifyコマンド, 正submit] の順)。
+                    continue
+                submitted = act.payload
+                solved = bool(oracle(submitted))
+                turns.append(TurnRecord(turn=t, action_kind="submit", command=submitted))
+                stop = "submit_correct" if solved else "submit_wrong"
+                break
+
+            # command: 隔離実行 → 観察を履歴へ。
+            #   mock           → _mock_exec (Docker ゼロ)
+            #   persistent     → session.exec (長命コンテナで状態持続; 実 Docker 未検証)
+            #   既定 stateless → run_shell_in_container (各ターン新規 docker run --rm)
+            if mock_script is not None:
+                ex = _mock_exec(task, act.payload)
+            elif session is not None:
+                ex = session.exec(act.payload)
+            else:
+                ex = run_shell_in_container(act.payload, task_id=task.task_id,
+                                            timeout=timeout)
+            # binary 観察を sanitize (cat した ELF 等の garbage で文脈を汚さない)。
+            obs = _sanitize_observation(ex.stdout)
+            rec = TurnRecord(
+                turn=t, action_kind="command", command=act.payload,
+                stdout_head=obs[:400], stderr_head=ex.stderr[:200],
+                timed_out=ex.timed_out, docker_error=ex.error,
+            )
+            turns.append(rec)
+            history.append({"command": act.payload, "stdout": obs,
+                            "stderr": ex.stderr})
     finally:
         if own_session and session is not None:
             session.close()
-
-    return TaskTrace(
-        tid=ct.tid, task_id=task.task_id, kind=ct.kind,
-        file_backed=task.file_backed, solved=_LAST_STATE.solved,
-        submitted_flag=_LAST_STATE.submitted,
-        n_turns=len(turns), stop_reason=_LAST_STATE.stop,
-        self_checks_used=_LAST_STATE.self_checks_used,
-        retry_nudges_used=_LAST_STATE.retry_nudges_used,
-        turns=turns,
-    )
-
-
-# NOTE: 以下の旧インライン実装は _run_turns_loop に移管 (下記)。
-def _UNUSED_inline_loop():  # pragma: no cover
-    for t in range(1, max_turns + 1):
-        if forced_verify is not None:
-            prompt = forced_verify
-            forced_verify = None
-        elif forced_retry is not None:
-            prompt = forced_retry
-            forced_retry = None
-        else:
-            prompt = _build_turn_prompt(task, history, max_turns, t)
-        if mock_script is not None:
-            raw = mock_script[mock_idx] if mock_idx < len(mock_script) else ""
-            mock_idx += 1
-        else:
-            raw = _real_turn(responder, _AGENT_SYSTEM, prompt, model)
-
-        act = parse_action(raw)
-
-        if act.kind == "none":
-            # no_action 矯正: 即終了せず「コマンド1つ or submit を1行で出せ」を注入。
-            if max_retry_nudges > 0 and retry_nudges_used < max_retry_nudges:
-                retry_nudges_used += 1
-                turns.append(TurnRecord(turn=t, action_kind="retry_nudge", command="",
-                                        stderr_head="no parseable action -> retry nudge"))
-                forced_retry = _retry_nudge_prompt()
-                continue
-            turns.append(TurnRecord(turn=t, action_kind="none", command=""))
-            stop = "no_action"
-            break
-
-        if act.kind == "submit":
-            body = _flag_body(act.payload)
-            # self-check gate: 本文が未検証 (stdout 未出現) なら却下して verify を強制。
-            if (max_self_checks > 0 and self_checks_used < max_self_checks
-                    and not _body_seen_in_history(body, history)):
-                self_checks_used += 1
-                turns.append(TurnRecord(
-                    turn=t, action_kind="submit_rejected", command=act.payload,
-                    stderr_head=f"self-check: body {body!r} not seen in stdout"))
-                forced_verify = _verify_nudge_prompt(act.payload, body)
-                # mock では却下後に verify コマンドを消費させたいので idx を戻さない
-                # (mock_script は [..., 未検証submit, verifyコマンド, 正submit] の順を想定)。
-                continue
-            submitted = act.payload
-            solved = bool(oracle(submitted))
-            turns.append(TurnRecord(turn=t, action_kind="submit", command=submitted))
-            stop = "submit_correct" if solved else "submit_wrong"
-            break
-
-        # command: 隔離実行 → 観察を履歴へ。
-        if mock_script is not None:
-            ex = _mock_exec(task, act.payload)
-        else:
-            ex = run_shell_in_container(act.payload, task_id=task.task_id,
-                                        timeout=timeout)
-        # binary 観察を sanitize (cat した ELF 等の garbage で文脈を汚さない)。
-        obs = _sanitize_observation(ex.stdout)
-        rec = TurnRecord(
-            turn=t, action_kind="command", command=act.payload,
-            stdout_head=obs[:400], stderr_head=ex.stderr[:200],
-            timed_out=ex.timed_out, docker_error=ex.error,
-        )
-        turns.append(rec)
-        history.append({"command": act.payload, "stdout": obs,
-                        "stderr": ex.stderr})
 
     return TaskTrace(
         tid=ct.tid, task_id=task.task_id, kind=ct.kind,
