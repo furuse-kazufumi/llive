@@ -410,6 +410,9 @@ def compare_modes(
     sc_neut = traces["neutral"].supra_count_tail_mean
     sc_sat = traces["saturated"].supra_count_tail_mean
 
+    d_adapt = traces["adaptive"].diversity_tail_mean
+    d_sat = traces["saturated"].diversity_tail_mean
+
     # neutral 自身の総 activity を near-zero 基準にする (A_new が neutral の total に対し微小)。
     neutral_total = traces["neutral"].total_activity[-1] if traces["neutral"].total_activity else 1.0
     near_zero_thresh = near_zero_frac * neutral_total
@@ -417,11 +420,17 @@ def compare_modes(
     adaptive_supra_neutral = a_adapt > supra_ratio * (a_neut + 1e-9)
     neutral_near_zero = a_neut <= near_zero_thresh
     saturated_decayed = traces["saturated"].a_new_decayed
-    # adaptive と saturated の区別は **supra-neutral component 種数** で行う (honest):
-    # A_new (活動和) は持続する自明少数 component でも単調増加するため、
-    # 「新規を獲得し続ける」適応的活動の核は「shadow を越える component 種数が多い」こと。
-    # adaptive はこの種数が saturated を有意 (>2x) に上回る。補助的に saturated の A_new 減衰も見る。
-    adaptive_exceeds_saturated = (sc_adapt > 2.0 * (sc_sat + 1e-9)) or saturated_decayed
+
+    # adaptive と saturated の区別 (honest disclosure):
+    # A_new (supra-neutral 活動和) は持続する自明少数 component でも単調増加するため、
+    # A_new の大小だけでは「新規を獲得し続ける適応」と「自明最適へ固着した飽和」を切り分けられない
+    # (実測: a_new_sat が a_new_adapt を上回る seed すらある)。
+    # **seed 安定な弁別子 = present component 多様性の崩壊**: 飽和は集団が自明小語彙へ収束し
+    # 多様性が大きく崩れる (D_sat ≈ trivial vocab) のに対し、適応的ランは moving target を
+    # 追って広い多様性を維持する。よって「saturated の多様性が adaptive の半分未満」を主判定とし、
+    # supra-neutral component 種数 (新規獲得の継続) を補助に併記する。
+    saturated_collapsed_diversity = d_sat < 0.5 * (d_adapt + 1e-9)
+    adaptive_exceeds_saturated = saturated_collapsed_diversity or saturated_decayed
 
     modes_detects = bool(
         adaptive_supra_neutral
@@ -437,9 +446,12 @@ def compare_modes(
         supra_count_adaptive=sc_adapt,
         supra_count_neutral=sc_neut,
         supra_count_saturated=sc_sat,
+        diversity_adaptive=d_adapt,
+        diversity_saturated=d_sat,
         adaptive_supra_neutral=adaptive_supra_neutral,
         neutral_near_zero=neutral_near_zero,
         adaptive_exceeds_saturated=adaptive_exceeds_saturated,
+        saturated_collapsed_diversity=saturated_collapsed_diversity,
         saturated_decayed=saturated_decayed,
         modes_detects_openendedness=modes_detects,
     )
