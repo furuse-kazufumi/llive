@@ -268,6 +268,7 @@ def test_compare_modes_detects_openendedness_true_seed0():
     assert verdict.adaptive_supra_neutral is True
     assert verdict.neutral_near_zero is True
     assert verdict.adaptive_exceeds_saturated is True
+    assert verdict.saturated_collapsed_diversity is True
     assert verdict.modes_detects_openendedness is True
 
 
