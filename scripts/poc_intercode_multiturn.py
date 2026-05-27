@@ -644,10 +644,20 @@ def run_multiturn_task(
     task: IntercodeTask, *, max_turns: int, timeout: float,
     responder: RealResponder | None, model: str, mock_script: list[str] | None,
     max_self_checks: int = 1, max_retry_nudges: int = 2,
+    persistent_session: bool = False,
+    session: "PersistentContainerSession | None" = None,
 ) -> TaskTrace:
     """1 タスクを multi-turn agentic に走らせ、軌跡と採点結果を返す.
 
     mock_script が与えられればその行を順にモデル出力として使う (inference ゼロ検証)。
+
+    persistent-session (opt-in; 既定 off=stateless; 実 Docker 未検証=環境待ち)
+    -----------------------------------------------------------------------
+    ``persistent_session=True`` で 1 タスク = 1 つの長命コンテナを起動し各ターン
+    ``docker exec`` で状態を持続させる (多段 exploitation 向け)。既定 ``False`` では
+    従来どおり各ターン ``run_shell_in_container`` で stateless 実行 (完全後方互換)。
+    ``session`` を直接渡せばそれを使う (テストで mock exec を注入するため)。
+    タスク終了時は ``finally`` で必ず ``session.close()`` する (fail-closed; 孤児破棄)。
 
     self-check gate (Task1, 算術退行修正)
     -------------------------------------
