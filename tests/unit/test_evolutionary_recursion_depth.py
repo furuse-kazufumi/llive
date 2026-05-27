@@ -34,7 +34,7 @@ from llive.perf.evolutionary.recursion_depth import (
     RecursionDepthGene,
     RefineStrategy,
 )
-from llive.perf.evolutionary.recursive_inference import (
+from llive.perf.evolutionary.experimental.recursive_inference import (
     RecursionTrace,
     run_recursive_inference,
 )
