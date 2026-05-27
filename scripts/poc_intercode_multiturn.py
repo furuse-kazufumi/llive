@@ -1079,9 +1079,15 @@ def main(argv: list[str] | None = None) -> int:
         "file_backed_solved(tids)": fb_solved,
         "new_solves_vs_no_tool(tids)": new_solves,
         "loop_design": {
-            "container_session": ("stateless: 各ターン同 image・同 /ctf/<id> で新規 "
-                                  "docker run --rm。task 資産 (読取) は毎ターン再現。"
-                                  "tmpfs 書込/env はターンを跨がない (honest 制約)。"),
+            "container_session": (
+                ("persistent (opt-in): 1 タスク=1 長命コンテナ (docker run -d) を起動し "
+                 "各ターン docker exec で状態 (tmpfs 書込/cwd) を持続。タスク終了時に "
+                 "docker rm -f で確実に破棄 (finally; fail-closed)。**実 Docker 未検証 "
+                 "(環境待ち)** — ライフサイクルは mock テスト済みだが run -d/exec/rm は未実測。")
+                if bool(args.persistent_session) else
+                ("stateless (既定): 各ターン同 image・同 /ctf/<id> で新規 docker run --rm。"
+                 "task 資産 (読取) は毎ターン再現。tmpfs 書込/env はターンを跨がない (honest "
+                 "制約)。多段 exploitation は --persistent-session で opt-in (実機未検証)。")),
             "turn_structure": ("system(エージェント規律: まず ls/架空名禁止/flag verbatim/"
                                "1ターン1アクション) + 観察履歴 prompt → モデル出力 → "
                                "parse_action(submit|command) → submit なら採点終了・"
