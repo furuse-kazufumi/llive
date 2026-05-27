@@ -428,6 +428,13 @@ def run_multiturn_task(
     「頭で解いた未検証値」とみなし、``max_self_checks`` 回まで submit を却下して強制 verify
     nudge を注入する (= echo/python3 -c で計算させ stdout に出させる)。出現済み or 却下枠
     使い切りなら submit を採点する。``max_self_checks=0`` で gate 無効 (旧挙動)。
+
+    機構ハードニング (2026-05-28)
+    -----------------------------
+    * no_action retry-nudge: 解析不能出力で即終了せず「コマンド1つ or submit を1行で
+      出せ」を ``max_retry_nudges`` 回まで注入 (ic21/22 の綴り損ない退行を救済)。
+    * binary 観察 sanitize: cat した binary の garbage 観察を検出して誘導 note に置換
+      (ic21 の観察汚染→no_action 退行の真因対処)。``_sanitize_observation`` 経由。
     """
     ct = task.as_ctftask()
     oracle = ct.oracle  # flag_oracle(gold); 不変の決定論オラクル
