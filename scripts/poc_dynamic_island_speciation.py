@@ -309,8 +309,9 @@ def run_islands(
         if g > 0 and g % period == 0:
             ids = np.unique(labels)
             # migration: a few individuals move to a neighbour island in the id ring.
-            if ids.size >= 2:
-                n_mig = max(1, int(migrate_frac * pop_size))
+            # n_mig=0 (migrate_frac=0) genuinely disables migration — no forced floor.
+            n_mig = int(round(migrate_frac * pop_size))
+            if ids.size >= 2 and n_mig > 0:
                 mig_idx = rng.choice(pop_size, size=min(n_mig, pop_size), replace=False)
                 cur_pos = np.searchsorted(ids, labels[mig_idx])
                 shift = rng.integers(1, ids.size, size=mig_idx.size)
