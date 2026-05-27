@@ -322,8 +322,7 @@ def run(
         "config": {
             "gens": gens, "pop": pop, "task_pop": task_pop, "d": d, "seed": seed,
             "mc_solve": mc_solve, "band_lo": band_lo, "band_hi": band_hi,
-            "step": step, "task_step": task_step,
-            "probe_n": probe_n, "probe_hi": probe_hi, "battery_hi": battery_hi,
+            "step": step, "task_step": task_step, "battery_hi": battery_hi,
         },
         "mcc": {
             "frontier": [round(x, 4) for x in mcc["frontier"].tolist()],
