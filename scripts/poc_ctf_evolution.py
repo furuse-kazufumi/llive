@@ -478,8 +478,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="inference ゼロの合成 responder でロジック検証")
     ap.add_argument("--real", action="store_true",
                     help="on-prem ollama (temp=0) で実採点 (極小設定のみ推奨)")
-    ap.add_argument("--pop", type=int, default=16, help="集団サイズ")
-    ap.add_argument("--gens", type=int, default=8, help="進化世代数")
+    ap.add_argument("--pop", type=int, default=12, help="集団サイズ")
+    ap.add_argument("--gens", type=int, default=16, help="進化世代数")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max-tasks", type=int, default=None,
                     help="バッテリ先頭から使うタスク数 (frugal 実機用)")
