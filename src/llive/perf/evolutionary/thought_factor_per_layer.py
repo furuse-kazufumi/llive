@@ -307,6 +307,30 @@ class ThoughtFactorPerLayerChromosome:
             raise KeyError(f"unknown memory layer: {layer!r}") from exc
         return tuple(row[li] for row in self.factor_weights)
 
+    # ----- persona-indexed (mosaic) decode --------------------------------
+
+    def persona_indexed_affinity(self) -> tuple[float, ...] | None:
+        """persona-indexed (モザイク) decode.
+
+        ``persona_index`` が設定されているとき, 各思考因子 f に対し
+        「担当ペルソナ ``ids[persona_index[f]]`` の factor f への親和度」を返す
+        (len == NUM_THOUGHT_FACTORS の phenotype). ``ids = sorted(
+        PERSONA_ONTOLOGY.keys())`` (= :func:`_canonical_persona_ids`).
+
+        小 PoC ``poc_persona_indexed_genome`` の ``decode_indexed`` と同一写像::
+
+            affinity[f] = PERSONA_ONTOLOGY[ids[persona_index[f]]].factor_affinity[f]
+
+        ``persona_index`` が None のとき None を返す (現行挙動を変えない signal).
+        """
+        if self.persona_index is None:
+            return None
+        ids = _canonical_persona_ids()
+        return tuple(
+            float(PERSONA_ONTOLOGY[ids[self.persona_index[f]]].factor_affinity[f])
+            for f in range(NUM_THOUGHT_FACTORS)
+        )
+
     # ----- serialization --------------------------------------------------
 
     def to_dict(self) -> dict[str, Any]:
