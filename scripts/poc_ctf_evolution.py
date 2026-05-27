@@ -579,6 +579,7 @@ def main(argv: list[str] | None = None) -> int:
         "mode": mode,
         "pop": args.pop,
         "gens": args.gens,
+        "hard_battery": bool(args.hard),
         "n_tasks": len(tasks),
         "task_kinds": {t.tid: t.kind for t in tasks},
         "epsilon": args.epsilon,
