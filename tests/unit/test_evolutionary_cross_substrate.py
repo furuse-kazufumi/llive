@@ -33,7 +33,7 @@ from llive.perf.evolutionary.cross_substrate import (
     Substrate,
     SubstrateAdapter,
 )
-from llive.perf.evolutionary.substrate_adapters import (
+from llive.perf.evolutionary.experimental.substrate_adapters import (
     BciSubstrateAdapter,
     CythonSubstrateAdapter,
     NeuromorphicSubstrateAdapter,
