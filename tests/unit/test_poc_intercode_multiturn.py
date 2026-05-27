@@ -64,6 +64,91 @@ def test_parse_action_empty_is_none():
 
 
 # ---------------------------------------------------------------------------
+# parse_action 頑健化 (2026-05-28): 散文の誤コマンド化を防ぎ none に倒す
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("prose", [
+    # 末尾句読点なしの英語散文 (旧 _looks_like_command はこれを command 化していた)。
+    "Let me look at the files first",
+    "Let me think about this",
+    "I will start by examining the directory",
+    "The flag is probably hidden in one of these files",
+    "I need to figure out what kind of encoding this is",
+    # 末尾句点ありの日本語散文。
+    "まず ls してみます。",
+    "次に何をすべきか考えます。",
+    # 疑問文。
+    "What files are in this directory?",
+    "どのファイルにフラグがあるだろうか？",
+])
+def test_parse_action_prose_only_is_none(prose):
+    """散文のみ (コマンドを含まない) は none。誤ってシェル実行しない。"""
+    assert mt.parse_action(prose).kind == "none"
+
+
+def test_parse_action_english_prose_prefix_then_command():
+    """前置き散文 + コマンド ("I will run the following:\\nls -la") → ls -la 抽出。"""
+    act = mt.parse_action("I will run the following:\nls -la")
+    assert act.kind == "command"
+    assert act.payload == "ls -la"
+
+
+def test_parse_action_prose_no_punct_then_command():
+    """末尾句読点なし散文 + コマンド → コマンド行を採る (散文行をスキップ)。"""
+    act = mt.parse_action("Let me look at the files first\ncat flag")
+    assert act.kind == "command"
+    assert act.payload == "cat flag"
+
+
+def test_parse_action_japanese_prefix_then_command():
+    """日本語前置き ("次のコマンドを実行します\\ncat flag") → cat flag 抽出。"""
+    act = mt.parse_action("次のコマンドを実行します\ncat flag")
+    assert act.kind == "command"
+    assert act.payload == "cat flag"
+
+
+def test_parse_action_fenced_command_with_prose_before():
+    """前置き散文の後にコードフェンス → フェンス内コマンドを抽出 (回帰防止)。"""
+    act = mt.parse_action("I will run the following command:\n```bash\nls -la\n```")
+    assert act.kind == "command"
+    assert act.payload == "ls -la"
+
+
+def test_parse_action_fenced_with_leading_prose_line():
+    """フェンス内に散文行 + コマンド行 → コマンド行を採る。"""
+    act = mt.parse_action("```\nFirst I will list files\nls -la\n```")
+    assert act.kind == "command"
+    assert act.payload == "ls -la"
+
+
+def test_parse_action_shell_operator_line_is_command():
+    """既知コマンド先頭でなくてもシェル演算子を含む行は command。"""
+    act = mt.parse_action("strings file | grep -ao 'picoCTF{[^}]*}'")
+    assert act.kind == "command"
+    assert "grep" in act.payload
+
+
+def test_parse_action_submit_regression_with_prose():
+    """散文に混じった submit は submit を優先抽出 (回帰防止)。"""
+    act = mt.parse_action("I found it. submit picoCTF{found_it_123}")
+    assert act.kind == "submit"
+    assert act.payload == "picoCTF{found_it_123}"
+
+
+def test_parse_action_bare_submit_with_flag_in_text():
+    """裸 submit (フェンスなし) でも picoCTF を含めば submit に昇格 (回帰防止)。"""
+    act = mt.parse_action("submit picoCTF{bare_flag_xyz}")
+    assert act.kind == "submit"
+    assert act.payload == "picoCTF{bare_flag_xyz}"
+
+
+def test_parse_action_short_bare_token_is_command():
+    """短い裸トークン (id/pwd 等) は散文でないので command として救済。"""
+    assert mt.parse_action("pwd").kind == "command"
+    assert mt.parse_action("ls").kind == "command"
+
+
+# ---------------------------------------------------------------------------
 # binary 観察 sanitize
 # ---------------------------------------------------------------------------
 
