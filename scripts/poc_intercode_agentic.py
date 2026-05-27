@@ -301,14 +301,45 @@ def _build_tool_prompt(task: IntercodeTask) -> str:
     )
 
 
+#: 行頭/行末に残る markdown フェンス断片 (```bash / ``` / ~~~ 等) を剥がす正規表現。
+#: 実機 (2026-05-28) で qwen2.5:14b が ``` ```bash echo ... ``` `` のように **改行なし**
+#: でフェンスとコマンドを 1 行に詰めて出すと、extract_code (lang 後に改行を要求) が拾えず
+#: 素のテキスト経路で `` ```bash echo ... ``` `` をそのまま command 化 → bash が
+#: `` ```bash `` を実行ファイル名と解釈し "cannot execute binary file" になった。
+#: その bitrot を防ぐため、抽出後にもインラインフェンス記号を除去する。
+import re as _re  # noqa: E402  (局所利用; トップ import を汚さない)
+
+_INLINE_FENCE = _re.compile(r"^\s*(?:```+|~~~+)\s*[a-zA-Z0-9_+-]*\s*|\s*(?:```+|~~~+)\s*$")
+
+
+def _strip_inline_fence(s: str) -> str:
+    """1 行に詰め込まれたフェンス記号 (```bash ... ```) を両端から剥がす。"""
+    prev = None
+    out = s.strip()
+    # 行頭と行末の両方を、フェンスが無くなるまで繰り返し剥がす。
+    while prev != out:
+        prev = out
+        out = _INLINE_FENCE.sub("", out).strip()
+    return out
+
+
 def _extract_shell(text: str) -> str | None:
-    """モデル出力からシェルコマンドを抽出する (```bash / ``` フェンス、無ければ素のテキスト)。"""
+    """モデル出力からシェルコマンドを抽出する (```bash / ``` フェンス、無ければ素のテキスト)。
+
+    多段:
+      1. extract_code で正規のコードフェンス (lang 後に改行あり) を拾う。
+      2. 失敗時は素のテキスト先頭行を採用しつつ、**インラインフェンス記号を剥がす**
+         (改行なしフェンス bitrot 対策; 実機 2026-05-28 で発覚)。
+    """
     code = extract_code(text)  # ```python 優先だが ``` 一般フェンスも拾う
     if code:
-        return code.strip()
-    # フェンス無し: 1 行コマンドとみなす (危険だが Docker 隔離前提)。空なら None。
+        cleaned = _strip_inline_fence(code)
+        return cleaned or None
     t = (text or "").strip()
-    return t.splitlines()[0].strip() if t else None
+    if not t:
+        return None
+    first = _strip_inline_fence(t.splitlines()[0])
+    return first or None
 
 
 @dataclass
