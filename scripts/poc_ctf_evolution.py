@@ -1126,9 +1126,13 @@ def _print_summary(out: dict) -> None:
     cv = out.get("crossfamily_verdict")
     if cv is not None:
         mark = "+" if cv["cross_beats_single"] else ("=" if cv["cross_ties_single"] else "-")
-        print(f"\ncross-family coverage  = {cv['cross_family_pop_coverage']:.3f}")
-        print(f"single-family coverage = {cv['single_family_pop_coverage']:.3f}")
-        print(f"delta(cross - single)  = {cv['delta(cross-single)']:+.3f}  [{mark}]")
+        pmark = "+" if cv["cross_beats_single_peak"] else "="
+        print(f"\ncross-family coverage  = {cv['cross_family_pop_coverage']:.3f}  "
+              f"(peak {cv['cross_family_peak_coverage']:.3f})")
+        print(f"single-family coverage = {cv['single_family_pop_coverage']:.3f}  "
+              f"(peak {cv['single_family_peak_coverage']:.3f})")
+        print(f"delta(cross - single)  = {cv['delta(cross-single)']:+.3f}  [{mark}]  "
+              f"(peak delta {cv['delta_peak(cross-single)']:+.3f}  [{pmark}])")
     print(f"\nVERDICT: {_crossfamily_verdict_text(out)}")
 
 
