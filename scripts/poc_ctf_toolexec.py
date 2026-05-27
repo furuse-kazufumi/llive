@@ -686,6 +686,12 @@ def main(argv: list[str] | None = None) -> int:
             "stdin": "closed (b'')",
             "output_cap_bytes": _OUTPUT_CAP,
             "danger_check": [label for label, _ in _DANGER_RULES],
+            "danger_filter_version": "v2 (false-positive 修正: 危険 API 狙い撃ち)",
+            "benign_stdlib_allowed": list(BENIGN_STDLIB_ALLOWED),
+            "network_isolation_note": (
+                "token ブラックリストは bypass 容易な PoC 安全弁。network/fs の真の隔離は "
+                "OS レベル (Docker --network=none / seccomp / namespace / Job Object) が本筋。"
+            ),
             "fail_closed": "危険トークン検出 / 抽出失敗 / 例外 / non-zero / timeout は FAIL",
         },
         "compute": {"llm_calls": calls, "elapsed_seconds": round(elapsed, 2)},
@@ -694,6 +700,14 @@ def main(argv: list[str] | None = None) -> int:
             "抽出/実行/危険検出/オラクル/反転集計のロジック検証専用。実機予言ではない。",
             "危険トークン静的チェックは完全防御でない PoC 安全弁。subprocess isolated "
             "+ timeout + temp cwd + 最小 env と多層で組み合わせる。",
+            "danger filter v2: false-positive 修正。urllib.parse (quote/unquote) / "
+            "base64 / codecs / binascii / string / re / hashlib / math / itertools / "
+            "collections 等の benign stdlib を許可し、urllib.request/urlopen / socket / "
+            "subprocess / os.system / os.popen / os.remove / eval(/exec(/__import__ / "
+            "write-mode open / shutil / ctypes / pickle は引き続きブロック。"
+            "import os / import sys 単体は許可 (危険メンバ呼び出しのみ拒否)。",
+            "network 真隔離は OS レベルが本筋 (token チェックは bypass 容易な PoC 安全弁)。"
+            "実 deploy では Docker --network=none / seccomp / namespace に置き換える前提。",
             "blind_flips = no_tool が FAIL で tool_exec が PASS のタスク (真のレバー実証)。",
             "オラクルは正規化部分文字列一致。偶然一致確率は低いがゼロでない。",
             "real は計算リソース限定のため極小 (temp=0 決定論, warmup 済)。",
