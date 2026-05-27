@@ -548,23 +548,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"  components={N_COMPONENTS} genome_len={GENOME_LEN} "
           f"a_shadow={verdict.a_shadow:.3f} (p{args.shadow_percentile:g} of neutral final activity)")
-    print(f"  metric = A_new(tail 20%) = supra-neutral cumulative activity "
-          f"(component activity > a_shadow)")
-    print(f"  {'regime':10s} {'A_new(tail)':>12s} {'A_new(peak)':>12s} "
+    print(f"  metrics: A_new = supra-neutral activity SUM; supra_cnt = supra-neutral "
+          f"component COUNT (both vs a_shadow, tail 20%)")
+    print(f"  {'regime':10s} {'A_new(tail)':>12s} {'supra_cnt':>10s} "
           f"{'A(final)':>10s} {'D(final)':>9s} {'decayed':>8s}")
     for name in ("adaptive", "neutral", "saturated"):
         tr = traces[name]
-        print(f"  {name:10s} {tr.a_new_tail_mean:12.3f} {tr.a_new_peak:12.3f} "
+        print(f"  {name:10s} {tr.a_new_tail_mean:12.3f} {tr.supra_count_tail_mean:10.2f} "
               f"{tr.total_activity[-1]:10.1f} {tr.diversity[-1]:9d} "
               f"{str(tr.a_new_decayed):>8s}")
     print("  checks:")
     print(f"    adaptive supra-neutral (A_new_adapt > {3.0:g}x A_new_neut) : "
           f"{verdict.adaptive_supra_neutral}")
-    print(f"    neutral near-zero                                        : "
+    print(f"    neutral near-zero (A_new_neut ~= 0)                      : "
           f"{verdict.neutral_near_zero}")
-    print(f"    adaptive exceeds/saturated decayed                       : "
+    print(f"    adaptive supra_cnt > 2x saturated (or sat decayed)       : "
           f"{verdict.adaptive_exceeds_saturated} "
-          f"(sat_decayed={verdict.saturated_decayed})")
+          f"(supra_cnt adapt={verdict.supra_count_adaptive:.1f} "
+          f"sat={verdict.supra_count_saturated:.1f} sat_decayed={verdict.saturated_decayed})")
     print(f"  => modes_detects_openendedness = {verdict.modes_detects_openendedness}")
     if not verdict.modes_detects_openendedness:
         print("  honest: the instrument did NOT cleanly separate the regimes at these "
