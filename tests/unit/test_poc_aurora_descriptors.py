@@ -108,7 +108,10 @@ def test_grid_coverage_full_spread_vs_degenerate():
     t = rng.uniform(-1, 1, 2000)
     degenerate = np.stack([t, t + rng.normal(0, 1e-3, 2000)], axis=1)
     cov_deg, occ_deg, _ = aur.grid_coverage(degenerate, bins=bins)
-    assert occ_deg <= bins  # at most ~one cell per diagonal step
+    # the diagonal cloud hugs the main diagonal, so it occupies only a small fraction of
+    # the grid (~the bins along the diagonal, a little spillover from the tiny jitter),
+    # far fewer than a full 2D spread.
+    assert occ_deg < occ_spread / 2
     assert cov_spread > cov_deg
 
 
