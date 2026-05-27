@@ -483,6 +483,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max-tasks", type=int, default=None,
                     help="バッテリ先頭から使うタスク数 (frugal 実機用)")
+    ap.add_argument("--hard", action="store_true",
+                    help="拡張バッテリ (_EXTRA_BATTERY) を足して coverage を scarce にする "
+                         "(10 タスク ↔ 10 specialist skill の 1 対 1 被覆 regime)")
     ap.add_argument("--epsilon", type=float, default=0.0,
                     help="ε-lexicase の許容範囲 (0/1 case なので既定 0.0)")
     ap.add_argument("--model", default="qwen2.5:14b", help="real モードの ollama model")
