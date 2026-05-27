@@ -136,6 +136,19 @@ def new_activity(activity: np.ndarray, a_shadow: float) -> float:
     return float(activity[mask].sum())
 
 
+def supra_neutral_count(activity: np.ndarray, a_shadow: float) -> int:
+    """supra-neutral component 数 = a_i > a_shadow を満たす component の種数.
+
+    Bedau の "new component diversity" 相当。**開放端性の核となる弁別子**:
+    A_new (活動和) は持続する component なら自明な少数でも単調に膨らむため、
+    「持続するが自明」(飽和) と「新規を獲得し続ける」(適応的) を A_new 単独では
+    十分に切り分けられない (本 PoC の honest disclosure)。一方この **種数** は、
+    新規 component が次々と shadow を越えるときだけ増え続けるので、
+    adaptive (増え続ける) / neutral (≈0) / saturated (少数で頭打ち) を区別する。
+    """
+    return int(np.count_nonzero(activity > a_shadow))
+
+
 def shadow_threshold(neutral_activity: np.ndarray, percentile: float = 99.0) -> float:
     """中立 activity 分布から閾値 a_shadow を出す.
 
