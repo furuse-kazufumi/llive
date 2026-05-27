@@ -1188,9 +1188,12 @@ def _write_summary_md(path: Path, out: dict) -> None:
             "",
             "## cross vs single (PoC-CTF-1b 主指標)",
             "",
-            f"- cross-family coverage = {cv['cross_family_pop_coverage']:.3f}",
-            f"- single-family coverage = {cv['single_family_pop_coverage']:.3f}",
-            f"- delta(cross - single) = {cv['delta(cross-single)']:+.3f} ({mark})",
+            f"- cross-family coverage = {cv['cross_family_pop_coverage']:.3f} "
+            f"(peak {cv['cross_family_peak_coverage']:.3f})",
+            f"- single-family coverage = {cv['single_family_pop_coverage']:.3f} "
+            f"(peak {cv['single_family_peak_coverage']:.3f})",
+            f"- delta(cross - single) = {cv['delta(cross-single)']:+.3f} ({mark}) / "
+            f"peak delta = {cv['delta_peak(cross-single)']:+.3f}",
         ]
     lines += [
         "",
