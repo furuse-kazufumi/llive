@@ -852,12 +852,14 @@ def _run_one_condition(
     best_single_cov = max((g.best_individual_coverage for g in gen_curve), default=0.0)
     final = gen_curve[-1] if gen_curve else None
     evolved_pop_cov = final.pop_coverage if final else 0.0
+    peak_pop_cov = max((g.pop_coverage for g in gen_curve), default=0.0)
     gen0_cov = gen_curve[0].pop_coverage if gen_curve else 0.0
 
     return ConditionResult(
         name=name,
         gen_curve=gen_curve,
         evolved_pop_cov=evolved_pop_cov,
+        peak_pop_cov=round(peak_pop_cov, 4),
         best_single_cov=round(best_single_cov, 4),
         gen0_cov=round(gen0_cov, 4),
         final_family_dist=fam_curve[-1] if fam_curve else {},
