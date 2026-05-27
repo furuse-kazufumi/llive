@@ -562,11 +562,17 @@ def main(argv: list[str] | None = None) -> int:
     final = gen_curve[-1] if gen_curve else None
     evolved_pop_cov = final.pop_coverage if final else 0.0
 
-    # ---- (b) 参考: 非進化の均等多様ミックス (同サイズ) ----
+    # ---- (b) 非進化の均等多様ミックス ----
+    # (b1) gen0 = 進化を一切かける前の同一集団 (= diverse founder + random padding)。
+    #      これが最も principled な「非進化の多様ミックス」: 同じ種から選択圧だけ抜いた対照。
+    gen0_cov = gen_curve[0].pop_coverage if gen_curve else 0.0
+    # (b2) 参考: 独立生成した均等多様ミックス (PoC-0 diverse 相当, step=0.3 の lucky shotgun 対照)。
     even = even_diverse_baseline(tasks, fitness_fn, n=args.pop, seed=args.seed + 101)
 
     # ---- verdict ----
+    # 命題 (b) の主指標 = gen0 (同一集団・選択圧前)。進化が gen0 を coverage で押し上げたか。
     beats_single = evolved_pop_cov > best_single_cov + 1e-9
+    beats_gen0 = evolved_pop_cov > gen0_cov + 1e-9
     beats_even = evolved_pop_cov > even.pop_coverage + 1e-9
 
     calls = getattr(real_responder, "calls", 0) if real_responder else 0
