@@ -449,7 +449,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--band-hi", type=int, default=12)
     ap.add_argument("--step", type=float, default=0.05)
     ap.add_argument("--task-step", type=float, default=0.05)
-    ap.add_argument("--battery-hi", type=float, default=0.4)
+    ap.add_argument("--battery-hi", type=float, default=0.25)
     ap.add_argument("--out", type=Path,
                     default=Path(r"D:/projects/llive/out/poc_minimal_criterion_coevolution"))
     args = ap.parse_args(argv)
