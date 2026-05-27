@@ -182,8 +182,12 @@ class ThoughtFactorPerLayerChromosome:
                     )
                 coerced.append(iv)
             # list / ndarray-int で渡されても frozen tuple-of-int に正規化 (hashable 維持).
+            # 既に同一の plain int tuple なら setattr を省く (= 等価比較は plain tuple 同士).
             coerced_tuple = tuple(coerced)
-            if coerced_tuple != self.persona_index:
+            if not (
+                isinstance(self.persona_index, tuple)
+                and self.persona_index == coerced_tuple
+            ):
                 object.__setattr__(self, "persona_index", coerced_tuple)
 
     # ----- factories ------------------------------------------------------
