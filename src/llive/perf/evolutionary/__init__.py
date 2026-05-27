@@ -282,7 +282,7 @@ from llive.perf.evolutionary.recursive_inference import (
     RecursionTrace,
     run_recursive_inference,
 )
-from llive.perf.evolutionary.scheduler import (
+from llive.perf.evolutionary.experimental.scheduler import (
     AsyncFitness,
     AsyncioScheduler,
     MultiprocessingScheduler,
