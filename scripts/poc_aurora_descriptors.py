@@ -81,27 +81,37 @@ def _random_orthonormal(d: int, rng: np.random.Generator) -> np.ndarray:
 def generate_behaviors(
     *, n: int, d: int, n_factors: int, seed: int, hi_var: float, lo_var: float
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Generate n behavior vectors b in R^d with the diversity hidden off the fixed axes.
+    """Generate n behavior vectors b in R^d with the diversity hidden off the handcoded axes.
 
-    Construction:
-      * `n_factors` latent factors carry the REAL behavior diversity, with large spread
-        (`hi_var`). The rest of the latent dims carry only small noise (`lo_var`).
-      * a fixed deterministic rotation R spreads the latent space across all D observed
-        dims. Because R mixes the high-variance factors into every observed axis with
-        roughly equal weight, the fixed dims (0,1) the handcoded descriptor reads see only
-        a small *fraction* of any single high-variance factor -> low variance along the
-        handcoded axes = the blind spot.
+    Construction (a deliberate, honestly-documented blind spot for the handcoded descriptor):
+      * the FIRST 2 observed dims (0,1) — exactly the ones the handcoded descriptor reads —
+        carry ONLY low-variance noise (`lo_var`). This models a human who picked the wrong
+        (low-variance) behavior axes.
+      * the REMAINING d-2 dims carry the real behavior diversity: `n_factors` high-variance
+        latent factors (`hi_var`) spread across the d-2 subspace by a fixed deterministic
+        rotation, plus low-variance noise on the rest of that subspace. The rotation makes
+        the variance NOT axis-aligned, so PCA must actually *discover* the directions (it
+        can't just read off a coordinate) — this is AURORA's real job.
 
-    Returns (behaviors b (n,d), rotation R (d,d), latent (n,d)).
+    The blind spot is therefore explicit and falsifiable: handcoded sees only noise; AURORA
+    must recover the rotated high-variance structure in the complementary subspace.
+
+    Returns (behaviors b (n,d), rotation R ((d-2),(d-2)), latent (n,d)).
     """
     rng = np.random.default_rng(seed)
-    latent = np.empty((n, d))
-    # high-variance latent factors (the real behavior diversity).
-    latent[:, :n_factors] = rng.normal(0.0, hi_var, (n, n_factors))
-    # low-variance latent noise on the remaining dims.
-    latent[:, n_factors:] = rng.normal(0.0, lo_var, (n, d - n_factors))
-    R = _random_orthonormal(d, rng)
-    behaviors = latent @ R.T  # spread factors across all observed dims
+    behaviors = np.empty((n, d))
+    # dims 0,1 = the handcoded descriptor's axes -> pure low-variance noise (the blind spot).
+    behaviors[:, :2] = rng.normal(0.0, lo_var, (n, 2))
+    # remaining d-2 dims = where the real behavior diversity lives.
+    rest = d - 2
+    latent_rest = np.empty((n, rest))
+    nf = min(n_factors, rest)
+    latent_rest[:, :nf] = rng.normal(0.0, hi_var, (n, nf))            # high-variance factors
+    latent_rest[:, nf:] = rng.normal(0.0, lo_var, (n, rest - nf))     # low-variance noise
+    R = _random_orthonormal(rest, rng)                               # rotate within the subspace
+    behaviors[:, 2:] = latent_rest @ R.T  # variance is NOT axis-aligned -> PCA must discover it
+    # full-D latent record (for diagnostics): [noise(2) | latent_rest]
+    latent = np.hstack([behaviors[:, :2], latent_rest])
     return behaviors, R, latent
 
 
