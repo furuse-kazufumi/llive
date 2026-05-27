@@ -686,7 +686,15 @@ def run_multiturn_task(
     forced_retry: str | None = None    # 次ターンに注入する retry nudge (no_action 矯正)
     mock_idx = 0                        # mock_script の消費位置 (却下では進めない)
 
-    for t in range(1, max_turns + 1):
+    # persistent-session (opt-in; 実 Docker 未検証=環境待ち)。明示 session > flag > stateless。
+    # mock では subprocess を呼ばないので session は使わず _mock_exec を直接使う。
+    own_session = False
+    if session is None and persistent_session and mock_script is None:
+        session = PersistentContainerSession(task_id=task.task_id, timeout=timeout)
+        own_session = True
+
+    try:
+      for t in range(1, max_turns + 1):
         if forced_verify is not None:
             prompt = forced_verify
             forced_verify = None
