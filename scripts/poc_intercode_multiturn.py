@@ -349,6 +349,10 @@ _PROSE_LEAD = _re.compile(
     _re.IGNORECASE)
 # 末尾コロン/ピリオド or 日本語句点/読点 (= 文末の散文)。
 _PROSE_TAIL = _re.compile(r"[:.。、！!？?]\s*$")
+# CJK (日本語/中国語/韓国語) 文字。シェルコマンドはまず CJK を含まない →
+# 既知コマンド先頭/演算子が無いのに CJK を含む行は散文 (日本語の前置き) とみなす。
+_CJK = _re.compile(
+    r"[぀-ヿ㐀-䶿一-鿿ｦ-ﾟ가-힯]")
 
 
 def _has_shell_op(s: str) -> bool:
@@ -359,8 +363,8 @@ def _looks_like_prose(line: str) -> bool:
     """その 1 行が散文 (説明文・前置き) らしいか.
 
     強い command シグナル (既知コマンド先頭 / シェル演算子) があれば散文ではない。
-    そうでなく、前置き語で始まる / 疑問符を含む / 末尾が句読点 / 空白区切りの語が
-    多く既知コマンドで始まらない、のいずれかなら散文とみなす。
+    そうでなく、前置き語で始まる / CJK を含む / 疑問符を含む / 末尾が句読点 /
+    空白区切りの語が多く既知コマンドで始まらない、のいずれかなら散文とみなす。
     """
     s = line.strip()
     if not s:
@@ -368,7 +372,10 @@ def _looks_like_prose(line: str) -> bool:
     # 既知コマンド先頭 or シェル演算子は明確に command → 散文ではない。
     if _KNOWN_CMD.search(s) or _has_shell_op(s):
         return False
-    # 前置き語 ("I will" / "Let me" / "まず" 等) で始まる = 散文。
+    # CJK 文字を含む = 日本語/中国語の散文 (シェルコマンドは CJK を含まない)。
+    if _CJK.search(s):
+        return True
+    # 前置き語 ("I will" / "Let me" / "First" 等) で始まる = 散文。
     if _PROSE_LEAD.search(s):
         return True
     # 疑問符を含む = 自問 (散文)。
