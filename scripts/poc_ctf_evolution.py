@@ -603,10 +603,13 @@ def main(argv: list[str] | None = None) -> int:
         "verdict": {
             "evolved_pop_coverage": evolved_pop_cov,
             "best_single_individual_coverage": round(best_single_cov, 4),
+            "gen0_diverse_mix_coverage": round(gen0_cov, 4),
             "even_diverse_mix_coverage": even.pop_coverage,
             "evolved_beats_single": beats_single,
+            "evolved_beats_gen0_diverse": beats_gen0,
             "evolved_beats_even_diverse": beats_even,
             "delta(evolved-single)": round(evolved_pop_cov - best_single_cov, 4),
+            "delta(evolved-gen0)": round(evolved_pop_cov - gen0_cov, 4),
             "delta(evolved-even)": round(evolved_pop_cov - even.pop_coverage, 4),
         },
         "specialist_diversity": {
