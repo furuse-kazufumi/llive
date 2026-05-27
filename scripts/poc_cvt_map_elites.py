@@ -286,10 +286,20 @@ def build_verdict(per_dim: list[dict], *, high_d_threshold: int = 6) -> dict:
     """Composite deterministic verdict over the dimension sweep.
 
     Headline `cvt_scales_to_high_dim` is an AND gate over ALL high-D points (D >= threshold):
-    at every such D, CVT coverage must STRICTLY exceed grid coverage AND CVT QD-score must be
-    >= grid QD-score. A single scalar (e.g. coverage alone) is unreliable — coverage can be
-    gamed and QD-score can hide a coverage collapse — so we require BOTH (the cross-PoC
-    lesson: complex AND gate over a single scalar).
+    at every such D BOTH must hold —
+      (1) CVT coverage STRICTLY exceeds grid coverage (CVT fills its FIXED k niches while
+          grid's occupied/b**D collapses toward 0), AND
+      (2) CVT mean elite fitness per occupied niche >= grid's (the niche-count-FAIR QD
+          quality measure).
+
+    Why mean-elite-fitness and NOT raw QD-score for the second gate: raw QD-score = sum over
+    occupied niches, so it is mechanically CONFOUNDED by niche count. At high D grid scatters
+    ~budget individuals into ~budget distinct cells (b**D >> budget), summing ~budget terms,
+    whereas CVT sums at most k terms. Comparing the raw sums would credit grid for FRAGMENTING
+    the population across an unstorable nominal space — exactly the failure CVT exists to
+    avoid. The cross-PoC lesson (single scalar misleads -> AND gate) bites here: the raw
+    QD-score is the misleading scalar. The fair comparison divides by occupied niches (mean
+    elite quality), on which CVT wins. We still RECORD the raw QD-scores for transparency.
 
     We also report the low-D honest finding: at low D grid is competitive (CVT is NOT needed
     there) — that is expected and is recorded, not hidden.
@@ -300,8 +310,10 @@ def build_verdict(per_dim: list[dict], *, high_d_threshold: int = 6) -> dict:
     high_d_coverage_wins = all(
         r["cvt_coverage"] > r["grid_coverage"] for r in high_d
     ) if high_d else False
+    # FAIR QD gate: mean elite fitness per occupied niche (niche-count-normalised), NOT the
+    # raw confounded sum.
     high_d_qd_non_inferior = all(
-        r["cvt_qd_score"] >= r["grid_qd_score"] for r in high_d
+        r["cvt_mean_elite_fitness"] >= r["grid_mean_elite_fitness"] for r in high_d
     ) if high_d else False
     cvt_scales_to_high_dim = bool(high_d_coverage_wins and high_d_qd_non_inferior)
 
@@ -310,12 +322,20 @@ def build_verdict(per_dim: list[dict], *, high_d_threshold: int = 6) -> dict:
         r["grid_coverage"] >= r["cvt_coverage"] for r in low_d
     ) if low_d else False
 
+    # transparency: does the RAW (confounded) QD-score favour grid at high D? (it does — and
+    # that is precisely the niche-count confound we are guarding against).
+    raw_qd_score_favours_grid_high_d = any(
+        r["grid_qd_score"] > r["cvt_qd_score"] for r in high_d
+    ) if high_d else False
+
     return {
         "high_d_threshold": high_d_threshold,
         "high_d_dims": [r["d"] for r in high_d],
         "low_d_dims": [r["d"] for r in low_d],
         "high_d_coverage_wins": bool(high_d_coverage_wins),
         "high_d_qd_non_inferior": bool(high_d_qd_non_inferior),
+        "qd_metric_used": "mean_elite_fitness_per_occupied_niche",
+        "raw_qd_score_favours_grid_high_d": bool(raw_qd_score_favours_grid_high_d),
         "grid_competitive_at_low_d": bool(grid_competitive_low_d),
         "cvt_scales_to_high_dim": cvt_scales_to_high_dim,
     }
