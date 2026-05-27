@@ -670,25 +670,41 @@ def main(argv: list[str] | None = None) -> int:
 
     no_tool_cov = round(len([i for i in no_tool_solved_ids
                              if i in [t.task_id for t in tasks]]) / n, 4)
+    total_self_checks = sum(tr.self_checks_used for tr in traces)
+    self_checked_tids = [tr.tid for tr in traces if tr.self_checks_used > 0]
+    # gate が効いて正答した = self-check が発火し かつ 解けた (= 未検証 submit を救済)。
+    self_check_rescued = [tr.tid for tr in traces
+                          if tr.self_checks_used > 0 and tr.solved]
 
     out = {
-        "schema": "poc_intercode_multiturn/v1",
+        "schema": "poc_intercode_multiturn/v2",
         "benchmark": "InterCode-CTF (princeton-nlp/intercode, picoCTF tasks, MIT)",
-        "phase": "Phase D-1 (multi-turn agentic loop)",
+        "phase": "Phase D-1 (multi-turn agentic loop) + Task1 submit self-check",
         "proposition": (
             "モデルを Docker コンテナ内で ls→stdout 観察→次コマンド→…→submit picoCTF{...} と "
-            "数ターン自律させる multi-turn agentic ループにすると、1-turn では 0/7 だった "
-            "file-backed タスクが解け始め、coverage が no_tool baseline (3/7) を上回る。"),
+            "数ターン自律させる multi-turn agentic ループ + submit 前 self-check (flag 本文を "
+            "コード実行で検証してから submit) で、file-backed タスクに加えて算術/decode "
+            "タスク (ic17/19/22) も回収し coverage が no_tool baseline (3/7) を大きく上回る。"),
         "mode": mode,
         "mock_strategy": (args.mock_strategy if mock else None),
         "model": args.model,
         "max_turns": args.max_turns,
+        "max_self_checks": args.max_self_checks,
         "n_tasks": len(traces),
         "task_ids": [tr.task_id for tr in traces],
         "coverage": {
             "no_tool_1turn_baseline": no_tool_cov,    # 既存 1-turn no_tool (3/7=0.429)
             "multiturn_agentic": cov_mt,
             "delta(multiturn-no_tool)": round(cov_mt - no_tool_cov, 4),
+        },
+        "self_check": {
+            "max_self_checks": args.max_self_checks,
+            "total_rejections": total_self_checks,
+            "self_checked(tids)": self_checked_tids,
+            "rescued_to_pass(tids)": self_check_rescued,
+            "note": ("submit しようとした flag 本文が過去コマンド stdout に未出現なら "
+                     "未検証とみなし submit を却下→強制 verify nudge を注入 (echo/python3 -c "
+                     "で本文を print させる)。算術/decode の頭で解く実行誤りを観察で消す。"),
         },
         "solved_task_ids": solved_ids,
         "file_backed_solved(tids)": fb_solved,
