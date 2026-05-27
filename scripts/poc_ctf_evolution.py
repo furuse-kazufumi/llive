@@ -659,16 +659,20 @@ def _print_summary(out: dict) -> None:
               f"{g['best_individual_coverage']:>9.3f} {g['n_specialist_taskmasks']:>12d}  "
               f"{','.join(g['solved_union'])}")
     v = out["verdict"]
-    print(f"\nevolved pop coverage   = {v['evolved_pop_coverage']:.3f}")
-    print(f"best single individual = {v['best_single_individual_coverage']:.3f}  "
+    print(f"\nevolved pop coverage    = {v['evolved_pop_coverage']:.3f}  (最終世代 best-of-pop)")
+    print(f"(a) best single ind     = {v['best_single_individual_coverage']:.3f}  "
           f"(delta {v['delta(evolved-single)']:+.3f}  "
           f"[{'+' if v['evolved_beats_single'] else '='}])")
-    print(f"even diverse mix       = {v['even_diverse_mix_coverage']:.3f}  "
+    print(f"(b) gen0 diverse mix    = {v['gen0_diverse_mix_coverage']:.3f}  "
+          f"(delta {v['delta(evolved-gen0)']:+.3f}  "
+          f"[{'+' if v['evolved_beats_gen0_diverse'] else '='}])  <- 主指標 (選択圧前の同一集団)")
+    print(f"    even diverse (ref)  = {v['even_diverse_mix_coverage']:.3f}  "
           f"(delta {v['delta(evolved-even)']:+.3f}  "
-          f"[{'+' if v['evolved_beats_even_diverse'] else '='}])")
-    verdict = ("進化集団が両 baseline を上回った"
-               if (v["evolved_beats_single"] and v["evolved_beats_even_diverse"])
-               else "進化の付加価値は不明瞭 (honest: 上回らない baseline あり)")
+          f"[{'+' if v['evolved_beats_even_diverse'] else '='}])  (独立生成 lucky-shotgun 対照)")
+    both = v["evolved_beats_single"] and v["evolved_beats_gen0_diverse"]
+    verdict = ("進化集団が単一最強・gen0 多様ミックスを上回った (命題支持)"
+               if both
+               else "進化の付加価値は不明瞭 (honest: 主 baseline を上回らない)")
     print(f"\nVERDICT: {verdict}")
 
 
