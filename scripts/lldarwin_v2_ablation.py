@@ -524,12 +524,22 @@ def _generate_report(
         "チューニング不要で凍結できる」要素。"
     )
     lines.append("")
+    _cfg_to_element = {
+        "no_novelty": "novelty",
+        "no_adaptive": "adaptive_difficulty",
+        "no_factor_sub": "factor_subspace_qd",
+        "no_reservoir": "lineage_reservoir",
+        "no_map_elites": "map_elites_archive",
+    }
     frozen_candidates = [
         cfg for cfg in essential
         if avg_results.get(cfg, {}).get("diversity_l2_mean", 0) > 0.0  # 多様性への寄与あり
     ]
     if frozen_candidates:
-        lines.append("frozen 候補: " + ", ".join(frozen_candidates))
+        lines.append(
+            "frozen 候補 (要素名): "
+            + ", ".join(_cfg_to_element.get(cfg, cfg) for cfg in frozen_candidates)
+        )
     else:
         lines.append("今回の proxy 実験では frozen 候補を特定できなかった (実 LLM 実験が必要)。")
     lines.append("")
