@@ -156,6 +156,16 @@ class ThoughtFactorPerLayerChromosome:
         # persona_index は additive: None なら何もしない (現行挙動を完全維持).
         # 設定時のみ fail-closed 検証 (len + 各 index の値域).
         if self.persona_index is not None:
+            # list / ndarray で渡されても frozen tuple-of-int に正規化 (hashable 維持).
+            try:
+                coerced = tuple(int(v) for v in self.persona_index)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"persona_index must be a sequence of ints, "
+                    f"got {self.persona_index!r}"
+                ) from exc
+            if coerced != self.persona_index:
+                object.__setattr__(self, "persona_index", coerced)
             n_personas = len(PERSONA_ONTOLOGY)
             if len(self.persona_index) != NUM_THOUGHT_FACTORS:
                 raise ValueError(
