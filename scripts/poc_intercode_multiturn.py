@@ -511,6 +511,7 @@ def run_multiturn_task(
         tid=ct.tid, task_id=task.task_id, kind=ct.kind,
         file_backed=task.file_backed, solved=solved, submitted_flag=submitted,
         n_turns=len(turns), stop_reason=stop, self_checks_used=self_checks_used,
+        retry_nudges_used=retry_nudges_used,
         turns=turns,
     )
 
