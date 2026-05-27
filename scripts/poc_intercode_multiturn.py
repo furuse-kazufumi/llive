@@ -725,6 +725,7 @@ def main(argv: list[str] | None = None) -> int:
             task, max_turns=args.max_turns, timeout=args.timeout,
             responder=responder, model=args.model, mock_script=script,
             max_self_checks=args.max_self_checks,
+            max_retry_nudges=args.max_retry_nudges,
         )
         traces.append(tr)
         print(f"  [{tr.tid}] {tr.kind:18s} file_backed={tr.file_backed!s:5s} "
