@@ -138,11 +138,9 @@ class IntercodeTask:
             "picoCTF{...}.\n"
             f"Challenge: {self.query}"
         )
-        t = CTFTask(tid=f"ic{self.task_id}", kind=kind, prompt=prompt, gold=self.gold) \
-            if "gold" in CTFTask.__init__.__code__.co_varnames \
-            else CTFTask(tid=f"ic{self.task_id}", kind=kind, prompt=prompt,
-                         answer=self.gold)
-        return t
+        # CTFTask(tid, kind, prompt, answer); oracle は __post_init__ で flag_oracle(answer)。
+        return CTFTask(tid=f"ic{self.task_id}", kind=kind, prompt=prompt,
+                       answer=self.gold)
 
 
 def load_intercode_tasks(repo: Path | None = None) -> dict[int, IntercodeTask]:
