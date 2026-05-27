@@ -816,14 +816,19 @@ def _write_summary(path: Path, out: dict) -> None:
         f"- solved task_ids: {out['solved_task_ids'] or '-'}",
         f"- file-backed solved: {', '.join(out['file_backed_solved(tids)']) or '-'}",
         f"- new solves vs no_tool: {', '.join(out['new_solves_vs_no_tool(tids)']) or '-'}",
+        f"- self-check (Task1): max={out['self_check']['max_self_checks']}, "
+        f"rejections={out['self_check']['total_rejections']}, "
+        f"fired={', '.join(out['self_check']['self_checked(tids)']) or '-'}, "
+        f"rescued={', '.join(out['self_check']['rescued_to_pass(tids)']) or '-'}",
         "",
-        "| tid | task_id | kind | file_backed | solved | turns | stop_reason | flag |",
-        "|---|---|---|---|---|---|---|---|",
+        "| tid | task_id | kind | file_backed | solved | turns | self_check | stop_reason | flag |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for tr in out["traces"]:
         lines.append(
             f"| {tr['tid']} | {tr['task_id']} | {tr['kind']} | {tr['file_backed']} | "
             f"{'PASS' if tr['solved'] else 'fail'} | {tr['n_turns']} | "
+            f"{tr.get('self_checks_used', 0)} | "
             f"{tr['stop_reason']} | `{(tr['submitted_flag'] or '')[:40]}` |")
 
     lines += ["", "## コマンド軌跡 (per task)", ""]
