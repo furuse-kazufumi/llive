@@ -252,6 +252,133 @@ def _mock_solves(system_prompt: str, task: CTFTask, salt: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# PoC-CTF-1b: クロスファミリ多様性の進化的配線 (entanglement root blocker への直撃)
+# ---------------------------------------------------------------------------
+#
+# RAD 調査 (2604.07650) の最大の壁 = **behavioral entanglement**: 弱モデルが同じ
+# error mode を共有し、アンサンブルが疑似独立になると coverage が頭打ちする。対策 =
+# **個体ごとに使うモデルファミリ (qwen2.5:14b / qwen2.5:7b / llama3.2) を進化させる**
+# (設計 §3 / §9 の次の核心増分 (a))。各モデルは異なるタスクが得意 (decorrelated
+# specialty; poc_ctf_coverage.MockResponder の _SPECIALTY が体現) なので、ε-lexicase が
+# 「どのモデルを使う specialist か」も含めて多様性を保てば集団 coverage が上がるはず。
+#
+# falsifiable 命題 (PoC-CTF-1b)
+# -----------------------------
+#     **個体 genome のモデル次元を responder のモデル選択に写像し進化させると、
+#       (単一モデルに固定した) 同条件の進化集団より集団 coverage(best-of-pop) が
+#       上回る (= クロスファミリ脱相関が効く)。**
+# 上回らなければ正直にそう報告する ([[feedback_benchmark_honest_disclosure]])。
+
+#: クロスファミリで使う on-prem モデル集合 (設計 §8 「on-prem 在庫」)。
+#: poc_ctf_coverage.MockResponder の _BASE / _SPECIALTY キーと一致させる
+#: (= 異なるモデルが異なる kind を得意とする decorrelated specialty を活かす)。
+CROSS_FAMILY_MODELS: tuple[str, ...] = (
+    "qwen2.5:14b",
+    "qwen2.5:7b",
+    "llama3.2:latest",
+)
+
+#: single-family 条件で全個体が固定使用する最強 on-prem モデル (設計 §8)。
+SINGLE_FAMILY_MODEL: str = "qwen2.5:14b"
+
+# --- モデルファミリ写像の方式 (honest disclosure) -------------------------------
+#
+# 本 PoC の進化個体は ``genome3d=True`` のため :class:`Genome3D` (4 chromosome:
+# c_impl / c_prompt / c_meta / c_factors)。flat 19-dim :class:`Genome` の
+# ``backend_id`` 次元は **Genome3D には存在しない** (backend_id は llive_variant.py /
+# fitness_llm.py の flat 経路専用)。よって設計タスクの指示通り「genome に明確な
+# backend 次元が無ければ persona/c_prompt の安定ハッシュ→モデルでもよい (その場合
+# 『進化で動く次元か』を honest に明記)」に従い、**c_impl.impl_language という実在の
+# 進化する離散次元** を第一信号にしつつ、確実に founder 段階から family が分散するよう
+# **c_prompt 由来 system prompt の安定ハッシュ** を併用する 2 経路写像を採る。
+#
+# どちらも「進化で動く次元」である:
+#   * c_impl.impl_language — ImplChromosome の enum 次元。Genome3DMutation
+#     (= sample_neighborhood, switch_prob=step_size) が毎世代確率 step で別候補へ
+#     flip する **実在の進化次元**。ただし founder は全員 base.c_impl (= "python")
+#     から始まるため、gen0 は homogeneous で family が分散しない (mutation で徐々に
+#     散る)。→ これだけだと「進化で family 分布が動くか」は世代が進むほど yes だが
+#     初期は single に潰れる。
+#   * c_prompt 由来 system prompt のハッシュ — c_prompt は diverse_founder_prompts と
+#     毎世代 mutation で **強く動く** ため、family が gen0 から分散し、c_prompt が
+#     進化すれば family 割当も変わる。ただし「設計されたモデル遺伝子」ではなく
+#     **決定論的な副次写像** である点を honest に明記する (指示の留保どおり)。
+#
+# 既定 mapping = ``impl_lang_then_hash``:
+#   c_impl.impl_language が default ("python") から **逸脱していれば** その enum を
+#   モデルに写す (= 実在の進化次元が genome 上で動いた個体はそれを尊重)。default の
+#   ままなら system prompt ハッシュにフォールバック (founder/未変異個体に family 分散を
+#   保証)。これにより「進化で実在 enum 次元が動いた割合」を出力で可視化できる。
+
+#: impl_language enum → model index (KNOWN_IMPL_LANGUAGES = python/rust/cython/typescript)。
+#: 4 enum → 3 model に離散写像 (typescript と python を同 family に畳む)。
+_IMPL_LANG_TO_MODEL_IDX: dict[str, int] = {
+    "python": 0,      # qwen2.5:14b
+    "rust": 1,        # qwen2.5:7b
+    "cython": 2,      # llama3.2:latest
+    "typescript": 0,  # qwen2.5:14b (4→3 畳み込み)
+}
+
+#: c_impl.impl_language の default 値 (ImplChromosome.default)。これと等しい個体は
+#: 「impl_language 次元が未変異」とみなし、hash フォールバックで family を決める。
+_IMPL_LANG_DEFAULT: str = "python"
+
+
+def _stable_model_idx_from_system(system_prompt: str, n_models: int) -> int:
+    """system prompt (c_prompt 由来) の安定ハッシュ → model index (決定論的).
+
+    c_prompt は diverse_founder_prompts + 毎世代 mutation で動くため、これに基づく
+    family 割当は **進化で動く**。salt 無しの安定ハッシュ = 同一 system prompt は常に
+    同 family (temp=0 キャッシュと同じ決定論)。
+    """
+    h = int(hashlib.sha256(system_prompt.encode("utf-8")).hexdigest(), 16)
+    return h % max(1, n_models)
+
+
+def genome_to_model(
+    genome: object,
+    system_prompt: str,
+    *,
+    models: tuple[str, ...] = CROSS_FAMILY_MODELS,
+    mapping: str = "impl_lang_then_hash",
+) -> tuple[str, str]:
+    """個体 genome を on-prem モデルファミリに離散写像する (クロスファミリ進化の核).
+
+    Returns
+    -------
+    (model, source) : tuple[str, str]
+        ``model`` = 選ばれた CROSS_FAMILY_MODELS のいずれか。
+        ``source`` = どの次元が決めたか (``"impl_lang"`` = 実在の進化 enum 次元が
+        default から逸脱して決めた / ``"hash"`` = system prompt ハッシュで決めた)。
+        この source を集計すると「進化で実在 enum 次元が動いて family を変えた割合」が
+        分かる (honest disclosure: hash は副次写像)。
+
+    mapping
+    -------
+    * ``"impl_lang_then_hash"`` (既定): c_impl.impl_language が default ("python") から
+      逸脱していればその enum 次元 (= 実在の進化次元) でモデルを選ぶ。default のままなら
+      system prompt ハッシュにフォールバック (founder/未変異個体に family 分散を保証)。
+    * ``"hash"``: 常に system prompt ハッシュ。
+    * ``"impl_lang"``: 常に c_impl.impl_language (default 個体は全員 model[0] に潰れる)。
+    """
+    n = len(models)
+    c_impl = getattr(genome, "c_impl", None)
+    impl_lang = getattr(c_impl, "impl_language", None) if c_impl is not None else None
+
+    if mapping == "hash":
+        return models[_stable_model_idx_from_system(system_prompt, n)], "hash"
+    if mapping == "impl_lang":
+        idx = _IMPL_LANG_TO_MODEL_IDX.get(impl_lang or _IMPL_LANG_DEFAULT, 0)
+        return models[idx % n], "impl_lang"
+
+    # impl_lang_then_hash (既定): 実在の進化次元が動いていればそれを尊重、未変異は hash。
+    if impl_lang is not None and impl_lang != _IMPL_LANG_DEFAULT:
+        idx = _IMPL_LANG_TO_MODEL_IDX.get(impl_lang, 0)
+        return models[idx % n], "impl_lang"
+    return models[_stable_model_idx_from_system(system_prompt, n)], "hash"
+
+
+# ---------------------------------------------------------------------------
 # CTF fitness: 個体 c_prompt → system prompt → 各タスク 0/1 を per-case breakdown に
 # ---------------------------------------------------------------------------
 
