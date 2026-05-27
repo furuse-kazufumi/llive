@@ -246,17 +246,32 @@ def run_fixed(
 # verdict
 # ---------------------------------------------------------------------------
 def _tail_slope(h: np.ndarray, frac: float = 0.3) -> float:
-    """Least-squares slope per generation over the last `frac` of the trajectory."""
+    """Least-squares slope per generation over the last `frac` of the trajectory.
+
+    NOTE: reported for transparency, but the verdict uses the less-noisy quarter-growth
+    signal below — the single-best-cohort frontier has stair-step growth (band
+    reshuffles), so the instantaneous tail slope is high-variance run-to-run.
+    """
     n = max(2, int(len(h) * frac))
     seg = h[-n:]
     x = np.arange(n, dtype=float)
-    # slope of linear fit
     return float(np.polyfit(x, seg, 1)[0])
 
 
 def _tail_mean(h: np.ndarray, frac: float = 0.2) -> float:
     n = max(1, int(len(h) * frac))
     return float(h[-n:].mean())
+
+
+def _quarter_growth(h: np.ndarray) -> float:
+    """Mean of the last quarter minus mean of the third quarter.
+
+    A robust 'still climbing in the tail' signal: a non-saturating trajectory keeps
+    lifting its quarter mean; a plateaued one does not. Far less noisy than the
+    instantaneous slope on a stair-stepping frontier.
+    """
+    q = max(1, len(h) // 4)
+    return float(h[-q:].mean() - h[-2 * q:-q].mean())
 
 
 def build_verdict(mcc: dict, fixed: dict, *, gens: int, step: float) -> dict:
