@@ -587,10 +587,10 @@ def main(argv: list[str] | None = None) -> int:
           f"{verdict.adaptive_supra_neutral}")
     print(f"    neutral near-zero (A_new_neut ~= 0)                      : "
           f"{verdict.neutral_near_zero}")
-    print(f"    adaptive supra_cnt > 2x saturated (or sat decayed)       : "
+    print(f"    saturated diversity collapsed (D_sat < 0.5 D_adapt)     : "
           f"{verdict.adaptive_exceeds_saturated} "
-          f"(supra_cnt adapt={verdict.supra_count_adaptive:.1f} "
-          f"sat={verdict.supra_count_saturated:.1f} sat_decayed={verdict.saturated_decayed})")
+          f"(D adapt={verdict.diversity_adaptive:.1f} sat={verdict.diversity_saturated:.1f}; "
+          f"supra_cnt adapt={verdict.supra_count_adaptive:.1f} sat={verdict.supra_count_saturated:.1f})")
     print(f"  => modes_detects_openendedness = {verdict.modes_detects_openendedness}")
     if not verdict.modes_detects_openendedness:
         print("  honest: the instrument did NOT cleanly separate the regimes at these "
