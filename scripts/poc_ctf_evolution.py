@@ -508,9 +508,7 @@ def main(argv: list[str] | None = None) -> int:
     mode = "mock" if mock else "real"
     args.out.mkdir(parents=True, exist_ok=True)
 
-    tasks = list(BATTERY)
-    if args.max_tasks is not None:
-        tasks = tasks[: args.max_tasks]
+    tasks = build_battery(include_extra=args.hard, max_tasks=args.max_tasks)
 
     # ---- fitness (共有キャッシュ = 進化 + ベースライン + 参考) ----
     cache: dict[tuple[str, str], bool] = {}
