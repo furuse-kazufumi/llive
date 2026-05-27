@@ -396,9 +396,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--band-lo", type=int, default=1)
     ap.add_argument("--band-hi", type=int, default=12)
     ap.add_argument("--step", type=float, default=0.05)
-    ap.add_argument("--task-step", type=float, default=0.04)
-    ap.add_argument("--probe-n", type=int, default=200)
-    ap.add_argument("--probe-hi", type=float, default=3.0)
+    ap.add_argument("--task-step", type=float, default=0.05)
     ap.add_argument("--battery-hi", type=float, default=0.6)
     ap.add_argument("--out", type=Path,
                     default=Path(r"D:/projects/llive/out/poc_minimal_criterion_coevolution"))
@@ -407,8 +405,7 @@ def main(argv: list[str] | None = None) -> int:
     out = run(
         gens=args.gens, pop=args.pop, task_pop=args.task_pop, d=args.d, seed=args.seed,
         mc_solve=args.mc_solve, band_lo=args.band_lo, band_hi=args.band_hi,
-        step=args.step, task_step=args.task_step,
-        probe_n=args.probe_n, probe_hi=args.probe_hi, battery_hi=args.battery_hi,
+        step=args.step, task_step=args.task_step, battery_hi=args.battery_hi,
     )
 
     args.out.mkdir(parents=True, exist_ok=True)
