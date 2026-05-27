@@ -730,6 +730,7 @@ def main(argv: list[str] | None = None) -> int:
                 "file_backed": tr.file_backed, "solved": tr.solved,
                 "submitted_flag": tr.submitted_flag, "n_turns": tr.n_turns,
                 "stop_reason": tr.stop_reason,
+                "self_checks_used": tr.self_checks_used,
                 "turns": [
                     {
                         "turn": r.turn, "action": r.action_kind,
