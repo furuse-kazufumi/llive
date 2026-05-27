@@ -266,6 +266,7 @@ def run_cvt_map_elites(
     qd_score = float(sum(archive.values()))
     k_eff = centroids.shape[0]
     coverage = occupied / k_eff
+    mean_elite = (qd_score / occupied) if occupied else 0.0
     return {
         "scheme": "cvt",
         "k": k_eff,                     # fixed niche count, independent of D
@@ -273,7 +274,8 @@ def run_cvt_map_elites(
         "total_niches": k_eff,
         "occupied_niches": occupied,
         "coverage": coverage,           # occupied / k
-        "qd_score": qd_score,
+        "qd_score": qd_score,           # raw sum (capped by k — see notes)
+        "mean_elite_fitness": mean_elite,  # niche-count-fair QD quality measure
     }
 
 
