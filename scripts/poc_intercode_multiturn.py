@@ -663,6 +663,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-self-checks", type=int, default=1,
                     help="submit 前 self-check で未検証 submit を却下する最大回数 "
                          "(0=gate 無効=旧挙動; Task1 算術退行修正)")
+    ap.add_argument("--max-retry-nudges", type=int, default=2,
+                    help="no_action (解析不能出力) を即終了せず矯正 nudge を注入する最大回数 "
+                         "(0=即終了=旧挙動; 機構ハードニング ic21/22 救済)")
     ap.add_argument("--model", default="qwen2.5:14b", help="on-prem ollama model")
     ap.add_argument("--host", default=None, help="ollama host (既定=env/localhost)")
     ap.add_argument("--max-tokens", type=int, default=256)
