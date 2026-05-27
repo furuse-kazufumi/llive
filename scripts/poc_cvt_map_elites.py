@@ -160,13 +160,15 @@ def run_grid_map_elites(
     occupied = len(archive)
     qd_score = float(sum(archive.values()))
     coverage = occupied / total
+    mean_elite = (qd_score / occupied) if occupied else 0.0
     return {
         "scheme": "grid",
         "bins": bins,
         "total_niches": total,          # b**D — explodes with D
         "occupied_niches": occupied,
         "coverage": coverage,           # occupied / b**D
-        "qd_score": qd_score,
+        "qd_score": qd_score,           # raw sum (CONFOUNDED by niche count — see notes)
+        "mean_elite_fitness": mean_elite,  # niche-count-fair QD quality measure
     }
 
 
