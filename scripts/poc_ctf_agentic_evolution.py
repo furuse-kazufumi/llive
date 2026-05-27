@@ -288,7 +288,7 @@ _CANNED_CODE: dict[str, str] = {
     ),
     "hex_then_b64": (
         "import base64\n"
-        "h='5a6d78685a3374305a584869374e6a52394e673d3d'\n"
+        "h='5a6d78685a33746f5a5868694e6a5239'\n"
         "print(base64.b64decode(bytes.fromhex(h)).decode())\n"
     ),
 }
