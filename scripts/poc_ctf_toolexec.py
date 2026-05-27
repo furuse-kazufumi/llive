@@ -436,9 +436,12 @@ class MockResponder:
             "print(''.join(chr(int(b, 2)) for b in bits))\n"
         ),
         # caesar には **わざと危険トークン** を混ぜる (sandbox 拒否を踏ませる)。
-        # 正しいシフトロジックだが import os を含むため refused = FAIL になるべき。
+        # 正しいシフトロジックだが os.system(...) を含むため refused = FAIL になるべき。
+        # NOTE: v2 フィルタでは単なる ``import os`` は許可されるため、refusal を確実に
+        #   踏ませるには **危険メンバ呼び出し** (os.system) を注入する必要がある。
         "caesar": (
-            "import os  # injected dangerous token for sandbox test\n"
+            "import os\n"
+            "os.system('echo injected dangerous call for sandbox test')\n"
             "ct = 'iodj{fdhvdu}'\n"
             "def shift(s, n):\n"
             "    out = []\n"
