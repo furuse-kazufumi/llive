@@ -317,7 +317,7 @@ def run(
     band_hi: int = 12,
     step: float = 0.05,
     task_step: float = 0.05,
-    battery_hi: float = 0.6,
+    battery_hi: float = 0.4,
 ) -> dict:
     """Run both arms (shared fair unbounded frontier metric) and return the result dict."""
     mcc = run_mcc(
