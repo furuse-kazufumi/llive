@@ -209,8 +209,12 @@ _DANGER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("os.remove / os.unlink / os.rmdir / os.rename (fs mutate)",
      re.compile(r"\bos\.(remove|unlink|rmdir|removedirs|rename|replace|truncate|chmod|chown|mkdir|makedirs|symlink|link)\b")),
     ("shutil", re.compile(r"\bshutil\b")),
-    ("open() write/append/binary-write mode",
-     re.compile(r"\bopen\s*\([^)]*['\"][rwaxb+]*[wax+][rwaxb+]*['\"]")),
+    # open() の write/append/exclusive モード文字列のみを狙う。filename に 'x' 等が
+    # 含まれても誤検出しないよう、**mode 文字だけで構成された短い quoted token**
+    # (= 実際の mode 引数) に絞り、かつ w/a/x/+ を 1 つ以上含むものだけ拒否する。
+    # 'r' / 'rb' / 'rt' (read-only) は許可。
+    ("open() write/append/exclusive mode",
+     re.compile(r"\bopen\s*\([^)]*,\s*['\"][rbt]*[wax+][rwaxbt+]*['\"]")),
     ("pathlib write (write_text/write_bytes/unlink/mkdir)",
      re.compile(r"\.(write_text|write_bytes|unlink|mkdir|rmdir|rename|replace|touch)\s*\(")),
     # --- dynamic code execution ---
