@@ -109,6 +109,16 @@ def _ensure_utf8_stdout() -> None:
 #
 # 1-turn 失敗の内訳 (設計 §Phase D): (a) ls せず架空ファイル名 (b) grep で wrapper 破壊
 # (c) 不在ツール bc (d) フェンス bitrot。これらを system prompt で正面から潰す。
+#
+# 🟢 Task1 (算術退行修正; 2026-05-28): multi-turn 実機 smoke で算術/decode タスク
+# (ic17/19/22) が submit_wrong で退行した内訳 (実軌跡):
+#   * ic17 (0x70→ASCII 'p'): ls しただけで `picoCTF{pickCTF{}` を**頭で当てて破損 submit**。
+#   * ic19 (42→2進 101010): ls しただけで `picoCTF{binary_conversion_10110}` と**接頭辞付与**。
+#   * ic22 (base64→l3arn_th3_r0p35): base64 -d は正しく decode できたのに**余計な xxd**を掛けて
+#     leet 表記を崩し `picoCTF{learning_therop5}` を submit。
+#   * 対照: ic18 (0x3D→61) は `echo $((0x3D))` で**コード実行して検証**したので正答した。
+# = 「頭で解く」失敗。レバーは **submit する flag 本文をシェル実行 (echo/python3 -c) で
+#   一度 print して確認してから submit する self-check 規律**。ic18 の成功パターンを全タスクへ。
 
 _AGENT_SYSTEM = (
     "You are an autonomous CTF agent operating a Linux bash shell inside a container. "
@@ -121,7 +131,16 @@ _AGENT_SYSTEM = (
     "  3. The flag has the EXACT form picoCTF{...} (it usually contains a random hex "
     "suffix). You CANNOT guess it from your head; you MUST read it from a file or "
     "compute it. Copy it VERBATIM, do not alter, truncate, or re-wrap it.\n"
-    "  4. When you have the flag, finish by writing exactly:  submit picoCTF{...}\n"
+    "  4. NEVER compute conversions (hex->ascii, base->base, base64/rot decode, "
+    "arithmetic) in your head -- you make mistakes there. Instead RUN A COMMAND to "
+    "compute the inner value, e.g. `python3 -c \"print(chr(0x70))\"`, "
+    "`echo $((0x3D))`, `echo VALUE | base64 -d`. Read the printed result, then submit.\n"
+    "  5. VERIFY BEFORE SUBMIT: before you submit, make sure the EXACT inner text of the "
+    "flag has already appeared verbatim in the stdout of one of your commands "
+    "(e.g. `echo` the flag body, or `python3 -c \"print('picoCTF{'+...+'}')\"`). "
+    "Do not submit a value you only worked out in your head.\n"
+    "  6. When the flag body is confirmed in stdout, finish by writing exactly:  "
+    "submit picoCTF{...}\n"
     "Output rules (STRICT): respond with EXACTLY ONE LINE that is either a single shell "
     "command OR `submit picoCTF{...}`. No code fences, no markdown, no explanation, no "
     "extra lines. Do not chain commands with ; or &&."
