@@ -157,10 +157,10 @@ _HARD_BATTERY: tuple[CTFTask, ...] = (
             f"{_INSTR_H}\nDouble Base64: Wm14aFozdGtiM1ZpYkdWOQ==",
             "flag{double}"),
     # hex(b64('flag{hexb64}')) — エンコード順の推定が要る (どちらから剥がすか)。
-    # b64('flag{hexb64}') = 'ZmxhZ3toZXhiNjR9' -> その ascii を hex 化。
+    # b64('flag{hexb64}') = 'ZmxhZ3toZXhiNjR9' -> その ascii を hex 化 = 下記。
     CTFTask("hex_then_b64", "hard",
             f"{_INSTR_H}\nHex of a Base64 string: "
-            "5a6d78685a3374305a584869374e6a52394e673d3d",
+            "5a6d78685a33746f5a5868694e6a5239",
             "flag{hexb64}"),
 )
 
