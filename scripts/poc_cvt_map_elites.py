@@ -467,19 +467,25 @@ def _print(out: dict) -> None:
           f"n_samples={c['n_samples']} seed={c['seed']} high_d>={c['high_d_threshold']}")
     print("\n[per-dimension: grid (b**D cells) vs CVT (fixed k niches)]")
     print(f"  {'D':>2s} {'grid_cells':>12s} {'grid_occ':>9s} {'grid_cov':>10s} "
-          f"{'grid_QD':>9s} | {'cvt_k':>6s} {'cvt_occ':>8s} {'cvt_cov':>8s} {'cvt_QD':>9s} "
-          f"{'cov_x':>8s}")
+          f"{'g_meanElite':>11s} | {'cvt_k':>6s} {'cvt_occ':>8s} {'cvt_cov':>8s} "
+          f"{'c_meanElite':>11s} {'cov_x':>8s}")
     for r in out["per_dim"]:
         print(f"  {r['d']:>2d} {_fmt_big(r['grid_total_niches']):>12s} "
               f"{r['grid_occupied_niches']:>9d} {r['grid_coverage']:>10.6f} "
-              f"{r['grid_qd_score']:>9.2f} | {r['cvt_total_niches']:>6d} "
+              f"{r['grid_mean_elite_fitness']:>11.4f} | {r['cvt_total_niches']:>6d} "
               f"{r['cvt_occupied_niches']:>8d} {r['cvt_coverage']:>8.4f} "
-              f"{r['cvt_qd_score']:>9.2f} {r['cvt_coverage_over_grid_ratio']:>7.1f}x")
-    print(f"\n  high_d_coverage_wins (CVT cov > grid cov, all D>={v['high_d_threshold']}) = "
-          f"{v['high_d_coverage_wins']}")
-    print(f"  high_d_qd_non_inferior (CVT QD >= grid QD)                  = "
+              f"{r['cvt_mean_elite_fitness']:>11.4f} "
+              f"{r['cvt_coverage_over_grid_ratio']:>7.1f}x")
+    print("\n  (QD gate uses MEAN elite fitness per occupied niche — niche-count-fair. The "
+          "RAW QD-score sum\n   is confounded by niche count and is recorded but NOT gated; "
+          "see honest_notes.)")
+    print(f"\n  high_d_coverage_wins (CVT cov > grid cov, all D>={v['high_d_threshold']})        "
+          f"= {v['high_d_coverage_wins']}")
+    print(f"  high_d_qd_non_inferior (CVT mean-elite >= grid mean-elite) = "
           f"{v['high_d_qd_non_inferior']}")
-    print(f"  grid_competitive_at_low_d (honest: low D needs no CVT)      = "
+    print(f"  raw_qd_score_favours_grid_high_d (confounded, transparency)= "
+          f"{v['raw_qd_score_favours_grid_high_d']}")
+    print(f"  grid_competitive_at_low_d (honest: low D needs no CVT)     = "
           f"{v['grid_competitive_at_low_d']}")
     print(f"\n  VERDICT cvt_scales_to_high_dim = {v['cvt_scales_to_high_dim']}")
     if v["cvt_scales_to_high_dim"]:
