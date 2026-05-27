@@ -8,14 +8,17 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from llive.perf.evolutionary.persona import THOUGHT_FACTORS
+from llive.perf.evolutionary.persona import PERSONA_ONTOLOGY, THOUGHT_FACTORS
 from llive.perf.evolutionary.thought_factor_per_layer import (
     DEFAULT_MEMORY_LAYER_NAMES,
     NUM_MEMORY_LAYERS,
     NUM_THOUGHT_FACTORS,
     ThoughtFactorPerLayerChromosome,
+    argmax_persona_index,
     crossover_per_factor,
     crossover_per_layer,
+    mutate_persona_index,
+    random_persona_index,
 )
 
 
