@@ -84,6 +84,8 @@ if str(_SCRIPTS_DIR) not in sys.path:
 # 既存ハーネスを import 利用のみ (本体無編集)。
 from poc_intercode_agentic import (  # noqa: E402
     _DEFAULT_REPO,
+    _IMAGE,
+    DockerExecResult,
     IntercodeTask,
     build_intercode_battery,
     docker_available,
