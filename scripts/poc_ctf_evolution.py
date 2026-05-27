@@ -721,6 +721,10 @@ def even_diverse_baseline(
 ) -> PopCoverage:
     """非進化の「均等多様ミックス」coverage (PoC-0 diverse 相当の参考線).
 
+    .. note:: PoC-CTF-1 の参考 baseline (b2)。**PoC-CTF-1b では非配線** (主比較が
+        cross vs single になり、gen0 (選択圧前の同一集団) を非進化対照に使うため)。
+        参照実装として残置。
+
     進化を一切かけず、ランダム c_prompt の Genome3D 個体を ``n`` 体生成して同じ fitness で
     採点し、集団 coverage を測る。「進化なしで同サイズの多様集団を作っただけ」の対照。
     """
