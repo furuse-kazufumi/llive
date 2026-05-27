@@ -309,6 +309,7 @@ def run_mode(
         tr.total_activity.append(total_activity(activity))
         tr.mean_cumulative_activity.append(mean_cumulative_activity(activity, conc))
         tr.new_activity.append(new_activity(activity, a_shadow))
+        tr.supra_count.append(supra_neutral_count(activity, a_shadow))
 
         if mode == "neutral":
             # 無選択: 親をランダムに選ぶ (淘汰なし; ランダム複製)。
