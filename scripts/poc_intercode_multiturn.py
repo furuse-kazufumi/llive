@@ -181,13 +181,37 @@ class Action:
     payload: str        # submit: flag 文字列 / command: シェルコマンド
 
 
+# 散文 (説明文) を弾くための簡易ヒューリスティック。system prompt は「1 行・説明なし」を
+# 厳命するが、弱モデルは前置き ("I will run:" 等) を付けがち → 防御的にスキップする。
+# コマンドらしさ = 既知の CTF ツール名で始まる / シェル演算子を含む / 末尾コロンの散文でない。
+_KNOWN_CMD = _re.compile(
+    r"^\s*(ls|cat|strings|grep|file|xxd|hexdump|od|head|tail|find|python3?|"
+    r"base64|tr|awk|sed|cut|sort|uniq|wc|echo|printf|sh|bash|nl|tac|rev|"
+    r"binwalk|exiftool|unzip|tar|gzip|zcat|sha\d+sum|md5sum|nm|objdump|readelf)\b")
+_PROSE_HINT = _re.compile(r"[:.]\s*$")  # 末尾がコロン/ピリオドの行 = 散文の前置きの可能性
+
+
+def _looks_like_command(line: str) -> bool:
+    """その 1 行がシェルコマンドらしいか (散文の前置きを弾く)。"""
+    s = line.strip()
+    if not s:
+        return False
+    if _KNOWN_CMD.search(s):
+        return True
+    # シェル演算子を含めばコマンド寄り。
+    if any(op in s for op in ("|", ">", "<", "&&", ";", "$(", "`")):
+        return True
+    # 末尾コロン/ピリオド (= "I will run:" 等の前置き) は散文とみなす。
+    return not _PROSE_HINT.search(s)
+
+
 def parse_action(text: str) -> Action:
     """モデル出力から 1 アクションを取り出す.
 
     優先順:
       1. ``submit picoCTF{...}`` → submit アクション (flag は本体のみ)。
       2. コードフェンス内の単一コマンド (extract_code) → command。
-      3. 素テキスト先頭の非空行 (インラインフェンスを剥離) → command。
+      3. 素テキストの **コマンドらしい最初の行** (散文の前置きをスキップ) → command。
          ただしその行が裸の ``submit ...`` でも picoCTF を含めば submit に昇格。
     """
     t = (text or "").strip()
@@ -204,12 +228,15 @@ def parse_action(text: str) -> Action:
     if code:
         cand = _strip_inline_fence(code.splitlines()[0] if code.splitlines() else "")
     if not cand:
-        # 素テキストの最初の非空行。
-        for ln in t.splitlines():
-            ln2 = _strip_inline_fence(ln)
-            if ln2:
-                cand = ln2
+        # 素テキスト: コマンドらしい最初の行を選ぶ (散文の前置きをスキップ)。
+        cleaned = [_strip_inline_fence(ln) for ln in t.splitlines()]
+        cleaned = [c for c in cleaned if c]
+        for c in cleaned:
+            if _looks_like_command(c):
+                cand = c
                 break
+        if not cand and cleaned:
+            cand = cleaned[0]  # 何も該当しなければ最初の非空行 (best effort)
     if not cand:
         return Action("none", "")
 

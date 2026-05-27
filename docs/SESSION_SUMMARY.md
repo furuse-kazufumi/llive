@@ -3,13 +3,14 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-28 01:10:47
+- **最終更新**: 2026-05-28 01:50:29
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
+07fa388 auto: poc_intercode_multiturn.py 編集前 (2026-05-28 01:14)
 5d9891e auto: poc_intercode_agentic.py 編集前 (2026-05-28 01:06)
 4fe53ab auto: poc_intercode_agentic.py 編集前 (2026-05-28 00:45)
 0ef0863 auto: poc_intercode_agentic.py 編集前 (2026-05-28 00:45)
@@ -19,21 +20,22 @@ aec51f1 auto: poc_intercode_agentic.py 編集前 (2026-05-28 00:26)
 0a920e2 auto: poc_ctf_agentic_evolution.py 編集前 (2026-05-28 00:06)
 6f7a46b auto: poc_ctf_agentic_evolution.py 編集前 (2026-05-28 00:06)
 d0ed48d auto: poc_ctf_agentic_evolution.py 編集前 (2026-05-28 00:06)
-1feb59f auto: poc_ctf_agentic_evolution.py 編集前 (2026-05-28 00:06)
 ```
 
 ## 現在の git status
 
 ```
-M scripts/poc_intercode_agentic.py
+M docs/SESSION_SUMMARY.md
+ M scripts/poc_intercode_multiturn.py
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
+01:49 docs/SESSION_SUMMARY.md
+01:19 .pytest_cache/v/cache/nodeids
+01:15 scripts/poc_intercode_multiturn.py
 01:06 scripts/poc_intercode_agentic.py
-00:16 docs/SESSION_SUMMARY.md
-00:09 .pytest_cache/v/cache/nodeids
 00:06 scripts/poc_ctf_agentic_evolution.py
 23:55 scripts/poc_ctf_toolexec.py
 ```
