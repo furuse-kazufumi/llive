@@ -860,6 +860,12 @@ def main(argv: list[str] | None = None) -> int:
             "Task1 submit self-check: submit する flag 本文が過去コマンド stdout に未出現なら "
             "未検証とみなし max_self_checks 回まで却下→強制 verify nudge を注入。算術/decode の "
             "頭で解く実行誤りを ic18 の成功パターン (echo $((...)) で計算→観察→submit) に誘導。",
+            "機構ハードニング (retry-nudge): no_action は timeout でなく action-parse 失敗が真因 "
+            "(設計 §timeout 反証)。即終了せず max_retry_nudges 回まで矯正 nudge を注入し ic21/22 の "
+            "綴り損ない退行を救済。max_turns で全体は有界 = 無限ループにならない。",
+            "機構ハードニング (binary sanitize): cat した binary の garbage 観察を検出し短い "
+            "誘導 note に置換 (strings/file/xxd へ)。ic21 の binary cat→観察汚染→no_action 退行の "
+            "真因対処。flag は text なので sanitize で失われない (strings/grep 出力は text=不変)。",
             "弱 on-prem モデルが multi-turn でも実 picoCTF を多く解けない可能性は十分ある "
             "([[feedback_benchmark_honest_disclosure]])。1 タスクでも file-backed が解ければ "
             "1-turn 0/7 からの前進 = 非飽和帯の確認。",
