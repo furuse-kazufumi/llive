@@ -785,6 +785,9 @@ def _print_summary(out: dict) -> None:
     print(f"solved task_ids: {out['solved_task_ids'] or '-'}")
     print(f"file-backed solved: {out['file_backed_solved(tids)'] or '-'}")
     print(f"new solves vs no_tool: {out['new_solves_vs_no_tool(tids)'] or '-'}")
+    sc = out["self_check"]
+    print(f"self-check  max={sc['max_self_checks']} rejections={sc['total_rejections']} "
+          f"fired={sc['self_checked(tids)'] or '-'} rescued={sc['rescued_to_pass(tids)'] or '-'}")
 
 
 def _write_summary(path: Path, out: dict) -> None:
