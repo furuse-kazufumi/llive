@@ -182,12 +182,15 @@ class ModeTrace:
     diversity: list = field(default_factory=list)            # D(t)
     total_activity: list = field(default_factory=list)        # A(t)
     mean_cumulative_activity: list = field(default_factory=list)  # \bar{a}(t)
-    new_activity: list = field(default_factory=list)          # A_new(t) (supra-neutral)
+    new_activity: list = field(default_factory=list)          # A_new(t) (supra-neutral activity sum)
+    supra_count: list = field(default_factory=list)           # supra-neutral component 種数 (t)
     final_activity: list = field(default_factory=list)        # 最終 cumulative activity per component
     a_new_final: float = 0.0                                  # A_new(最終世代)
     a_new_tail_mean: float = 0.0                              # 末尾 20% の A_new 平均
     a_new_peak: float = 0.0                                   # A_new(t) のピーク
     a_new_decayed: bool = False                               # ピークから末尾へ減衰したか (飽和シグナル)
+    supra_count_tail_mean: float = 0.0                        # 末尾 20% の supra-neutral 種数平均
+    supra_count_final: int = 0                                # supra-neutral 種数 (最終世代)
 
 
 def _select_parents(
