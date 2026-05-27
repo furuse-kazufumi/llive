@@ -437,13 +437,18 @@ def run_multiturn_task(
     submitted: str | None = None
     stop = "max_turns"
     self_checks_used = 0
+    retry_nudges_used = 0
     forced_verify: str | None = None   # 次ターンに注入する verify nudge (gate 発火時)
+    forced_retry: str | None = None    # 次ターンに注入する retry nudge (no_action 矯正)
     mock_idx = 0                        # mock_script の消費位置 (却下では進めない)
 
     for t in range(1, max_turns + 1):
         if forced_verify is not None:
             prompt = forced_verify
             forced_verify = None
+        elif forced_retry is not None:
+            prompt = forced_retry
+            forced_retry = None
         else:
             prompt = _build_turn_prompt(task, history, max_turns, t)
         if mock_script is not None:
