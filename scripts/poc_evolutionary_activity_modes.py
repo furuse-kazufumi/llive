@@ -191,6 +191,7 @@ class ModeTrace:
     a_new_decayed: bool = False                               # ピークから末尾へ減衰したか (飽和シグナル)
     supra_count_tail_mean: float = 0.0                        # 末尾 20% の supra-neutral 種数平均
     supra_count_final: int = 0                                # supra-neutral 種数 (最終世代)
+    diversity_tail_mean: float = 0.0                          # 末尾 20% の present component 種数平均
 
 
 def _select_parents(
