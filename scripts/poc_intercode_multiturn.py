@@ -838,6 +838,9 @@ def _write_summary(path: Path, out: dict) -> None:
         for r in tr["turns"]:
             if r["action"] == "submit":
                 lines.append(f"- turn {r['turn']}: **submit** `{r['command']}`")
+            elif r["action"] == "submit_rejected":
+                lines.append(f"- turn {r['turn']}: submit `{r['command']}` "
+                             f"**REJECTED by self-check** ({r.get('stderr_head', '')})")
             elif r["action"] == "command":
                 head = (r["stdout_head"] or "").replace("\n", " ")[:120]
                 extra = ""
