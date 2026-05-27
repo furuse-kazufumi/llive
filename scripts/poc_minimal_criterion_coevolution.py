@@ -403,19 +403,23 @@ def _print(out: dict) -> None:
     print("\n===== Minimal Criterion Coevolution (MCC) PoC — PROXY, deterministic =====")
     print(f"gens={c['gens']} pop={c['pop']} task_pop={c['task_pop']} d={c['d']} "
           f"seed={c['seed']} band=[{c['band_lo']},{c['band_hi']}] mc_solve={c['mc_solve']}")
-    print("\n[capability frontier — hardest uniform task any solver dominates = max_i min_d cap]")
-    print(f"  {'arm':10s} {'gen0':>8s} {'mid':>8s} {'final':>8s} {'tail20%':>8s} {'tailslope':>10s}")
+    print("\n[capability frontier — hardest uniform task the top-k cohort dominates "
+          "= mean top-k (min_d cap)]")
+    print(f"  {'arm':10s} {'gen0':>8s} {'mid':>8s} {'final':>8s} {'tail20%':>8s} {'qgrowth':>9s}")
     mid = len(mf) // 2
     print(f"  {'MCC':10s} {mf[0]:8.3f} {mf[mid]:8.3f} {mf[-1]:8.3f} "
-          f"{v['mcc_tail_frontier']:8.3f} {v['mcc_tail_slope_per_gen']:10.5f}")
+          f"{v['mcc_tail_frontier']:8.3f} {v['mcc_quarter_growth']:+9.4f}")
     print(f"  {'fixed':10s} {xf[0]:8.3f} {xf[mid]:8.3f} {xf[-1]:8.3f} "
-          f"{v['fixed_tail_frontier']:8.3f} {v['fixed_tail_slope_per_gen']:10.5f}")
+          f"{v['fixed_tail_frontier']:8.3f} {v['fixed_quarter_growth']:+9.4f}")
     print(f"\n  MCC / fixed tail ratio = {v['mcc_over_fixed_ratio']:.2f}x")
+    print(f"  thresholds/quarter ({v['quarter_len_gens']} gens): "
+          f"climb>={v['climb_threshold_per_quarter']:.3f} plateau<{v['plateau_threshold_per_quarter']:.3f}")
     print(f"  mcc_exceeds_fixed_tail = {v['mcc_exceeds_fixed_tail']}")
     print(f"  mcc_still_climbing     = {v['mcc_still_climbing']} "
-          f"(tail slope {v['mcc_tail_slope_per_gen']:+.5f}/gen)")
+          f"(quarter growth {v['mcc_quarter_growth']:+.4f})")
+    print(f"  mcc_outpaces_drift     = {v['mcc_outpaces_drift']}")
     print(f"  fixed_is_plateau       = {v['fixed_is_plateau']} "
-          f"(tail slope {v['fixed_tail_slope_per_gen']:+.5f}/gen)")
+          f"(quarter growth {v['fixed_quarter_growth']:+.4f})")
     print(f"\n  VERDICT mcc_avoids_saturation = {v['mcc_avoids_saturation']}")
     if v["mcc_avoids_saturation"]:
         print("  → 共進化 (タスク自動カリキュラム) は固定タスク選択が早期に陥る飽和を回避し、"
