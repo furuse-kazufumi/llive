@@ -443,14 +443,15 @@ def _generate_report(
 
         # 判定ルール:
         # 必須: total > 0.02 かつ (best_incr_contrib > 0.001 or div_contrib > 0.001)
-        # 削減候補: total < 0.005 または total < 0 (有害)
+        # 有害: total < 0 (外すと改善 = 含まれると有害)
+        # 削減候補: 0 <= total < 0.005 (寄与微小)
         # 補助: その間
         if total > 0.02 and (best_incr_contrib > 0.001 or div_contrib > 0.001):
             verdict = "**必須** — 外すと飽和/多様性が有意に低下"
+        elif total < 0:
+            verdict = "**削減候補 (有害方向)** — 外した方が指標が改善 (proxy 限定)"
         elif total < 0.005:
             verdict = "**削減候補** — 寄与微小 (proxy スケールでは必要性薄)"
-        elif total < 0:
-            verdict = "**削減候補 (有害)** — 外した方が改善 (proxy 限定)"
         else:
             verdict = "**補助** — 小〜中程度の寄与"
 
