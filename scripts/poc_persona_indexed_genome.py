@@ -264,7 +264,10 @@ def run(pop: int, gens: int, seed: int, eps: float) -> dict:
 
     return {
         "schema": "poc_persona_indexed_genome/v1",
-        "proposition": __doc__.split("命題")[1].split("----")[1].strip()[:280] if "命題" in __doc__ else "",
+        "proposition": (
+            "因子ごとに別ペルソナを割り当てる indexed(モザイク)ゲノムは、個体全体を 1 ペルソナに "
+            "固定する single 方式が構造的に到達できない『各因子の最適が別専門家にある』因子 "
+            "プロファイルに到達できる。"),
         "n_personas": len(ids),
         "persona_ids": ids,
         "n_factors": N_FACTORS,
