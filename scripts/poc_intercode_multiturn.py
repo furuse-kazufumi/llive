@@ -409,13 +409,14 @@ class TaskTrace:
     n_turns: int
     stop_reason: str            # "submit_correct" | "submit_wrong" | "max_turns" | "no_action"
     self_checks_used: int = 0   # submit を「未検証」で却下した回数 (Task1 gate)
+    retry_nudges_used: int = 0  # no_action を矯正した回数 (機構ハードニング)
     turns: list[TurnRecord] = field(default_factory=list)
 
 
 def run_multiturn_task(
     task: IntercodeTask, *, max_turns: int, timeout: float,
     responder: RealResponder | None, model: str, mock_script: list[str] | None,
-    max_self_checks: int = 1,
+    max_self_checks: int = 1, max_retry_nudges: int = 2,
 ) -> TaskTrace:
     """1 タスクを multi-turn agentic に走らせ、軌跡と採点結果を返す.
 
