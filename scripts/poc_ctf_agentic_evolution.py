@@ -425,11 +425,16 @@ def _case_key(task: CTFTask) -> str:
     return f"{_CASE_PREFIX}{task.tid}"
 
 
-#: 観測専用 (非数値) breakdown キー — MultiPressureSelector は数値キーのみ case 化するため
-#: 文字列/補助数値は lexicase 選択に影響しない (= 観測専用の安全な配線)。
-_STRAT_KEY = "ctf_strategy::label"        # "code" / "direct" (非数値 → case 化されない)
-_PTOOL_KEY = "ctf_strategy::p_tool"       # 数値だが case に混ざると有害 → 下記 注記参照
-_SKILLDRV_KEY = "ctf_strategy::skill_component"
+#: 観測専用 breakdown キー (すべて **文字列値** で格納する)。
+#: lldarwin._infer_numeric_criteria は breakdown の **数値キーを全て** lexicase case に
+#: 自動抽出する (除外は factor_score / nearest_persona_idx / novelty のみ)。よって
+#: p_tool / skill_component を **数値で入れると case 汚染** (選択圧に化ける) する。
+#: PoC-CTF-1b の model/source キー (文字列のみ) と同じく、観測値は **str 化**して格納し
+#: case 抽出 (isinstance int/float かつ非 bool) に引っかからないようにする (= 安全配線)。
+#: lexicase case は ``ctf::<tid>`` の 0/1 のみ。
+_STRAT_KEY = "ctf_strategy::label"             # "code" / "direct"
+_PTOOL_KEY = "ctf_strategy::p_tool"            # str(round(p_tool,4))
+_SKILLDRV_KEY = "ctf_strategy::skill_component"  # str(round(skill_component,4))
 
 
 def make_agentic_fitness(
