@@ -411,6 +411,12 @@ class MockResponder:
 
     # blind-spot タスクごとの「正しい復号コード」(tool_exec で返す)。
     _CANNED_CODE: dict[str, str] = {
+        # url: 無害な urllib.parse.unquote を使う。v2 フィルタが false-positive 拒否せず
+        #   通すこと (=タスク1 の修正点) を mock でも検証するための canned。
+        "url": (
+            "from urllib.parse import unquote\n"
+            "print(unquote('flag%7Ba%26b%7D'))\n"
+        ),
         "rot13": (
             "import codecs\n"
             "ct = 'synt{ebg13}'\n"
