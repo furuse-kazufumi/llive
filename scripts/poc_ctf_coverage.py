@@ -116,7 +116,7 @@ BATTERY: tuple[CTFTask, ...] = (
     CTFTask("caesar", "medium",
             f"{_INSTR}\nCaesar cipher (shift 3): iodj{{fdhvdu}}", "flag{caesar}"),
     CTFTask("atbash", "hard",
-            f"{_INSTR}\nAtbash cipher: uozt{{zgyzh}}", "flag{atbash}"),
+            f"{_INSTR}\nAtbash cipher: uozt{{zgyzhs}}", "flag{atbash}"),
     CTFTask("binary", "hard",
             f"{_INSTR}\nBinary (ASCII): "
             "01100110 01101100 01100001 01100111 01111011 "
