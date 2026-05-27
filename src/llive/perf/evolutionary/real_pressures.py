@@ -83,10 +83,49 @@ _STYLE_INSTRUCTIONS: dict[str, str] = {
 _DEFAULT_SYSTEM = "You are a careful, precise assistant. Follow the question exactly."
 
 
+def _persona_index_instruction(genome: object, top_k: int = 3) -> str | None:
+    """個体の ``c_factors.persona_index`` (各因子の担当ペルソナ) を system prompt 句に変換.
+
+    persona-indexed (モザイク) ゲノムの whole-system bridge: 因子ごとに割り当てられた
+    ペルソナの視点を実 LLM に被せる。``persona_index`` が None (既定) や c_factors 不在なら
+    None を返す = **旧挙動完全維持** (additive・後方互換)。担当ペルソナの affinity が高い
+    top_k 因子を選び、その専門家視点を述べる。
+    """
+    c_factors = getattr(genome, "c_factors", None)
+    if c_factors is None:
+        return None
+    persona_index = getattr(c_factors, "persona_index", None)
+    decode = getattr(c_factors, "persona_indexed_affinity", None)
+    if persona_index is None or not callable(decode):
+        return None
+    affinity = decode()
+    if not affinity:
+        return None
+    # 循環 import 回避で関数内 import (persona は同一 package の軽量モジュール)。
+    from llive.perf.evolutionary.persona import PERSONA_ONTOLOGY, THOUGHT_FACTORS
+
+    ids = sorted(PERSONA_ONTOLOGY.keys())
+    order = sorted(range(len(affinity)), key=lambda f: affinity[f], reverse=True)
+    clauses: list[str] = []
+    for f in order[: max(1, top_k)]:
+        try:
+            pid = ids[int(persona_index[f])]
+        except (IndexError, ValueError, TypeError):
+            continue
+        name = PERSONA_ONTOLOGY[pid].name
+        factor = THOUGHT_FACTORS[f] if f < len(THOUGHT_FACTORS) else f"factor{f}"
+        clauses.append(f"for {factor.replace('factor_', '')}, think like {name}")
+    if not clauses:
+        return None
+    return "Channel these expert perspectives: " + "; ".join(clauses) + "."
+
+
 def genome_to_system_prompt(genome: object) -> str:
     """個体の ``c_prompt`` (PromptChromosome) を system prompt に変換する.
 
     skill_set → 指示文、prompt_template_id → 推論スタイル、language_style → 語調。
+    ``c_factors.persona_index`` があれば各因子の担当ペルソナ視点も反映 (persona-indexed の
+    whole-system bridge; default None では何も足さない)。
     ``c_prompt`` を持たない個体 (flat genome 等) は default system prompt。
     """
     c_prompt = getattr(genome, "c_prompt", None)
@@ -103,6 +142,10 @@ def genome_to_system_prompt(genome: object) -> str:
     style = _STYLE_INSTRUCTIONS.get(getattr(c_prompt, "language_style", "terse"), "")
     if style:
         parts.append(style)
+    # persona-indexed bridge (additive, default off): 担当ペルソナ視点を被せる。
+    persona_line = _persona_index_instruction(genome)
+    if persona_line:
+        parts.append(persona_line)
     # 末尾に「最終答を明示」だけ促す (推論は template に委ねる。CoT を抑制しないことで
     # multistep に勾配が生まれる — 採点は最終答を拾う _last_number_is)。
     parts.append("End with the final answer clearly.")
