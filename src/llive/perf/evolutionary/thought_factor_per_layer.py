@@ -156,32 +156,35 @@ class ThoughtFactorPerLayerChromosome:
         # persona_index は additive: None なら何もしない (現行挙動を完全維持).
         # 設定時のみ fail-closed 検証 (len + 各 index の値域).
         if self.persona_index is not None:
-            # list / ndarray で渡されても frozen tuple-of-int に正規化 (hashable 維持).
-            try:
-                coerced = tuple(int(v) for v in self.persona_index)
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    f"persona_index must be a sequence of ints, "
-                    f"got {self.persona_index!r}"
-                ) from exc
-            if coerced != self.persona_index:
-                object.__setattr__(self, "persona_index", coerced)
             n_personas = len(PERSONA_ONTOLOGY)
-            if len(self.persona_index) != NUM_THOUGHT_FACTORS:
+            raw = tuple(self.persona_index)
+            if len(raw) != NUM_THOUGHT_FACTORS:
                 raise ValueError(
                     f"persona_index must have {NUM_THOUGHT_FACTORS} entries "
-                    f"(one per thought factor), got {len(self.persona_index)}"
+                    f"(one per thought factor), got {len(raw)}"
                 )
-            for f, idx in enumerate(self.persona_index):
-                if not isinstance(idx, (int, np.integer)) or isinstance(idx, bool):
+            coerced: list[int] = []
+            for f, idx in enumerate(raw):
+                # bool は int サブクラスだが persona index としては拒否 (fail-closed).
+                if isinstance(idx, bool):
+                    raise ValueError(
+                        f"persona_index[{f}] must be an int, got bool {idx!r}"
+                    )
+                if not isinstance(idx, (int, np.integer)):
                     raise ValueError(
                         f"persona_index[{f}] must be an int, got {idx!r}"
                     )
-                if not (0 <= int(idx) < n_personas):
+                iv = int(idx)
+                if not (0 <= iv < n_personas):
                     raise ValueError(
-                        f"persona_index[{f}] = {idx} out of "
+                        f"persona_index[{f}] = {iv} out of "
                         f"[0, {n_personas}) (n_personas={n_personas})"
                     )
+                coerced.append(iv)
+            # list / ndarray-int で渡されても frozen tuple-of-int に正規化 (hashable 維持).
+            coerced_tuple = tuple(coerced)
+            if coerced_tuple != self.persona_index:
+                object.__setattr__(self, "persona_index", coerced_tuple)
 
     # ----- factories ------------------------------------------------------
 
