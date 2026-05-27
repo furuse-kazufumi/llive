@@ -407,6 +407,79 @@ class ThoughtFactorPerLayerChromosome:
 
 
 # ---------------------------------------------------------------------------
+# persona-index operators (free functions)
+# ---------------------------------------------------------------------------
+
+
+def random_persona_index(rng: np.random.Generator) -> tuple[int, ...]:
+    """各思考因子にランダムな担当ペルソナ index を割り当てた persona_index を返す.
+
+    小 PoC ``i_init`` 相当. index 値域 = [0, len(PERSONA_ONTOLOGY)).
+    """
+    n_personas = len(PERSONA_ONTOLOGY)
+    return tuple(int(i) for i in rng.integers(n_personas, size=NUM_THOUGHT_FACTORS))
+
+
+def argmax_persona_index(target: np.ndarray | None = None) -> tuple[int, ...]:
+    """各因子で affinity 最大のペルソナを割り当てた persona_index を返す.
+
+    ``target`` 指定時は |affinity - target| 最小のペルソナを各因子で選ぶ (モザイク
+    target への最良 indexed 充填). None のとき各因子で affinity 最大のペルソナ
+    (= per-factor 専門家委員会の argmax envelope).
+    """
+    ids = _canonical_persona_ids()
+    A = np.array(
+        [list(PERSONA_ONTOLOGY[pid].factor_affinity) for pid in ids], dtype=float
+    )
+    if target is None:
+        idx = A.argmax(axis=0)
+    else:
+        t = np.asarray(target, dtype=float)
+        idx = np.abs(A - t[None, :]).argmin(axis=0)
+    return tuple(int(i) for i in idx)
+
+
+def mutate_persona_index(
+    persona_index: tuple[int, ...],
+    rng: np.random.Generator,
+) -> tuple[int, ...]:
+    """persona_index の 1 因子の担当ペルソナを別ペルソナへ変更する (小 PoC ``i_mut``).
+
+    決定論 (rng 固定で再現). 長さ・値域は呼び出し元 (``__post_init__``) で fail-closed
+    検証される.
+    """
+    n_personas = len(PERSONA_ONTOLOGY)
+    new = list(persona_index)
+    f = int(rng.integers(NUM_THOUGHT_FACTORS))
+    new[f] = int(rng.integers(n_personas))
+    return tuple(new)
+
+
+def _crossover_persona_index(
+    pi_a: tuple[int, ...] | None,
+    pi_b: tuple[int, ...] | None,
+    rng: np.random.Generator,
+) -> tuple[int, ...] | None:
+    """親の persona_index を因子ごと 50/50 で継承.
+
+    - 両親とも None → None (**no-op = additive 不変条件**: persona_index 非使用の
+      個体集団は従来通り何も増えない).
+    - 両親とも設定 → 因子ごと独立 50/50 で A/B を選ぶ.
+    - 片方だけ設定 → 設定側をそのまま継承 (None からは合成しない).
+    """
+    if pi_a is None and pi_b is None:
+        return None
+    if pi_a is None:
+        return pi_b
+    if pi_b is None:
+        return pi_a
+    return tuple(
+        int(pi_a[f]) if rng.random() < 0.5 else int(pi_b[f])
+        for f in range(NUM_THOUGHT_FACTORS)
+    )
+
+
+# ---------------------------------------------------------------------------
 # Crossover (free functions, Genome3D の crossover と命名整合)
 # ---------------------------------------------------------------------------
 
@@ -419,6 +492,7 @@ def crossover_per_factor(
     """因子ごとに 50/50 で親 A/B から行を選ぶ.
 
     結果: 「**ある因子は親 A の層別分布**, 別の因子は親 B の層別分布」を継承.
+    ``persona_index`` も同様に因子ごと 50/50 継承 (両親 None なら None のまま = no-op).
     """
     a = parent_a.as_array()
     b = parent_b.as_array()
@@ -430,9 +504,12 @@ def crossover_per_factor(
         raise ValueError("parents must share layer_names")
     mask = rng.random(NUM_THOUGHT_FACTORS) < 0.5
     new = np.where(mask[:, None], a, b)
+    persona_index = _crossover_persona_index(
+        parent_a.persona_index, parent_b.persona_index, rng
+    )
     return ThoughtFactorPerLayerChromosome.from_array(
         new, layer_names=parent_a.layer_names
-    )
+    ).with_persona_index(persona_index)
 
 
 def crossover_per_layer(
@@ -444,6 +521,8 @@ def crossover_per_layer(
 
     結果: 「**working layer は親 A から, episodic layer は親 B から**」のような
     層別遺伝物質交換. cross-layer な再構成を促す.
+    ``persona_index`` は層概念を持たない離散メタデータなので因子ごと 50/50 継承
+    (両親 None なら None のまま = no-op).
     """
     a = parent_a.as_array()
     b = parent_b.as_array()
@@ -456,9 +535,12 @@ def crossover_per_layer(
     n_layers = a.shape[1]
     mask = rng.random(n_layers) < 0.5
     new = np.where(mask[None, :], a, b)
+    persona_index = _crossover_persona_index(
+        parent_a.persona_index, parent_b.persona_index, rng
+    )
     return ThoughtFactorPerLayerChromosome.from_array(
         new, layer_names=parent_a.layer_names
-    )
+    ).with_persona_index(persona_index)
 
 
 __all__ = [
@@ -468,6 +550,9 @@ __all__ = [
     "NUM_MEMORY_LAYERS",
     "NUM_THOUGHT_FACTORS",
     "ThoughtFactorPerLayerChromosome",
+    "argmax_persona_index",
     "crossover_per_factor",
     "crossover_per_layer",
+    "mutate_persona_index",
+    "random_persona_index",
 ]
