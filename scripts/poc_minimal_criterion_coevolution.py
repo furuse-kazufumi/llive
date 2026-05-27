@@ -256,32 +256,48 @@ def _tail_mean(h: np.ndarray, frac: float = 0.2) -> float:
     return float(h[-n:].mean())
 
 
-def build_verdict(mcc: dict, fixed: dict, *, gens: int) -> dict:
-    fm = mcc["frontier"]
-    fx = fixed["frontier"]
+def build_verdict(mcc: dict, fixed: dict, *, gens: int, step: float) -> dict:
+    """Deterministic saturation verdict.
+
+    Scale-free thresholds anchored to the mutation `step` (the natural per-generation
+    unit of capability change):
+      * climbing  = tail slope >= 5% of a mutation step per generation (selection is
+                    accumulating net progress, not just drifting).
+      * plateau   = |tail slope| < 1% of a step per generation (no net progress = drift).
+    The fixed arm's residual tail slope is the pure-drift floor; MCC must beat it clearly.
+    """
+    fm = np.asarray(mcc["frontier"], dtype=float)
+    fx = np.asarray(fixed["frontier"], dtype=float)
     mcc_tail = _tail_mean(fm)
     fixed_tail = _tail_mean(fx)
     mcc_slope = _tail_slope(fm)
     fixed_slope = _tail_slope(fx)
 
-    # plateau test for the fixed arm: tail slope small relative to its own scale.
-    fixed_plateau = abs(fixed_slope) < 0.01 * (fixed_tail + 1e-9)
-    # MCC still climbing: positive tail slope.
-    mcc_still_climbing = mcc_slope > 0.01 * (mcc_tail + 1e-9)
-    # MCC exceeds fixed in the tail with margin.
-    mcc_exceeds = mcc_tail > 1.15 * fixed_tail
+    climb_thresh = 0.05 * step   # per-generation net progress to count as "climbing"
+    plateau_thresh = 0.01 * step  # below this = indistinguishable from drift
 
-    mcc_avoids_saturation = bool(mcc_exceeds and mcc_still_climbing and fixed_plateau)
+    fixed_is_plateau = abs(fixed_slope) < plateau_thresh
+    mcc_still_climbing = mcc_slope > climb_thresh
+    # MCC must beat the fixed tail with margin AND climb faster than the fixed drift floor.
+    mcc_exceeds = mcc_tail > 1.15 * fixed_tail
+    mcc_outpaces_drift = mcc_slope > max(climb_thresh, 5.0 * abs(fixed_slope))
+
+    mcc_avoids_saturation = bool(
+        mcc_exceeds and mcc_still_climbing and fixed_is_plateau and mcc_outpaces_drift
+    )
 
     return {
         "mcc_tail_frontier": round(mcc_tail, 4),
         "fixed_tail_frontier": round(fixed_tail, 4),
         "mcc_tail_slope_per_gen": round(mcc_slope, 6),
         "fixed_tail_slope_per_gen": round(fixed_slope, 6),
+        "climb_threshold_per_gen": round(climb_thresh, 6),
+        "plateau_threshold_per_gen": round(plateau_thresh, 6),
         "mcc_over_fixed_ratio": round(mcc_tail / (fixed_tail + 1e-9), 4),
         "mcc_exceeds_fixed_tail": bool(mcc_exceeds),
         "mcc_still_climbing": bool(mcc_still_climbing),
-        "fixed_is_plateau": bool(fixed_plateau),
+        "mcc_outpaces_drift": bool(mcc_outpaces_drift),
+        "fixed_is_plateau": bool(fixed_is_plateau),
         "mcc_avoids_saturation": mcc_avoids_saturation,
     }
 
