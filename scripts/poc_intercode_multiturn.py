@@ -316,27 +316,86 @@ class Action:
 
 
 # 散文 (説明文) を弾くための簡易ヒューリスティック。system prompt は「1 行・説明なし」を
-# 厳命するが、弱モデルは前置き ("I will run:" 等) を付けがち → 防御的にスキップする。
-# コマンドらしさ = 既知の CTF ツール名で始まる / シェル演算子を含む / 末尾コロンの散文でない。
+# 厳命するが、弱モデルは前置き ("I will run:" / "まず ls してみます。" 等) を付けがち。
+#
+# 🟢 parse_action 頑健化 (2026-05-28): 旧 _looks_like_command は「末尾が ':'/'.' でない行」を
+# 全部コマンド扱いしていたため、末尾句読点なしの **普通の散文** ("Let me think about this")
+# を誤ってシェルコマンドとして実行してしまう脆さがあった。対策 =
+#   (a) 既知コマンド先頭 or 明確なシェル演算子を含む行を **強い command シグナル**として優先。
+#   (b) 散文シグナル (前置き語 / 疑問符 / 末尾読点 / 多語かつコマンド先頭でない) を **強く除外**。
+#   (c) どの行も command らしくなければ ``cand`` を最初の非空行で強行せず ``Action("none","")``
+#       を返し、既存 retry-nudge に矯正を委ねる (誤実行 < no_action の方が安全)。
+#
+# 既知 CTF ツール先頭 (許可演算子は別途判定するので bash/sh も含む)。
 _KNOWN_CMD = _re.compile(
-    r"^\s*(ls|cat|strings|grep|file|xxd|hexdump|od|head|tail|find|python3?|"
-    r"base64|tr|awk|sed|cut|sort|uniq|wc|echo|printf|sh|bash|nl|tac|rev|"
-    r"binwalk|exiftool|unzip|tar|gzip|zcat|sha\d+sum|md5sum|nm|objdump|readelf)\b")
-_PROSE_HINT = _re.compile(r"[:.]\s*$")  # 末尾がコロン/ピリオドの行 = 散文の前置きの可能性
+    r"^\s*(ls|cat|strings|grep|egrep|fgrep|zgrep|file|xxd|hexdump|od|head|tail|find|"
+    r"python3?|perl|ruby|node|base64|base32|tr|awk|sed|cut|paste|sort|uniq|wc|echo|"
+    r"printf|sh|bash|nl|tac|rev|cmp|diff|seq|expr|bc|dd|strace|ltrace|"
+    r"binwalk|exiftool|unzip|zip|tar|gzip|gunzip|zcat|bunzip2|xz|7z|"
+    r"sha\d+sum|md5sum|nm|objdump|readelf|gdb|nm|ldd|pwd|cd|export|set)\b")
+# 明確なシェル演算子 (パイプ/リダイレクト/連結/コマンド置換)。
+_SHELL_OPS = ("|", ">", "<", "&&", "||", ";", "$(", "`")
+# 散文前置き語 (英/日)。これで始まる行は command 候補から除外。
+_PROSE_LEAD = _re.compile(
+    r"^\s*("
+    r"i\s+(will|am|'ll|need|should|want|can|think|see|notice|found|have|am\s+going)|"
+    r"i'?ll|let\s+me|let\s+us|let's|we\s+(will|should|need|can|'ll)|we'?ll|"
+    r"first[,\s]|next[,\s]|then[,\s]|now[,\s]|okay[,\s]|ok[,\s]|so[,\s]|"
+    r"the\s+flag|to\s+(solve|find|get|recover)|here\s+(is|are)|"
+    r"based\s+on|it\s+(looks|seems|appears)|this\s+(is|looks|seems)|"
+    r"まず|次に|では|それでは|なので|だから|つまり|したがって|"
+    r"フラグ|コマンド|ファイル|実行(し|する)|確認(し|する)|観察(し|する)"
+    r")",
+    _re.IGNORECASE)
+# 末尾コロン/ピリオド or 日本語句点/読点 (= 文末の散文)。
+_PROSE_TAIL = _re.compile(r"[:.。、！!？?]\s*$")
+
+
+def _has_shell_op(s: str) -> bool:
+    return any(op in s for op in _SHELL_OPS)
+
+
+def _looks_like_prose(line: str) -> bool:
+    """その 1 行が散文 (説明文・前置き) らしいか.
+
+    強い command シグナル (既知コマンド先頭 / シェル演算子) があれば散文ではない。
+    そうでなく、前置き語で始まる / 疑問符を含む / 末尾が句読点 / 空白区切りの語が
+    多く既知コマンドで始まらない、のいずれかなら散文とみなす。
+    """
+    s = line.strip()
+    if not s:
+        return True
+    # 既知コマンド先頭 or シェル演算子は明確に command → 散文ではない。
+    if _KNOWN_CMD.search(s) or _has_shell_op(s):
+        return False
+    # 前置き語 ("I will" / "Let me" / "まず" 等) で始まる = 散文。
+    if _PROSE_LEAD.search(s):
+        return True
+    # 疑問符を含む = 自問 (散文)。
+    if "?" in s or "？" in s:
+        return True
+    # 末尾が句読点 = 文 (散文の前置き)。
+    if _PROSE_TAIL.search(s):
+        return True
+    # 空白区切りの語が多く (>=4)、既知コマンドで始まらない = 文っぽい散文。
+    if len(s.split()) >= 4:
+        return True
+    return False
 
 
 def _looks_like_command(line: str) -> bool:
-    """その 1 行がシェルコマンドらしいか (散文の前置きを弾く)。"""
+    """その 1 行がシェルコマンドらしいか (散文の前置きを弾く)。
+
+    既知コマンド先頭 or シェル演算子は強い command シグナル。それ以外は
+    ``_looks_like_prose`` で散文判定されなければ command とみなす (短い裸トークン
+    ``id`` / ``pwd`` 等を救済)。
+    """
     s = line.strip()
     if not s:
         return False
-    if _KNOWN_CMD.search(s):
+    if _KNOWN_CMD.search(s) or _has_shell_op(s):
         return True
-    # シェル演算子を含めばコマンド寄り。
-    if any(op in s for op in ("|", ">", "<", "&&", ";", "$(", "`")):
-        return True
-    # 末尾コロン/ピリオド (= "I will run:" 等の前置き) は散文とみなす。
-    return not _PROSE_HINT.search(s)
+    return not _looks_like_prose(s)
 
 
 def parse_action(text: str) -> Action:
@@ -345,8 +404,11 @@ def parse_action(text: str) -> Action:
     優先順:
       1. ``submit picoCTF{...}`` → submit アクション (flag は本体のみ)。
       2. コードフェンス内の単一コマンド (extract_code) → command。
+         フェンス先頭行が散文なら、フェンス内の **コマンドらしい行**を探す。
       3. 素テキストの **コマンドらしい最初の行** (散文の前置きをスキップ) → command。
          ただしその行が裸の ``submit ...`` でも picoCTF を含めば submit に昇格。
+      4. どの行も command らしくなければ最初の非空行で強行せず ``Action("none","")``
+         を返す (誤実行を避け retry-nudge に矯正を委ねる)。
     """
     t = (text or "").strip()
     if not t:
@@ -356,21 +418,29 @@ def parse_action(text: str) -> Action:
     if m:
         return Action("submit", m.group(1))
 
-    # フェンス優先で 1 行コマンドを拾う。
-    code = extract_code(t)
     cand = None
+
+    # (2) フェンス優先: フェンス内から command らしい最初の行を拾う。
+    code = extract_code(t)
     if code:
-        cand = _strip_inline_fence(code.splitlines()[0] if code.splitlines() else "")
+        fenced = [_strip_inline_fence(ln) for ln in code.splitlines()]
+        fenced = [c for c in fenced if c]
+        for c in fenced:
+            if _looks_like_command(c):
+                cand = c
+                break
+        # フェンス内に command らしい行が無ければ強行採用しない (散文 only のフェンス)。
+
+    # (3) 素テキスト: コマンドらしい最初の行を選ぶ (散文の前置きをスキップ)。
     if not cand:
-        # 素テキスト: コマンドらしい最初の行を選ぶ (散文の前置きをスキップ)。
         cleaned = [_strip_inline_fence(ln) for ln in t.splitlines()]
         cleaned = [c for c in cleaned if c]
         for c in cleaned:
             if _looks_like_command(c):
                 cand = c
                 break
-        if not cand and cleaned:
-            cand = cleaned[0]  # 何も該当しなければ最初の非空行 (best effort)
+        # (4) 何も該当しなければ最初の非空行で強行せず none (retry-nudge に委ねる)。
+
     if not cand:
         return Action("none", "")
 
