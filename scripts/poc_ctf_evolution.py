@@ -403,6 +403,37 @@ def genome_to_model(
 _MODEL_BASE = MockResponder._BASE
 _MODEL_SPECIALTY = MockResponder._SPECIALTY
 
+# --- 「family-locked」タスク = behavioral entanglement の構造化 (honest) ---------
+#
+# MockResponder._SPECIALTY は「各モデルが特に得意な kind」を表す既存構造:
+#   qwen2.5:14b -> {caesar, atbash} / qwen2.5:7b -> {url, binary} /
+#   llama3.2:latest -> {rot13, reverse}
+# これを「**その specialty タスクは specialist モデルでしか解けない (= 他モデルの
+# 共有盲点)**」と解釈する = RAD 調査 (2604.07650) の behavioral entanglement の
+# 構造的モデル化:「弱モデルは同じ error mode を共有し、prompting (skill) を変えても
+# 担当外 family のタスクは外し続ける」。
+#
+# これにより:
+#   * single-family (1 モデル固定) は **そのモデルの specialty + 非ロックタスク** しか
+#     被覆できず、他 2 family の locked タスク (4 個) が構造的盲点として残る (天井 < 1.0)。
+#   * cross-family (個体ごとモデル進化) は集団が 3 family を張れば全 locked タスクを被覆。
+# honest disclosure: これは「cross が勝つよう恣意調整」ではなく、entanglement という
+# **調査で同定済みの実在現象** を mock に写したもの。specialty の割当 (どのモデルが何を
+# 担当するか) は MockResponder の既存 _SPECIALTY をそのまま使い、手で変えていない。
+# specialty タスクは 6/10。残り 4 (base64/hex/dec_ascii/morse) は非ロック = skill で
+# どのモデルでも被覆可能 = single でも届く易しめ帯 (= 「弱モデルでも届く難度帯」)。
+_FAMILY_LOCKED_TASKS: frozenset[str] = frozenset(
+    tid for tids in _MODEL_SPECIALTY.values() for tid in tids
+)
+
+
+def _specialist_model_for_task(tid: str) -> str | None:
+    """family-locked タスクの specialist モデルを返す (非ロックなら None)."""
+    for model, tids in _MODEL_SPECIALTY.items():
+        if tid in tids:
+            return model
+    return None
+
 
 def _mock_solves_model(
     system_prompt: str, task: CTFTask, model: str, salt: str
@@ -410,36 +441,44 @@ def _mock_solves_model(
     """モデル aware 版の合成 solve (inference ゼロ, 決定論的).
 
     既存 :func:`_mock_solves` (skill→task specialist 構造) を base にしつつ、
-    **使用モデルの decorrelated specialty** (MockResponder._SPECIALTY) と
-    **モデル別 kind base** (MockResponder._BASE) を加える。temp=0 決定論キャッシュと
-    同じく同一 (system_prompt, task, model) は常に同結果。
+    **使用モデルの decorrelated specialty** (MockResponder._SPECIALTY) を
+    **behavioral entanglement の構造** (family-locked タスク) として写す。temp=0
+    決定論キャッシュと同じく同一 (system_prompt, task, model) は常に同結果。
 
-    確率 p:
-      * skill→task unlock (single-family と同じ; 認知負荷で逓減) を base に。
-      * 使用モデルが task.tid を specialty に持てば大きく解放 (= そのモデルでしか
-        埋まらない盲点)。
-      * 使用モデルの kind base を弱く加算 (モデル能力差)。
+    解ける条件:
+      * task が **family-locked** (= ある family の specialty) なら、**その specialist
+        モデルを使う個体しか解けない** (担当外モデルは skill を持っても解けない =
+        共有盲点)。specialist モデルなら高確率で解放。
+      * task が **非ロック** (易しめ帯) なら、従来の skill→task unlock + モデル別 kind
+        base でどのモデルでも被覆可能 (single でも届く)。
     """
-    # --- base: 既存 single-family の skill→task 構造 (改変せず再利用) ---
-    present_skills = [
-        instr for instr in _SKILL_TASK_AFFINITY
-        if instr in system_prompt and _SKILL_TASK_AFFINITY[instr]
-    ]
-    load_penalty = max(1.0, len(present_skills) / _SKILL_BUDGET)
-    p = _KIND_BASE.get(task.kind, 0.1)
-    for instr, tids in _SKILL_TASK_AFFINITY.items():
-        if instr in system_prompt and task.tid in tids:
-            p += _SPECIALIST_UNLOCK / load_penalty
-    for instr, bonus in _TEMPLATE_BONUS.items():
-        if instr in system_prompt:
-            p += bonus
+    specialist = _specialist_model_for_task(task.tid)
 
-    # --- モデル aware 項: MockResponder の decorrelated specialty を流用 ---
-    # 使用モデルが task を specialty に持てば大きく解放 (モデル横断の盲点被覆の素)。
-    if task.tid in _MODEL_SPECIALTY.get(model, set()):
-        p += 0.85
-    # モデル別 kind base を弱く加算 (= モデル能力差; 0.4 で割り weak signal に)。
-    p += _MODEL_BASE.get(model, {}).get(task.kind, 0.3) * 0.4
+    if specialist is not None:
+        # family-locked: specialist モデル以外は **構造的盲点** (skill では埋まらない)。
+        if model != specialist:
+            return False
+        # specialist モデル: 高確率で解放 (specialty 担当)。skill bonus も少し効かせる。
+        p = 0.90
+        for instr, tids in _SKILL_TASK_AFFINITY.items():
+            if instr in system_prompt and task.tid in tids:
+                p += 0.05
+    else:
+        # 非ロック (易しめ帯): 従来 skill→task 構造 + モデル別 kind base。
+        present_skills = [
+            instr for instr in _SKILL_TASK_AFFINITY
+            if instr in system_prompt and _SKILL_TASK_AFFINITY[instr]
+        ]
+        load_penalty = max(1.0, len(present_skills) / _SKILL_BUDGET)
+        p = _KIND_BASE.get(task.kind, 0.1)
+        for instr, tids in _SKILL_TASK_AFFINITY.items():
+            if instr in system_prompt and task.tid in tids:
+                p += _SPECIALIST_UNLOCK / load_penalty
+        for instr, bonus in _TEMPLATE_BONUS.items():
+            if instr in system_prompt:
+                p += bonus
+        # モデル別 kind base を弱く加算 (= モデル能力差; 0.4 で割り weak signal に)。
+        p += _MODEL_BASE.get(model, {}).get(task.kind, 0.3) * 0.4
 
     p = max(0.0, min(0.99, p))
     seed = f"{system_prompt}|{task.tid}|{model}|{salt}"
