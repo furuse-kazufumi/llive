@@ -523,6 +523,20 @@ class PopCoverage:
     solved_union: list[str]
 
 
+def _coerce_float(val: object) -> float | None:
+    """観測専用 str (or 数値) breakdown 値を float 化する (失敗は None)。"""
+    if isinstance(val, bool):
+        return None
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        try:
+            return float(val)
+        except ValueError:
+            return None
+    return None
+
+
 def _solved_mask(ind: Individual, tasks: list[CTFTask]) -> frozenset[str]:
     bd = (ind.fitness.breakdown if ind.fitness else {}) or {}
     return frozenset(
