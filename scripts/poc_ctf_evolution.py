@@ -180,14 +180,19 @@ _KIND_BASE: dict[str, float] = {"easy": 0.45, "medium": 0.10, "hard": 0.02}
 # medium/hard タスクは素の base がほぼ 0 なので、**担当 skill を持つ個体しか解けない** =
 # 異なる skill 構成の個体が異なるタスクの specialist になる (ε-lexicase の餌)。
 # 指示文は real_pressures._SKILL_INSTRUCTIONS に対応 (system prompt に substring 出現)。
+# 10 specialist skill ↔ 10 タスク (8 既定 + 2 拡張) を **1 対 1** に割り当てる。
+# easy タスク (base64/hex/rot13/reverse) は base が五分なので担当 skill 無しでも時々解けるが、
+# medium/hard (url/caesar/atbash/binary/dec_ascii/morse) は base≒0 → **担当 skill 必須**。
+# uncertainty/align は「解放タスク無し」(全個体共通の素能力寄与のみ) にして、進化が無駄 skill を
+# 切り落とす圧も観測できるようにする (空 tuple)。
 _SKILL_TASK_AFFINITY: dict[str, tuple[str, ...]] = {
     "Break the problem into clear, explicit steps.": ("binary",),                # structurize
     "Restate the question in your own words first.": ("url",),                   # recompose
     "Double-check your answer before finalizing it.": ("atbash",),               # loop
     "If information is missing, reason from what is given.": ("reverse",),        # self_extend
-    "If you are unsure, say so explicitly.": (),                                  # uncertainty
+    "If you are unsure, say so explicitly.": ("dec_ascii",),                      # uncertainty
     "Briefly consider alternatives before deciding.": ("rot13",),                # explore
-    "Stay strictly on-topic and consistent.": (),                                # align
+    "Stay strictly on-topic and consistent.": ("morse",),                        # align
     "Base your answer only on the facts in the question.": ("hex",),             # provenance
     "Consider multiple possible meanings before answering.": ("caesar",),        # perspective
     "Ignore irrelevant or distracting statements.": ("base64",),                 # ground
