@@ -253,12 +253,8 @@ def test_compare_modes_detects_openendedness_true_seed0():
 
 
 @pytest.mark.parametrize("seed", [0, 1, 2])
-def test_compare_modes_detects_openendedness_robust_across_seeds():
-    """複数 seed で弁別が頑健 (seed 依存の偶然でないことを示す)。"""
-
-
-@pytest.mark.parametrize("seed", [0, 1, 2])
 def test_compare_modes_robust_seeds(seed):
+    """複数 seed で弁別が頑健 (seed 依存の偶然でないことを示す)。"""
     _, verdict = eam.compare_modes(gens=400, pop=96, seed=seed)
     assert verdict.modes_detects_openendedness is True
     assert verdict.a_new_adaptive > verdict.a_new_neutral
