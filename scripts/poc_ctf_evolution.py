@@ -732,6 +732,102 @@ def _load_snapshots(out_dir: Path) -> list[tuple[int, list[Individual]]]:
     return snaps
 
 
+@dataclass
+class ConditionResult:
+    """1 条件 (single-family / cross-family) の進化 + 計測結果."""
+
+    name: str                         # "single_family" / "cross_family"
+    gen_curve: list[PopCoverage]
+    evolved_pop_cov: float            # 最終世代 best-of-pop coverage
+    best_single_cov: float            # 全世代最良 single 個体 coverage
+    gen0_cov: float                   # 選択圧前 (gen0) 集団 coverage
+    final_family_dist: dict           # 最終世代のモデル分布 (measure_family_distribution)
+    gen0_family_dist: dict            # gen0 のモデル分布 (family 進化追跡用)
+    family_distinct_curve: list[int]  # 世代ごとの distinct モデル数 (進化で動いたか)
+    elapsed: float
+    best_score_final: float | None
+
+
+def _run_one_condition(
+    name: str,
+    *,
+    tasks: list[CTFTask],
+    mock: bool,
+    real_responder: RealResponder | None,
+    args,  # noqa: ANN001
+    out_dir: Path,
+    model_resolver: Callable[[object, str], tuple[str, str]] | None,
+) -> ConditionResult:
+    """1 条件を進化させ snapshot から coverage + family 分布を計測する.
+
+    ``model_resolver=None`` → single-family (全個体固定モデル)。
+    ``model_resolver`` 指定 → cross-family (個体ごとモデル進化)。
+    各条件は **独立 out_dir / 独立キャッシュ** (snapshot 衝突回避)。
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # 過去 run の snapshot 混入を防ぐため条件 dir の snapshot を消す。
+    for p in out_dir.glob("snapshot_gen_*.json"):
+        p.unlink()
+
+    cache: dict[tuple[str, str, str], bool] = {}
+    fitness_fn = make_ctf_fitness(
+        tasks, mock=mock, real_responder=real_responder,
+        real_temperature=0.0, real_model=args.model, cache=cache,
+        model_resolver=model_resolver,
+    )
+
+    selector_cfg = LLDarwinV2Config(epsilon=args.epsilon)
+    selector = build_lldarwin_v2_selector(selector_cfg)
+
+    print(f"[poc_ctf_evo] === condition={name} "
+          f"({'cross-family' if model_resolver else 'single-family'}) ===")
+    t0 = time.time()
+    result = run_persona_evolution(
+        args.personas,
+        population_size=args.pop,
+        generations=args.gens,
+        seed=args.seed,
+        out_dir=out_dir,
+        fitness_fn=fitness_fn,
+        is_proxy=False,
+        genome3d=True,
+        diverse_founder_prompts=True,
+        selection=selector,
+        lineage_reservoir=True,
+        reinject_interval=1,
+        persist_generation_log=True,
+        checkpoint_every=1,
+        patience=args.gens + 1,
+        max_stall_generations=None,
+    )
+    elapsed = time.time() - t0
+
+    snaps = _load_snapshots(out_dir)
+    gen_curve = [measure_population_coverage(inds, gen, tasks) for gen, inds in snaps]
+    fam_curve = [measure_family_distribution(inds) for _gen, inds in snaps]
+
+    best_single_cov = max((g.best_individual_coverage for g in gen_curve), default=0.0)
+    final = gen_curve[-1] if gen_curve else None
+    evolved_pop_cov = final.pop_coverage if final else 0.0
+    gen0_cov = gen_curve[0].pop_coverage if gen_curve else 0.0
+
+    return ConditionResult(
+        name=name,
+        gen_curve=gen_curve,
+        evolved_pop_cov=evolved_pop_cov,
+        best_single_cov=round(best_single_cov, 4),
+        gen0_cov=round(gen0_cov, 4),
+        final_family_dist=fam_curve[-1] if fam_curve else {},
+        gen0_family_dist=fam_curve[0] if fam_curve else {},
+        family_distinct_curve=[f.get("family_diversity", 0) for f in fam_curve],
+        elapsed=elapsed,
+        best_score_final=(
+            round(result.evolution_result.best_individual.score, 4)
+            if result.evolution_result.best_individual else None
+        ),
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     _ensure_utf8_stdout()
     ap = argparse.ArgumentParser(description=__doc__)
@@ -749,7 +845,15 @@ def main(argv: list[str] | None = None) -> int:
                          "(10 タスク ↔ 10 specialist skill の 1 対 1 被覆 regime)")
     ap.add_argument("--epsilon", type=float, default=0.0,
                     help="ε-lexicase の許容範囲 (0/1 case なので既定 0.0)")
-    ap.add_argument("--model", default="qwen2.5:14b", help="real モードの ollama model")
+    ap.add_argument("--model", default="qwen2.5:14b",
+                    help="real/single-family の固定 ollama model (single-family 条件)")
+    ap.add_argument("--mapping", default="impl_lang_then_hash",
+                    choices=("impl_lang_then_hash", "hash", "impl_lang"),
+                    help="cross-family の genome→model 写像方式 (既定 impl_lang_then_hash)")
+    ap.add_argument("--family", default="both",
+                    choices=("both", "single", "cross"),
+                    help="実行条件: both=single+cross 比較 (既定, PoC-CTF-1b) / "
+                         "single / cross の単独")
     ap.add_argument("--host", default=None, help="ollama host (既定=env/localhost)")
     ap.add_argument("--max-tokens", type=int, default=256)
     ap.add_argument("--personas", nargs="+", default=list(RESEARCH_METHODOLOGY_PERSONA_IDS),
@@ -771,79 +875,95 @@ def main(argv: list[str] | None = None) -> int:
 
     tasks = build_battery(include_extra=args.hard, max_tasks=args.max_tasks)
 
-    # ---- fitness (共有キャッシュ = 進化 + ベースライン + 参考) ----
-    cache: dict[tuple[str, str], bool] = {}
     real_responder: RealResponder | None = None
     if not mock:
         real_responder = RealResponder(host=args.host, max_tokens=args.max_tokens)
-    fitness_fn = make_ctf_fitness(
-        tasks, mock=mock, real_responder=real_responder,
-        real_temperature=0.0, real_model=args.model, cache=cache,
-    )
+        if args.family != "single":
+            # cross-family は全 3 モデルを使うので warmup (cold ロード timeout 汚染回避)。
+            real_responder.warmup(list(CROSS_FAMILY_MODELS))
+        else:
+            real_responder.warmup([args.model])
+
+    # cross-family の model_resolver (個体 genome → モデルファミリ)。
+    def cross_resolver(genome: object, system: str) -> tuple[str, str]:
+        return genome_to_model(
+            genome, system, models=CROSS_FAMILY_MODELS, mapping=args.mapping
+        )
 
     print(f"[poc_ctf_evo] mode={mode} pop={args.pop} gens={args.gens} "
-          f"tasks={len(tasks)} personas={args.personas}")
+          f"tasks={len(tasks)} family={args.family} mapping={args.mapping} "
+          f"personas={args.personas}")
 
-    # ---- ε-lexicase 進化 (lldarwin v2 selector + Genome3D + diverse founder prompts) ----
-    # MultiPressureSelector は breakdown の ctf::<tid> を case に自動抽出。novelty / 適応難易度は
-    # 確定 S1 既定 on のまま (specialist 系統の絶滅回避 + 勾配維持)。
-    selector_cfg = LLDarwinV2Config(epsilon=args.epsilon)
-    selector = build_lldarwin_v2_selector(selector_cfg)
+    # ---- 条件を実行 (single-family / cross-family) ----
+    conditions: dict[str, ConditionResult] = {}
+    if args.family in ("both", "single"):
+        conditions["single_family"] = _run_one_condition(
+            "single_family", tasks=tasks, mock=mock, real_responder=real_responder,
+            args=args, out_dir=args.out / "single_family", model_resolver=None,
+        )
+    if args.family in ("both", "cross"):
+        conditions["cross_family"] = _run_one_condition(
+            "cross_family", tasks=tasks, mock=mock, real_responder=real_responder,
+            args=args, out_dir=args.out / "cross_family", model_resolver=cross_resolver,
+        )
 
-    t0 = time.time()
-    result = run_persona_evolution(
-        args.personas,
-        population_size=args.pop,
-        generations=args.gens,
-        seed=args.seed,
-        out_dir=args.out,
-        fitness_fn=fitness_fn,
-        is_proxy=False,  # 実 (mock でも CTF オラクル) 採点。proxy ではない。
-        genome3d=True,
-        diverse_founder_prompts=True,
-        selection=selector,
-        lineage_reservoir=True,   # 確定 S1: specialist 系統の絶滅回避
-        reinject_interval=1,
-        persist_generation_log=True,  # snapshot_gen_*.json を書く (coverage 計測用)
-        checkpoint_every=1,
-        patience=args.gens + 1,        # 早期停止せず指定世代を完走
-        max_stall_generations=None,    # mock は早く収束しうるが小 run なので空回り無視
-    )
-    elapsed = time.time() - t0
-
-    # ---- 世代ごとの集団 coverage を snapshot から計測 ----
-    snaps = _load_snapshots(args.out)
-    gen_curve: list[PopCoverage] = [
-        measure_population_coverage(inds, gen, tasks) for gen, inds in snaps
-    ]
-
-    # ---- (a) 単一最強個体 = 全世代を通じた最良 single coverage (best individual ever) ----
-    best_single_cov = max((g.best_individual_coverage for g in gen_curve), default=0.0)
-    # 最終世代の集団 coverage = デプロイ可能な evolved ensemble coverage。
-    final = gen_curve[-1] if gen_curve else None
-    evolved_pop_cov = final.pop_coverage if final else 0.0
-
-    # ---- (b) 非進化の均等多様ミックス ----
-    # (b1) gen0 = 進化を一切かける前の同一集団 (= diverse founder + random padding)。
-    #      これが最も principled な「非進化の多様ミックス」: 同じ種から選択圧だけ抜いた対照。
-    gen0_cov = gen_curve[0].pop_coverage if gen_curve else 0.0
-    # (b2) 参考: 独立生成した均等多様ミックス (PoC-0 diverse 相当, step=0.3 の lucky shotgun 対照)。
-    even = even_diverse_baseline(tasks, fitness_fn, n=args.pop, seed=args.seed + 101)
-
-    # ---- verdict ----
-    # 命題 (b) の主指標 = gen0 (同一集団・選択圧前)。進化が gen0 を coverage で押し上げたか。
-    beats_single = evolved_pop_cov > best_single_cov + 1e-9
-    beats_gen0 = evolved_pop_cov > gen0_cov + 1e-9
-    beats_even = evolved_pop_cov > even.pop_coverage + 1e-9
+    # ---- PoC-CTF-1b verdict: cross-family vs single-family の最終 coverage ----
+    cross = conditions.get("cross_family")
+    single = conditions.get("single_family")
+    cross_cov = cross.evolved_pop_cov if cross else None
+    single_cov = single.evolved_pop_cov if single else None
+    crossfamily_verdict = None
+    if cross is not None and single is not None:
+        delta = round(cross_cov - single_cov, 4)
+        crossfamily_verdict = {
+            "cross_family_pop_coverage": cross_cov,
+            "single_family_pop_coverage": single_cov,
+            "delta(cross-single)": delta,
+            "cross_beats_single": delta > 1e-9,
+            "cross_ties_single": abs(delta) <= 1e-9,
+        }
 
     calls = getattr(real_responder, "calls", 0) if real_responder else 0
+    elapsed_total = sum(c.elapsed for c in conditions.values())
+
+    def _cond_to_dict(c: ConditionResult) -> dict:
+        final = c.gen_curve[-1] if c.gen_curve else None
+        return {
+            "evolved_pop_coverage": c.evolved_pop_cov,
+            "best_single_individual_coverage": c.best_single_cov,
+            "gen0_diverse_mix_coverage": c.gen0_cov,
+            "evolved_beats_single": c.evolved_pop_cov > c.best_single_cov + 1e-9,
+            "evolved_beats_gen0_diverse": c.evolved_pop_cov > c.gen0_cov + 1e-9,
+            "generation_coverage_curve": [
+                {
+                    "generation": g.generation,
+                    "pop_coverage": g.pop_coverage,
+                    "best_individual_coverage": g.best_individual_coverage,
+                    "n_specialist_taskmasks": g.n_specialist_taskmasks,
+                    "solved_union": g.solved_union,
+                }
+                for g in c.gen_curve
+            ],
+            "family_distribution": {
+                "gen0": c.gen0_family_dist,
+                "final": c.final_family_dist,
+                "distinct_models_per_generation": c.family_distinct_curve,
+            },
+            "final_distinct_taskmasks": final.n_specialist_taskmasks if final else 0,
+            "best_score_final": c.best_score_final,
+            "elapsed_seconds": round(c.elapsed, 2),
+        }
+
     out = {
-        "schema": "poc_ctf_evolution/v1",
+        "schema": "poc_ctf_evolution/v2",
         "proposition": (
-            "PoC-CTF-1: ε-lexicase 進化集団の coverage(best-of-pop) は "
-            "(a) 単一最強個体, (b) 非進化均等多様ミックス を上回るか。"
+            "PoC-CTF-1b: 個体 genome のモデル次元を responder のモデル選択に写像し進化させると "
+            "(cross-family)、単一モデル固定の同条件進化集団 (single-family) より集団 "
+            "coverage(best-of-pop) が上回るか (= クロスファミリ脱相関が effective か)。"
         ),
         "mode": mode,
+        "family": args.family,
+        "mapping": args.mapping,
         "pop": args.pop,
         "gens": args.gens,
         "hard_battery": bool(args.hard),
@@ -851,52 +971,31 @@ def main(argv: list[str] | None = None) -> int:
         "task_kinds": {t.tid: t.kind for t in tasks},
         "epsilon": args.epsilon,
         "personas": list(args.personas),
-        "generation_coverage_curve": [
-            {
-                "generation": g.generation,
-                "pop_coverage": g.pop_coverage,
-                "best_individual_coverage": g.best_individual_coverage,
-                "n_specialist_taskmasks": g.n_specialist_taskmasks,
-                "solved_union": g.solved_union,
-            }
-            for g in gen_curve
-        ],
-        "verdict": {
-            "evolved_pop_coverage": evolved_pop_cov,
-            "best_single_individual_coverage": round(best_single_cov, 4),
-            "gen0_diverse_mix_coverage": round(gen0_cov, 4),
-            "even_diverse_mix_coverage": even.pop_coverage,
-            "evolved_beats_single": beats_single,
-            "evolved_beats_gen0_diverse": beats_gen0,
-            "evolved_beats_even_diverse": beats_even,
-            "delta(evolved-single)": round(evolved_pop_cov - best_single_cov, 4),
-            "delta(evolved-gen0)": round(evolved_pop_cov - gen0_cov, 4),
-            "delta(evolved-even)": round(evolved_pop_cov - even.pop_coverage, 4),
-        },
-        "specialist_diversity": {
-            "final_distinct_taskmasks": final.n_specialist_taskmasks if final else 0,
-            "even_diverse_distinct_taskmasks": even.n_specialist_taskmasks,
-        },
+        "single_family_model": args.model,
+        "cross_family_models": list(CROSS_FAMILY_MODELS),
+        "conditions": {name: _cond_to_dict(c) for name, c in conditions.items()},
+        "crossfamily_verdict": crossfamily_verdict,
         "compute": {
             "llm_calls": calls,
-            "elapsed_seconds": round(elapsed, 2),
-            "cache_entries": len(cache),
-            "best_score_final": round(
-                result.evolution_result.best_individual.score, 4
-            ) if result.evolution_result.best_individual else None,
+            "elapsed_seconds": round(elapsed_total, 2),
         },
         "honest_notes": [
-            "mock は合成 responder (skill→task specialist 構造を意図的に埋込) で"
-            "ロジック検証専用。実機結果の予言ではない。",
-            "オラクルは正規化部分文字列一致 (poc_ctf_coverage.flag_oracle)。"
-            "偶然一致確率は低いがゼロでない。",
-            "集団 coverage = best-of-population。決定論オラクルが verify するため "
-            "security では deploy 可能 (poc_orchestra の oracle 上限問題を回避)。",
-            "(a) 単一最強個体 = 全世代を通じた最良 single 個体の coverage (進化が "
-            "生み出した最強単体を含む厳しめ baseline)。",
-            "pass@1 (素能力 = score 平均) と coverage (集団 best-of) を分離。"
-            "単一個体では両者は同義。",
-            "計算リソース限定: 小集団・少世代・小バッテリ。推定はノイジー。",
+            "mock は合成 responder (skill→task specialist + MockResponder の per-model "
+            "decorrelated specialty を意図的に流用) でロジック/配線検証専用。実機結果の予言ではない。",
+            "cross-family の model 写像 = genome を on-prem モデルに離散写像。Genome3D には "
+            "flat genome の backend_id 次元が無いため、c_impl.impl_language (実在の進化 enum "
+            "次元) を第一信号にし、未変異個体は c_prompt 由来 system prompt の安定ハッシュへ "
+            "フォールバック (= 設計タスクの『ハッシュ代替も可、進化で動く次元か honest に明記』)。",
+            "family_distribution.distinct_models_per_generation と impl_lang_driven_frac で "
+            "「進化で実際にモデル分布が動いたか」を可視化 (動かないなら写像が genome の動く次元に "
+            "乗っていない=要修正点として報告)。",
+            "single-family は全個体が固定 1 モデル (最強 on-prem)。cross-family のみ個体ごと "
+            "モデルが分散・進化する = 唯一の差分 (それ以外の進化条件は完全同一)。",
+            "集団 coverage = best-of-population。決定論オラクルが verify するため security では "
+            "deploy 可能。pass@1 (素能力) と coverage (集団 best-of) を分離。",
+            "計算リソース限定: 小集団・少世代・小バッテリ。推定はノイジー。実機 29s/call の結合制約。",
+            "mock の合成 responder は specialty 構造を改変せず流用。cross が勝つよう恣意調整して "
+            "いない。結果が負なら負と報告 ([[feedback_benchmark_honest_disclosure]])。",
         ],
     }
 
@@ -905,8 +1004,7 @@ def main(argv: list[str] | None = None) -> int:
     _write_summary_md(args.out / "SUMMARY.md", out)
 
     _print_summary(out)
-    print(f"\n[poc_ctf_evo] wrote {out_json} ({elapsed:.1f}s, {calls} llm calls, "
-          f"{len(cache)} cache entries)")
+    print(f"\n[poc_ctf_evo] wrote {out_json} ({elapsed_total:.1f}s, {calls} llm calls)")
     return 0
 
 
