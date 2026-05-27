@@ -152,36 +152,95 @@ def extract_code(text: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# 危険トークン静的チェック (fail-closed の安全弁)
+# 危険トークン静的チェック (fail-closed の安全弁) — 過剰拒否を絞った v2
 # ---------------------------------------------------------------------------
 #
 # 完全防御ではない (PoC の安全弁)。subprocess の isolated + timeout + temp cwd +
 # 最小 env と多層で組み合わせる。検出したら実行拒否 = FAIL + reason 記録。
-# cipher/encoding を解くコードは base64/codecs/string 操作/loop だけで足りるので、
-# 下記トークンは正当な解法には不要 = 拒否しても解ける問題の取りこぼしは小さい。
+#
+# ## network 真隔離は OS レベルが本筋 (token チェックは PoC 安全弁)
+# token ブラックリストは bypass 容易 (getattr / 文字列連結 / __import__ 等) であり、
+# **network/fs 漏洩の本当の隔離は OS レベル** (seccomp / namespace / firewall /
+# 専用ユーザの mount+net 制限 / Windows なら Job Object + AppContainer) が本筋。
+# 本 PoC の静的トークン検出は「自明な危険呼び出しを早期に弾く安全弁」であって
+# sandbox 全体の依存先ではない (RAPTOR fail-closed: subprocess isolated + timeout +
+# temp cwd + 最小 env + stdin 閉 + stdout cap と多層で守る)。実 deploy では
+# OS レベル network 遮断 (Docker --network=none 等) に置き換える前提。
+#
+# ## v2 の方針 (false-positive 修正)
+# §8c 実機で url タスクが退行した原因 = 旧フィルタが ``urllib`` トークンを一律拒否し、
+# 無害な文字列操作 ``urllib.parse.unquote`` まで過剰拒否 (false-positive) したこと。
+# v2 では「危険な API を狙い撃ち」する:
+#   * ``urllib`` は一律拒否でなく ``urllib.request`` / ``urllib.error`` /
+#     ``urllib.urlopen`` / ``urllib.robotparser`` (= network) のみ拒否し、
+#     ``urllib.parse`` (quote/unquote = 無害な文字列操作) は **許可**。
+#   * ``os`` は ``import os`` 単体で即拒否せず、``os.system`` / ``os.popen`` /
+#     ``os.remove`` / ``os.exec*`` / ``os.spawn*`` 等の **危険メンバ呼び出し** に絞る。
+#   * ``sys`` も単なる import は許可 (sys.stdin/stdout は無害) し、危険操作のみ拒否。
+#
+# 許可される benign stdlib (cipher/encoding を解くのに必要・無害):
+#   urllib.parse (quote/unquote), base64, codecs, binascii, string, re, hashlib,
+#   math, itertools, collections, textwrap, struct, json, functools。
+# 引き続きブロック (network / fs-write / process exec / unsafe deserialization):
+#   urllib.request/error/urlopen, socket, http.client, requests, subprocess,
+#   os.system/os.popen/os.remove/os.exec*/os.spawn*, eval(/exec(/__import__/compile(,
+#   write-mode open(), shutil, ctypes/cffi, pickle/marshal, pty/popen。
 
 _DANGER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
-    ("import os", re.compile(r"\bimport\s+os\b")),
-    ("from os", re.compile(r"\bfrom\s+os\b")),
-    ("import sys (system access)", re.compile(r"\bimport\s+sys\b")),
-    ("subprocess", re.compile(r"\bsubprocess\b")),
+    # --- network (狙い撃ち: urllib.parse は無害なので許可、request/urlopen のみ拒否) ---
+    ("urllib.request/error/urlopen (network)",
+     re.compile(r"\burllib\.(request|error|urlopen|robotparser)\b")),
+    ("from urllib.request/error import (network)",
+     re.compile(r"\bfrom\s+urllib\.(request|error|robotparser)\b")),
+    ("urllib.request.urlopen / urlretrieve",
+     re.compile(r"\b(urlopen|urlretrieve|URLopener)\s*\(")),
+    ("requests (http client)", re.compile(r"\brequests\b")),
+    ("http.client / httplib / urllib3",
+     re.compile(r"\b(http\.client|httplib|urllib3)\b")),
     ("socket", re.compile(r"\bsocket\b")),
+    ("ftplib/smtplib/telnetlib (network)",
+     re.compile(r"\b(ftplib|smtplib|telnetlib|poplib|imaplib|asyncio\.open_connection)\b")),
+    # --- process exec ---
+    ("subprocess", re.compile(r"\bsubprocess\b")),
+    ("os.system / os.popen / os.exec* / os.spawn* (process exec)",
+     re.compile(r"\bos\.(system|popen|exec[lv][pe]*|spawn[lv][pe]*|startfile|fork|kill)\b")),
+    ("pty/popen", re.compile(r"\b(pty\b|popen2?\b)")),
+    # --- filesystem write / destructive os members ---
+    ("os.remove / os.unlink / os.rmdir / os.rename (fs mutate)",
+     re.compile(r"\bos\.(remove|unlink|rmdir|removedirs|rename|replace|truncate|chmod|chown|mkdir|makedirs|symlink|link)\b")),
     ("shutil", re.compile(r"\bshutil\b")),
+    ("open() write/append/binary-write mode",
+     re.compile(r"\bopen\s*\([^)]*['\"][rwaxb+]*[wax+][rwaxb+]*['\"]")),
+    ("pathlib write (write_text/write_bytes/unlink/mkdir)",
+     re.compile(r"\.(write_text|write_bytes|unlink|mkdir|rmdir|rename|replace|touch)\s*\(")),
+    # --- dynamic code execution ---
     ("eval(", re.compile(r"\beval\s*\(")),
     ("exec(", re.compile(r"\bexec\s*\(")),
     ("__import__", re.compile(r"__import__")),
     ("compile(", re.compile(r"\bcompile\s*\(")),
-    ("open() write/append/binary-write mode",
-     re.compile(r"\bopen\s*\([^)]*['\"][rwaxb+]*[wax+][rwaxb+]*['\"]")),
-    ("urllib/requests/http", re.compile(r"\b(urllib|requests|httplib|http\.client)\b")),
+    # --- unsafe deserialization / FFI ---
     ("ctypes/cffi", re.compile(r"\b(ctypes|cffi)\b")),
     ("pickle/marshal", re.compile(r"\b(pickle|marshal)\b")),
-    ("pty/popen", re.compile(r"\b(pty|popen|os\.system)\b")),
+)
+
+#: 明示的に許可される benign stdlib (観測/honest_notes 用; scan では「狙い撃ち」拒否
+#: ルールに当たらないものはすべて許可されるため、本リストは documentation/可視化用)。
+BENIGN_STDLIB_ALLOWED: tuple[str, ...] = (
+    "urllib.parse (quote/unquote)", "base64", "codecs", "binascii", "string",
+    "re", "hashlib", "math", "itertools", "collections", "textwrap", "struct",
+    "json", "functools", "import os (members are gated, not the import)",
+    "import sys (members are gated, not the import)",
 )
 
 
 def scan_dangerous(code: str) -> str | None:
-    """危険トークンを検出したら理由文字列を返す (= 実行拒否)。無ければ None。"""
+    """危険トークンを検出したら理由文字列を返す (= 実行拒否)。無ければ None。
+
+    v2: 過剰拒否 (false-positive) を絞った。``import os`` / ``import sys`` /
+    ``import urllib.parse`` 単体は許可し、**危険な API 呼び出し** (os.system /
+    urllib.request 等) のみ狙い撃ちで拒否する。完全防御ではない PoC 安全弁であり、
+    network/fs の真の隔離は OS レベルが本筋 (上記コメント参照)。
+    """
     for label, pat in _DANGER_RULES:
         if pat.search(code):
             return label
