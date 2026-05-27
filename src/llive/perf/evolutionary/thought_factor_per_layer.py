@@ -334,11 +334,16 @@ class ThoughtFactorPerLayerChromosome:
     # ----- serialization --------------------------------------------------
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        d: dict[str, Any] = {
             "factor_weights": [list(row) for row in self.factor_weights],
             "layer_names": list(self.layer_names),
             "factor_names": list(THOUGHT_FACTORS),
         }
+        # additive: persona_index は設定時のみ書き出す (None は省略しても to_dict 経由で
+        # from_dict 復元時に default None になり round-trip 整合).
+        if self.persona_index is not None:
+            d["persona_index"] = list(self.persona_index)
+        return d
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ThoughtFactorPerLayerChromosome:
@@ -346,9 +351,15 @@ class ThoughtFactorPerLayerChromosome:
         layer_names = tuple(
             data.get("layer_names", DEFAULT_MEMORY_LAYER_NAMES)
         )
+        # backward-compat: 旧 snapshot に persona_index キーが無ければ None.
+        raw_pi = data.get("persona_index")
+        persona_index = (
+            None if raw_pi is None else tuple(int(v) for v in raw_pi)
+        )
         return cls(
             factor_weights=tuple(tuple(float(v) for v in row) for row in weights),
             layer_names=layer_names,
+            persona_index=persona_index,
         )
 
     # ----- evolution operators -------------------------------------------
