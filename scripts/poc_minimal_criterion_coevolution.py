@@ -435,11 +435,12 @@ def _print(out: dict) -> None:
     print(f"\n  battery ceiling (fixed static difficulty) = {v['battery_ceiling']:.3f}")
     print(f"  MCC / fixed tail ratio = {v['mcc_over_fixed_ratio']:.2f}x "
           f"(divergence threshold >= {v['divergence_ratio_threshold']:.1f}x)")
+    print(f"  mcc_diverges (PRIMARY)    = {v['mcc_diverges']} "
+          f"(ratio {v['mcc_over_fixed_ratio']:.2f}x >= 2.0x)")
+    print(f"  mcc_broke_ceiling (sanity)= {v['mcc_broke_ceiling']} "
+          f"(MCC tail {v['mcc_tail_frontier']:.3f} > 3*ceiling {3 * v['battery_ceiling']:.3f})")
     print(f"  fixed_confined_to_battery = {v['fixed_confined_to_battery']} "
-          f"(fixed tail {v['fixed_tail_frontier']:.3f} < 2*ceiling {2 * v['battery_ceiling']:.3f})")
-    print(f"  mcc_broke_ceiling         = {v['mcc_broke_ceiling']} "
-          f"(MCC tail {v['mcc_tail_frontier']:.3f} > 2*ceiling {2 * v['battery_ceiling']:.3f})")
-    print(f"  mcc_diverges              = {v['mcc_diverges']}")
+          f"(fixed tail {v['fixed_tail_frontier']:.3f} < 3*ceiling {3 * v['battery_ceiling']:.3f}) [info only]")
     print(f"  (transparency) MCC quarter-growth {v['mcc_quarter_growth']:+.4f}  "
           f"fixed quarter-growth {v['fixed_quarter_growth']:+.4f}  "
           f"[noisy — NOT a verdict gate]")
