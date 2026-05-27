@@ -1154,13 +1154,15 @@ def _write_summary_md(path: Path, out: dict) -> None:
         "",
         "## 結果 (coverage + family diversity)",
         "",
-        "| 条件 | evolved coverage | best single | gen0 | final distinct models | impl_lang_driven |",
-        "|---|---|---|---|---|---|",
+        "| 条件 | evolved coverage (最終) | peak coverage (全世代最良) | best single | gen0 | "
+        "final distinct models | impl_lang_driven |",
+        "|---|---|---|---|---|---|---|",
     ]
     for name, cond in out["conditions"].items():
         fam = cond["family_distribution"]["final"]
         lines.append(
             f"| {name} | **{cond['evolved_pop_coverage']:.3f}** | "
+            f"{cond['peak_pop_coverage']:.3f} | "
             f"{cond['best_single_individual_coverage']:.3f} | "
             f"{cond['gen0_diverse_mix_coverage']:.3f} | "
             f"{fam.get('family_diversity', 0)} | "
