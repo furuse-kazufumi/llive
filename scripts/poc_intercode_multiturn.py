@@ -577,12 +577,17 @@ def main(argv: list[str] | None = None) -> int:
                     help="LLM/Docker ゼロの canned 軌跡でループ制御/採点/終了判定を検証")
     ap.add_argument("--real", action="store_true",
                     help="on-prem ollama (temp=0) で multi-turn agentic smoke")
-    ap.add_argument("--mock-strategy", choices=["ideal", "naive"], default="ideal",
-                    help="mock の軌跡: ideal=ls→観察→submit / naive=ls せず誤 submit")
+    ap.add_argument("--mock-strategy", choices=["ideal", "naive", "inhead"],
+                    default="ideal",
+                    help="mock の軌跡: ideal=ls→観察/検証→submit / naive=ls せず誤 submit / "
+                         "inhead=頭で誤 submit→gate 却下→verify 訂正 (Task1 self-check 検証)")
     ap.add_argument("--max-tasks", type=int, default=7,
                     help="offline easy 帯から先頭 n 件 (frugal smoke)")
     ap.add_argument("--max-turns", type=int, default=8,
                     help="1 タスクの最大ターン数 (打ち切り = FAIL)")
+    ap.add_argument("--max-self-checks", type=int, default=1,
+                    help="submit 前 self-check で未検証 submit を却下する最大回数 "
+                         "(0=gate 無効=旧挙動; Task1 算術退行修正)")
     ap.add_argument("--model", default="qwen2.5:14b", help="on-prem ollama model")
     ap.add_argument("--host", default=None, help="ollama host (既定=env/localhost)")
     ap.add_argument("--max-tokens", type=int, default=256)
