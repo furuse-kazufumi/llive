@@ -496,13 +496,15 @@ def run_multiturn_task(
         else:
             ex = run_shell_in_container(act.payload, task_id=task.task_id,
                                         timeout=timeout)
+        # binary 観察を sanitize (cat した ELF 等の garbage で文脈を汚さない)。
+        obs = _sanitize_observation(ex.stdout)
         rec = TurnRecord(
             turn=t, action_kind="command", command=act.payload,
-            stdout_head=ex.stdout[:400], stderr_head=ex.stderr[:200],
+            stdout_head=obs[:400], stderr_head=ex.stderr[:200],
             timed_out=ex.timed_out, docker_error=ex.error,
         )
         turns.append(rec)
-        history.append({"command": act.payload, "stdout": ex.stdout,
+        history.append({"command": act.payload, "stdout": obs,
                         "stderr": ex.stderr})
 
     return TaskTrace(
