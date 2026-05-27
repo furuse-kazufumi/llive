@@ -368,12 +368,21 @@ def run(
             "PoC は『データから記述子を学ぶと手設計の盲点を捉えうる』線形版の feasibility の "
             "みを示し、非線形 manifold での挙動は別途要検証 (line: PCA は線形部分空間しか "
             "捉えられない)。",
-            "盲点は意図的に構成: high-variance latent factors を直交回転で全 D 次元へ拡散させ、"
-            "handcoded が固定で読む 2 次元には high-variance 成分が薄くしか乗らないようにした。"
-            "実 llive 行動信号で handcoded がこれほど不利かは未検証 (= toy の設計上の優位)。",
+            "盲点は意図的に構成: handcoded が読む dims(0,1) を near-DEGENERATE (collinear) な "
+            "低分散読み出しにし (同一の高分散 factor を lo_var で縮小+微小独立ノイズ)、"
+            "残り d-2 次元に高分散 factor を直交回転で配置した。dims(0,1) は相関が高く低分散 "
+            "ゆえ binning で個体がほぼ 1 次元対角線に潰れる = 少数セル。実 llive 行動信号で "
+            "handcoded がこれほど不利かは未検証 (= toy の設計上の優位)。",
+            "HONEST (設計中に踏んだ罠): 盲点を『i.i.d. 純ノイズ 2 次元』にすると range-normalised "
+            "coverage は逆に handcoded が高くなった — 純ノイズは grid 上に一様に散らばり coverage "
+            "を spurious に水増しするため。これは『grid 被覆 = 行動多様性』ではない好例 (純ノイズ "
+            "セルは行動的に無意味)。ゆえに盲点を『純ノイズ』でなく『低分散 collinear (退化)』に "
+            "して、coverage が正しく崩壊するようにした。captured_variance はどちらの構成でも "
+            "AURORA 圧勝 (盲点軸の捕捉は robust)。",
             "coverage は各記述子の OBSERVED range を 16x16 グリッドに張る (range-normalised) "
             "ので、生スケールの大小では不利にならない fair な比較。測っているのは『個体を異なる "
-            "セルにどれだけ広く散らすか』。",
+            "セルにどれだけ広く散らすか』。ただし上記の通り純ノイズには甘い指標なので "
+            "captured_variance と AND で判定する (= coverage 単独では不十分という教訓)。",
             "captured_variance = 記述子 2 座標の分散和 / b 全分散。PCA では top-2 PC の "
             "explained-variance ratio、handcoded では固定 2 次元の分散割合 = 記述子が "
             "high-variance 行動軸に乗っているかの直接指標。",
