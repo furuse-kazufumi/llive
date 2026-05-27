@@ -679,12 +679,13 @@ def _print_summary(out: dict) -> None:
 def _write_summary_md(path: Path, out: dict) -> None:
     v = out["verdict"]
     sd = out["specialist_diversity"]
-    both = v["evolved_beats_single"] and v["evolved_beats_even_diverse"]
+    both = v["evolved_beats_single"] and v["evolved_beats_gen0_diverse"]
     lines = [
         "# PoC-CTF-1 — ε-lexicase 進化集団 coverage (honest)",
         "",
         f"- mode: **{out['mode']}** / pop={out['pop']} / gens={out['gens']} / "
-        f"n_tasks={out['n_tasks']} / epsilon={out['epsilon']}",
+        f"n_tasks={out['n_tasks']} / hard_battery={out.get('hard_battery')} / "
+        f"epsilon={out['epsilon']}",
         f"- personas (founders): {', '.join(out['personas'])}",
         "",
         "## 命題",
@@ -697,12 +698,17 @@ def _write_summary_md(path: Path, out: dict) -> None:
         f"|---|---|",
         f"| evolved 集団 (best-of-pop, 最終世代) | **{v['evolved_pop_coverage']:.3f}** |",
         f"| (a) 単一最強個体 (全世代最良 single) | {v['best_single_individual_coverage']:.3f} |",
-        f"| (b) 非進化 均等多様ミックス (同サイズ) | {v['even_diverse_mix_coverage']:.3f} |",
+        f"| (b) gen0 多様ミックス (選択圧前の同一集団, **主指標**) | "
+        f"{v['gen0_diverse_mix_coverage']:.3f} |",
+        f"| (参考) 独立生成 均等多様ミックス (lucky-shotgun 対照) | "
+        f"{v['even_diverse_mix_coverage']:.3f} |",
         "",
         f"- delta(evolved - single) = {v['delta(evolved-single)']:+.3f} "
         f"({'上回る' if v['evolved_beats_single'] else '上回らない'})",
+        f"- delta(evolved - gen0)   = {v['delta(evolved-gen0)']:+.3f} "
+        f"({'上回る' if v['evolved_beats_gen0_diverse'] else '上回らない'})  <- 主指標",
         f"- delta(evolved - even)   = {v['delta(evolved-even)']:+.3f} "
-        f"({'上回る' if v['evolved_beats_even_diverse'] else '上回らない'})",
+        f"({'上回る' if v['evolved_beats_even_diverse'] else '上回らない'})  (参考)",
         "",
         "## specialist 多様性",
         "",
@@ -711,15 +717,17 @@ def _write_summary_md(path: Path, out: dict) -> None:
         "",
         "## VERDICT (honest)",
         "",
-        ("**進化集団が単一最強・均等多様の両 baseline を coverage で上回った。**"
-         "ε-lexicase が異なるタスクの specialist を共存させ、決定論オラクルが best-of-pop を "
-         "verify することで集団 coverage がデプロイ可能になった、という設計 §9 の対応関係を "
-         "(この regime で) 支持する。"
+        ("**進化集団が単一最強個体・gen0 多様ミックス (選択圧前の同一集団) を coverage で "
+         "上回った。** ε-lexicase が異なるタスクの specialist を共存・増殖させ、決定論オラクルが "
+         "best-of-pop を verify することで集団 coverage がデプロイ可能になった、という設計 §9 の "
+         "対応関係を (この regime で) 支持する。なお十分大きい独立 random ミックスは小さなタスク "
+         "空間を shotgun で埋められる (参考 even が高い) ため、進化の価値は「同じ種から選択圧で "
+         "coverage を伸ばす」点にある (PoC-0 の『均等多様化は盲点に集中しないと負ける』教訓と整合)。"
          if both else
-         "**進化の付加価値は不明瞭** — 少なくとも 1 つの baseline を上回らなかった。"
+         "**進化の付加価値は不明瞭** — 主 baseline (単一最強 または gen0) を上回らなかった。"
          "honest にこの結果を残す ([[feedback_benchmark_honest_disclosure]])。"
-         "上回らない原因 (集団が小さい / タスクが易しく単一個体が飽和 / specialist 圧が "
-         "効いていない 等) を内訳から疑うこと。"),
+         "原因 (タスク空間が小さく random shotgun で飽和 / 集団が大きすぎ / specialist 圧不足 等) を "
+         "内訳から疑うこと。"),
         "",
         "## honest 留保",
         "",
