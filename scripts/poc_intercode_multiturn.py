@@ -460,6 +460,13 @@ def run_multiturn_task(
         act = parse_action(raw)
 
         if act.kind == "none":
+            # no_action 矯正: 即終了せず「コマンド1つ or submit を1行で出せ」を注入。
+            if max_retry_nudges > 0 and retry_nudges_used < max_retry_nudges:
+                retry_nudges_used += 1
+                turns.append(TurnRecord(turn=t, action_kind="retry_nudge", command="",
+                                        stderr_head="no parseable action -> retry nudge"))
+                forced_retry = _retry_nudge_prompt()
+                continue
             turns.append(TurnRecord(turn=t, action_kind="none", command=""))
             stop = "no_action"
             break
