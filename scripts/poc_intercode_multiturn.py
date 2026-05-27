@@ -331,7 +331,7 @@ def parse_action(text: str) -> Action:
 @dataclass
 class TurnRecord:
     turn: int
-    action_kind: str
+    action_kind: str            # "command" | "submit" | "submit_rejected" | "none"
     command: str
     stdout_head: str = ""
     stderr_head: str = ""
@@ -349,16 +349,25 @@ class TaskTrace:
     submitted_flag: str | None
     n_turns: int
     stop_reason: str            # "submit_correct" | "submit_wrong" | "max_turns" | "no_action"
+    self_checks_used: int = 0   # submit を「未検証」で却下した回数 (Task1 gate)
     turns: list[TurnRecord] = field(default_factory=list)
 
 
 def run_multiturn_task(
     task: IntercodeTask, *, max_turns: int, timeout: float,
     responder: RealResponder | None, model: str, mock_script: list[str] | None,
+    max_self_checks: int = 1,
 ) -> TaskTrace:
     """1 タスクを multi-turn agentic に走らせ、軌跡と採点結果を返す.
 
     mock_script が与えられればその行を順にモデル出力として使う (inference ゼロ検証)。
+
+    self-check gate (Task1, 算術退行修正)
+    -------------------------------------
+    submit しようとした flag 本文 (picoCTF{...} の中身) が過去コマンド stdout に未出現なら
+    「頭で解いた未検証値」とみなし、``max_self_checks`` 回まで submit を却下して強制 verify
+    nudge を注入する (= echo/python3 -c で計算させ stdout に出させる)。出現済み or 却下枠
+    使い切りなら submit を採点する。``max_self_checks=0`` で gate 無効 (旧挙動)。
     """
     ct = task.as_ctftask()
     oracle = ct.oracle  # flag_oracle(gold); 不変の決定論オラクル
@@ -367,11 +376,19 @@ def run_multiturn_task(
     solved = False
     submitted: str | None = None
     stop = "max_turns"
+    self_checks_used = 0
+    forced_verify: str | None = None   # 次ターンに注入する verify nudge (gate 発火時)
+    mock_idx = 0                        # mock_script の消費位置 (却下では進めない)
 
     for t in range(1, max_turns + 1):
-        prompt = _build_turn_prompt(task, history, max_turns, t)
+        if forced_verify is not None:
+            prompt = forced_verify
+            forced_verify = None
+        else:
+            prompt = _build_turn_prompt(task, history, max_turns, t)
         if mock_script is not None:
-            raw = mock_script[t - 1] if t - 1 < len(mock_script) else ""
+            raw = mock_script[mock_idx] if mock_idx < len(mock_script) else ""
+            mock_idx += 1
         else:
             raw = _real_turn(responder, _AGENT_SYSTEM, prompt, model)
 
@@ -383,6 +400,18 @@ def run_multiturn_task(
             break
 
         if act.kind == "submit":
+            body = _flag_body(act.payload)
+            # self-check gate: 本文が未検証 (stdout 未出現) なら却下して verify を強制。
+            if (max_self_checks > 0 and self_checks_used < max_self_checks
+                    and not _body_seen_in_history(body, history)):
+                self_checks_used += 1
+                turns.append(TurnRecord(
+                    turn=t, action_kind="submit_rejected", command=act.payload,
+                    stderr_head=f"self-check: body {body!r} not seen in stdout"))
+                forced_verify = _verify_nudge_prompt(act.payload, body)
+                # mock では却下後に verify コマンドを消費させたいので idx を戻さない
+                # (mock_script は [..., 未検証submit, verifyコマンド, 正submit] の順を想定)。
+                continue
             submitted = act.payload
             solved = bool(oracle(submitted))
             turns.append(TurnRecord(turn=t, action_kind="submit", command=submitted))
@@ -407,7 +436,8 @@ def run_multiturn_task(
     return TaskTrace(
         tid=ct.tid, task_id=task.task_id, kind=ct.kind,
         file_backed=task.file_backed, solved=solved, submitted_flag=submitted,
-        n_turns=len(turns), stop_reason=stop, turns=turns,
+        n_turns=len(turns), stop_reason=stop, self_checks_used=self_checks_used,
+        turns=turns,
     )
 
 
