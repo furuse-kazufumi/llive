@@ -34,7 +34,7 @@ from llive.perf.evolutionary.cross_substrate import (
     AbstractGenome,
     Substrate,
 )
-from llive.perf.evolutionary.mcp_substrate_adapter import (
+from llive.perf.evolutionary.experimental.mcp_substrate_adapter import (
     GENOME_URI_SCHEME,
     MCP_REMOTE_SUBSTRATE,
     MCP_SDK_AVAILABLE,
