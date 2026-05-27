@@ -761,9 +761,10 @@ def main(argv: list[str] | None = None) -> int:
                      if tr.retry_nudges_used > 0 and tr.solved]
 
     out = {
-        "schema": "poc_intercode_multiturn/v2",
+        "schema": "poc_intercode_multiturn/v3",
         "benchmark": "InterCode-CTF (princeton-nlp/intercode, picoCTF tasks, MIT)",
-        "phase": "Phase D-1 (multi-turn agentic loop) + Task1 submit self-check",
+        "phase": ("Phase D-1 (multi-turn agentic loop) + Task1 submit self-check "
+                  "+ no_action retry-nudge + binary observation sanitize"),
         "proposition": (
             "モデルを Docker コンテナ内で ls→stdout 観察→次コマンド→…→submit picoCTF{...} と "
             "数ターン自律させる multi-turn agentic ループ + submit 前 self-check (flag 本文を "
