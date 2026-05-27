@@ -831,6 +831,7 @@ def main(argv: list[str] | None = None) -> int:
                 "submitted_flag": tr.submitted_flag, "n_turns": tr.n_turns,
                 "stop_reason": tr.stop_reason,
                 "self_checks_used": tr.self_checks_used,
+                "retry_nudges_used": tr.retry_nudges_used,
                 "turns": [
                     {
                         "turn": r.turn, "action": r.action_kind,
