@@ -233,14 +233,33 @@ def test_compare_modes_neutral_near_zero():
     assert verdict.supra_count_neutral < 1.0  # ほぼどの component も shadow を越えない
 
 
-def test_compare_modes_adaptive_supra_count_exceeds_saturated():
-    """命題(3): adaptive は saturated より多くの component が shadow を越える (開放端獲得)。
+def test_compare_modes_saturated_collapses_diversity():
+    """命題(3): saturated は present component 多様性が崩壊し adaptive と区別できる。
 
-    A_new (活動和) 単独では saturated も持続成分で膨らむため、種数で区別する (honest)。
+    A_new (活動和) も supra-neutral 種数も saturated を完全には切り分けられない
+    (honest: seed により saturated A_new が adaptive を上回る)。seed 安定な弁別子は
+    「飽和は自明小語彙へ収束し多様性が崩壊する」(D_sat << D_adapt) こと。
     """
     _, verdict = eam.compare_modes(gens=400, pop=96, seed=0)
+    assert verdict.saturated_collapsed_diversity is True
+    # 飽和の present 多様性は適応的の半分未満。
+    assert verdict.diversity_saturated < 0.5 * verdict.diversity_adaptive
+    # supra-neutral 種数も adaptive のほうが多い (補助シグナル)。
     assert verdict.supra_count_adaptive > verdict.supra_count_saturated
-    assert verdict.supra_count_adaptive > 2.0 * verdict.supra_count_saturated
+
+
+def test_compare_modes_a_new_alone_does_not_separate_saturated():
+    """honest disclosure の明示テスト: A_new の大小だけでは saturated を切り分けられない.
+
+    ある seed では saturated の A_new が adaptive を上回る = A_new 単独は不十分という
+    本 PoC の核となる正直な発見を回帰として固定する。
+    """
+    # seed=1 で a_new_saturated > a_new_adaptive となることを確認 (実測)。
+    _, v1 = eam.compare_modes(gens=400, pop=96, seed=1)
+    assert v1.a_new_saturated > v1.a_new_adaptive
+    # それでも多様性崩壊で区別でき、総合 verdict は True。
+    assert v1.saturated_collapsed_diversity is True
+    assert v1.modes_detects_openendedness is True
 
 
 def test_compare_modes_detects_openendedness_true_seed0():
