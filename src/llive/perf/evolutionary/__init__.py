@@ -90,7 +90,7 @@ from llive.perf.evolutionary.frozen_gene import (
     FreezeReason,
     FrozenGene,
 )
-from llive.perf.evolutionary.frozen_registry import FrozenGeneRegistry
+from llive.perf.evolutionary.experimental.frozen_registry import FrozenGeneRegistry
 from llive.perf.evolutionary.genome import Genome, GenomeBounds
 from llive.perf.evolutionary.genome_3d import (
     Genome3D,
