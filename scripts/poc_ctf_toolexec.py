@@ -160,8 +160,6 @@ def extract_code(text: str) -> str | None:
 # cipher/encoding を解くコードは base64/codecs/string 操作/loop だけで足りるので、
 # 下記トークンは正当な解法には不要 = 拒否しても解ける問題の取りこぼしは小さい。
 
-_DANGEROUS_PATTERNS: tuple[tuple[str, re.Pattern[str]], None] | None = None  # placeholder
-
 _DANGER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("import os", re.compile(r"\bimport\s+os\b")),
     ("from os", re.compile(r"\bfrom\s+os\b")),
