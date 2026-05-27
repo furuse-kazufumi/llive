@@ -584,12 +584,13 @@ def measure_strategy_distribution(individuals: list[Individual]) -> dict:
             n_code += 1
         else:
             n_direct += 1
-        pt = bd.get(_PTOOL_KEY)
-        sc = bd.get(_SKILLDRV_KEY)
-        if isinstance(pt, (int, float)):
-            p_tools.append(float(pt))
+        # p_tool / skill_component は str 化して格納されている (case 汚染回避)。読む際に float 化。
+        pt = _coerce_float(bd.get(_PTOOL_KEY))
+        sc = _coerce_float(bd.get(_SKILLDRV_KEY))
+        if pt is not None:
+            p_tools.append(pt)
         # skill_component がゼロでない = c_prompt の tool-affine skill/template が在る個体。
-        if isinstance(sc, (int, float)) and float(sc) > 1e-9:
+        if sc is not None and sc > 1e-9:
             skill_driven += 1
     return {
         "n_code": n_code,
