@@ -335,6 +335,7 @@ def run_mode(
     tr.a_new_decayed = bool(tr.a_new_peak > 1.25 * (tr.a_new_tail_mean + 1e-9))
     tr.supra_count_tail_mean = float(np.mean(tr.supra_count[-tail_n:])) if tr.supra_count else 0.0
     tr.supra_count_final = tr.supra_count[-1] if tr.supra_count else 0
+    tr.diversity_tail_mean = float(np.mean(tr.diversity[-tail_n:])) if tr.diversity else 0.0
     return tr
 
 
