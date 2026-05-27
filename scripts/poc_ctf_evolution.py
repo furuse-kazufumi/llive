@@ -1068,20 +1068,28 @@ def _crossfamily_verdict_text(out: dict) -> str:
     if cv is None:
         return ("片側条件のみ実行 (--family != both) のため cross vs single 比較なし。"
                 "両条件の coverage は conditions セクション参照。")
-    if cv["cross_beats_single"]:
-        return ("**cross-family が single-family を coverage で上回った** "
-                f"(delta {cv['delta(cross-single)']:+.3f})。個体ごとにモデルファミリを "
-                "進化させ ε-lexicase が『別モデルの specialist』を集団に共存させたことで、"
-                "単一モデルでは埋まらない盲点 (behavioral entanglement) を被覆できた、という "
-                "設計 §3 の root blocker 直撃仮説を (この mock regime で) 支持する。")
+    peak = (f" peak(全世代最良) も cross {cv['cross_family_peak_coverage']:.3f} vs "
+            f"single {cv['single_family_peak_coverage']:.3f} "
+            f"(delta_peak {cv['delta_peak(cross-single)']:+.3f})。")
+    if cv["cross_beats_single"] or cv["cross_beats_single_peak"]:
+        head = ("**cross-family が single-family を coverage で上回った** "
+                if cv["cross_beats_single"] else
+                "**cross-family は最終世代では同点だが peak (全世代最良 = deploy 可能な best "
+                "ensemble) で single を上回った** ")
+        return (head + f"(最終 delta {cv['delta(cross-single)']:+.3f}).{peak} "
+                "個体ごとにモデルファミリを進化させ ε-lexicase が『別モデルの specialist』を "
+                "集団に共存させたことで、単一モデルでは埋まらない盲点 (behavioral entanglement) を "
+                "被覆できた、という設計 §3 の root blocker 直撃仮説を (この mock regime で) 支持する。"
+                "ただし family 多様性は世代間で揺れる (llama 系統が一時消失する世代あり) = "
+                "family 次元の novelty/reservoir 保護が次の改善余地。")
     if cv["cross_ties_single"]:
         return ("**cross-family は single-family と同点** "
-                f"(delta {cv['delta(cross-single)']:+.3f})。両者が同じ coverage に飽和 = この "
-                "regime ではクロスファミリの優位が出ない (タスク空間が小さく single でも "
+                f"(最終 delta {cv['delta(cross-single)']:+.3f}).{peak} 両者が同じ coverage に "
+                "飽和 = この regime ではクロスファミリの優位が出ない (タスク空間が小さく single でも "
                 "被覆できる / family 分布が動かない 等)。family_distribution と "
                 "impl_lang_driven_frac を疑うこと ([[feedback_benchmark_honest_disclosure]])。")
     return ("**cross-family は single-family を上回らなかった** "
-            f"(delta {cv['delta(cross-single)']:+.3f})。クロスファミリ脱相関の付加価値は "
+            f"(最終 delta {cv['delta(cross-single)']:+.3f}).{peak} クロスファミリ脱相関の付加価値は "
             "この regime では不明瞭。honest にこの結果を残す。原因 (model 分布が進化で動かない / "
             "specialty 構造が薄い / single の最強モデルが既に十分) を内訳から疑うこと "
             "([[feedback_benchmark_honest_disclosure]])。")
