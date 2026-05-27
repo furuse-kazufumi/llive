@@ -79,7 +79,7 @@ from llive.perf.evolutionary.fitness_llm import (
     LlmFitnessConfig,
     llm_fitness_factory,
 )
-from llive.perf.evolutionary.fitness_ucb import (
+from llive.perf.evolutionary.experimental.fitness_ucb import (
     UCB_GENOME_BOUNDS,
     UCB_GENOME_LABELS,
     UcbFitnessConfig,
