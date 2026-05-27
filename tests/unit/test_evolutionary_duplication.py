@@ -26,7 +26,7 @@ from llive.perf.evolutionary.duplication import (
 )
 from llive.perf.evolutionary.genome_3d import Genome3D
 from llive.perf.evolutionary.impl_chromosome import ImplChromosome
-from llive.perf.evolutionary.parallel_mutation import (
+from llive.perf.evolutionary.experimental.parallel_mutation import (
     KNOWN_AGGREGATIONS,
     ParallelEvaluationResult,
     evaluate_parallel,
