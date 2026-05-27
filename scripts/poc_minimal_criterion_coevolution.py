@@ -410,6 +410,11 @@ def run(
             "既存 AdaptivePercentileGate との違い: gate は固定 task 集合に対する閾値を "
             "適応させるだけ。MCC は task 自体を生成・淘汰して frontier 近傍の難度を "
             "創発させる (= auto-curriculum) 点が本質的に異なる。",
+            "per-seed 変動: seed 8 件 sweep で約 7/8 が mcc_avoids_saturation=True "
+            "(ratio>=2.0)。残りは MCC の lead lineage が band reshuffle で一時崩壊した不運 run "
+            "(ratio 1.4-1.9x) で、固定タスクには劣後しないが divergence 閾値未達。機構は "
+            "『多数派で成立・小規模 toy ゆえ noisy』が正確。pop/gens を上げても完全には消えない "
+            "(単一 cohort frontier の本質的分散)。default seed=0 は安定して True。",
             "verdict が False なら命題は inconclusive/falsified — honest にそう報告する "
             "(mcc_avoids_saturation=False で表現)。",
         ],
