@@ -358,6 +358,12 @@ def main(argv: list[str] | None = None) -> int:
           f"single={args.single_model} models={args.models}")
 
     conditions = build_conditions(args.single_model, args.models)
+
+    if not args.mock:
+        # cold ロード timeout がサンプルを汚さないよう、測定前に全モデルを warmup。
+        all_models = list(dict.fromkeys([args.single_model, *args.models]))
+        responder.warmup(all_models)  # type: ignore[attr-defined]
+
     t0 = time.time()
     results = []
     for name, samplers in conditions.items():

@@ -3,50 +3,50 @@
 > 自動生成: `libexec/raptor-auto-summary` (Stop hook)
 > 次回 ccr 起動時に CLAUDE.md SESSION START で自動的に読み取られる。
 
-- **最終更新**: 2026-05-27 21:49:10
+- **最終更新**: 2026-05-27 22:06:37
 - **プロジェクト**: `D:/projects/llive`
 - **ブランチ**: `optimize/core-2026-05-20`
 
 ## 直近の git log
 
 ```
-cb628c7 chore(evo): frozen 隔離 (experimental/) を __init__ に反映 [Phase A 収束]
-39a0672 auto: __init__.py 編集前 (2026-05-27 21:00)
-106018c auto: __init__.py 編集前 (2026-05-27 21:00)
-6978707 auto: __init__.py 編集前 (2026-05-27 21:00)
-c741653 auto: test_evolutionary_recursion_depth.py 編集前 (2026-05-27 20:59)
-75deeed auto: test_evolutionary_persona_extended.py 編集前 (2026-05-27 20:59)
-f5a1fb6 auto: test_evolutionary_frozen_gene.py 編集前 (2026-05-27 20:59)
-e608559 auto: test_evolutionary_mcp_substrate.py 編集前 (2026-05-27 20:59)
-74a12aa auto: test_evolutionary_cross_substrate.py 編集前 (2026-05-27 20:59)
-fb29689 auto: __init__.py 編集前 (2026-05-27 20:58)
+4fecb2c auto: poc_ctf_coverage.py 編集前 (2026-05-27 22:00)
+04c3fb9 auto: poc_ctf_coverage.py 編集前 (2026-05-27 22:00)
+de93ea4 auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:59)
+ea4ee90 auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:59)
+0788d43 auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:58)
+9921abf auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:58)
+60d7452 auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:58)
+292f680 auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:57)
+0b2e372 auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:56)
+715b6a8 auto: poc_ctf_evolution.py 編集前 (2026-05-27 21:56)
 ```
 
 ## 現在の git status
 
 ```
 M docs/SESSION_SUMMARY.md
-?? scripts/poc_ctf_coverage.py
+ M scripts/poc_ctf_coverage.py
 ```
 
 ## 直近 2 時間に変更されたファイル
 
 ```
-21:41 scripts/poc_ctf_coverage.py
-21:20 docs/SESSION_SUMMARY.md
-21:03 .pytest_cache/v/cache/nodeids
-21:00 src/llive/perf/evolutionary/__init__.py
-21:00 tests/unit/test_evolutionary_recursion_depth.py
-20:59 tests/unit/test_evolutionary_persona_extended.py
-20:59 tests/unit/test_evolutionary_frozen_gene.py
-20:59 tests/unit/test_evolutionary_mcp_substrate.py
-20:59 tests/unit/test_evolutionary_cross_substrate.py
-20:58 tests/unit/test_evolutionary_duplication.py
-20:57 tests/unit/test_evolutionary_meta_chromosome.py
-20:56 src/llive/perf/evolutionary/experimental/__init__.py
-20:50 docs/research/evolutionary_module_inventory_2026_05_27.md
-20:49 docs/research/lldarwin_v2_ablation_2026_05_27.md
-20:49 scripts/lldarwin_v2_ablation.py
+22:01 docs/SESSION_SUMMARY.md
+22:00 .pytest_cache/v/cache/nodeids
+22:00 .hypothesis/constants/fdcc6b911f23ea92
+22:00 .hypothesis/constants/fd9f6d37ceb11ff1
+22:00 .hypothesis/constants/f91483e62a8e2f83
+22:00 .hypothesis/constants/f701a82599443565
+22:00 .hypothesis/constants/e3f082d166906651
+22:00 .hypothesis/constants/ba48e0f665169d7c
+22:00 .hypothesis/constants/ad86a3046192fdb5
+22:00 .hypothesis/constants/9eede84fe8146c96
+22:00 .hypothesis/constants/9286b1a5af348fe7
+22:00 .hypothesis/constants/76e5b015dc77b20b
+22:00 .hypothesis/constants/656e6693057d27fd
+22:00 .hypothesis/constants/643f8bba710a3f52
+22:00 .hypothesis/constants/5744aa22b11e68e0
 ```
 
 ---
