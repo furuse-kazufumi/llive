@@ -480,10 +480,11 @@ def make_agentic_fitness(
             ok = _solve(system, strategy, task)
             breakdown[_case_key(task)] = 1.0 if ok else 0.0
             solved += int(ok)
-        # 観測専用 (lexicase case には混ぜない: label は非数値, 補助数値は接頭辞で除外想定)。
+        # 観測専用 — **すべて str 化**して格納 (数値だと lexicase case に自動抽出され
+        # 選択圧を汚染するため; lldarwin._infer_numeric_criteria は数値キーを全て case 化)。
         breakdown[_STRAT_KEY] = strategy  # type: ignore[assignment]
-        breakdown[_PTOOL_KEY] = round(p_tool, 4)  # type: ignore[assignment]
-        breakdown[_SKILLDRV_KEY] = round(skill_component, 4)  # type: ignore[assignment]
+        breakdown[_PTOOL_KEY] = str(round(p_tool, 4))  # type: ignore[assignment]
+        breakdown[_SKILLDRV_KEY] = str(round(skill_component, 4))  # type: ignore[assignment]
         score = solved / len(tasks) if tasks else 0.0
         return FitnessReport(
             score=float(score),
