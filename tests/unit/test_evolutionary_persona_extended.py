@@ -12,7 +12,7 @@ from llive.perf.evolutionary.persona import (
     THOUGHT_FACTORS,
     get_persona,
 )
-from llive.perf.evolutionary.persona_extended import (
+from llive.perf.evolutionary.experimental.persona_extended import (
     EXTENDED_PERSONA_DATA,
     EXTENDED_PERSONAS,
     register_extended_personas,
