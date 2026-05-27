@@ -214,7 +214,7 @@ _DANGER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     # (= 実際の mode 引数) に絞り、かつ w/a/x/+ を 1 つ以上含むものだけ拒否する。
     # 'r' / 'rb' / 'rt' (read-only) は許可。
     ("open() write/append/exclusive mode",
-     re.compile(r"\bopen\s*\([^)]*,\s*['\"][rbt]*[wax+][rwaxbt+]*['\"]")),
+     re.compile(r"\bopen\s*\([^)]*,\s*(?:mode\s*=\s*)?['\"][rbt]*[wax+][rwaxbt+]*['\"]")),
     ("pathlib write (write_text/write_bytes/unlink/mkdir)",
      re.compile(r"\.(write_text|write_bytes|unlink|mkdir|rmdir|rename|replace|touch)\s*\(")),
     # --- dynamic code execution ---
