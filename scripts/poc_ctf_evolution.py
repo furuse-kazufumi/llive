@@ -634,6 +634,36 @@ def measure_population_coverage(
     )
 
 
+def measure_family_distribution(individuals: list[Individual]) -> dict:
+    """集団が実際に使ったモデルファミリ分布 + 写像 source 分布を測る (PoC-CTF-1b).
+
+    各個体の ``fitness.breakdown[_MODEL_BREAKDOWN_KEY]`` (使用モデル名) と
+    ``[_MODEL_SOURCE_BREAKDOWN_KEY]`` (写像 source = impl_lang / hash / fixed) を集計。
+    family_diversity = distinct なモデル数 (= クロスファミリ脱相関の素になる多様性)。
+    src=="impl_lang" の割合 = 「進化で実在の enum 次元 (c_impl.impl_language) が動いて
+    family を決めた個体の割合」 = 写像が genome の動く次元に乗っているかの honest 指標。
+    """
+    fam_counts: dict[str, int] = {}
+    src_counts: dict[str, int] = {}
+    for ind in individuals:
+        bd = (ind.fitness.breakdown if ind.fitness else {}) or {}
+        model = bd.get(_MODEL_BREAKDOWN_KEY)
+        src = bd.get(_MODEL_SOURCE_BREAKDOWN_KEY)
+        if isinstance(model, str):
+            fam_counts[model] = fam_counts.get(model, 0) + 1
+        if isinstance(src, str):
+            src_counts[src] = src_counts.get(src, 0) + 1
+    n = sum(fam_counts.values())
+    return {
+        "family_counts": dict(sorted(fam_counts.items())),
+        "family_diversity": len(fam_counts),  # distinct モデル数
+        "source_counts": dict(sorted(src_counts.items())),
+        "impl_lang_driven_frac": (
+            round(src_counts.get("impl_lang", 0) / n, 4) if n else 0.0
+        ),
+    }
+
+
 # ---------------------------------------------------------------------------
 # 参考ベースライン (b): 非進化の均等多様ミックス (PoC-0 diverse 相当)
 # ---------------------------------------------------------------------------
