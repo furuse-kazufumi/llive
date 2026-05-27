@@ -127,9 +127,13 @@ def run_mcc(
     band_hi: int,
     step: float,
     task_step: float,
-    probe: np.ndarray,
 ) -> dict:
-    """Coevolve solvers + tasks. Return frontier trajectory + task-difficulty trajectory."""
+    """Coevolve solvers + tasks. Return frontier trajectory + task-difficulty trajectory.
+
+    Mutation is ZERO-MEAN Gaussian: net upward movement of capability comes ONLY from
+    selection, never from a mechanical mutation bias. So if the selection signal dies
+    (saturation), the frontier stops climbing — which is exactly what we want to detect.
+    """
     rng = np.random.default_rng(seed)
     # start solvers small (low capability) and tasks easy — both must climb together.
     solvers = rng.uniform(0.0, 0.3, (pop, d))
@@ -140,7 +144,7 @@ def run_mcc(
     task_max_diff = np.empty(gens)
 
     for g in range(gens):
-        frontier[g] = capability_frontier(solvers, probe)
+        frontier[g] = capability_frontier(solvers)
         task_mean_diff[g] = float(tasks.sum(axis=1).mean()) if len(tasks) else 0.0
         task_max_diff[g] = float(tasks.sum(axis=1).max()) if len(tasks) else 0.0
 
