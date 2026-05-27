@@ -1107,7 +1107,8 @@ def _print_condition(name: str, cond: dict) -> None:
               f"{nmodels:>8d}  {','.join(g['solved_union'])}")
     fam = cond["family_distribution"]
     print(f"  evolved pop coverage = {cond['evolved_pop_coverage']:.3f}  "
-          f"(best single = {cond['best_single_individual_coverage']:.3f}, "
+          f"(peak = {cond['peak_pop_coverage']:.3f}, "
+          f"best single = {cond['best_single_individual_coverage']:.3f}, "
           f"gen0 = {cond['gen0_diverse_mix_coverage']:.3f})")
     print(f"  family gen0  = {fam['gen0'].get('family_counts', {})} "
           f"(distinct {fam['gen0'].get('family_diversity', 0)})")
