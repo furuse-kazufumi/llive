@@ -433,6 +433,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-tokens", type=int, default=256)
     ap.add_argument("--timeout", type=float, default=30.0,
                     help="コンテナ実行 timeout 秒")
+    ap.add_argument("--no-warmup", action="store_true",
+                    help="model が既に warm な場合に warmup(max_tokens=1) を省く "
+                         "(極小 token warmup は ollama で稀に hang するため; 実測 2026-05-28)")
     ap.add_argument("--repo", type=Path, default=_DEFAULT_REPO,
                     help="intercode repo path")
     ap.add_argument("--out", type=Path,
