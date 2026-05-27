@@ -952,7 +952,9 @@ def main(argv: list[str] | None = None) -> int:
             args=args, out_dir=args.out / "cross_family", model_resolver=cross_resolver,
         )
 
-    # ---- PoC-CTF-1b verdict: cross-family vs single-family の最終 coverage ----
+    # ---- PoC-CTF-1b verdict: cross-family vs single-family の coverage ----
+    # 主指標 = 最終世代 (conservative)。併記 = peak (全世代最良 = 決定論オラクル下で
+    # deploy 可能な best ensemble; family 多様性が世代間で揺れるため両方出す)。
     cross = conditions.get("cross_family")
     single = conditions.get("single_family")
     cross_cov = cross.evolved_pop_cov if cross else None
@@ -960,12 +962,18 @@ def main(argv: list[str] | None = None) -> int:
     crossfamily_verdict = None
     if cross is not None and single is not None:
         delta = round(cross_cov - single_cov, 4)
+        peak_delta = round(cross.peak_pop_cov - single.peak_pop_cov, 4)
         crossfamily_verdict = {
             "cross_family_pop_coverage": cross_cov,
             "single_family_pop_coverage": single_cov,
             "delta(cross-single)": delta,
             "cross_beats_single": delta > 1e-9,
             "cross_ties_single": abs(delta) <= 1e-9,
+            # peak (全世代最良) — deployable best ensemble の比較 (family 揺れに頑健)。
+            "cross_family_peak_coverage": cross.peak_pop_cov,
+            "single_family_peak_coverage": single.peak_pop_cov,
+            "delta_peak(cross-single)": peak_delta,
+            "cross_beats_single_peak": peak_delta > 1e-9,
         }
 
     calls = getattr(real_responder, "calls", 0) if real_responder else 0
