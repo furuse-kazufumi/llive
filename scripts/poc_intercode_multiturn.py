@@ -924,15 +924,19 @@ def _write_summary(path: Path, out: dict) -> None:
         f"rejections={out['self_check']['total_rejections']}, "
         f"fired={', '.join(out['self_check']['self_checked(tids)']) or '-'}, "
         f"rescued={', '.join(out['self_check']['rescued_to_pass(tids)']) or '-'}",
+        f"- retry-nudge: max={out['retry_nudge']['max_retry_nudges']}, "
+        f"nudges={out['retry_nudge']['total_nudges']}, "
+        f"nudged={', '.join(out['retry_nudge']['nudged(tids)']) or '-'}, "
+        f"rescued={', '.join(out['retry_nudge']['rescued_to_pass(tids)']) or '-'}",
         "",
-        "| tid | task_id | kind | file_backed | solved | turns | self_check | stop_reason | flag |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| tid | task_id | kind | file_backed | solved | turns | self_check | retry | stop_reason | flag |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for tr in out["traces"]:
         lines.append(
             f"| {tr['tid']} | {tr['task_id']} | {tr['kind']} | {tr['file_backed']} | "
             f"{'PASS' if tr['solved'] else 'fail'} | {tr['n_turns']} | "
-            f"{tr.get('self_checks_used', 0)} | "
+            f"{tr.get('self_checks_used', 0)} | {tr.get('retry_nudges_used', 0)} | "
             f"{tr['stop_reason']} | `{(tr['submitted_flag'] or '')[:40]}` |")
 
     lines += ["", "## コマンド軌跡 (per task)", ""]
