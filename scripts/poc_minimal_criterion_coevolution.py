@@ -159,9 +159,9 @@ def run_mcc(
             # special-casing of the metric).
             eligible = np.argsort(solver_solved_counts)[-max(1, pop // 4):]
         parents = solvers[rng.choice(eligible, size=pop)]
-        # mutation pushes capability UPWARD (half-normal) = open-ended search for harder.
-        children = parents + np.abs(rng.normal(0.0, step, parents.shape))
-        solvers = children  # unbounded above: frontier can keep climbing
+        # ZERO-MEAN mutation: only selection (not a mutation bias) moves the frontier.
+        children = np.clip(parents + rng.normal(0.0, step, parents.shape), 0.0, None)
+        solvers = children  # unbounded above: frontier can keep climbing if selection pushes
 
         # --- TASK minimal criterion: keep tasks solved by [lo, hi] solvers ---
         sm2 = solve_matrix(solvers, tasks)       # recompute vs the new solver pop
@@ -169,18 +169,21 @@ def run_mcc(
         survivors = tasks[keep]
         if survivors.size == 0:
             # band empty -> seed near the current solver frontier so the curriculum
-            # tracks capability (mutate the median solver capability downward a touch).
+            # re-anchors to current capability (auto-curriculum self-heals).
             anchor = np.median(solvers, axis=0)
             survivors = np.clip(
                 anchor[None, :] + rng.normal(0.0, task_step, (max(1, task_pop // 4), d)),
                 0.0, None,
             )
-        # refill task population by mutating survivors UPWARD a little -> harder tasks
-        # appear as solvers improve (auto-curriculum advances the frontier).
+        # refill task population by mutating survivors (zero-mean) -> the surviving band
+        # already sits near the frontier; mutation explores難度 around it. As solvers
+        # improve, the band re-selects HARDER survivors -> curriculum advances upward.
         n_children = task_pop - len(survivors)
         if n_children > 0:
             idx = rng.choice(len(survivors), size=n_children)
-            new_tasks = survivors[idx] + np.abs(rng.normal(0.0, task_step, (n_children, d)))
+            new_tasks = np.clip(
+                survivors[idx] + rng.normal(0.0, task_step, (n_children, d)), 0.0, None
+            )
             tasks = np.vstack([survivors, new_tasks])
         else:
             tasks = survivors[:task_pop]
