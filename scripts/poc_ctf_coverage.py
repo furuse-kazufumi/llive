@@ -158,14 +158,41 @@ class Sampler:
 
 
 class RealResponder:
-    """on-prem ollama backend を叩く実サンプラ (measurement purity)。"""
+    """on-prem ollama backend を叩く実サンプラ (measurement purity)。
 
-    def __init__(self, host: str | None = None, max_tokens: int = 256) -> None:
+    実測で判明 (2026-05-27 smoke): qwen2.5:14b の **cold ロードが OllamaBackend
+    既定 timeout(120s) を超えて TimeoutError** → サンプル欠落で coverage が汚れた。
+    対策: (a) timeout を広げる (既定 300s) (b) ``warmup()`` で各モデルを 1 度
+    空打ちして load を済ませてから測定する。計算リソース限定のため大規模 sweep は
+    避け、極小バッテリ + temp=0 キャッシュ運用が前提。
+    """
+
+    def __init__(self, host: str | None = None, max_tokens: int = 256,
+                 timeout: float = 300.0) -> None:
         from llive.llm.backend import OllamaBackend  # 遅延 import (mock 時は不要)
 
-        self._backend = OllamaBackend(host=host)
+        self._backend = OllamaBackend(host=host, timeout=timeout)
         self._max_tokens = max_tokens
         self.calls = 0
+        self._warmed: set[str] = set()
+
+    def warmup(self, models: list[str]) -> None:
+        """各モデルを 1 度だけ空打ちして cold ロードを済ませる (timeout 汚染回避)。"""
+        from llive.llm.backend import GenerateRequest
+
+        for m in models:
+            if m in self._warmed:
+                continue
+            print(f"  [warmup] loading {m} ...", file=sys.stderr)
+            try:
+                self._backend.generate(
+                    GenerateRequest(prompt="ok", max_tokens=1,
+                                    temperature=0.0, model=m)
+                )
+            except Exception as exc:  # noqa: BLE001 - warmup 失敗は無視
+                print(f"  [warmup] {m} failed ({type(exc).__name__})",
+                      file=sys.stderr)
+            self._warmed.add(m)
 
     def __call__(self, s: Sampler, task: CTFTask) -> str:
         from llive.llm.backend import GenerateRequest
