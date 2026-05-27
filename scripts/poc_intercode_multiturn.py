@@ -693,8 +693,34 @@ def run_multiturn_task(
         session = PersistentContainerSession(task_id=task.task_id, timeout=timeout)
         own_session = True
 
+    # ループ本体を _run_turns に委譲し、own_session のときのみ finally で確実に破棄する
+    # (fail-closed: 例外時も孤児コンテナを残さない)。
     try:
-      for t in range(1, max_turns + 1):
+        _run_turns_loop(
+            task=task, max_turns=max_turns, timeout=timeout, responder=responder,
+            model=model, mock_script=mock_script, oracle=oracle,
+            max_self_checks=max_self_checks, max_retry_nudges=max_retry_nudges,
+            session=session, history=history, turns=turns,
+            state=_LoopState(),
+        )
+    finally:
+        if own_session and session is not None:
+            session.close()
+
+    return TaskTrace(
+        tid=ct.tid, task_id=task.task_id, kind=ct.kind,
+        file_backed=task.file_backed, solved=_LAST_STATE.solved,
+        submitted_flag=_LAST_STATE.submitted,
+        n_turns=len(turns), stop_reason=_LAST_STATE.stop,
+        self_checks_used=_LAST_STATE.self_checks_used,
+        retry_nudges_used=_LAST_STATE.retry_nudges_used,
+        turns=turns,
+    )
+
+
+# NOTE: 以下の旧インライン実装は _run_turns_loop に移管 (下記)。
+def _UNUSED_inline_loop():  # pragma: no cover
+    for t in range(1, max_turns + 1):
         if forced_verify is not None:
             prompt = forced_verify
             forced_verify = None
