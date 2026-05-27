@@ -93,23 +93,26 @@ def task_band_mask(solve_mat: np.ndarray, lo: int, hi: int) -> np.ndarray:
 # ---------------------------------------------------------------------------
 # frontier metric — identical fair probe for both arms
 # ---------------------------------------------------------------------------
-def capability_frontier(solvers: np.ndarray, probe: np.ndarray | None = None) -> float:
-    """Frontier = the hardest UNIFORM task any solver can dominate (UNBOUNDED metric).
+def capability_frontier(solvers: np.ndarray, top_k: int = 8) -> float:
+    """Frontier = mean over the top-k solvers of the hardest UNIFORM task each dominates.
 
     A solver dominates the uniform difficulty vector (t,...,t) iff t <= min(capability)
-    in every dim (dominance is gated by the weakest dim). So the hardest uniform task a
-    solver clears is exactly its min-dim capability, and the population frontier is
+    in every dim (dominance is gated by the weakest dim), so the hardest uniform task a
+    solver clears is exactly its min-dim capability `c_i = min_d capability[i, d]`.
 
-        max_i  min_d  capability[i, d].
-
-    This is the *same fair metric* for both arms (it depends only on the solver
-    capabilities, not on either arm's own task population) AND it is unbounded above, so
-    a non-saturating arm can keep climbing through it indefinitely. `probe` is accepted
-    for API symmetry but unused (kept so callers/tests can pass it harmlessly).
+    The population frontier is the MEAN of the top-k `c_i` (the frontier *cohort*), not
+    the single max. The cohort mean is far less noisy than the single-best extreme — a
+    lucky lineage that briefly spikes then gets reshuffled out of the task band no longer
+    whipsaws the metric. It is still:
+      * fair  — depends only on solver capabilities, not on either arm's own tasks;
+      * unbounded above — a non-saturating arm can climb through it indefinitely.
     """
     if solvers.size == 0:
         return 0.0
-    return float(np.max(np.min(solvers, axis=1)))
+    c = np.min(solvers, axis=1)                  # per-solver min-dim capability
+    k = min(top_k, c.shape[0])
+    top = np.partition(c, -k)[-k:]               # the k largest c_i (frontier cohort)
+    return float(top.mean())
 
 
 # ---------------------------------------------------------------------------
