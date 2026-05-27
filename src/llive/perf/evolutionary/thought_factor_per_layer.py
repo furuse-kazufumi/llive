@@ -113,10 +113,23 @@ class ThoughtFactorPerLayerChromosome:
         ``factor_weights[i][j]`` = THOUGHT_FACTORS[i] の layer_names[j] への強度.
     layer_names : tuple[str, ...]
         メモリ層名. default は :data:`DEFAULT_MEMORY_LAYER_NAMES`.
+    persona_index : tuple[int, ...] | None
+        **additive・default None** (2026-05-28 追加). 各思考因子に「担当ペルソナ」を
+        1 名割り当てる **persona-indexed (モザイク)** メタデータ. len ==
+        NUM_THOUGHT_FACTORS, 各値は :func:`_canonical_persona_ids` (=
+        ``sorted(PERSONA_ONTOLOGY.keys())``) 上の index ∈ [0, P).
+
+        小 PoC ``scripts/poc_persona_indexed_genome.py`` で「各因子の最適が別専門家に
+        ある専門家委員会型 (モザイク) target」に対して効果ありと gate 済の方式を
+        **後方互換に** 個体構造へ持ち込んだもの. ``None`` のとき現行挙動を完全維持し,
+        連続 flat genome ベクトル (:meth:`as_array` / :meth:`as_flat`) には **一切
+        含めない** (genome_version.assert_no_fourth_dim の 40-dim 不変条件を守る).
+        decode は :meth:`persona_indexed_affinity` から別経路で取り出す.
     """
 
     factor_weights: tuple[tuple[float, ...], ...]
     layer_names: tuple[str, ...] = field(default=DEFAULT_MEMORY_LAYER_NAMES)
+    persona_index: tuple[int, ...] | None = field(default=None)
 
     def __post_init__(self) -> None:
         if len(self.factor_weights) != NUM_THOUGHT_FACTORS:
@@ -139,6 +152,25 @@ class ThoughtFactorPerLayerChromosome:
                     raise ValueError(
                         f"factor_weights[{i}][{j}] = {fval} "
                         f"out of [{FACTOR_WEIGHT_LO}, {FACTOR_WEIGHT_HI}]"
+                    )
+        # persona_index は additive: None なら何もしない (現行挙動を完全維持).
+        # 設定時のみ fail-closed 検証 (len + 各 index の値域).
+        if self.persona_index is not None:
+            n_personas = len(PERSONA_ONTOLOGY)
+            if len(self.persona_index) != NUM_THOUGHT_FACTORS:
+                raise ValueError(
+                    f"persona_index must have {NUM_THOUGHT_FACTORS} entries "
+                    f"(one per thought factor), got {len(self.persona_index)}"
+                )
+            for f, idx in enumerate(self.persona_index):
+                if not isinstance(idx, (int, np.integer)) or isinstance(idx, bool):
+                    raise ValueError(
+                        f"persona_index[{f}] must be an int, got {idx!r}"
+                    )
+                if not (0 <= int(idx) < n_personas):
+                    raise ValueError(
+                        f"persona_index[{f}] = {idx} out of "
+                        f"[0, {n_personas}) (n_personas={n_personas})"
                     )
 
     # ----- factories ------------------------------------------------------
