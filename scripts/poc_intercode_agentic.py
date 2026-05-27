@@ -467,7 +467,8 @@ def main(argv: list[str] | None = None) -> int:
     responder: RealResponder | None = None
     if not mock:
         responder = RealResponder(host=args.host, max_tokens=args.max_tokens)
-        responder.warmup([args.model])
+        if not args.no_warmup:
+            responder.warmup([args.model])
 
     t0 = time.time()
     outcomes: list[TaskOutcome] = []
