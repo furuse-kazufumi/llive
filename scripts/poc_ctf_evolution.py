@@ -1008,85 +1008,126 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _print_summary(out: dict) -> None:
-    print("\n===== PoC-CTF-1 EVOLUTION COVERAGE SUMMARY =====")
-    print(f"mode={out['mode']} pop={out['pop']} gens={out['gens']} "
-          f"n_tasks={out['n_tasks']}")
-    print(f"{'gen':>4s} {'pop_cov':>8s} {'best_ind':>9s} {'specialists':>12s}  solved_union")
-    for g in out["generation_coverage_curve"]:
+def _crossfamily_verdict_text(out: dict) -> str:
+    """cross-family vs single-family の honest verdict 文を組み立てる."""
+    cv = out.get("crossfamily_verdict")
+    if cv is None:
+        return ("片側条件のみ実行 (--family != both) のため cross vs single 比較なし。"
+                "両条件の coverage は conditions セクション参照。")
+    if cv["cross_beats_single"]:
+        return ("**cross-family が single-family を coverage で上回った** "
+                f"(delta {cv['delta(cross-single)']:+.3f})。個体ごとにモデルファミリを "
+                "進化させ ε-lexicase が『別モデルの specialist』を集団に共存させたことで、"
+                "単一モデルでは埋まらない盲点 (behavioral entanglement) を被覆できた、という "
+                "設計 §3 の root blocker 直撃仮説を (この mock regime で) 支持する。")
+    if cv["cross_ties_single"]:
+        return ("**cross-family は single-family と同点** "
+                f"(delta {cv['delta(cross-single)']:+.3f})。両者が同じ coverage に飽和 = この "
+                "regime ではクロスファミリの優位が出ない (タスク空間が小さく single でも "
+                "被覆できる / family 分布が動かない 等)。family_distribution と "
+                "impl_lang_driven_frac を疑うこと ([[feedback_benchmark_honest_disclosure]])。")
+    return ("**cross-family は single-family を上回らなかった** "
+            f"(delta {cv['delta(cross-single)']:+.3f})。クロスファミリ脱相関の付加価値は "
+            "この regime では不明瞭。honest にこの結果を残す。原因 (model 分布が進化で動かない / "
+            "specialty 構造が薄い / single の最強モデルが既に十分) を内訳から疑うこと "
+            "([[feedback_benchmark_honest_disclosure]])。")
+
+
+def _print_condition(name: str, cond: dict) -> None:
+    print(f"\n----- condition={name} -----")
+    print(f"{'gen':>4s} {'pop_cov':>8s} {'best_ind':>9s} {'specialists':>12s} "
+          f"{'#models':>8s}  solved_union")
+    distinct_curve = cond["family_distribution"]["distinct_models_per_generation"]
+    for i, g in enumerate(cond["generation_coverage_curve"]):
+        nmodels = distinct_curve[i] if i < len(distinct_curve) else 0
         print(f"{g['generation']:>4d} {g['pop_coverage']:>8.3f} "
-              f"{g['best_individual_coverage']:>9.3f} {g['n_specialist_taskmasks']:>12d}  "
-              f"{','.join(g['solved_union'])}")
-    v = out["verdict"]
-    print(f"\nevolved pop coverage    = {v['evolved_pop_coverage']:.3f}  (最終世代 best-of-pop)")
-    print(f"(a) best single ind     = {v['best_single_individual_coverage']:.3f}  "
-          f"(delta {v['delta(evolved-single)']:+.3f}  "
-          f"[{'+' if v['evolved_beats_single'] else '='}])")
-    print(f"(b) gen0 diverse mix    = {v['gen0_diverse_mix_coverage']:.3f}  "
-          f"(delta {v['delta(evolved-gen0)']:+.3f}  "
-          f"[{'+' if v['evolved_beats_gen0_diverse'] else '='}])  <- 主指標 (選択圧前の同一集団)")
-    print(f"    even diverse (ref)  = {v['even_diverse_mix_coverage']:.3f}  "
-          f"(delta {v['delta(evolved-even)']:+.3f}  "
-          f"[{'+' if v['evolved_beats_even_diverse'] else '='}])  (独立生成 lucky-shotgun 対照)")
-    both = v["evolved_beats_single"] and v["evolved_beats_gen0_diverse"]
-    verdict = ("進化集団が単一最強・gen0 多様ミックスを上回った (命題支持)"
-               if both
-               else "進化の付加価値は不明瞭 (honest: 主 baseline を上回らない)")
-    print(f"\nVERDICT: {verdict}")
+              f"{g['best_individual_coverage']:>9.3f} {g['n_specialist_taskmasks']:>12d} "
+              f"{nmodels:>8d}  {','.join(g['solved_union'])}")
+    fam = cond["family_distribution"]
+    print(f"  evolved pop coverage = {cond['evolved_pop_coverage']:.3f}  "
+          f"(best single = {cond['best_single_individual_coverage']:.3f}, "
+          f"gen0 = {cond['gen0_diverse_mix_coverage']:.3f})")
+    print(f"  family gen0  = {fam['gen0'].get('family_counts', {})} "
+          f"(distinct {fam['gen0'].get('family_diversity', 0)})")
+    print(f"  family final = {fam['final'].get('family_counts', {})} "
+          f"(distinct {fam['final'].get('family_diversity', 0)}, "
+          f"impl_lang_driven_frac {fam['final'].get('impl_lang_driven_frac', 0.0):.2f})")
+
+
+def _print_summary(out: dict) -> None:
+    print("\n===== PoC-CTF-1b CROSS-FAMILY EVOLUTION COVERAGE SUMMARY =====")
+    print(f"mode={out['mode']} family={out['family']} mapping={out['mapping']} "
+          f"pop={out['pop']} gens={out['gens']} n_tasks={out['n_tasks']}")
+    for name, cond in out["conditions"].items():
+        _print_condition(name, cond)
+    cv = out.get("crossfamily_verdict")
+    if cv is not None:
+        mark = "+" if cv["cross_beats_single"] else ("=" if cv["cross_ties_single"] else "-")
+        print(f"\ncross-family coverage  = {cv['cross_family_pop_coverage']:.3f}")
+        print(f"single-family coverage = {cv['single_family_pop_coverage']:.3f}")
+        print(f"delta(cross - single)  = {cv['delta(cross-single)']:+.3f}  [{mark}]")
+    print(f"\nVERDICT: {_crossfamily_verdict_text(out)}")
 
 
 def _write_summary_md(path: Path, out: dict) -> None:
-    v = out["verdict"]
-    sd = out["specialist_diversity"]
-    both = v["evolved_beats_single"] and v["evolved_beats_gen0_diverse"]
+    cv = out.get("crossfamily_verdict")
     lines = [
-        "# PoC-CTF-1 — ε-lexicase 進化集団 coverage (honest)",
+        "# PoC-CTF-1b — クロスファミリ多様性の進化的配線 (honest)",
         "",
-        f"- mode: **{out['mode']}** / pop={out['pop']} / gens={out['gens']} / "
-        f"n_tasks={out['n_tasks']} / hard_battery={out.get('hard_battery')} / "
-        f"epsilon={out['epsilon']}",
+        f"- mode: **{out['mode']}** / family={out['family']} / mapping={out['mapping']} / "
+        f"pop={out['pop']} / gens={out['gens']} / n_tasks={out['n_tasks']} / "
+        f"hard_battery={out.get('hard_battery')} / epsilon={out['epsilon']}",
         f"- personas (founders): {', '.join(out['personas'])}",
+        f"- single-family model: `{out['single_family_model']}` / "
+        f"cross-family models: {', '.join('`'+m+'`' for m in out['cross_family_models'])}",
         "",
-        "## 命題",
+        "## 命題 (PoC-CTF-1b)",
         "",
         "> " + out["proposition"],
         "",
-        "## 結果 (coverage)",
+        "## 結果 (coverage + family diversity)",
         "",
-        f"| 条件 | coverage |",
-        f"|---|---|",
-        f"| evolved 集団 (best-of-pop, 最終世代) | **{v['evolved_pop_coverage']:.3f}** |",
-        f"| (a) 単一最強個体 (全世代最良 single) | {v['best_single_individual_coverage']:.3f} |",
-        f"| (b) gen0 多様ミックス (選択圧前の同一集団, **主指標**) | "
-        f"{v['gen0_diverse_mix_coverage']:.3f} |",
-        f"| (参考) 独立生成 均等多様ミックス (lucky-shotgun 対照) | "
-        f"{v['even_diverse_mix_coverage']:.3f} |",
-        "",
-        f"- delta(evolved - single) = {v['delta(evolved-single)']:+.3f} "
-        f"({'上回る' if v['evolved_beats_single'] else '上回らない'})",
-        f"- delta(evolved - gen0)   = {v['delta(evolved-gen0)']:+.3f} "
-        f"({'上回る' if v['evolved_beats_gen0_diverse'] else '上回らない'})  <- 主指標",
-        f"- delta(evolved - even)   = {v['delta(evolved-even)']:+.3f} "
-        f"({'上回る' if v['evolved_beats_even_diverse'] else '上回らない'})  (参考)",
-        "",
-        "## specialist 多様性",
-        "",
-        f"- evolved 最終世代 distinct task-mask 数: {sd['final_distinct_taskmasks']}",
-        f"- 均等多様ミックス distinct task-mask 数: {sd['even_diverse_distinct_taskmasks']}",
+        "| 条件 | evolved coverage | best single | gen0 | final distinct models | impl_lang_driven |",
+        "|---|---|---|---|---|---|",
+    ]
+    for name, cond in out["conditions"].items():
+        fam = cond["family_distribution"]["final"]
+        lines.append(
+            f"| {name} | **{cond['evolved_pop_coverage']:.3f}** | "
+            f"{cond['best_single_individual_coverage']:.3f} | "
+            f"{cond['gen0_diverse_mix_coverage']:.3f} | "
+            f"{fam.get('family_diversity', 0)} | "
+            f"{fam.get('impl_lang_driven_frac', 0.0):.2f} |"
+        )
+    lines += ["", "## family 分布 (集団が実際に使ったモデル)", ""]
+    for name, cond in out["conditions"].items():
+        fam = cond["family_distribution"]
+        lines.append(f"- **{name}**:")
+        lines.append(f"  - gen0  models: {fam['gen0'].get('family_counts', {})} "
+                     f"(distinct {fam['gen0'].get('family_diversity', 0)})")
+        lines.append(f"  - final models: {fam['final'].get('family_counts', {})} "
+                     f"(distinct {fam['final'].get('family_diversity', 0)})")
+        lines.append(f"  - distinct models / generation: "
+                     f"{fam['distinct_models_per_generation']}")
+        lines.append(f"  - source 分布 (final): {fam['final'].get('source_counts', {})} "
+                     f"→ impl_lang_driven_frac = "
+                     f"{fam['final'].get('impl_lang_driven_frac', 0.0):.2f}")
+    if cv is not None:
+        mark = "上回る" if cv["cross_beats_single"] else (
+            "同点" if cv["cross_ties_single"] else "上回らない")
+        lines += [
+            "",
+            "## cross vs single (PoC-CTF-1b 主指標)",
+            "",
+            f"- cross-family coverage = {cv['cross_family_pop_coverage']:.3f}",
+            f"- single-family coverage = {cv['single_family_pop_coverage']:.3f}",
+            f"- delta(cross - single) = {cv['delta(cross-single)']:+.3f} ({mark})",
+        ]
+    lines += [
         "",
         "## VERDICT (honest)",
         "",
-        ("**進化集団が単一最強個体・gen0 多様ミックス (選択圧前の同一集団) を coverage で "
-         "上回った。** ε-lexicase が異なるタスクの specialist を共存・増殖させ、決定論オラクルが "
-         "best-of-pop を verify することで集団 coverage がデプロイ可能になった、という設計 §9 の "
-         "対応関係を (この regime で) 支持する。なお十分大きい独立 random ミックスは小さなタスク "
-         "空間を shotgun で埋められる (参考 even が高い) ため、進化の価値は「同じ種から選択圧で "
-         "coverage を伸ばす」点にある (PoC-0 の『均等多様化は盲点に集中しないと負ける』教訓と整合)。"
-         if both else
-         "**進化の付加価値は不明瞭** — 主 baseline (単一最強 または gen0) を上回らなかった。"
-         "honest にこの結果を残す ([[feedback_benchmark_honest_disclosure]])。"
-         "原因 (タスク空間が小さく random shotgun で飽和 / 集団が大きすぎ / specialist 圧不足 等) を "
-         "内訳から疑うこと。"),
+        _crossfamily_verdict_text(out),
         "",
         "## honest 留保",
         "",
