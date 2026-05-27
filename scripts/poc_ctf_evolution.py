@@ -379,6 +379,75 @@ def genome_to_model(
 
 
 # ---------------------------------------------------------------------------
+# モデル aware な合成 (mock) responder: poc_ctf_coverage.MockResponder の per-model
+# decorrelated specialty を活かしつつ、skill→task specialist 構造も残す
+# ---------------------------------------------------------------------------
+#
+# 設計の肝 (honest): MockResponder の _BASE / _SPECIALTY は **モデルごとに違う kind を
+# 得意とする** (qwen14b: caesar/atbash, qwen7b: url/binary, llama: rot13/reverse)。
+# クロスファミリ命題が成立する **ための前提構造**はここに既存で埋まっている。本 mock は
+# その構造を **改変せず流用** し、各個体が使うモデルに応じて「そのモデルが得意なタスク」を
+# 解放する。recombine する形:
+#   p = (single-family mock の skill→task unlock 確率) を base にしつつ、
+#       使用モデルの specialty タスクは大きく解放 (+ そのモデルの kind base を足す)。
+# これにより:
+#   * 全個体が同一モデル (single-family) だと、その 1 モデルの specialty しか被覆できない
+#     → モデル間で異なる盲点が残る。
+#   * 個体ごとにモデルが分散 (cross-family) すると、ε-lexicase が「別モデルの specialist」を
+#     集団に共存させ、モデル横断で盲点を被覆できる → coverage が上がる **はず**。
+# 合成器を「cross が必ず勝つ」よう恣意調整しない: specialty 構造は MockResponder のまま、
+# skill unlock も既存 _mock_solves のまま。結果が負なら負と報告する。
+
+# poc_ctf_coverage.MockResponder の per-model 構造を直接参照 (改変しない)。
+_MODEL_BASE = MockResponder._BASE
+_MODEL_SPECIALTY = MockResponder._SPECIALTY
+
+
+def _mock_solves_model(
+    system_prompt: str, task: CTFTask, model: str, salt: str
+) -> bool:
+    """モデル aware 版の合成 solve (inference ゼロ, 決定論的).
+
+    既存 :func:`_mock_solves` (skill→task specialist 構造) を base にしつつ、
+    **使用モデルの decorrelated specialty** (MockResponder._SPECIALTY) と
+    **モデル別 kind base** (MockResponder._BASE) を加える。temp=0 決定論キャッシュと
+    同じく同一 (system_prompt, task, model) は常に同結果。
+
+    確率 p:
+      * skill→task unlock (single-family と同じ; 認知負荷で逓減) を base に。
+      * 使用モデルが task.tid を specialty に持てば大きく解放 (= そのモデルでしか
+        埋まらない盲点)。
+      * 使用モデルの kind base を弱く加算 (モデル能力差)。
+    """
+    # --- base: 既存 single-family の skill→task 構造 (改変せず再利用) ---
+    present_skills = [
+        instr for instr in _SKILL_TASK_AFFINITY
+        if instr in system_prompt and _SKILL_TASK_AFFINITY[instr]
+    ]
+    load_penalty = max(1.0, len(present_skills) / _SKILL_BUDGET)
+    p = _KIND_BASE.get(task.kind, 0.1)
+    for instr, tids in _SKILL_TASK_AFFINITY.items():
+        if instr in system_prompt and task.tid in tids:
+            p += _SPECIALIST_UNLOCK / load_penalty
+    for instr, bonus in _TEMPLATE_BONUS.items():
+        if instr in system_prompt:
+            p += bonus
+
+    # --- モデル aware 項: MockResponder の decorrelated specialty を流用 ---
+    # 使用モデルが task を specialty に持てば大きく解放 (モデル横断の盲点被覆の素)。
+    if task.tid in _MODEL_SPECIALTY.get(model, set()):
+        p += 0.85
+    # モデル別 kind base を弱く加算 (= モデル能力差; 0.4 で割り weak signal に)。
+    p += _MODEL_BASE.get(model, {}).get(task.kind, 0.3) * 0.4
+
+    p = max(0.0, min(0.99, p))
+    seed = f"{system_prompt}|{task.tid}|{model}|{salt}"
+    h = int(hashlib.sha256(seed.encode("utf-8")).hexdigest(), 16)
+    roll = (h % 1_000_000) / 1_000_000.0
+    return roll < p
+
+
+# ---------------------------------------------------------------------------
 # CTF fitness: 個体 c_prompt → system prompt → 各タスク 0/1 を per-case breakdown に
 # ---------------------------------------------------------------------------
 
