@@ -484,11 +484,12 @@ class _MockExec:
 
 
 def _mock_exec(task: IntercodeTask, command: str) -> _MockExec:
-    """合成コマンド実行 — ls/cat/strings/grep の最小エミュレーション。
+    """合成コマンド実行 — ls/cat/strings/grep + echo/python verify のエミュレーション。
 
     file-backed タスクは ls で実ファイル名を見せ、cat/strings/grep でその中身
     (= flag を含む) を返す。架空ファイル名には「No such file」を返す。
-    算術/decode タスク (17/18/19/22) は printf/echo の即時計算をエミュレート。
+    算術/decode タスク (17/18/19/22) は verify コマンド (echo/python3 -c) の stdout を
+    エミュレートし、self-check gate が「本文が stdout に出た」と認識できるようにする。
     """
     cmd = command.strip()
     fname = {4: "flag", 21: "strings", 23: "file"}.get(task.task_id)
@@ -511,13 +512,18 @@ def _mock_exec(task: IntercodeTask, command: str) -> _MockExec:
             return _MockExec(content)
         return _MockExec("", stderr=f"{cmd.split()[-1]}: No such file or directory")
 
-    # 算術/decode: 理想 mock では submit 直打ちするので exec はほぼ来ない。
+    # 算術/decode の verify コマンド: 計算結果 (flag 本文) を stdout に出すと self-check が通る。
+    # mock では「正しい verify を打てば正しい本文が出る」を表現するため、gold 本文を返す。
+    if any(tok in cmd for tok in ("echo", "python3", "python", "printf", "base64", "$((")):
+        body = _flag_body(task.gold)
+        return _MockExec(body + "\n")
     return _MockExec("")
 
 
-# 各タスクの **理想軌跡** (ls → 観察 → submit)。ループ制御/採点/終了の inference ゼロ検証。
+# 各タスクの **理想軌跡** (ls → 観察/検証 → submit)。self-check gate を満たす。
 def _mock_ideal_script(task: IntercodeTask) -> list[str]:
     gold = task.gold
+    body = _flag_body(gold)
     fname = {4: "flag", 21: "strings", 23: "file"}.get(task.task_id)
     if task.file_backed and fname:
         if task.task_id == 4:
@@ -528,8 +534,8 @@ def _mock_ideal_script(task: IntercodeTask) -> list[str]:
         if task.task_id == 23:
             return ["ls -la", f"grep -ao 'picoCTF{{[^}}]*}}' {fname}",
                     f"submit {gold}"]
-    # 算術/decode: ls して空 → 頭で計算して submit。
-    return ["ls -la", f"submit {gold}"]
+    # 算術/decode: ls → verify コマンドで本文を print (self-check 通過) → submit。
+    return ["ls -la", f"echo {body}", f"submit {gold}"]
 
 
 # 比較対照: **ls しない戦略** (架空ファイル名で submit → wrong)。file-backed のみ意味を持つ。
@@ -538,6 +544,25 @@ def _mock_naive_script(task: IntercodeTask) -> list[str]:
         # ls せず即座に頭で当てた偽 flag を submit (1-turn 失敗モードの再現)。
         return ["submit picoCTF{guessed_without_observing}"]
     return ["ls -la", f"submit {task.gold}"]  # 算術問は頭で解けるので正答
+
+
+# Task1 検証用: **頭で誤答 → gate 却下 → verify で訂正 → 正答** の軌跡。
+# self-check gate が「未検証 submit を却下し、verify を強制して正答に導く」ことを示す。
+def _mock_inhead_script(task: IntercodeTask) -> list[str]:
+    gold = task.gold
+    body = _flag_body(gold)
+    fname = {4: "flag", 21: "strings", 23: "file"}.get(task.task_id)
+    if task.file_backed and fname:
+        # file-backed: cat/grep の stdout に本文が出るので gate は自然に通る (ideal と同等)。
+        if task.task_id == 4:
+            return ["ls -la", f"cat {fname}", f"submit {gold}"]
+        if task.task_id == 21:
+            return ["ls -la", f"strings {fname} | grep -ao 'picoCTF{{[^}}]*}}'",
+                    f"submit {gold}"]
+        return ["ls -la", f"grep -ao 'picoCTF{{[^}}]*}}' {fname}", f"submit {gold}"]
+    # 算術/decode: ls → 頭で誤 submit (gate 却下) → verify nudge で echo 本文 → 正 submit。
+    return ["ls -la", "submit picoCTF{wrong_in_head}", f"echo {body}",
+            f"submit {gold}"]
 
 
 # ---------------------------------------------------------------------------
