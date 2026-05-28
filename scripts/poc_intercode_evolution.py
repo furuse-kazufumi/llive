@@ -861,6 +861,20 @@ def _write_summary_md(path: Path, out: dict) -> None:
             f"- delta(evolved - naive) = {v['delta(evolved-naive)']:+.3f} ({mark}) / "
             f"peak delta = {v['delta_peak(evolved-naive)']:+.3f}",
         ]
+    slv = out.get("single_loop_verdict")
+    if slv is not None:
+        mark2 = "上回る" if slv["evolved_champion_beats_naive"] else (
+            "同点" if slv["evolved_champion_ties_naive"] else "上回らない")
+        lines += [
+            "",
+            "## single-loop 新主経路 verdict (deploy=1 loop = orchestra の 1/k コスト)",
+            "",
+            f"- evolved champion single coverage = {slv['evolved_champion_single_coverage']:.3f}",
+            f"- naive champion single coverage   = {slv['naive_champion_single_coverage']:.3f}",
+            f"- delta(evolved - naive) = {slv['delta(evolved-naive)']:+.3f} ({mark2})",
+            f"- deploy cost: {slv['deploy_cost']}",
+            f"- note: {slv['note']}",
+        ]
     lines += ["", "## VERDICT (honest)", "", _verdict_text(out), "",
               "## honest 留保", ""]
     lines += [f"- {n}" for n in out["honest_notes"]]
