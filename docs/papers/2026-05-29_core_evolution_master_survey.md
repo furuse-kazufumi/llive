@@ -243,10 +243,23 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 - PoC: MNIST/CIFAR-10 char-level small NN で各規則の収束を進化集団で比較
 - 価値: もう 1 本の独自軸 (Agent A も先行未発見と verdict)
 
+#### Path 0-ε: **Marabou Incremental NN Verification 統合** (Agent D 派生 新規 Task 候補)
+- 外部 library として Marabou を呼ぶ薄い bridge (`src/llive/evolution/marabou_bridge.py`)
+- llive ChangeOp 列を Marabou refinement relation に写像する **sound 拡張**を設計
+- 世代越え conflict cache を `evolution/verifier.py` SMT 層に組込
+- 価値: **「異なる構造」の refinement relation を sound に拡張 = 論文化可能な独自軸** (Agent D verdict)
+
+#### Path 0-ζ: **VNN-COMP 新カテゴリ提案** (中長期)
+- 「online architecture evolution verification」を VNN-COMP 新カテゴリとして提案
+- llive verifier.py を reference implementation として打ち出す
+- 価値: コミュニティ標準を作る = 引用ハブになれる
+
 ### Stage 1: 新 PC 着任後 (1-3 ヶ月)
 - Mamba CUDA kernel × factor_hook 実接続
 - 100M-1B 級小モデルで進化ループ、ベースライン (固定 Transformer) 実測超え検証
-- NAS-Bench で proxy task 進化計算の baseline
+- NAS-Bench-201 で proxy task 進化計算の baseline (Agent C)
+- BitMamba-2 (1.58-bit) を i3-12100F 級で動かす再現実験
+- TorchLean bridge で高優先度個体 (top-K) の full verification (sampling 検証戦略)
 
 ### Stage 2: 研究としてのスケール (3-12 ヶ月)
 - L6 (AutoML-Zero × Z3 verifier) を限定領域で挑戦
