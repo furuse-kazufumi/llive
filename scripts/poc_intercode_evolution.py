@@ -793,6 +793,14 @@ def _print_summary(out: dict) -> None:
               f"(peak {v['naive_only_peak_coverage']:.3f})")
         print(f"delta(evolved - naive) = {v['delta(evolved-naive)']:+.3f}  [{mark}]  "
               f"(peak delta {v['delta_peak(evolved-naive)']:+.3f})")
+    slv = out.get("single_loop_verdict")
+    if slv is not None:
+        mark2 = "+" if slv["evolved_champion_beats_naive"] else (
+            "=" if slv["evolved_champion_ties_naive"] else "-")
+        print("\n[single-loop 新主経路 (deploy=1 loop = orchestra の 1/k コスト)]")
+        print(f"evolved champion single = {slv['evolved_champion_single_coverage']:.3f}")
+        print(f"naive champion single   = {slv['naive_champion_single_coverage']:.3f}")
+        print(f"delta(evolved - naive)  = {slv['delta(evolved-naive)']:+.3f}  [{mark2}]")
     print(f"\nVERDICT: {_verdict_text(out)}")
 
 
