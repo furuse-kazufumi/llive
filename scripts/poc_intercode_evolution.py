@@ -415,6 +415,35 @@ class ConditionResult:
     elapsed: float
 
 
+def build_single_loop_verdict(
+    evolved_single_cov: float, naive_single_cov: float, eps: float = 1e-9,
+) -> dict:
+    """新主経路 (進化×単一 agentic ループ) verdict — 進化チャンピオンを 1 ループで deploy.
+
+    オーケストラ (best-of-pop=k ループ) でなく **単一チャンピオン deploy=1 ループ** の
+    コスト軽量経路 ([[goal_surpass_mythos_evolutionary]] 2026-05-28 ユーザー方針:
+    オーケストラ Phase B 条件付き保留 → 進化×単一 agentic ループを Mythos 目標の主経路に)
+    が成立するかを foreground する pure 関数。pop_coverage (orchestra) verdict と独立。
+    進化チャンピオン (best individual) が naive 単一を上回ったか、+ deploy コスト記載。
+    """
+    delta = round(evolved_single_cov - naive_single_cov, 4)
+    return {
+        "evolved_champion_single_coverage": round(evolved_single_cov, 4),
+        "naive_champion_single_coverage": round(naive_single_cov, 4),
+        "delta(evolved-naive)": delta,
+        "evolved_champion_beats_naive": delta > eps,
+        "evolved_champion_ties_naive": abs(delta) <= eps,
+        "deploy_cost": (
+            "single multi-turn loop (1x); NOT population aggregation (kx). "
+            "進化で得た単一個体を deploy → 推論コスト = 1 ループ = "
+            "orchestra (best-of-pop) の 1/k。"),
+        "note": (
+            "オーケストラ (Phase B) 条件付き保留 (2026-05-28) に伴う主経路評価: "
+            "進化が単一 deployable agentic 個体を naive 単一より引き上げたか。"
+            "pop_coverage (orchestra) verdict とは独立に、deploy=1 ループ前提で測る。"),
+    }
+
+
 def _load_snapshots(out_dir: Path) -> list[tuple[int, list[Individual]]]:
     from llive.perf.evolutionary.population import Population
 
