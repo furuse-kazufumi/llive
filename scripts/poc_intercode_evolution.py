@@ -628,6 +628,13 @@ def main(argv: list[str] | None = None) -> int:
             "evolved_beats_naive_peak": peak_delta > 1e-9,
         }
 
+    # 新主経路 verdict (オーケストラ条件付き保留に伴い 2026-05-28 追加): 進化で得た
+    # 単一チャンピオンを 1 ループ deploy したカバレッジで naive 単一を超えるか。
+    single_loop_verdict = None
+    if evolved is not None and naive is not None:
+        single_loop_verdict = build_single_loop_verdict(
+            evolved.best_single_cov, naive.best_single_cov)
+
     calls = getattr(real_responder, "calls", 0) if real_responder else 0
     elapsed_total = sum(c.elapsed for c in conditions.values())
 
