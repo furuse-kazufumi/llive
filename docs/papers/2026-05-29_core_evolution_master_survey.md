@@ -257,10 +257,11 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 
 ## §9. 残課題 / 未確認領域
 
-### 9.1 まだ走行中の Agent (明朝までに統合)
-- Agent B: Verified NAS × Z3 既存研究の overlap 深掘り (TorchLean / Marabou との関係、VNN-COMP 2024-2025)
-- Agent C: 個人 compute での architecture/algo evolution 事例 (AlphaEvolve / Sakana / GECCO best papers)
-- Agent D: Lean 4 / Z3 × NN 最新到達点 (TorchLean 深掘り + llive verifier.py 拡張計画)
+### 9.1 全 Agent 完了 (4/4 ✓)
+- Agent A ✓: 非 Transformer 系 + Forward-Forward + AlphaEvolve + 学習則代替 + CPU 実機現実性
+- Agent B ✓: Verified NAS × Z3 既存研究 → negation なし verdict、Lipschitz invariants の進化 SMT embedding が独自軸
+- Agent C ✓: 個人 compute での architecture/algo evolution 事例 → CPU only は AutoML-Zero 系 + WANN + NAS-Bench-201 軸
+- Agent D ✓: Lean 4 / Z3 × NN 最新到達点 → TorchLean は直交合流可、Marabou Incremental の refinement relation 拡張が独自軸
 
 ### 9.2 未確認 (Agent A honest 留保 + 私の追加)
 - Mamba / safari / mergekit / CfC の LICENSE ファイル直接確認 (Apache-2.0 推定)
