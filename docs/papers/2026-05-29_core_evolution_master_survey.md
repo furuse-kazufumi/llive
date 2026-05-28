@@ -23,9 +23,18 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 - **「persona-indexed specialist 集団 with verifier」** (NAS は単一最良を探す、進化集団 × verifier は llive 独自)
 
 ### 1.2 最も近い先行 (差別化が要る)
-- **AlphaEvolve** (DeepMind 2025-05) = LLM × evaluator で Strassen 4×4 を 56 年ぶり更新。**llive 差別化軸 = Approval Bus (人間 approval を fitness の 1 dim 化) + persona 遺伝子**
+- **AlphaEvolve** (DeepMind 2025-05) = LLM × evaluator で Strassen 4×4 を 56 年ぶり更新。**API LLM call 前提で「純 CPU only」でない** (Agent C verdict) → llive が CPU only を主張するなら **AutoML-Zero 系 (prim ベース) に軸足**
 - **TorchLean** (Anandkumar/Caltech 2026-02, NeurIPS) = Lean 4 で NN の数学的健全性検証 (IEEE-754 Float32 / IBP / CROWN / Lyapunov controller)。**llive 差別化軸 = ChangeOp 構造変更の online verify**
 - **Incremental NN Verification** (Marabou 2026-03) = branch-and-bound に conflict learning 追加、1.9x speedup。**llive への統合機会** (外部資産として使える)
+- **CDGP** (Krawiec IJCAI/EvoComp 2018) = **唯一の "進化 × 形式手法" 直接 hit**。ただし記号プログラム合成 (LIA/SLIA) で NN ではない + 反例 → fitness フィードバック (**事後**) で llive の**事前 gate** と方向が逆 (Agent B verdict)
+- **ShinkaEvolve** (Sakana 2025-09) = 150 sample で円パッキング SOTA、open-source、個人 compute に最も近い実装
+
+### 1.4 Agent B/C 確定 verdict (撤退不要)
+- **negation される work は確認できず** (Agent B verdict)
+- Reluplex / Marabou / α,β-CROWN / ERAN / DeepPoly / NeuralSAT — すべて **学習後 NN の入出力性質検証**、アーキ変異列の事前 gate は誰もやっていない
+- Lipschitz (Trockman & Kolter ICLR 2021) / Mamba 安定性 (Sparse Mamba, Lyapunov-stable Mamba 2024) / LTC Theorem 2 (Hasani AAAI 2021) は厚いが **進化ループ内 SMT gate への embedding は未踏**
+- AutoML-Zero フォロー direct は **少ない = llive 未開拓領域**
+- PBT / Sakana Evo Merge / AlphaEvolve / LLMatic (GECCO 2024) — **全て evaluator-based 事後 scoring**、事前 formal gate は不在
 
 ### 1.3 CPU 実装の現実線
 - **最現実パス = RWKV-7 0.19B / 0.4B + Mamba-130M** (Apache-2.0 GGUF 確定、llama.cpp 取り込み済)
