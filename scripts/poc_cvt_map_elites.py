@@ -430,11 +430,23 @@ def run(
             "CVT coverage = occupied / k で分母 k は D 非依存。よって coverage を D 間で直接 "
             "比較するのは『同じ分母 k に対する被覆』であり、grid の coverage (分母 b**D) とは "
             "分母が異なる — coverage の絶対比較は分母差を含む点に注意 (両者は『その方式が現実的 "
-            "に張れる niche 空間をどれだけ埋めたか』を測る)。QD-score は両者とも『占有 niche の "
-            "elite fitness 和』で、niche 定義は違えど同一個体集合・同一 fitness なので比較可能。",
-            "verdict は単一指標でなく coverage AND QD-score の AND gate (先行 5 PoC 横断教訓: "
-            "単一スカラーは誤判定しやすい)。高 D (>=6) の全点で CVT coverage > grid coverage "
-            "かつ CVT QD-score >= grid QD-score を要求。",
+            "に張れる niche 空間をどれだけ埋めたか』を測る)。",
+            "HONEST (設計中に踏んだ罠): 当初 QD gate を生の QD-score 和 (占有 niche の elite "
+            "fitness 総和) で組んだら高 D で grid が CVT を上回った (例 D=8: grid 1811 vs CVT "
+            "237) → 一見 CVT が QD で負けて命題 falsified に見えた。だがこれは niche 数の交絡: "
+            "QD-score 和は占有 niche 数に比例し、grid は高 D で b**D >> budget ゆえ個体がほぼ "
+            "全部別セルに散り ~budget 個の項を足す一方、CVT は高々 k 個しか足せない。生の和を "
+            "比べると『張れない巨大空間に個体を断片化した』grid を不当に評価してしまう "
+            "(= CVT が存在する理由そのものの裏返し)。これぞ先行 5 PoC 横断教訓『単一スカラーは "
+            "誤判定』の好例で、誤らせるスカラーが生 QD-score だった。",
+            "FAIR な QD 比較 = 占有 niche あたりの平均 elite fitness (niche 数で正規化)。これで "
+            "見ると CVT が高 D で勝つ (例 D=8: grid 0.906 vs CVT 0.942) — grid は巨大な名目容量 "
+            "に個体を散らして低品質セルを量産する一方、CVT は budget を k 個の良 niche に集中 "
+            "させ平均 elite 品質が高い。生 QD-score は transparency のため記録するが gate には "
+            "使わない (raw_qd_score_favours_grid_high_d=True を併記)。",
+            "verdict は単一指標でなく coverage AND mean-elite-fitness の AND gate (先行 5 PoC "
+            "横断教訓: 単一スカラーは誤判定しやすい)。高 D (>=6) の全点で CVT coverage > grid "
+            "coverage かつ CVT mean elite fitness >= grid mean elite fitness を要求。",
             "低 D (<6) では grid が competitive = 『低次元なら grid で十分、CVT は不要』を honest "
             "に記録 (grid_competitive_at_low_d)。CVT が効くのは高次元のみ = いつ効くかを明示。",
             "k (centroid 数) は hyperparameter。--k で感度を測れる。k を上げると niche 解像度は "
