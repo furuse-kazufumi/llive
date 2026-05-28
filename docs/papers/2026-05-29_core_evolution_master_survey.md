@@ -167,13 +167,15 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 
 | 主張 | 既存 (overlap 度) | llive 独自度 | 論文化価値 |
 |---|---|---|---|
-| **Z3 で architecture 変異 online gate** | TorchLean 静的検証 / tree ML 単発 (中) | **完全独自** (進化ループ内 online) | ★★★ |
+| **ChangeOp 列 → Z3 事前 gate → commit pipeline** | CDGP は事後フィードバック (反対方向) | **完全独自** (Agent B verdict) | ★★★ |
 | **学習則を gene として混在進化** | AutoML-Zero (基本演算) / Sakana Merge (重み) (低) | **完全独自** (規則そのもの) | ★★★ |
-| **factor_hook 認知駆動 Δ** | 予告は予測符号化系にあるが実装は未発見 (低) | **完全独自** | ★★★ |
-| **persona-indexed specialist 集団 × verifier** | NAS = 単一最良 (なし) | **完全独自** | ★★ |
-| **Lipschitz / 数値安定 制約進化** | TorchLean が CROWN/LiRPA (中) | LLM 全体でなく SSM state update に絞れば独自 | ★★ |
-| **Approval Bus = fitness の 1 dim 化** | RLHF / HITL 系 (一部) | architecture 進化での HITL は未発見 | ★★ |
-| **RWKV state update rule の進化** | RWKV 系列改良は人手 (なし) | **完全独自** | ★★★ |
+| **factor_hook (認知状態 → SSM Δ)** | 予告は予測符号化系にあるが実装は未発見 (低) | **完全独自** (Agent A/B verdict) | ★★★ |
+| **persona-indexed specialist 集団 × verifier** | NAS = 単一最良 (なし) | **完全独自** (Agent A/B verdict) | ★★★ |
+| **Lipschitz/spectral/Hurwitz invariants を進化ループ SMT gate に embedding** | 既存 invariants は Trockman/Mamba/LTC で厚い | **角度独自** (進化ループ embedding が未踏, Agent B) | ★★★ |
+| **Approval Bus = HITL × architecture 変異 promotion** | RLHF / HITL は出力レベル (一部) | architecture 進化での HITL は未発見 | ★★ |
+| **RWKV state update rule の進化** | RWKV 改良は人手 (なし) | **完全独自** | ★★★ |
+| **AutoML-Zero × invariants gate × HITL の small-compute 派生** | AutoRobotics-Zero / AutoNumerics-Zero / TensorNEAT | **完全独自** (Agent B verdict) | ★★ |
+| **持続進化系 × 事前 formal gate** | PBT / Sakana Evo Merge / AlphaEvolve は事後 scoring | **完全独自** (要再設計, Agent B) | ★★ |
 | **Wiki + ChangeOp による認知主体移し替え** | Karpathy LLM Wiki 着想 (低) | **完全独自実装** | ★ (動作中) |
 
 ---
