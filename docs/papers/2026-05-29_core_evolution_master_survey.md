@@ -121,8 +121,36 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 - `formal_methods_corpus_v2` は AI Safety / LLM verification 中心、純粋 NN architecture 検証は少
 - `cognitive_ai_corpus_v2/cluster_02_bayesian_brain` = predictive coding × NN の鉱脈
 
-### 5.3 Agent D 結果 (進行中、ここに統合予定)
-> [Agent D の `2026-05-28_presurvey_verifier_stack.md` 完了後マージ]
+### 5.3 Agent D verdict (verifier stack deep dive 完了)
+
+#### 5.3.1 llive verifier.py × 既存 verifier の位置関係
+- **TorchLean (値領域) と llive verifier.py (構造領域) は直交** — 競合でなく**合流可能**
+- TorchLean は IBP/CROWN/LiRPA で「学習済 NN の入出力性質」を Lean 4 で証明
+- llive verifier.py は ChangeOp 列の構造変更不変量を Z3 で gate
+- **計算コスト**: TorchLean レベルの full verification を進化ループ毎世代に回すのは現実的でない → **sampling 検証**が現実的
+
+#### 5.3.2 Incremental NN Verification (Marabou 2026-03) との接続
+- 論文範囲: 「同一 network・異なる input」での conflict learning + 1.9x speedup
+- llive 側で必要な sound 拡張: **「異なる構造」(ChangeOp 列で生じる architecture 系列) に対する refinement relation**
+- これが成功すれば: 「**進化ループの世代越えで Z3 unsat core を継承**」= **論文化可能な独自軸**
+- 統合経路: Marabou を外部 library として呼び、llive verifier.py の SMT 層で conflict cache を世代間持続化
+
+#### 5.3.3 VNN-COMP 2024 / α,β-CROWN 状況
+- 2021-2025 の 5 年連続優勝が α,β-CROWN (Stanford/UCLA 系)
+- **全カテゴリ「固定 network + 入力 robustness」のみ**
+- **incremental / online / NAS カテゴリは存在しない** — llive の "online architecture evolution verification" は **新規ベンチ提案余地**
+- = 新カテゴリ提案論文として GECCO / NeurIPS workshop に投稿可
+
+#### 5.3.4 llive verifier.py 拡張軸 (Agent D 具体化)
+1. **Lipschitz 定量不変量**: state norm 有界性、spectral 制約を Z3 Real 制約に encode
+2. **Conflict cache**: Marabou 由来の learned conflict を世代越えで保存 (現状 final-state のみ検査 → 中間で再利用)
+3. **Approval Bus 連携**: 構造変更が invariant を破った場合の HITL fallback を policy 化
+4. **TorchLean bridge**: 高優先度個体に対してのみ full verification (sampling 検証戦略)
+
+#### 5.3.5 確定独自軸 (★★★ 3 つ)
+- Z3 を進化ループ内で online 呼出し architecture 変異を gate (希少例、WebSearch + RAD クロスでヒットゼロ)
+- Approval Bus 経由で HITL gate された architecture 進化
+- persona-indexed specialist 集団 with verifier (memory `project_persona_genome_integration` で実装着地済)
 
 ---
 
