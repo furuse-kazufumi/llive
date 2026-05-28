@@ -184,6 +184,8 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 
 ### Stage 0: 今夜〜1 週間で踏み込める (CPU 完結)
 
+**前提**: Agent C verdict より、CPU only を主張するなら **AutoML-Zero 系 prim ベース + WANN + NAS-Bench-201 proxy** に軸足を置く。AlphaEvolve / ShinkaEvolve 系 (API LLM call 前提) は引用比較先として参照のみ。
+
 #### Path 0-α: **factor_hook × RWKV-7 受け取り側実装** (Task #3)
 - `src/llive/backend/rwkv_backend.py` で `ThoughtFactorDeltaHook` を consume
 - RWKV-7 の time-mixing / channel-mixing の decay 係数を Δ 比例で動かす
