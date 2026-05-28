@@ -661,9 +661,10 @@ def main(argv: list[str] | None = None) -> int:
         }
 
     out = {
-        "schema": "poc_intercode_evolution/v1",
+        "schema": "poc_intercode_evolution/v2",
         "benchmark": "InterCode-CTF (princeton-nlp/intercode, picoCTF tasks, MIT)",
-        "phase": "Phase D-1 next-(1): make_agentic_fitness を multi-turn runner に配線",
+        "phase": ("Phase D-1 next-(1) + 新主経路 single-loop verdict (2026-05-28, "
+                  "オーケストラ Phase B 条件付き保留に伴う主経路評価追加)"),
         "proposition": (
             "個体 c_prompt から observe(観察先行)/naive(頭で当てる) の multi-turn agentic 戦略を "
             "発現させ、multi-turn InterCode オラクル (flag 一致) で ε-lexicase 進化させると、"
