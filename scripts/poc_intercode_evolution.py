@@ -713,6 +713,10 @@ def main(argv: list[str] | None = None) -> int:
             "([[feedback_benchmark_honest_disclosure]])。",
             "MultiPressureSelector は breakdown の数値キー (ic::<tid>) のみ lexicase case に抽出。"
             "strategy label / p_tool (非数値 str) は case に混ざらない = 観測専用の安全配線。",
+            "新主経路 single-loop verdict (2026-05-28): オーケストラ (Phase B) 条件付き保留に伴い、"
+            "進化チャンピオン=単一個体を 1 multi-turn ループで deploy した coverage を、naive 単一の "
+            "それと比較する。**deploy コストは 1 ループ = orchestra (best-of-pop) の 1/k**。"
+            "pop_coverage (orchestra) verdict と独立に出力 — GPU 無し新主経路で進化価値を評価する指標。",
         ],
     }
 
