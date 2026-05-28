@@ -325,6 +325,45 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 
 ---
 
+## §12-bis. 追加発見 (RAD 第 2 ラウンド 2026-05-29 朝)
+
+cryptography / compiler / distributed_systems / agents / spiking 系の追加 grep で重要 4+ 件発見、いずれも llive 設計に直接応用可能。
+
+### 12-bis-1. PrediPrune (arxiv 2509.16497, Sep 2025)
+- **ML driven pruning で SMT verification overhead を 51% 削減** (Souper superoptimizer)
+- LLVM IR optimization candidate validity を ML で先読み、SMT solver 負荷を削減
+- **llive 応用**: Z3 verifier gate (online) の高速化に **直接統合可能** = Stage 0-γ で組込み候補
+- 既存 ML + non-ML hybrid (PrediPrune + Dataflow) で更に 12% 追加削減 = llive verifier の階層構造設計に示唆
+
+### 12-bis-2. Quokka (arxiv 2509.21629, Sep 2025) — Open Source
+- **LLM で loop invariant synthesis、SV-COMP 866 問で 9 LLM 評価、SOTA**
+- 「LLM 出力を symbolic material として post-process」でなく「直接 invariant として validate」の評価中心設計
+- GitHub: https://github.com/Anjiang-Wei/Quokka
+- **llive 応用**: 進化中の architecture 変異に対し **LLM で invariant 候補生成** → Z3 で validate → 探索効率向上 = 新規 Path 0-η 候補
+
+### 12-bis-3. FlashEvolve (arxiv 2605.08520, May 2026)
+- **agent self-evolution の非同期 stage orchestration、wall-clock 3.5x-4.9x speedup** (GEPA workload)
+- artifact version tracking で stale artifact を update / discard / patch
+- 「language-space staleness は inspectable and repairable」(weight-space と違う)
+- **llive 応用**: lldarwin_v2 の世代並列化に直接適用可能 = 進化ループ wall-clock を 3-5x 短縮できれば CPU only 制約が緩む
+
+### 12-bis-4. SpikingBrain 2.0 + Evolutionary Feature Selection for SNN (RAD)
+- `neural_network_corpus_v2/cluster_07_spiking` に複数 hit
+- **Spiking NN の進化系統** = CPU 親和性高 (Forward-Forward と並ぶ非 BP 系統)
+- **llive 応用**: 学習則 gene に "STDP" (spike-timing dependent plasticity) を追加する根拠
+
+### 12-bis-5. agent self-evolution 系 (agents_corpus_v2)
+- Self-Evolving Software Agents
+- EvolveRouter (Co-Evolving Routing and Prompt)
+- MappingEvolve (LLM-Driven Code Evolution)
+- FitText (Evolving Agent Tool Ecologies via Memetic)
+- **llive 応用**: persona-indexed specialist 集団 × co-evolution の理論的根拠材料
+
+### 12-bis-6. 統合への影響
+master doc §8 (実装パス) に **Path 0-η (Quokka 統合 = LLM-driven invariant synthesis)** と **Path 0-θ (PrediPrune 統合 = ML pruning for SMT)** を新規候補追加。research plan §3.2 (Z3 verifier-gate) も拡張: 単純 SMT でなく ML + LLM hybrid で構成。
+
+---
+
 ## §12. honest 留保 (この doc の制限)
 
 - Agent B/C/D 完了前の中間 doc。最終版は明朝。
