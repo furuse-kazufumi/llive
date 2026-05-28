@@ -38,8 +38,12 @@ Goal (ユーザー設定): 明日朝までにコア進化 (Transformer 本体に
 
 ### 1.3 CPU 実装の現実線
 - **最現実パス = RWKV-7 0.19B / 0.4B + Mamba-130M** (Apache-2.0 GGUF 確定、llama.cpp 取り込み済)
-- 1B 級 scratch CPU 学習は **不現実**、100M 級でも days オーダー
-- NAS proxy task は char-level / 小規模 MLP で **hours 想定**
+- 1B 級 scratch CPU 学習は **不現実** (TinyLlama 1.1B from scratch は $140k / 90日 / 16×A100, Agent C 実測引用)
+- **BitMamba-2 (1.58-bit) が i3-12100F で 50 tok/s** = CPU LLM の最新到達点 (Agent C)
+- **TinyStories 10M は CPU 数日で train 可能** (Agent C)
+- NAS proxy task は **NAS-Bench-201 (15,625 arch pre-trained) + Zero-Cost Proxies** が de facto (Agent C)
+- **WANN (Weight-Agnostic Neural Network) は Raspberry Pi 移植実証あり**、CPU 親和性高 (Agent C)
+- **Forward-Forward は CIFAR 21% error (BP 劣勢)** honest disclosure (Agent C, Hinton NeurIPS 2022)
 
 ---
 
