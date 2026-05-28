@@ -696,6 +696,7 @@ def main(argv: list[str] | None = None) -> int:
                           "observe specialist が集団に保たれる。戦略 label は str 化 = case 化されない。"),
         "conditions": {name: _cond_to_dict(c) for name, c in conditions.items()},
         "verdict": verdict,
+        "single_loop_verdict": single_loop_verdict,
         "compute": {"llm_calls": calls, "elapsed_seconds": round(elapsed_total, 2)},
         "honest_notes": [
             "--mock 必須: 本ファイルの主用途は配線/弁別ロジック検証 (観察先行 vs naive を弁別し、"
