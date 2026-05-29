@@ -50,3 +50,4 @@ data/rad/
 
 # Rust build artifacts (regenerable via maturin develop)
 crates/*/target/
+rust_ext/target/
