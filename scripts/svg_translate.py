@@ -123,11 +123,15 @@ LANGS = ("en", "zh", "ko")
 # Source SVG basenames the article embeds.
 SOURCE_SVGS = (
     "lldarwin_stage1_baseline_status",
+    "lldarwin_stage1_novelty_status",
     "lldarwin_reservoir_off_dominance",
     "lldarwin_reservoir_on_dominance",
+    "lldarwin_reservoir_on_status",
     "lldarwin_stage1_diversity_overlay",
     "lldarwin_reinject_sweep",
+    "lldarwin_stage2_proxy_axes",
     "lldarwin_stage2_real_llm_axes",
+    "lldarwin_stage2_real_llm_status",
 )
 
 # Matches inner text of <text ...>INNER</text> and <tspan ...>INNER</tspan>.
