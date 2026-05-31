@@ -103,11 +103,18 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     # NOTE: "diversity_l2 (max14)" is ascii-only (no Japanese) and identical
     # across all languages, so it has no entry and is passed through verbatim.
 
-    # --- lldarwin_stage2_real_llm_axes.svg ---
+    # --- lldarwin_stage2_real_llm_axes.svg + lldarwin_stage2_proxy_axes.svg ---
+    # (両図はタイトルを共有する。proxy_axes は per-axis スコアの proxy 測定版)
     "lldarwin — LLM 苦手軸スコアの進化 (per-axis)": {
         "en": "lldarwin — evolution of LLM weak-axis scores (per-axis)",
         "zh": "lldarwin — LLM 弱项轴得分的进化 (per-axis)",
         "ko": "lldarwin — LLM 취약 축 점수의 진화 (per-axis)",
+    },
+    # --- lldarwin_stage2_proxy_axes.svg のサブタイトル (genome 振る舞い代理) ---
+    "PROXY (genome 振る舞い代理) ·  fitness=pressure-proxy  ·  model=n/a  ·  snapshots=5 (gen 0–100)": {
+        "en": "PROXY (genome behavior proxy) ·  fitness=pressure-proxy  ·  model=n/a  ·  snapshots=5 (gen 0–100)",
+        "zh": "PROXY (genome 行为代理) ·  fitness=pressure-proxy  ·  model=n/a  ·  snapshots=5 (gen 0–100)",
+        "ko": "PROXY (genome 행동 대리) ·  fitness=pressure-proxy  ·  model=n/a  ·  snapshots=5 (gen 0–100)",
     },
 }
 
