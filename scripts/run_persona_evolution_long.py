@@ -352,7 +352,7 @@ def main() -> int:
     if args.fitness == "rich-proxy":
         # 多峰 proxy: 全40次元 + persona archetype。fitness_fn 非 None だが proxy なので
         # is_proxy=True を明示し honest disclosure (used_proxy_fitness) を保つ。
-        from llive.perf.evolutionary.fitness_rich import make_rich_proxy_fitness
+        from llive.perf.evolutionary.experimental.fitness_rich import make_rich_proxy_fitness
 
         fitness_fn = make_rich_proxy_fitness(args.personas)
     elif args.fitness == "pressure-proxy":
