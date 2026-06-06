@@ -519,6 +519,7 @@ def main() -> int:
             lineage_reservoir=effective_lineage_reservoir,
             reinject_interval=effective_reinject_interval,
             map_elites=effective_map_elites,
+            novelty_filter=novelty_filter_obj,  # T2 2-2 ShinkaEvolve 流 評価前 novelty 棄却
             max_wallclock_seconds=(
                 args.max_wallclock_seconds if args.max_wallclock_seconds and args.max_wallclock_seconds > 0 else None
             ),
