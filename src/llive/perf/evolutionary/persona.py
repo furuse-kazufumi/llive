@@ -400,6 +400,17 @@ OPEN_ENDEDNESS_PERSONA_IDS: tuple[str, ...] = (
     "joel-lehman",
 )
 
+#: 古典思想家 (classical sage) ペルソナ群 (2026-06-06 追加). 孫子 (兵法戦略家) と
+#: 孔子. 計算力で大手に追いつけない前提下で差別化 trait を積層する「特別な DNA」
+#: 戦略の一環で、古典原理 (先勝・避実撃虚・温故知新・honest disclosure) を思考因子
+#: へ写像した founder 種個体. 既存 anchor の "sun-tzu"/"laozi" とは別系統 (こちらは
+#: 研究戦略・設計遺伝子の源泉). 詳細 = fullsense
+#: docs/research/classics_dna_mapping_2026_06_06.md.
+CLASSICAL_SAGE_PERSONA_IDS: tuple[str, ...] = (
+    "sun-tzu-strategist",
+    "confucius",
+)
+
 
 def list_persona_ids() -> tuple[str, ...]:
     return tuple(sorted(PERSONA_ONTOLOGY.keys()))
