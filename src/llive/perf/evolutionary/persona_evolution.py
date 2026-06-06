@@ -826,6 +826,9 @@ def run_persona_evolution(
     # lldarwin Stage1.5: 中立貯蔵庫を on_population_bred に注入 (絶滅 founder 系統を再投入)。
     if reservoir_hook is not None:
         loop_kwargs["on_population_bred"] = reservoir_hook
+    # ShinkaEvolve 流 評価前 novelty 棄却 (T2 2-2): None なら EvolutionLoop 既定 (無効)。
+    if novelty_filter is not None:
+        loop_kwargs["novelty_filter"] = novelty_filter
     if genome3d:
         loop_kwargs["crossover"] = Genome3DCrossover(mode=crossover_mode)
         loop_kwargs["mutation"] = Genome3DMutation(step_size=mutation_step)
