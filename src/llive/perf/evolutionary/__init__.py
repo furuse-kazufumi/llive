@@ -444,6 +444,7 @@ __all__ = [
     "NSGA2Selection",
     "NeuromorphicSubstrateAdapter",
     "NoveltyDescriptor",
+    "NoveltyFilter",
     "NoveltyScore",
     "NoveltyScorer",
     "PairScoreFn",
