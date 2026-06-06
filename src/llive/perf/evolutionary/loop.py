@@ -20,6 +20,7 @@ from llive.perf.evolutionary.crossover import UniformCrossover
 from llive.perf.evolutionary.fitness import Fitness
 from llive.perf.evolutionary.individual import FitnessReport, Individual
 from llive.perf.evolutionary.mutation import ChainedMutation, GaussianMutation
+from llive.perf.evolutionary.novelty_filter import NoveltyFilter
 from llive.perf.evolutionary.population import Population, PopulationStats
 from llive.perf.evolutionary.seeds import call_fitness_with_seed, fitness_accepts_seed
 from llive.perf.evolutionary.selection import (
