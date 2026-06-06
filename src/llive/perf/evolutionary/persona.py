@@ -345,6 +345,15 @@ RESEARCH_METHODOLOGY_PERSONA_IDS: tuple[str, ...] = (
     "isomura-takuya",
 )
 
+#: 進化派 (open-endedness) ペルソナ群 (2026-06-06 追加). 進化探索の設計判断を司る
+#: 3 開拓者 (AI-GAs の Clune, novelty search の Stanley / Lehman). llive 自身の
+#: 派生集団進化・メタ認知進化に最も馴染む種個体. founder 種個体候補.
+OPEN_ENDEDNESS_PERSONA_IDS: tuple[str, ...] = (
+    "jeff-clune",
+    "kenneth-stanley",
+    "joel-lehman",
+)
+
 
 def list_persona_ids() -> tuple[str, ...]:
     return tuple(sorted(PERSONA_ONTOLOGY.keys()))
