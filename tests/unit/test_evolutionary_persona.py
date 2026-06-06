@@ -98,6 +98,59 @@ def test_research_persona_composition_and_mutation() -> None:
         assert pid in PERSONA_ONTOLOGY
 
 
+def test_open_endedness_personas_registered() -> None:
+    """進化派 3 名 (Clune / Stanley / Lehman) が ontology に登録済みで整合する."""
+    assert OPEN_ENDEDNESS_PERSONA_IDS == (
+        "jeff-clune",
+        "kenneth-stanley",
+        "joel-lehman",
+    )
+    # 研究方法論 group とは交わらない (別系統の founder 種)
+    assert not (set(OPEN_ENDEDNESS_PERSONA_IDS) & set(RESEARCH_METHODOLOGY_PERSONA_IDS))
+    for pid in OPEN_ENDEDNESS_PERSONA_IDS:
+        p = get_persona(pid)
+        assert len(p.factor_affinity) == len(THOUGHT_FACTORS)
+        assert p.thought_patterns  # 非空
+        assert p.fields  # 非空
+
+
+def test_open_endedness_personas_factor_signature() -> None:
+    """探索 (exploration) が全員高め, 各人の代表因子が立っていること."""
+    factors = lambda pid: dict(  # noqa: E731
+        zip(THOUGHT_FACTORS, get_persona(pid).factor_affinity, strict=True)
+    )
+
+    # 3 名とも探索駆動 (open-endedness の核)
+    for pid in OPEN_ENDEDNESS_PERSONA_IDS:
+        assert factors(pid)["factor_exploration"] >= 0.9
+
+    # Clune (AI-GAs): 自己拡張が最大級 (AI が AI を生む)
+    assert factors("jeff-clune")["factor_self_extend"] >= 0.95
+
+    # Stanley (novelty search): 探索が最大, 単一目的を拒むため整合は低
+    stanley = factors("kenneth-stanley")
+    assert stanley["factor_exploration"] >= 0.95
+    assert stanley["factor_consistency"] <= 0.5
+
+    # Lehman (novelty + AI safety): 再構成 (LLM 変異) と現実接続 (安全) が高い
+    lehman = factors("joel-lehman")
+    assert lehman["factor_recompose"] >= 0.8
+    assert lehman["factor_reality_link"] >= 0.8
+
+
+def test_open_endedness_personas_convert_to_genome() -> None:
+    """進化派ペルソナ親和度 → ThoughtFactorPerLayerChromosome へゲノム化できる."""
+    for pid in OPEN_ENDEDNESS_PERSONA_IDS:
+        p = get_persona(pid)
+        chrom = ThoughtFactorPerLayerChromosome.from_persona_affinity(
+            p.factor_affinity, broadcast_strategy="uniform"
+        )
+        arr = chrom.as_array()
+        assert arr.shape[0] == NUM_THOUGHT_FACTORS
+        for li in range(arr.shape[1]):
+            np.testing.assert_allclose(arr[:, li], p.factor_affinity)
+
+
 def test_thought_factors_length_10() -> None:
     assert len(THOUGHT_FACTORS) == 10
 
