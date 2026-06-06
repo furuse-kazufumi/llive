@@ -455,6 +455,7 @@ __all__ = [
     "PersonaOverlapPenalty",
     "PersonaSurvivalAnalysis",
     "PersonaZoneShareEvent",
+    "CLASSICAL_SAGE_PERSONA_IDS",
     "OPEN_ENDEDNESS_PERSONA_IDS",
     "RESEARCH_METHODOLOGY_PERSONA_IDS",
     "PhyEdge",
