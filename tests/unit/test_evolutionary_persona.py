@@ -152,6 +152,66 @@ def test_open_endedness_personas_convert_to_genome() -> None:
             np.testing.assert_allclose(arr[:, li], p.factor_affinity)
 
 
+def test_classical_sage_personas_registered() -> None:
+    """古典思想家 2 名 (孫子戦略家 / 孔子) が ontology に登録済みで整合する."""
+    assert CLASSICAL_SAGE_PERSONA_IDS == (
+        "sun-tzu-strategist",
+        "confucius",
+    )
+    # 既存の 2 group とは交わらない (別系統の founder 種)
+    assert not (set(CLASSICAL_SAGE_PERSONA_IDS) & set(RESEARCH_METHODOLOGY_PERSONA_IDS))
+    assert not (set(CLASSICAL_SAGE_PERSONA_IDS) & set(OPEN_ENDEDNESS_PERSONA_IDS))
+    for pid in CLASSICAL_SAGE_PERSONA_IDS:
+        p = get_persona(pid)
+        assert len(p.factor_affinity) == len(THOUGHT_FACTORS)
+        assert p.thought_patterns  # 非空
+        assert p.fields  # 非空
+
+
+def test_classical_sage_personas_factor_signature() -> None:
+    """孫子 = 不確実性/整合/現実接続が高い, 孔子 = 来歴/多視点/整合が高い."""
+    factors = lambda pid: dict(  # noqa: E731
+        zip(THOUGHT_FACTORS, get_persona(pid).factor_affinity, strict=True)
+    )
+
+    # 孫子 (兵法戦略家): 不確実性 (兵は詭道) / 現実接続 / 整合 (算多きは勝つ) が高い
+    sun = factors("sun-tzu-strategist")
+    assert sun["factor_uncertainty"] >= 0.85
+    assert sun["factor_reality_link"] >= 0.9
+    assert sun["factor_consistency"] >= 0.85
+
+    # 孔子: 来歴 (温故知新) / 多視点 (和して同ぜず) / 整合 (不知を不知とす) が高い
+    conf = factors("confucius")
+    assert conf["factor_provenance"] >= 0.85
+    assert conf["factor_multiview"] >= 0.85
+    assert conf["factor_consistency"] >= 0.85
+
+
+def test_classical_sage_personas_convert_to_genome() -> None:
+    """古典思想家ペルソナ親和度 → ThoughtFactorPerLayerChromosome へゲノム化できる."""
+    for pid in CLASSICAL_SAGE_PERSONA_IDS:
+        p = get_persona(pid)
+        chrom = ThoughtFactorPerLayerChromosome.from_persona_affinity(
+            p.factor_affinity, broadcast_strategy="uniform"
+        )
+        arr = chrom.as_array()
+        assert arr.shape[0] == NUM_THOUGHT_FACTORS
+        for li in range(arr.shape[1]):
+            np.testing.assert_allclose(arr[:, li], p.factor_affinity)
+
+
+def test_classical_sage_disjoint_from_other_groups() -> None:
+    """3 group (research/open-endedness/classical-sage) は相互に交わらない."""
+    groups = (
+        set(RESEARCH_METHODOLOGY_PERSONA_IDS),
+        set(OPEN_ENDEDNESS_PERSONA_IDS),
+        set(CLASSICAL_SAGE_PERSONA_IDS),
+    )
+    for i, gi in enumerate(groups):
+        for gj in groups[i + 1:]:
+            assert not (gi & gj)
+
+
 def test_thought_factors_length_10() -> None:
     assert len(THOUGHT_FACTORS) == 10
 
