@@ -70,6 +70,7 @@ from llive.perf.evolutionary.persona import (
     THOUGHT_FACTORS,
     get_persona,
 )
+from llive.perf.evolutionary.novelty_filter import NoveltyFilter
 from llive.perf.evolutionary.population import Population
 from llive.perf.evolutionary.prompt_chromosome import (
     KNOWN_PROMPT_SKILLS,
