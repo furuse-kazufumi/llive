@@ -606,6 +606,7 @@ def persona_dissimilarity(
 
 
 __all__ = [
+    "OPEN_ENDEDNESS_PERSONA_IDS",
     "PERSONA_ONTOLOGY",
     "RESEARCH_METHODOLOGY_PERSONA_IDS",
     "THOUGHT_FACTORS",
