@@ -145,6 +145,14 @@ class EvolutionLoop:
     (絶滅系統の re-inject) はここで bred リストの一部を貯蔵庫 elite に置換する。
     返り値の個体数は population.size と一致させること (呼び出し側責務)。
     """
+    novelty_filter: NoveltyFilter | None = None
+    """ShinkaEvolve 流 *評価前* novelty-based rejection (T2 2-2). ``None`` (default)
+    で完全に無効 = 従来挙動 (後方互換)。設定すると **各世代の評価直前** に、既評価
+    個体と表現が類似しすぎる候補を判定し、類似超の候補は **LLM 評価をスキップ** して
+    淘汰用の sentinel fitness (score=-inf) を割り当てる。評価 (= 進化の最大ボトル
+    ネック) のコストを節約するための効率最適化であり、**安全ゲートではない**
+    (採用の安全判断は llcore の証明ゲートの役割; G15 二層倫理)。フィルタ不能時は
+    fail-open で素通し (=従来どおり全評価)。統計は ``novelty_filter.stats`` 参照。"""
 
     # -- main loop ---------------------------------------------------------
 
