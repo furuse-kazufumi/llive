@@ -526,6 +526,7 @@ __all__ = [
     "fitness_accepts_seed",
     "founder_persona_id",
     "get_persona",
+    "hashing_ngram_vector",
     "is_founder",
     "initial_sigma_values",
     "initialize_self_adaptive_variant_genome_values",
