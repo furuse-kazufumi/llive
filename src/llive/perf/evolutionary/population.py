@@ -115,13 +115,22 @@ class Population:
                 [ind.score for ind in self.individuals if ind.fitness is not None],
                 dtype=np.float64,
             )
+            # 集約 (mean/std/median) は **有限スコアのみ** で計算する。novelty
+            # rejection でスキップした個体は sentinel score=-inf を持つので、それを
+            # 混ぜると mean/std が -inf/NaN に汚染される。全スコアが有限なら従来と
+            # bit-identical (フィルタ無効時の後方互換)。best は max なので -inf を
+            # 含めても従来どおり最大値に一致する。
+            finite = scores[np.isfinite(scores)]
             if scores.size == 0:
+                best_s = mean_s = std_s = med_s = float("-inf")
+            elif finite.size == 0:
+                # 全員 -inf (= 全員スキップ/未評価扱い) — best は -inf 据置き
                 best_s = mean_s = std_s = med_s = float("-inf")
             else:
                 best_s = float(scores.max())
-                mean_s = float(scores.mean())
-                std_s = float(scores.std())
-                med_s = float(np.median(scores))
+                mean_s = float(finite.mean())
+                std_s = float(finite.std())
+                med_s = float(np.median(finite))
             diversity = self._diversity_l2_locked()
             seed = self.generation_seeds[-1] if self.generation_seeds else self.seed
             return PopulationStats(
