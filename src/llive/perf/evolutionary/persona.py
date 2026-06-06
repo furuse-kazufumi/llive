@@ -663,6 +663,7 @@ def persona_dissimilarity(
 
 
 __all__ = [
+    "CLASSICAL_SAGE_PERSONA_IDS",
     "OPEN_ENDEDNESS_PERSONA_IDS",
     "PERSONA_ONTOLOGY",
     "RESEARCH_METHODOLOGY_PERSONA_IDS",
