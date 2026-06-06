@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from llive.perf.evolutionary import (
+    CLASSICAL_SAGE_PERSONA_IDS,
     OPEN_ENDEDNESS_PERSONA_IDS,
     PERSONA_ONTOLOGY,
     RESEARCH_METHODOLOGY_PERSONA_IDS,
