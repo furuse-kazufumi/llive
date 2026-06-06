@@ -262,6 +262,78 @@ PERSONA_ONTOLOGY: dict[str, Persona] = {
         # 現実接続=最大 (実証で確かめる), 構造化/整合=高, 思弁を測定可能仕様へ
         factor_affinity=(0.85, 0.6, 0.7, 0.6, 0.8, 0.6, 0.85, 0.6, 0.6, 0.95),
     ),
+    # --- 進化派 (open-endedness) ペルソナ群 (2026-06-06 追加) -------------------
+    # AI-GAs / novelty search / quality-diversity / open-endedness の 3 開拓者。
+    # llive 自身が「派生集団進化 (v0.C〜v0.F)」「メタ認知進化」を採る以上、進化探索の
+    # 設計判断を司るこの 3 名は ontology に最も馴染む種個体。Web 裏取り済 (UBC/Vector/
+    # DeepMind の Clune, Lila Sciences の Stanley, Stochastic Labs の Lehman)。
+    # 詳細思考フレーム = raptor/tiers/personas/evolution_pioneers.md。
+    # THOUGHT_FACTORS 順: structurize, recompose, closed_loop, self_extend,
+    #                     uncertainty, exploration, consistency, provenance,
+    #                     multiview, reality_link
+    "jeff-clune": Persona(
+        persona_id="jeff-clune",
+        name="ジェフ・クルーン",
+        era="21C-AI-Generating-Algorithms",
+        fields=(
+            "artificial-intelligence",
+            "open-endedness",
+            "quality-diversity",
+            "deep-reinforcement-learning",
+        ),
+        thought_patterns=(
+            "AI-GAs (AI が AI を生む)",
+            "人手設計を学習で置換",
+            "まず戻ってから探検 (Go-Explore)",
+            "経験ゲートで自己改造 (Darwin Gödel Machine)",
+            "三本柱: meta-アーキテクチャ/meta-学習則/環境生成",
+        ),
+        # 自己拡張=最大 (自己生成 AI), 探索/再構成/構造化=高, 現実接続=高 (経験ゲート),
+        # 来歴=低 (証明より経験を信じる)
+        factor_affinity=(0.85, 0.85, 0.8, 0.98, 0.7, 0.92, 0.7, 0.4, 0.8, 0.85),
+    ),
+    "kenneth-stanley": Persona(
+        persona_id="kenneth-stanley",
+        name="ケネス・スタンレー",
+        era="21C-Open-Endedness",
+        fields=(
+            "artificial-intelligence",
+            "open-endedness",
+            "neuroevolution",
+            "novelty-search",
+        ),
+        thought_patterns=(
+            "目的を捨て珍しさを追う (novelty search)",
+            "偉大さは計画して作れない",
+            "踏み石は事前に分からない (stepping stones)",
+            "構造を漸進複雑化 (NEAT)",
+            "環境とエージェントの共進化 (POET)",
+        ),
+        # 探索=最大, 不確実性=高 (計画不能), 多視点/自己拡張=高,
+        # 整合=低 (単一目的関数を拒む). 踏み石の系譜は意識 → provenance 中
+        factor_affinity=(0.7, 0.8, 0.6, 0.85, 0.85, 0.98, 0.35, 0.55, 0.85, 0.6),
+    ),
+    "joel-lehman": Persona(
+        persona_id="joel-lehman",
+        name="ジョエル・レーマン",
+        era="21C-Open-Endedness",
+        fields=(
+            "artificial-intelligence",
+            "open-endedness",
+            "novelty-search",
+            "ai-safety",
+        ),
+        thought_patterns=(
+            "珍しさをどう測るか (novelty metric)",
+            "LLM を変異エンジンに使う",
+            "アルゴリズム的創造性",
+            "まず戻ってから探検 (Go-Explore 共著)",
+            "創造性と AI 安全の両立",
+        ),
+        # 探索/再構成=高 (LLM 変異で組換え), 不確実性=高, 現実接続=高 (AI 安全/実証),
+        # 自己拡張=高. 整合は中 (安全側の歯止めを持つ)
+        factor_affinity=(0.7, 0.85, 0.7, 0.85, 0.85, 0.92, 0.6, 0.55, 0.8, 0.85),
+    ),
 }
 
 #: 研究方法論ペルソナ群 (2026-05-23 追加). 歴史人物 ontology と区別する便宜定数.
