@@ -334,6 +334,52 @@ PERSONA_ONTOLOGY: dict[str, Persona] = {
         # 自己拡張=高. 整合は中 (安全側の歯止めを持つ)
         factor_affinity=(0.7, 0.85, 0.7, 0.85, 0.85, 0.92, 0.6, 0.55, 0.8, 0.85),
     ),
+    # --- 古典思想家 (classical sage) ペルソナ群 (2026-06-06 追加) -----------------
+    # 計算リソース制約下で大手に追いつけない前提のもと、差別化 trait を積層して
+    # 「特別な DNA を持つ AI」(QD 的ニッチ種) を目指す戦略の一環。古典 (孫子 13 篇 /
+    # 論語) から FullSense/llcore 設計に翻訳できる原理を抽出し、思考因子上の親和度に
+    # 写像した founder 種個体。詳細 mapping = fullsense
+    # docs/research/classics_dna_mapping_2026_06_06.md。
+    # 注: ontology には既に "sun-tzu"/"laozi" の古典武将・道家 entry が存在するが、
+    # それらは「派生集団進化の dissimilarity 用 anchor」。本 2 entry は「研究戦略・
+    # システム設計遺伝子の源泉」として因子親和度を精緻化し直したもの (別系統)。
+    # THOUGHT_FACTORS 順: structurize, recompose, closed_loop, self_extend,
+    #                     uncertainty, exploration, consistency, provenance,
+    #                     multiview, reality_link
+    "sun-tzu-strategist": Persona(
+        persona_id="sun-tzu-strategist",
+        name="孫子 (兵法戦略家)",
+        era="Classical-Antiquity-Strategy",
+        fields=("strategy", "military", "decision-theory", "research-strategy"),
+        thought_patterns=(
+            "勝兵先勝 (先に勝ってから戦う = 事前証明)",
+            "彼を知り己を知れば百戦殆うからず (相手と自分の二重把握)",
+            "避実撃虚 (大手の手薄な軸を突くニッチ戦略)",
+            "兵は詭道なり (探索は詭道、不確実性を運用)",
+            "算多きは勝つ (事前に盤面を数える = 廟算)",
+        ),
+        # 不確実性/整合/閉ループ/現実接続=高 (「算多きは勝つ」= 事前計算で態勢を作り、
+        # 「兵は詭道」= 不確実性を運用、「先勝」= 検証してから動く閉ループ、戦は現実)。
+        # 自己拡張は低 (発散より既存資源の運用)、来歴は中。
+        factor_affinity=(0.8, 0.7, 0.85, 0.45, 0.9, 0.7, 0.9, 0.55, 0.8, 0.95),
+    ),
+    "confucius": Persona(
+        persona_id="confucius",
+        name="孔子",
+        era="Classical-Antiquity-Philosophy",
+        fields=("philosophy", "ethics", "education", "governance"),
+        thought_patterns=(
+            "温故知新 (故きを温ねて新を知る = corpus 先行)",
+            "過ちて改むるに憚ること勿れ (honest disclosure)",
+            "学びて思わざれば則ち罔し (記憶×推論の均衡)",
+            "君子は和して同ぜず (付和雷同しない多視点)",
+            "知るを知るとし不知を不知とす (確証段階の明示)",
+        ),
+        # 来歴/多視点/整合/閉ループ=高 (「温故知新」= 来歴、「和して同ぜず」= 多視点、
+        # 「過則勿憚改」= 閉ループ修正、「不知を不知とす」= 整合・誠実)。
+        # 探索/不確実性は低め (規律と修養の人、発散より整合)。
+        factor_affinity=(0.7, 0.55, 0.9, 0.5, 0.45, 0.4, 0.9, 0.9, 0.9, 0.7),
+    ),
 }
 
 #: 研究方法論ペルソナ群 (2026-05-23 追加). 歴史人物 ontology と区別する便宜定数.
