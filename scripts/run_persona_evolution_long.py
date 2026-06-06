@@ -118,6 +118,17 @@ def _write_run_manifest(out_dir: Path, args: argparse.Namespace) -> None:
         "lineage_reservoir": bool(args.lineage_reservoir),
         "reinject_interval": args.reinject_interval,
     }
+    # real-pressure バッテリ再設計 (飽和監査) + 評価前 novelty 棄却フィルタ (T2 2-2) の追跡。
+    # additive: real-pressure 以外 / フィルタ未使用でもキーは常に残す (既存キーは不変)。
+    manifest["real_pressure_battery"] = (args.battery if args.fitness == "real-pressure" else None)
+    manifest["real_pressure_tasks_per_axis"] = (
+        args.tasks_per_axis if args.fitness == "real-pressure" else None
+    )
+    manifest["novelty_filter"] = {
+        "enabled": bool(args.novelty_filter),
+        "threshold": args.novelty_filter_threshold if args.novelty_filter else None,
+        "encoder": args.novelty_filter_encoder if args.novelty_filter else None,
+    }
     # diverse-founder-prompts は genome3d 経路のみ有効だが、後付けの追跡性のため
     # フラグ値は常に manifest top-level に additive で残す (既存キーは不変)。
     manifest["diverse_founder_prompts"] = bool(args.diverse_founder_prompts)
