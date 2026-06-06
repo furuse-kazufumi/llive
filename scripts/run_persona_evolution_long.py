@@ -340,6 +340,27 @@ def main() -> int:
         "系統が長期欠落するリスク (系統保持 vs 行動多様性のトレードオフ knob)。",
     )
     ap.add_argument(
+        "--novelty-filter",
+        action="store_true",
+        help="ShinkaEvolve 流の評価前 novelty 棄却フィルタ (NoveltyFilter, T2 2-2) を配線する。"
+        "各世代の評価直前に、既評価個体と genome が類似しすぎる候補の LLM 評価をスキップして "
+        "淘汰する (評価コスト節約)。効率最適化であり安全ゲートではない (fail-open)。既定 OFF。",
+    )
+    ap.add_argument(
+        "--novelty-filter-threshold",
+        type=float,
+        default=0.999,
+        help="--novelty-filter の cosine 類似棄却閾値 [0,1]。これを超える類似で棄却。"
+        "保守的 (高い) ほど「ほぼ完全一致のみ棄却」= 多様性を削らない。既定 0.999。",
+    )
+    ap.add_argument(
+        "--novelty-filter-encoder",
+        choices=["genome", "text"],
+        default="genome",
+        help="--novelty-filter の表現エンコーダ。genome=flat vector cosine (既定) / "
+        "text=system prompt の hashing n-gram。既定 genome。",
+    )
+    ap.add_argument(
         "--response-log",
         type=Path,
         default=None,
