@@ -241,6 +241,21 @@ def main() -> int:
         help="--fitness real-pressure で使う固定 on-prem ollama モデル (既定 llama3.2:latest)。",
     )
     ap.add_argument(
+        "--battery",
+        choices=["default", "hard_v2"],
+        default="default",
+        help="--fitness real-pressure のタスクバッテリ。default=旧 (二値・粗・gen1 で天井飽和) / "
+        "hard_v2=飽和監査の推奨に従う連続スコア + 難化 + 高 tasks_per_axis (headroom あり)。"
+        "s2 本走行は hard_v2 を使う。既定 default (後方互換)。",
+    )
+    ap.add_argument(
+        "--tasks-per-axis",
+        type=int,
+        default=None,
+        help="--fitness real-pressure の軸あたり評価問数。None=バッテリ既定 "
+        "(default→2, hard_v2→6)。粗さ解消のため hard_v2 では 6 推奨。",
+    )
+    ap.add_argument(
         "--max-wallclock-seconds",
         type=float,
         default=None,
