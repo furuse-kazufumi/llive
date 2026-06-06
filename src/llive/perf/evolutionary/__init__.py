@@ -409,6 +409,7 @@ __all__ = [
     "ExpertCompositionMutation",
     "ExpertPanel",
     "FactorSubspaceNovelty",
+    "FilterStats",
     "Fitness",
     "FitnessFn",
     "FitnessReport",
