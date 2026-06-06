@@ -768,3 +768,7 @@ __all__ = [
     "genome_to_system_prompt",
     "make_real_pressure_fitness",
 ]
+
+#: 公開している選択可能バッテリ名 (driver / 監査ツールが参照する)。
+AVAILABLE_BATTERIES: tuple[str, ...] = tuple(_BATTERIES.keys())
+__all__.append("AVAILABLE_BATTERIES")
