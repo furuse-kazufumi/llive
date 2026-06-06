@@ -720,16 +720,30 @@ def make_real_pressure_fitness(
             )
         return value
 
+    battery_tasks = _BATTERIES[cfg.battery]
+
     def fitness(genome: object) -> FitnessReport:
         system = genome_to_system_prompt(genome)
         breakdown: dict[str, float] = {}
         all_scores: list[float] = []
         for axis in cfg.axes:
-            for i, task in enumerate(_AXIS_TASKS[axis][: max(1, cfg.tasks_per_axis)]):
+            for i, task in enumerate(battery_tasks[axis][: max(1, cfg.tasks_per_axis)]):
                 s = _eval_task(system, task, axis)
                 breakdown[f"{axis}::t{i}"] = s
                 all_scores.append(s)
         score = float(sum(all_scores) / len(all_scores)) if all_scores else 0.0
+        # honest note: バッテリ別に粒度・天井の説明を変える (連続化済みかどうか)。
+        if cfg.battery == "hard_v2":
+            battery_note = (
+                "battery=hard_v2 (saturation-audit redesign): CONTINUOUS partial-credit "
+                "scoring (token overlap / numeric proximity / multi-criteria rubric), "
+                "harder + more tasks per axis to create headroom (gen1 should NOT hit 1.0). "
+            )
+        else:
+            battery_note = (
+                "battery=default (legacy binary 0/1 scoring, coarse 0.1-step landscape; "
+                "saturates at ceiling per saturation audit 2026-06-02). "
+            )
         return FitnessReport(
             score=score,
             breakdown=breakdown,
@@ -738,8 +752,9 @@ def make_real_pressure_fitness(
             notes=(
                 f"REAL on-prem LLM weakness-axis eval (model={cfg.model}, temp={cfg.temperature}, "
                 "deterministic+cached). genome.c_prompt -> system prompt (Promptbreeder-style); "
-                "fixed LLM, evolving prompt strategy. Small batteries = noisy estimate; "
-                "on-prem only (measurement purity); NOT a general-capability claim."
+                f"fixed LLM, evolving prompt strategy. {battery_note}"
+                "Small batteries = noisy estimate; on-prem only (measurement purity); "
+                "NOT a general-capability claim."
             ),
         )
 
