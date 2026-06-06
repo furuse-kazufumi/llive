@@ -295,6 +295,49 @@ class EvolutionLoop:
             elapsed_seconds=elapsed,
         )
 
+    # -- evaluate ----------------------------------------------------------
+
+    def _evaluate_population(self, population: Population) -> None:
+        """集団を評価して各個体に fitness を記録する.
+
+        ``novelty_filter`` が設定されていれば、評価 (= LLM 呼び出し; 高コスト)
+        の **直前** に既評価個体と類似しすぎる候補をふるい落とす (ShinkaEvolve 流
+        novelty-based rejection)。棄却された個体には sentinel fitness (score=-inf)
+        を割り当てて淘汰し、**評価そのものはスキップ** する (評価予算の節約)。
+
+        ``novelty_filter`` が ``None`` (default) のときは従来どおり全個体を評価
+        する (完全な後方互換)。
+        """
+        nf = self.novelty_filter
+        if nf is None:
+            self._evaluate_individuals(population, population.individuals)
+            return
+
+        # novelty filter: 評価前に accept/reject へ分割。
+        accepted, rejected = nf.partition(population.individuals)
+        # accept 群のみ評価 (LLM 呼び出しは accept の数だけ)。
+        if accepted:
+            self._evaluate_individuals(population, accepted)
+        # reject 群は評価せず sentinel fitness で淘汰。
+        for ind in rejected:
+            ind.record_fitness(_novelty_skipped_report())
+
+    def _evaluate_individuals(
+        self, population: Population, individuals: list[Individual]
+    ) -> None:
+        """指定個体群を fitness 評価して record する (scheduler/seed-aware 経路を踏襲)."""
+        if not individuals:
+            return
+        if fitness_accepts_seed(self.fitness_fn) and self.scheduler is _serial_scheduler:
+            reports = [
+                call_fitness_with_seed(self.fitness_fn, ind, parent_seed=population.seed)
+                for ind in individuals
+            ]
+        else:
+            reports = self.scheduler(self.fitness_fn, individuals)
+        for ind, rep in zip(individuals, reports, strict=True):
+            ind.record_fitness(rep)
+
     # -- breed -------------------------------------------------------------
 
     def _breed_next_generation(
