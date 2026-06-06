@@ -212,6 +212,7 @@ from llive.perf.evolutionary.peer_evaluation import (
     PeerFitnessAdapter,
 )
 from llive.perf.evolutionary.persona import (
+    CLASSICAL_SAGE_PERSONA_IDS,
     OPEN_ENDEDNESS_PERSONA_IDS,
     PERSONA_ONTOLOGY,
     RESEARCH_METHODOLOGY_PERSONA_IDS,
