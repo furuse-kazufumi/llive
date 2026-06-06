@@ -53,6 +53,21 @@ def _serial_scheduler(
     return [fitness_fn(ind.genome) for ind in inds]
 
 
+def _novelty_skipped_report() -> FitnessReport:
+    """novelty rejection で評価をスキップした個体に割り当てる sentinel report.
+
+    score=-inf で必ず淘汰されるが、LLM 評価 (高コスト) は **呼ばれていない**。
+    ``breakdown``/``notes`` に来歴を残し、後解析で「スキップされた個体」を
+    識別できるようにする (provenance; honest disclosure)。
+    """
+    return FitnessReport(
+        score=float("-inf"),
+        breakdown={"novelty_skipped": 1.0},
+        n_samples=0,
+        notes="novelty_skipped (ShinkaEvolve 流 評価前 rejection; LLM 評価を節約)",
+    )
+
+
 @dataclass
 class EvolutionConfig:
     """1 run の設定.
