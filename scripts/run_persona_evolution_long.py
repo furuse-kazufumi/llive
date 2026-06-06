@@ -415,9 +415,16 @@ def main() -> int:
                 if str(args.response_log) == "@out"
                 else args.response_log
             )
+        # battery 選択 (飽和監査の再設計): default=旧二値・粗 / hard_v2=連続・難化・headroom。
+        # tasks_per_axis 未指定ならバッテリ既定 (default→2, hard_v2→6) を採用。
+        rp_kwargs: dict = {"model": args.ollama_model, "battery": args.battery}
+        if args.tasks_per_axis is not None:
+            rp_kwargs["tasks_per_axis"] = args.tasks_per_axis
+        elif args.battery == "hard_v2":
+            rp_kwargs["tasks_per_axis"] = 6  # 粗さ解消のため軸あたり 6 問 (hard_v2 既定)
         fitness_fn = make_real_pressure_fitness(
             rp_backend,
-            RealPressureConfig(model=args.ollama_model),
+            RealPressureConfig(**rp_kwargs),
             response_log=response_log,
         )
     elif args.fitness == "llm":
