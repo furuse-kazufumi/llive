@@ -217,15 +217,9 @@ class EvolutionLoop:
             # 1. 評価 — Phase 3.5: seed-aware path で per-individual sub_seed を派生.
             #    Default scheduler は population.seed を見ない (1 引数 shape) ので,
             #    seed-aware fitness の場合は loop 側で個別に評価ループを回す.
-            if fitness_accepts_seed(self.fitness_fn) and self.scheduler is _serial_scheduler:
-                reports = [
-                    call_fitness_with_seed(self.fitness_fn, ind, parent_seed=population.seed)
-                    for ind in population.individuals
-                ]
-            else:
-                reports = self.scheduler(self.fitness_fn, population.individuals)
-            for ind, rep in zip(population.individuals, reports, strict=True):
-                ind.record_fitness(rep)
+            #    novelty_filter が設定されていれば、評価直前に既評価個体と類似
+            #    しすぎる候補をふるい落とし、LLM 評価をスキップする (T2 2-2)。
+            self._evaluate_population(population)
 
             # 2. 統計
             stats = population.compute_stats()
