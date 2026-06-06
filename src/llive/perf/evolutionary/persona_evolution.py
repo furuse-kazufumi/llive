@@ -606,6 +606,14 @@ def run_persona_evolution(
         長時間 run でも「同じ結果を吐き続ける空回り」を断つ。default 25。``None``
         で無効。EvolutionLoop は ``max_generations`` で必ず有界 (真の無限ループは
         起きない) が、本ガードは無駄な長時間空回りを早期に止める。
+    novelty_filter : NoveltyFilter | None
+        ShinkaEvolve 流の **評価前 novelty 棄却** フィルタ (T2 2-2)。``None``
+        (default) なら無効 = 従来挙動 (後方互換)。設定すると各世代の評価直前に、
+        既評価個体と表現が類似しすぎる候補を ``EvolutionLoop`` 側でふるい落とし、
+        類似超の候補は LLM 評価をスキップして淘汰する (評価コスト節約)。これは
+        効率最適化であって安全ゲートではない (fail-open; 採用判断は llcore 証明
+        ゲートの役割)。多様性維持の本体は selection (lldarwin-v2 の novelty
+        selection / lineage_reservoir) が担い、本フィルタは補助。
 
     Returns
     -------
