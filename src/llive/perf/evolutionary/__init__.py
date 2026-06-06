@@ -188,6 +188,11 @@ from llive.perf.evolutionary.mutation import (
     GaussianMutation,
     ResetMutation,
 )
+from llive.perf.evolutionary.novelty_filter import (
+    FilterStats,
+    NoveltyFilter,
+    hashing_ngram_vector,
+)
 from llive.perf.evolutionary.novelty_lane import (
     MultiObjectiveSelector,
     NoveltyDescriptor,
