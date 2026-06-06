@@ -463,6 +463,24 @@ def main() -> int:
             effective_reinject_interval = v2_cfg.reinject_interval
         effective_map_elites = v2_cfg.map_elites_archive  # QD-1/2 成果アーカイブ
 
+    # ShinkaEvolve 流 評価前 novelty 棄却フィルタ (T2 2-2): --novelty-filter で配線。
+    # genome encoder 既定、threshold は保守的 (0.999) = ほぼ完全一致のみ棄却 (多様性を削らない)。
+    # 効率最適化であり安全ゲートではない (fail-open)。多様性維持の本体は selection が担う。
+    novelty_filter_obj = None
+    if args.novelty_filter:
+        from llive.perf.evolutionary.novelty_filter import NoveltyFilter
+
+        nf_kwargs: dict = {
+            "threshold": args.novelty_filter_threshold,
+            "encoder": args.novelty_filter_encoder,
+        }
+        if args.novelty_filter_encoder == "text":
+            # text encoder は個体の system prompt (genome.c_prompt 由来) を見る。
+            from llive.perf.evolutionary.real_pressures import genome_to_system_prompt
+
+            nf_kwargs["text_of"] = lambda ind: genome_to_system_prompt(ind.genome)
+        novelty_filter_obj = NoveltyFilter(**nf_kwargs)
+
     print(
         f"[run] personas={len(args.personas)} pop={args.population} "
         f"generations={args.generations} patience={patience} fitness={args.fitness} "
