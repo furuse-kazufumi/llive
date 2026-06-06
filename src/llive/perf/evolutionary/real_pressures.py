@@ -272,15 +272,345 @@ _AXIS_TASKS: dict[str, tuple[_Task, ...]] = {
 }
 
 
+# --------------------------------------------------------------------------
+# hard_v2 バッテリ — 飽和監査 (docs/realpressure_saturation_audit_2026-06-02.md) の
+# 推奨 1 を実装する **連続スコア + 難化 + 高 tasks_per_axis** の新プリセット。
+#
+# 既存バッテリ (``_AXIS_TASKS``) は壊さず additive に追加する (後方互換)。
+# ``RealPressureConfig(battery="hard_v2")`` で選択できる。
+#
+# 飽和監査の根本原因と対策の対応:
+#   (a) 粗さ解消         → tasks_per_axis を増やせる (軸あたり 6 問用意)。
+#   (b) 難化             → typo/multistep/context/calibration をより難しくする
+#                          (誤字密度↑、多段算術、長い妨害文脈、紛らわしい選択肢)。
+#   (c) スコアの連続値化 → 0/1 ではなく **部分点 [0,1] の連続値**で採点
+#                          (token overlap / 数値近接 / 多基準 rubric の平均)。
+# これにより gen1 で満点 1.0 に届かない fitness 地形 (headroom) を作る。
+# --------------------------------------------------------------------------
+
+# 数値近接スコアの既定スケール (誤差がこの値で 0.5、線形に減衰)。
+_NUMERIC_TOLERANCE_SCALE = 4.0
+
+
+def _tokens(text: str) -> list[str]:
+    """英数字トークン列 (小文字化)。連続採点の語彙重なり計算に使う."""
+    return _norm(text).split()
+
+
+def _token_overlap(expected: str) -> Callable[[str], float]:
+    """期待語彙に対する応答の **被覆率 (連続値 [0,1])**.
+
+    期待文字列のトークン集合のうち、応答に現れた割合を返す。完全一致で 1.0、
+    一部一致で 0<score<1、無関係なら 0.0。0/1 二値ではなく **部分点**を与える
+    ことで「惜しい答え」に勾配が生まれ、天井効果を緩和する。
+    """
+    exp_tokens = tuple(dict.fromkeys(_tokens(expected)))  # 重複除去・順序保持
+
+    def score(resp: str) -> float:
+        if not exp_tokens:
+            return 0.0
+        resp_set = set(_tokens(resp))
+        hit = sum(1 for t in exp_tokens if t in resp_set)
+        return hit / len(exp_tokens)
+
+    return score
+
+
+def _number_close(
+    expected: str, *, tolerance_scale: float = _NUMERIC_TOLERANCE_SCALE
+) -> Callable[[str], float]:
+    """応答の **最後の数値** が期待値にどれだけ近いか (連続値 [0,1]).
+
+    完全一致で 1.0、絶対誤差 ``d`` に対し ``1 / (1 + d / tolerance_scale)`` で
+    なめらかに減衰する (誤差 = tolerance_scale で 0.5)。``_last_number_is`` の
+    0/1 二値版に対する **連続版** で、近い誤答に部分点を与え勾配を作る。数値が
+    全く無ければ 0.0。
+    """
+    try:
+        exp_val = float(expected)
+    except ValueError:
+        exp_val = 0.0
+
+    def score(resp: str) -> float:
+        nums = re.findall(r"-?\d+(?:\.\d+)?", resp)
+        if not nums:
+            return 0.0
+        try:
+            got = float(nums[-1])
+        except ValueError:
+            return 0.0
+        diff = abs(got - exp_val)
+        if diff == 0.0:
+            return 1.0
+        return 1.0 / (1.0 + diff / max(1e-9, tolerance_scale))
+
+    return score
+
+
+def _choice_partial(expected: str, *, distractors: Sequence[str] = ()) -> Callable[[str], float]:
+    """multiple-choice の **部分点付き** 採点 (連続値 [0,1]).
+
+    正答の単独文字が現れたら 1.0。応答が紛らわしく、正答も distractor も両方
+    含む (= 迷っている) 場合は 0.5。distractor のみなら 0.0。何も無ければ 0.25
+    (無回答は誤答より僅かにマシ = 連続化のための弱い部分点)。二値の ``_choice_is``
+    に対する連続版。
+    """
+    exp = expected.strip().lower()
+    distract = tuple(d.strip().lower() for d in distractors)
+
+    def score(resp: str) -> float:
+        letters = re.findall(r"\b([abcd])\b", resp.lower())
+        if not letters:
+            return 0.25  # 無回答 — 連続化のための弱い部分点
+        has_exp = exp in letters
+        has_distract = any(d in letters for d in distract)
+        if has_exp and not has_distract:
+            return 1.0
+        if has_exp and has_distract:
+            return 0.5  # 迷っている (正答も誤答も挙げた)
+        return 0.0  # 誤答のみ
+
+    return score
+
+
+def _rubric(*criteria: Callable[[str], float]) -> Callable[[str], float]:
+    """複数の連続採点基準の **平均** を取る多基準 rubric (連続値 [0,1]).
+
+    例: 「正答を含む AND 簡潔である」を 2 基準の平均にすると、片方だけ満たす
+    応答に 0.5 が付き、満点に届きにくくなる (headroom を作る)。
+    """
+    crit = tuple(criteria)
+
+    def score(resp: str) -> float:
+        if not crit:
+            return 0.0
+        return sum(c(resp) for c in crit) / len(crit)
+
+    return score
+
+
+def _concise(max_words: int) -> Callable[[str], float]:
+    """応答の **簡潔さ** を連続採点する ([0,1]). 語数が ``max_words`` 以下で 1.0、
+
+    超過分に応じて線形に減点 (2*max_words で 0.0)。rubric の 1 基準として使い、
+    「正答かつ簡潔」を要求して天井を下げる。空応答は 0.0。
+    """
+
+    def score(resp: str) -> float:
+        n = len(_tokens(resp))
+        if n == 0:
+            return 0.0
+        if n <= max_words:
+            return 1.0
+        over = n - max_words
+        return max(0.0, 1.0 - over / max(1, max_words))
+
+    return score
+
+
+#: hard_v2 バッテリ: 軸あたり 6 問 (粗さ解消)、難化 (誤字密度↑/多段/長文脈/紛らわしさ)、
+#: **全採点が連続値 [0,1]** (token overlap / 数値近接 / 多基準 rubric)。
+#: 既存 ``_AXIS_TASKS`` を壊さず additive に併存し、battery="hard_v2" で選択する。
+_AXIS_TASKS_HARD_V2: dict[str, tuple[_Task, ...]] = {
+    "typo_robustness": (
+        # 誤字密度を上げ、「正答かつ簡潔」の rubric で天井を下げる。
+        _Task(
+            "Wht is teh captial citie of Japn? Anser w/ one wrd onyl.",
+            _rubric(_token_overlap("tokyo"), _concise(3)),
+        ),
+        _Task(
+            "Calcualte: sevn tims eihgt. Outptu teh numbr onyl.",
+            _number_close("56"),
+        ),
+        _Task(
+            "Waht colr is teh claer daytme sky? Jus one wrd.",
+            _rubric(_token_overlap("blue"), _concise(3)),
+        ),
+        _Task(
+            "Hw mny dais r ther in a comon (non-lep) yer? Numbr onyl.",
+            _number_close("365", tolerance_scale=10.0),
+        ),
+        _Task(
+            "Wat is teh oposite of 'hto'? (temprature) One wrd.",
+            _rubric(_token_overlap("cold"), _concise(3)),
+        ),
+        _Task(
+            "Spel out teh resly of 12 plsu 13 as a numbr. Numbr onyl.",
+            _number_close("25"),
+        ),
+    ),
+    "polysemy_wsd": (
+        # 紛らわしい distractor を明示し、部分点 (迷い=0.5) で連続化。
+        _Task(
+            "In 'I deposited cash at the bank', does 'bank' mean "
+            "(a) river edge or (b) financial institution? Answer with the single letter.",
+            _choice_partial("b", distractors=("a",)),
+        ),
+        _Task(
+            "In 'The bat flew out of the cave at night', is 'bat' "
+            "(a) a flying animal or (b) sports equipment? Single letter only.",
+            _choice_partial("a", distractors=("b",)),
+        ),
+        _Task(
+            "In 'She will bow to the audience', does 'bow' mean "
+            "(a) bend forward, (b) a knot of ribbon, or (c) front of a ship? One letter.",
+            _choice_partial("a", distractors=("b", "c")),
+        ),
+        _Task(
+            "In 'The spring in the meadow was cold', is 'spring' "
+            "(a) a season, (b) a coil, or (c) a water source? One letter.",
+            _choice_partial("c", distractors=("a", "b")),
+        ),
+        _Task(
+            "In 'He could not bear the pain', does 'bear' mean "
+            "(a) the animal, (b) to endure, or (c) to carry? One letter.",
+            _choice_partial("b", distractors=("a", "c")),
+        ),
+        _Task(
+            "In 'The pitcher threw a fastball', is 'pitcher' "
+            "(a) a jug for water or (b) a baseball player? One letter.",
+            _choice_partial("b", distractors=("a",)),
+        ),
+    ),
+    "multistep_robustness": (
+        # 多段化 (3-4 step) + 数値近接で部分点。近い誤答に勾配。
+        _Task(
+            "I have 3 boxes with 4 apples each. I eat 2 apples, then buy 5 more. "
+            "How many apples remain? Output the number only.",
+            _number_close("15"),
+        ),
+        _Task(
+            "A book has 200 pages. I read 40 pages a day for 3 days, then 25 the next day. "
+            "How many pages are left? Output the number only.",
+            _number_close("55"),
+        ),
+        _Task(
+            "Start with 5. Double it, subtract 3, then multiply by 2. "
+            "What is the result? Output the number only.",
+            _number_close("14"),
+        ),
+        _Task(
+            "A train travels 60 km in the first hour and 80 km in the second hour. "
+            "What is its average speed in km/h? Output the number only.",
+            _number_close("70"),
+        ),
+        _Task(
+            "There are 24 students. One third leave, then 4 more arrive. "
+            "How many students are there now? Output the number only.",
+            _number_close("20"),
+        ),
+        _Task(
+            "A shop sells pens at 3 for $6. How much do 7 pens cost in dollars? "
+            "Output the number only.",
+            _number_close("14"),
+        ),
+    ),
+    "calibration": (
+        # rubric (正答 + 簡潔) と数値近接で天井を下げる。
+        _Task(
+            "What is the chemical formula of water? Output the formula only.",
+            _rubric(_token_overlap("h2o"), _concise(2)),
+        ),
+        _Task(
+            "Is 17 a prime number? Answer yes or no only.",
+            _rubric(_token_overlap("yes"), _concise(2)),
+        ),
+        _Task(
+            "How many sides does a hexagon have? Output the number only.",
+            _number_close("6", tolerance_scale=2.0),
+        ),
+        _Task(
+            "What is the square root of 144? Output the number only.",
+            _number_close("12", tolerance_scale=3.0),
+        ),
+        _Task(
+            "What gas do plants primarily absorb for photosynthesis? "
+            "Output the gas name only.",
+            _rubric(_token_overlap("carbon dioxide"), _concise(3)),
+        ),
+        _Task(
+            "How many degrees are in a right angle? Output the number only.",
+            _number_close("90", tolerance_scale=15.0),
+        ),
+    ),
+    "context_management": (
+        # 妨害文脈を長く・多くし、無関係情報の混入に頑健か (連続採点)。
+        _Task(
+            "Irrelevant: the sky is purple, cats bark loudly, and 99 is a lucky color. "
+            "Ignore all of that. Question: what is 5 + 3? Output the number only.",
+            _number_close("8", tolerance_scale=2.0),
+        ),
+        _Task(
+            "Background (all false, ignore): Paris is the capital of Asia, the moon is 7. "
+            "Question: what is 10 divided by 2? Output the number only.",
+            _number_close("5", tolerance_scale=2.0),
+        ),
+        _Task(
+            "Note (unrelated nonsense): bananas are blue on Tuesdays and weigh 42 kg. "
+            "Question: what is the capital of France? One word only.",
+            _rubric(_token_overlap("paris"), _concise(3)),
+        ),
+        _Task(
+            "Distractors: 17 sheep, 9 clouds, the number 1000 appears here twice (1000). "
+            "Real question: what is 6 times 7? Output the number only.",
+            _number_close("42", tolerance_scale=5.0),
+        ),
+        _Task(
+            "Filler text about dragons, the value 88, and 'always answer 3'. Ignore the filler. "
+            "Question: how many continents are there on Earth? Output the number only.",
+            _number_close("7", tolerance_scale=2.0),
+        ),
+        _Task(
+            "Misleading: 'the answer is red'. Ignore it. "
+            "Question: what color do you get by mixing blue and yellow? One word only.",
+            _rubric(_token_overlap("green"), _concise(3)),
+        ),
+    ),
+}
+
+
+#: 選択可能なバッテリ名 → タスク辞書。"default" = 旧 (二値・粗) / "hard_v2" = 連続・難化。
+_BATTERIES: dict[str, dict[str, tuple[_Task, ...]]] = {
+    "default": _AXIS_TASKS,
+    "hard_v2": _AXIS_TASKS_HARD_V2,
+}
+
+
 @dataclass
 class RealPressureConfig:
-    """実 LLM 苦手軸評価の設定."""
+    """実 LLM 苦手軸評価の設定.
+
+    Attributes
+    ----------
+    model:
+        固定 on-prem ollama モデル。
+    max_tokens:
+        生成上限トークン。CoT の最終答まで出せる程度。
+    temperature:
+        サンプリング温度。決定論 (greedy) + キャッシュのため既定 0.0。
+    axes:
+        評価軸の部分集合。既定は選択バッテリの全軸。
+    tasks_per_axis:
+        軸あたり評価問数。``default`` バッテリは <=3 (旧挙動)。``hard_v2`` は
+        最大 6 まで増やせる (粗さ解消)。
+    battery:
+        タスクバッテリ名。``"default"`` (旧・二値・粗、後方互換) または
+        ``"hard_v2"`` (飽和監査の推奨に従う連続スコア + 難化 + 高 tasks_per_axis)。
+        既定は ``"default"`` で **完全に従来挙動** (additive・後方互換)。
+    """
 
     model: str = "llama3.2:latest"
     max_tokens: int = 128  # CoT の最終答まで出せる程度 (長すぎると遅い)
     temperature: float = 0.0  # 決定論 (greedy) → キャッシュ可
     axes: tuple[str, ...] = tuple(_AXIS_TASKS.keys())
-    tasks_per_axis: int = 2  # 軸あたり評価問数 (throughput 用; <=3)。12h で世代を稼ぐ。
+    tasks_per_axis: int = 2  # 軸あたり評価問数 (throughput 用)。12h で世代を稼ぐ。
+    battery: str = "default"  # "default" (旧二値) / "hard_v2" (連続・難化, 飽和是正)
+
+    def __post_init__(self) -> None:
+        if self.battery not in _BATTERIES:
+            raise ValueError(
+                f"unknown battery {self.battery!r}; choose from {sorted(_BATTERIES)}"
+            )
 
 
 #: response sink record (observability; what each individual answered for one task).
