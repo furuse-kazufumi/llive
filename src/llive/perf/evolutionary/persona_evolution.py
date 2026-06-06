@@ -553,6 +553,8 @@ def run_persona_evolution(
     reinject_interval: int = 1,
     # ---- lldarwin v2 QD-1/2: MAP-Elites 成果アーカイブを各世代 submit (単調成長) ----
     map_elites: bool = False,
+    # ---- ShinkaEvolve 流 評価前 novelty 棄却 (T2 2-2): None なら無効 (後方互換) ----
+    novelty_filter: "NoveltyFilter | None" = None,
 ) -> PersonaEvolutionResult:
     """ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバ.
 
