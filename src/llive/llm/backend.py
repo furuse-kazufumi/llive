@@ -36,6 +36,24 @@ _UNSET = object()
 # Phase C-1.1: VLM image input types
 ImageInput = bytes | Path | str  # bytes payload, file path, or base64-encoded string
 
+# Phase C-1.3: multimodal extension — audio + sensor input types (skeleton).
+# audio: 同じく bytes / Path / base64-str. 実 encoding (wav / mp3 / ogg) は
+# backend ごとに対応, supports_audio で能力を表明.
+AudioInput = bytes | Path | str
+# sensor: 時系列 numeric / categorical 観測. 1 sample = {"ts": float ISO 8601 or
+# epoch, "metric": str, "value": float | str | list, "unit": str | None}.
+# llmesh の MQTT / OPC-UA bridge と同じ envelope を想定.
+SensorSample = dict[str, Any]
+# Phase C-1.4 (Gemini #2 Stage 1, 2026-05-22): KV cache Memory Translator.
+# Embedding 結合経路 — テキストトークン化せず memory entry の embedding を
+# 直接 LLM の inputs_embeds に注入. **ローカル LLM を内包する FullSense
+# だからこそできる hack**. Open LLM (Ollama / llama.cpp / HF Transformers)
+# 経路限定 — Closed LLM (Anthropic / OpenAI) はこの API を公開していない.
+# 1 prefix = (label: str, vector: ndarray-like 1D of float). label は
+# observability 用 (実 LLM には流さない). vector は backend の hidden_dim と
+# 一致が必要 (mismatch は generate() 内で reject).
+PrefixEmbedding = tuple[str, Any]  # (label, ndarray | list[float])
+
 _EXT_TO_MEDIA = {
     ".png": "image/png",
     ".jpg": "image/jpeg",
@@ -90,6 +108,18 @@ class GenerateRequest:
     # Each item can be ``bytes`` (raw image), ``Path`` (file to read), or
     # ``str`` (already base64-encoded payload).
     images: list[ImageInput] = field(default_factory=list)
+    # Phase C-1.3 (multimodal extension, 2026-05-22 skeleton):
+    # audio inputs (bytes/Path/base64) for speech / sound backends.
+    audio: list[AudioInput] = field(default_factory=list)
+    # sensor sample list (numeric / categorical time-series). 1 sample is a
+    # dict with at minimum ``ts`` / ``metric`` / ``value`` keys. llmesh の
+    # MQTT/OPC-UA envelope と互換.
+    sensor: list[SensorSample] = field(default_factory=list)
+    # Phase C-1.4 (Gemini #2 Stage 1, 2026-05-22): KV cache Memory Translator
+    # Embedding 結合経路. Open LLM backend が inputs_embeds に注入する用途.
+    # backend が supports_prefix_embeddings = False なら無視 (ignore) or reject
+    # (実装次第). MockBackend は accept + count を返す.
+    prefix_embeddings: list[PrefixEmbedding] = field(default_factory=list)
 
 
 @dataclass
@@ -121,6 +151,35 @@ class LLMBackend:
         """Whether this backend has a coding-specialised model variant (Phase C-1.2)."""
         return False
 
+    @property
+    def supports_audio(self) -> bool:
+        """Whether this backend can accept audio inputs (Phase C-1.3, skeleton).
+
+        実装は backend ごと. Whisper / Gemini Audio / GPT-4o audio 等.
+        default False — 各 backend が必要時に override.
+        """
+        return False
+
+    @property
+    def supports_sensor(self) -> bool:
+        """Whether this backend can accept structured sensor samples (Phase C-1.3).
+
+        典型的には専用 backend (llmesh MTEngine 直結, time-series LLM 等).
+        汎用 backend は通常 False, sensor は事前に prompt に序列化して渡す.
+        """
+        return False
+
+    @property
+    def supports_prefix_embeddings(self) -> bool:
+        """Whether this backend can accept prefix embeddings (Phase C-1.4).
+
+        Open LLM (Ollama / llama.cpp / HF Transformers) のうち inputs_embeds を
+        受け付ける backend で True. Closed LLM (Anthropic / OpenAI) は API が
+        公開されていないため False が default. これは [[project_idea_kv_cache_memory_translator]]
+        Stage 1: Embedding 結合経路.
+        """
+        return False
+
 
 # ---------------------------------------------------------------------------
 # Mock backend — deterministic, network-free, used as fallback and in tests
@@ -143,16 +202,48 @@ class MockBackend(LLMBackend):
     def supports_vlm(self) -> bool:
         return True
 
+    @property
+    def supports_audio(self) -> bool:
+        # mock は audio も accept する (count を返すだけ, transcription なし).
+        return True
+
+    @property
+    def supports_sensor(self) -> bool:
+        # mock は sensor も accept する (sample 数を返すだけ).
+        return True
+
+    @property
+    def supports_prefix_embeddings(self) -> bool:
+        # mock は prefix embeddings も accept する (count と label 一覧を返す).
+        return True
+
     def generate(self, request: GenerateRequest) -> GenerateResponse:
         text = f"{self.prefix} {request.prompt[: max(0, request.max_tokens)]}".strip()
         normed = [_normalise_image(im) for im in request.images]
         if normed:
             text = f"{text} (with {len(normed)} image{'s' if len(normed) != 1 else ''})"
+        if request.audio:
+            text = f"{text} (with {len(request.audio)} audio clip{'s' if len(request.audio) != 1 else ''})"
+        if request.sensor:
+            text = f"{text} (with {len(request.sensor)} sensor sample{'s' if len(request.sensor) != 1 else ''})"
+        if request.prefix_embeddings:
+            n_pre = len(request.prefix_embeddings)
+            text = f"{text} (with {n_pre} prefix embedding{'s' if n_pre != 1 else ''})"
         raw: dict[str, Any] = {"echo": True}
         if normed:
             raw["images"] = [
                 {"media_type": m, "base64_len": len(b64)} for m, b64 in normed
             ]
+        if request.audio:
+            raw["audio_count"] = len(request.audio)
+        if request.sensor:
+            raw["sensor_count"] = len(request.sensor)
+            raw["sensor_metrics"] = sorted(
+                {str(s.get("metric", "")) for s in request.sensor if s.get("metric")}
+            )
+        if request.prefix_embeddings:
+            raw["prefix_count"] = len(request.prefix_embeddings)
+            raw["prefix_labels"] = [str(label) for label, _ in request.prefix_embeddings]
         return GenerateResponse(
             text=text,
             finish_reason="stop",
@@ -494,7 +585,10 @@ def _delegate_generate(
     Used by MambaBackend / RwkvBackend / JambaBackend / DiffusionBackend so
     their analytics tag isn't lost when the actual transport is OpenAI-
     compatible HTTP. Forces the model name onto the request to override the
-    inner backend's own default.
+    inner backend's own default. All multimodal + prefix_embeddings fields
+    must be forwarded — earlier revisions dropped audio/sensor/prefix
+    silently, which broke Phase C-1.3 (audio/sensor) and Phase C-1.4 Stage 1
+    (KV cache Memory Translator).
     """
     coerced = GenerateRequest(
         prompt=request.prompt,
@@ -504,6 +598,9 @@ def _delegate_generate(
         stop=list(request.stop),
         model=request.model or fallback_model,
         images=list(request.images),
+        audio=list(request.audio),
+        sensor=list(request.sensor),
+        prefix_embeddings=list(request.prefix_embeddings),
     )
     resp = inner.generate(coerced)
     return GenerateResponse(
@@ -689,6 +786,149 @@ class DiffusionBackend(LLMBackend):
 
 
 # ---------------------------------------------------------------------------
+# HuggingFace Transformers backend (Phase C-1.4 Stage 1)
+#
+# 直接 inputs_embeds に注入できる唯一の Open LLM 経路. Ollama / llama-server の
+# HTTP API は inputs_embeds を公開していないため, KV cache Memory Translator
+# Stage 1 (Embedding 結合) は HF Transformers in-process が前提.
+#
+# 重い依存 (transformers + torch) は lazy import. 未 install 環境では
+# resolve_backend("hf") 時点で明示的に ModuleNotFoundError を投げる.
+# ---------------------------------------------------------------------------
+
+
+class HFTransformersBackend(LLMBackend):
+    """HuggingFace Transformers in-process backend with inputs_embeds support.
+
+    Loads a causal LM via ``transformers.AutoModelForCausalLM`` and accepts
+    ``request.prefix_embeddings`` (Phase C-1.4 Stage 1). Each prefix vector is
+    concatenated to the prompt's token embeddings, then ``model.generate`` is
+    called with ``inputs_embeds=...`` (token-economy bypass).
+
+    Requirements: ``pip install transformers torch`` (heavy). For tests,
+    mock ``sys.modules["transformers"]`` + ``sys.modules["torch"]`` and stub
+    the model — this skeleton's wiring is unit-testable without real weights.
+
+    Why this backend exists (vs. Ollama / llama-server):
+        Closed LLM APIs and Ollama's REST do not expose ``inputs_embeds``.
+        Only in-process HF transformers + raw llama.cpp C API can accept
+        pre-computed embeddings. This is the **token-economy bypass** core of
+        [[project_idea_kv_cache_memory_translator]] Stage 1.
+    """
+
+    name = "hf"
+    DEFAULT_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        *,
+        device: str | None = None,
+        torch_dtype: str | None = None,
+    ) -> None:
+        try:
+            import torch  # type: ignore[import-not-found]
+            import transformers  # type: ignore[import-not-found]
+        except ModuleNotFoundError as exc:  # pragma: no cover - heavy dep
+            raise ModuleNotFoundError(
+                "HFTransformersBackend requires: pip install transformers torch. "
+                "This backend exists for Phase C-1.4 Stage 1 (KV cache Memory "
+                "Translator inputs_embeds path) — closed LLMs do not expose it."
+            ) from exc
+
+        self.model_name = model or os.environ.get("LLIVE_HF_MODEL") or self.DEFAULT_MODEL
+        self.device = device or os.environ.get("LLIVE_HF_DEVICE") or "cpu"
+        dtype_str = torch_dtype or os.environ.get("LLIVE_HF_DTYPE") or "float32"
+        self._torch = torch
+        self._transformers = transformers
+        self._dtype = getattr(torch, dtype_str)
+
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(self.model_name)
+        self.model = transformers.AutoModelForCausalLM.from_pretrained(
+            self.model_name, torch_dtype=self._dtype
+        ).to(self.device)
+        self.model.eval()
+
+    @property
+    def supports_prefix_embeddings(self) -> bool:
+        return True
+
+    def _build_inputs_embeds(
+        self,
+        prompt: str,
+        prefix_embeddings: list[PrefixEmbedding],
+    ) -> Any:
+        """Return ``inputs_embeds`` tensor: [prefix_1, ..., prefix_n, prompt_embeds].
+
+        Each prefix vector's length must equal the model's hidden_size — else
+        the model would silently misinterpret the injection. Raises
+        ``ValueError`` on mismatch (fail-closed per CLAUDE.md MCP rules).
+        """
+        torch = self._torch
+        embed_layer = self.model.get_input_embeddings()
+        hidden_size = embed_layer.embedding_dim
+        token_ids = self.tokenizer(prompt, return_tensors="pt").input_ids.to(self.device)
+        prompt_embeds = embed_layer(token_ids)  # [1, T, H]
+
+        if not prefix_embeddings:
+            return prompt_embeds
+
+        prefix_tensors = []
+        for label, vec in prefix_embeddings:
+            t = torch.as_tensor(vec, dtype=self._dtype, device=self.device)
+            if t.ndim == 1:
+                if t.shape[0] != hidden_size:
+                    raise ValueError(
+                        f"prefix_embedding {label!r} dim={t.shape[0]} but "
+                        f"model hidden_size={hidden_size} — must match. "
+                        f"Reproject upstream or use a model with matching dim."
+                    )
+                t = t.unsqueeze(0)  # [1, H]
+            elif t.ndim == 2:
+                if t.shape[1] != hidden_size:
+                    raise ValueError(
+                        f"prefix_embedding {label!r} dim={t.shape[1]} but "
+                        f"model hidden_size={hidden_size} — must match."
+                    )
+            else:
+                raise ValueError(
+                    f"prefix_embedding {label!r} must be 1D or 2D, got ndim={t.ndim}"
+                )
+            prefix_tensors.append(t.unsqueeze(0))  # [1, P, H]
+
+        # [1, sum(P)+T, H]
+        return torch.cat(prefix_tensors + [prompt_embeds], dim=1)
+
+    def generate(self, request: GenerateRequest) -> GenerateResponse:  # pragma: no cover - heavy
+        torch = self._torch
+        with torch.no_grad():
+            inputs_embeds = self._build_inputs_embeds(
+                request.prompt, request.prefix_embeddings
+            )
+            out = self.model.generate(
+                inputs_embeds=inputs_embeds,
+                max_new_tokens=int(request.max_tokens),
+                temperature=float(request.temperature) if request.temperature > 0 else 1.0,
+                do_sample=request.temperature > 0,
+                pad_token_id=self.tokenizer.eos_token_id,
+            )
+        # Decoder-only models return generated tokens for inputs_embeds path;
+        # the prompt is not echoed back (different from input_ids path).
+        text = self.tokenizer.decode(out[0], skip_special_tokens=True)
+        return GenerateResponse(
+            text=text,
+            finish_reason="stop",
+            backend=self.name,
+            model=request.model or self.model_name,
+            raw={
+                "prefix_count": len(request.prefix_embeddings),
+                "device": self.device,
+                "hidden_size": self.model.get_input_embeddings().embedding_dim,
+            },
+        )
+
+
+# ---------------------------------------------------------------------------
 # Default backend resolution
 # ---------------------------------------------------------------------------
 
@@ -734,6 +974,8 @@ def resolve_backend(name: str | None = None) -> LLMBackend:
         return JambaBackend()
     if candidate == "diffusion":
         return DiffusionBackend()
+    if candidate in ("hf", "huggingface"):
+        return HFTransformersBackend()
     raise ValueError(f"unknown LLM backend: {candidate!r}")
 
 

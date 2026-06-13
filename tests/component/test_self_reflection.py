@@ -119,3 +119,76 @@ def test_observe_many_returns_count():
 def test_session_isolates_llive_data_dir(tmp_path):
     # Sanity that our fixture redirected LLIVE_DATA_DIR.
     assert os.environ["LLIVE_DATA_DIR"].startswith(str(tmp_path.parent))
+
+
+# --- ChangeOp sequence logging hook (SPEC-MESH-01) --------------------------
+
+
+def test_change_op_log_hook_records_applied_ops(tmp_path):
+    """A verified diff's materialised action sequence is persisted to the log."""
+    from types import SimpleNamespace
+
+    from llive.evolution.change_op_log import ChangeOpSequenceLog
+
+    log = ChangeOpSequenceLog(tmp_path / "ops.jsonl")
+    session = SelfReflectionSession(reservoir=None, change_op_log=log)
+    container = _container()
+    # `_verify` only reads .diff and .candidate_id off the candidate.
+    candidate = SimpleNamespace(
+        candidate_id="cand_test",
+        diff={
+            "schema_version": 1,
+            "candidate_id": "cand_test",
+            "base_candidate": "t_v1",
+            "changes": [
+                {
+                    "action": "remove_subblock",
+                    "target_container": "t_v1",
+                    "target_subblock": "ffn_swiglu",
+                }
+            ],
+        },
+    )
+    result = session._verify(container, candidate)
+    (rec,) = list(log.iter_records())
+    assert rec.actions == ("remove_subblock",)
+    assert rec.candidate_id == "cand_test"
+    assert rec.container_id == "t_v1"
+    assert rec.applied == result.ok  # `applied` mirrors the static gate verdict
+
+
+def test_change_op_log_hook_skips_when_apply_fails(tmp_path):
+    """A diff that cannot apply leaves no row (apply_diff raised before logging)."""
+    from types import SimpleNamespace
+
+    from llive.evolution.change_op_log import ChangeOpSequenceLog
+
+    log = ChangeOpSequenceLog(tmp_path / "ops.jsonl")
+    session = SelfReflectionSession(reservoir=None, change_op_log=log)
+    candidate = SimpleNamespace(
+        candidate_id="cand_bad",
+        diff={
+            "schema_version": 1,
+            "candidate_id": "cand_bad",
+            "base_candidate": "t_v1",
+            "changes": [
+                {
+                    "action": "remove_subblock",
+                    "target_container": "t_v1",
+                    "target_subblock": "no_such_subblock",
+                }
+            ],
+        },
+    )
+    result = session._verify(_container(), candidate)
+    assert result.ok is False
+    assert list(log.iter_records()) == []
+
+
+def test_no_change_op_log_by_default(tmp_path):
+    """Without a log the session never touches the filesystem for ChangeOps."""
+    session = SelfReflectionSession(reservoir=None)
+    session.observe_many(_samples())
+    proposals, _ = session.run_once(_container())
+    assert session.change_op_log is None
+    assert len(proposals) >= 1

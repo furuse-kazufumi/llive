@@ -4,6 +4,181 @@
 
 ## [Unreleased]
 
+### Added — Antifragile Mutation controller (EVO-ANTIFRAGILE, opt-in)
+
+Nassim Taleb の *Antifragile* を進化計算に持ち込む **opt-in / fail-closed**
+controller。高 surprise を「守り」でなく「学習機会」と捉え、panic mode で
+探索を一時増幅する (Gemini 発ブレスト #3, 2026-05-22)。
+
+- `src/llive/evolution/antifragile.py`:
+  - `AntifragileController` — surprise 駆動の panic state machine。
+    `observe_surprise` / `tick` (cooldown 経過) / `stop` (Approval Bus user
+    停止) で NORMAL ⇄ PANIC を遷移。panic 中のみ `exploration_constant` を
+    `exploration_multiplier` 倍 (既定 10x, `ucb_clip` で UCB bound へ clamp 可)、
+    `unlocked_conflict_pairs` で相反 TRIZ 原理の同時適用を解放、
+    `record_change_op` で全 ChangeOp を `AuditTrail` の SHA-256 hash chain へ
+    署名記録。
+  - `AntifragileConfig` — **`enabled=False` の fail-closed が既定**。
+    `from_env()` が `LLIVE_ANTIFRAGILE_AUTO` を解決 (明示 override 優先)。
+    `recovery_ratio` で surprise 回復の hysteresis、`cooldown_s` で panic の
+    最長滞在 (risk 上限, 既定 300s) を保証。
+  - `ConflictPair` / `DEFAULT_CONFLICT_PAIRS` — 対立 pair の正本
+    (#1 分割×#40 複合材料 / #14 球面化×#2 取り出し / #1 分割×#5 併合)。
+  - `AntifragileEpisode` + `disclosure()` — honest disclosure: panic episode
+    ごとの ops/成功/損失/滞在時間を時系列集計。**効果は未検証**で内訳を疑う
+    前提の計測基盤。無効時に panic し得た回数 (`suppressed_triggers`) も記録。
+- 既存進化 driver には**配線せず**疎結合 (gem-critic 指摘の driver genome
+  不整合は本機構の対象外)。`llive.evolution` から re-export。
+- `tests/unit/test_antifragile.py`: 28 ケース PASS (fail-closed / cooldown /
+  surprise 回復 / user_stop / 探索増幅 / 対立 pair / audit / disclosure / gate 連携)。
+
+### Planned
+
+- v0.7 Rust 高速化 (`docs/rust_hotspot_v0E_addendum.md` の RUST-15〜18).
+- v0.E E.5 (League mode, AlphaStar 風) / E.6 (Debate mode) — credential
+  + judge LLM 復旧後.
+- lleval ↔ llive bridge v0.1.0a2 — promptfoo subprocess 実走 + llive
+  Genome → ProviderSpec mapper 連携.
+
+## [0.6.0a1] — 2026-05-21 (Evolutionary stack v0.B/C/D/E 大規模前倒し)
+
+ユーザー Goal「完璧に近い Release 環境レベル + Rust 高速化検討」(2026-05-21)
+を受けて, 1 セッションで v0.B/C/D/E (進化系) の **13 wave + 303 件 test 追加**
+を着地. v0.E 要件定義は 34 IDs (CE-01〜34 + LG-FX + DB-FX) に完成.
+
+### Added — v0.E E.17 quality-diversity (PersonaOverlapPenalty + MAP-Elites)
+
+- `src/llive/perf/evolutionary/quality_diversity.py`:
+  - `PersonaOverlapPenalty` (CE-25) — fitness 軸に persona dissimilarity の
+    集団平均を加算. λ=0 で base, λ↑ で集団内で persona が被っていない
+    個体ほど高い実効 fitness.
+  - `MAPElitesGrid` (CE-26, Mouret & Clune 2015) — persona 2 軸 ×
+    thought_factor 2 軸 = 4 次元 archive. submit/coverage/best/
+    best_per_persona_slice/fitness_grid/to_dict.
+  - `default_persona_features` / `default_thought_features` /
+    `default_map_elites_features` — PERSONA_ONTOLOGY
+    effective_factor_affinity ベースの既定 feature extractor.
+- `tests/unit/test_evolutionary_quality_diversity.py`: 41 ケース PASS.
+
+### Added — v0.E E.12 persona import (CE-20)
+
+- `src/llive/perf/evolutionary/persona_import.py`:
+  - `PersonaImportAlgorithm` — 派生 A から派生 B へ persona を per-id で
+    部分採用. max_imports_per_event / min_source_peer_score /
+    affinity_threshold (cosine sim) / 3 blend strategy (extend / replace /
+    blend_weights) / forbid_existing / zone.
+  - `PersonaImportPlan` (frozen) — `apply()` で新 PersonaComposition を
+    返す純データ. `to_dict()` で序列化.
+  - `PersonaZoneShareEvent` (frozen) — COG-MESH-05 Quarantined Memory
+    zone への通知 envelope (本 module は event を返すだけ).
+- `tests/unit/test_evolutionary_persona_import.py`: 26 ケース PASS.
+
+### Added — v0.E E.4 governance skeleton (CE-06/07/08)
+
+- `src/llive/perf/evolutionary/coevolution_governance.py`:
+  - `CollusionDetector` (CE-06) — PeerEvaluationMatrix.is_suspected_collusion
+    を thresholds dataclass で wrap.
+  - `CoevolutionGovernance` (CE-07) — 共謀疑い時に
+    ApprovalBus.request("coevolution.suspected_collusion", payload) を発行.
+  - TonicRiskMonitor 連携 (CE-08) — collusion_risk_score を RiskModel と
+    して auto-register, evaluate_generation のたびに tick(state) に投入.
+  - `GovernanceReport` (frozen) — 1 世代の検査結果 (suspected / score /
+    approval / risk_alert) を統合 view として返す.
+- `tests/unit/test_evolutionary_coevolution_governance.py`: 28 ケース PASS.
+
+### Added — v0.C Phase 2 subprocess transport
+
+- `src/llive/perf/evolutionary/subprocess_scheduler.py` —
+  `VariantSubprocessScheduler` (variant_runner を subprocess.run で起動,
+  ThreadPool 並列, timeout/retries/cleanup). 派生間プロセス分離 + OS-level
+  timeout で fault isolation を実現.
+
+### Added — v0.D Phase 1+2 self-referential mutation
+
+- `src/llive/perf/evolutionary/self_adaptive.py` —
+  `SelfAdaptiveGaussianMutation` (Schwefel σSA-ES, log-normal σ update,
+  Genome 38 dim) + `pack_self_adaptive_bounds` + `initial_sigma_values`.
+- `src/llive/perf/evolutionary/meta_mutation.py` — `MetaMutation`
+  (strategy_id を genome に埋込, 集団内で 4 戦略並走) +
+  `pack_meta_strategy_bounds` + `strategy_distribution`.
+- `src/llive/perf/evolutionary/llive_variant_extras.py` — LV 19 dim を
+  38/20/39 dim に拡張する high-level helper 9 関数 + demo script.
+
+### Added — v0.E E.1 peer evaluation
+
+- `src/llive/perf/evolutionary/peer_evaluation.py` — `PeerEvaluationMatrix`
+  (N×N 採点行列, 共謀検出 3 指標, Mermaid 可視化) +
+  `PeerFitnessAdapter` (EvolutionLoop.scheduler 互換).
+
+### Added — v0.E E.14-18 多様性保護
+
+- `src/llive/perf/evolutionary/diversity.py`:
+  - `latin_hypercube_population` (scipy.stats.qmc) — 空間均等初期集団
+  - `NoveltyScorer` (k-NN, Lehman-Stanley 2008/2011)
+  - `DiversityPreservingBreedFilter` (novelty rejection + resample)
+  - `DiversityMonitor` (diversity_l2 / spread / median + 閾値 alarm)
+
+### Added — v0.E E.10/11 historical persona
+
+- `src/llive/perf/evolutionary/persona.py` — PERSONA_ONTOLOGY 10 名
+  (岡潔 / グロタンディーク / ファインマン / ガロア / フォン・ノイマン /
+  ニュートン / カント / ソクラテス / 老子 / 孫子) +
+  PersonaComposition (3 policy: exclusive / mix / moderator) +
+  PersonaCompositionMutation + persona_dissimilarity.
+
+### Added — v0.E E.19/20 mating
+
+- `src/llive/perf/evolutionary/mating.py`:
+  - `MutualScorePairSelector` — assortative mating, softmax sampling
+  - `LexicaseSelection` (Helmuth 2014) — 単一 fitness 収束回避
+
+### Added — v0.E E.21/31/33 speciation + NSGA-II + IslandModel
+
+- `src/llive/perf/evolutionary/speciation.py` — NEAT 流種分け
+  (Stanley-Miikkulainen 2002) + SpeciatedTournamentSelection
+- `src/llive/perf/evolutionary/nsga2.py` — non_dominated_sort +
+  crowding_distance + NSGA2Selection (Deb et al. 2002)
+- `src/llive/perf/evolutionary/island_model.py` — ring/fully/star 3 topology
+  + best/random/worst migration policy (Cohoon 1987)
+
+### Added — v0.E E.7/8/9 expert council + composition evolution
+
+- `src/llive/perf/evolutionary/expert_council.py` — Expert dataclass +
+  ExpertPanel + 4 protocol (weighted_average / round_robin /
+  moderator_vote / veto) + CouncilDecision +
+  build_panel_from_personas helper.
+- `src/llive/perf/evolutionary/expert_evolution.py` —
+  ExpertCompositionGenome + ExpertCompositionMutation +
+  CompositionStat + SurvivalRateTracker.
+
+### Added — 要件 / spec
+
+- `docs/requirements_v0.D_self_referential_and_llm_operators.md` (SR/LX/SU/MR)
+- `docs/requirements_v0.E_competitive_coevolution.md` — 34 IDs
+  (CE-01〜34) + LG-FX + DB-FX
+- `docs/requirements_v0.7_rust_acceleration_v0DE_addendum.md` —
+  RUST-15〜20 (v0.D/v0.E hotspot を v0.7 既存 RUST-01〜14 に追補)
+
+### Changed
+
+- `__version__` 0.2.0.dev0 → 0.6.0a1 (pyproject.toml と同期)
+- ruff 95/126 errors fix (PEP 585 / collections.abc 移行 + I001 整列)
+
+### Tests
+
+- 全件 1673 → 1881 PASS (+208, 回帰ゼロ)
+- 新規 test 13 ファイル
+
+### Known limitations / honest disclosure
+
+- 実 LlivKernel spawn は credential / kernel module 待ち (variant_runner は
+  mock baseline で完走)
+- v0.D LX-01/02 (LMX crossover / EUREKA fitness) は credential 後
+- v0.E CE-02 (PeerCommunication via MCP) は llmesh 統合待ち
+- Rust 高速化 RUST-15〜20 は spec のみ, 実装は Phase 5 着工
+
+## [0.6.0a0] — 2026-05-16 (Brief API + progressive validation matrix)
+
 ### Added — LLIVE-002: Brief API end-to-end (closes LLIVE-001 / LLIVE-002) — 2026-05-16
 
 `docs/proposals/brief_api_design.md` の 7 ステップを 1 セッションで完走。

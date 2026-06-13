@@ -1,0 +1,54 @@
+{
+  "generations": 50,
+  "population_size": 10,
+  "trials": 3,
+  "inproc_per_op_us_median": 18.443600041791797,
+  "mcp_per_op_us_median": 119.54339989461005,
+  "overhead_ratio_median": 6.681515526059387,
+  "verdict": "ok",
+  "mcp_sdk_available": true,
+  "mcp_sdk_path": "C:\\Users\\puruy\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\mcp\\__init__.py",
+  "trials_raw": [
+    {
+      "generations": 50,
+      "population_size": 10,
+      "inproc_total_s": 0.009221800020895898,
+      "inproc_per_op_us": 18.443600041791797,
+      "mcp_total_s": 0.06161560001783073,
+      "mcp_per_op_us": 123.23120003566147,
+      "overhead_ratio": 6.681515526059387,
+      "mcp_sdk_available": true,
+      "mcp_sdk_path": "C:\\Users\\puruy\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\mcp\\__init__.py",
+      "verdict": "ok"
+    },
+    {
+      "generations": 50,
+      "population_size": 10,
+      "inproc_total_s": 0.008776700007729232,
+      "inproc_per_op_us": 17.553400015458465,
+      "mcp_total_s": 0.059771699947305024,
+      "mcp_per_op_us": 119.54339989461005,
+      "overhead_ratio": 6.81027036296864,
+      "mcp_sdk_available": true,
+      "mcp_sdk_path": "C:\\Users\\puruy\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\mcp\\__init__.py",
+      "verdict": "ok"
+    },
+    {
+      "generations": 50,
+      "population_size": 10,
+      "inproc_total_s": 0.009699299931526184,
+      "inproc_per_op_us": 19.398599863052368,
+      "mcp_total_s": 0.05923879996407777,
+      "mcp_per_op_us": 118.47759992815554,
+      "overhead_ratio": 6.107533572761323,
+      "mcp_sdk_available": true,
+      "mcp_sdk_path": "C:\\Users\\puruy\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\mcp\\__init__.py",
+      "verdict": "ok"
+    }
+  ],
+  "honest_disclosure": [
+    "in-memory JSON-RPC mock (not real MCP stdio/sse transport)",
+    "real MCP transport is 10-100x heavier (subprocess pipe / asyncio httpx)",
+    "ratio here is LOWER BOUND of actual MCP overhead"
+  ]
+}

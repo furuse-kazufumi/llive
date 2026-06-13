@@ -95,8 +95,13 @@ def main() -> int:
 
     now = _resolve_now(guard)
     if now is None:
-        print("  -> Cannot resolve current time, demo halted")
-        return 0
+        # Quiet Hours が fail-closed の時点で demo を halt させると、デモの
+        # 90% を占める残 9 sections が実演されない. security stance は維持
+        # しつつ、env 設定方法を案内した上で mock time で続行する.
+        print("  -> Quiet Hours fail-closed (LLIVE_TZ not set is the secure default).")
+        print("     Hint: export LLIVE_TZ=Asia/Tokyo to demo Quiet-Hours time evaluation.")
+        print("     Falling back to mock time 2026-05-23T12:00:00+09:00 for demo continuity.")
+        now = datetime.fromisoformat("2026-05-23T12:00:00+09:00")
     is_quiet = guard.in_quiet_hours(now=now)
     print(f"  Now: {now.isoformat()}")
     print(f"  in_quiet_hours: {is_quiet}")

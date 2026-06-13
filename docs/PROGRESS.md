@@ -6,6 +6,81 @@
 
 ---
 
+## 2026-05-23 — 進化 fitness 時系列 animated SVG (SMIL) 可視化材料着地 (proxy fitness)
+
+persona 世代交代の進化ダイナミクスを **animated SVG (SMIL)** で可視化する生成器を実装。
+`metrics.jsonl` (毎世代の `PopulationStats` ダンプ) を読み、世代軸 fitness 折れ線
+(best/mean) を stroke-dashoffset で「描き進める」+ 再生ヘッド (縦線) が左→右へ走る
+animated SVG にする。diversity_l2 は下段別トラックの帯。既存 `phylogeny.to_animated_svg`
+と同じ「依存なし純 Python 文字列生成 / SMIL only / no JS / `role="img"`/`<title>`/`<desc>`」
+方針を踏襲し、GitHub README で再生できることを前提とする。
+
+| 着地物 | 内容 | 状態 |
+|---|---|---|
+| `src/llive/perf/evolutionary/svg_render.py` | `render_evolution_svg()` / `load_metrics_jsonl()` / `PROXY_NOTE`。best/mean draw-on 折れ線 + diversity 帯 + 再生ヘッド + 走査ドット。1001 点は `max_points` (default 200) に等間隔ダウンサンプリング (先頭/末尾保持) | **done** |
+| `scripts/render_evolution_svg.py` | CLI (`--metrics --out --founders --max-points --loop-seconds --no-proxy-note`)。UTF-8 reconfigure 踏襲 | **done** |
+| `out/persona_evo_1000/evolution.svg` | 実 1000 世代ランから生成 (18 KB, animate×7, polyline×3, well-formed)。best 1.000 / mean 0.996 へ収束 | **done** |
+| `tests/unit/test_svg_render.py` | 17 テスト (well-formed / `<animate>` / no-JS / proxy 注記 / founder 注記 / ダウンサンプリング / flat / 空 metrics) | **done** |
+| `__init__.py` export | `render_evolution_svg` / `load_metrics_jsonl` / `PROXY_NOTE` を追加 | **done** |
+
+honest disclosure:
+
+- **fitness は proxy のみ** — SVG の title / caption / `<desc>` / footer の 4 箇所に
+  `proxy fitness (NOT real LLM eval)` を明記。実 LLM タスク評価へは未配線
+  (feedback_benchmark_honest_disclosure)。`--no-proxy-note` で外せるが現状は付けたまま使う。
+- **SMIL の GitHub 互換前提** — CSS keyframe でなく `<animate>` を使用 (GitHub README は
+  SMIL を再生するが CSS animation は再生しないため)。Safari/Chrome/Firefox は SMIL 再生可。
+- **founder 注記は呼び出し側指定** — 自動推定せず `--founders` で渡したものを列挙
+  (どの種から始めたかの来歴明示)。
+
+### 検証
+
+```powershell
+Set-Location 'D:\projects\llive'; $env:PYTHONPATH='src'
+py -3.11 -m pytest tests/unit/test_svg_render.py -q   # 17 passed
+py -3.11 -m pytest tests/unit/test_persona_evolution.py tests/unit/test_evolutionary_lineage.py tests/unit/test_evolutionary_phylogeny_svg.py tests/unit/test_svg_render.py -q   # 56 passed (回帰なし)
+py -3.11 scripts/render_evolution_svg.py --metrics out/persona_evo_1000/metrics.jsonl --out out/persona_evo_1000/evolution.svg --founders furuse-kazufumi friston millidge isomura-takuya
+```
+
+---
+
+## 2026-05-23 — persona 世代交代 turnkey ドライバ着地 (proxy fitness)
+
+ペルソナ founder からの世代交代を 1 コマンドで回す turnkey ドライバを実装。
+既存進化系 (`genome`/`individual`/`population`/`loop`/`lineage`) を薄く束ねる
+orchestrator で、新規進化アルゴリズムは導入していない。
+
+| 着地物 | 内容 | 状態 |
+|---|---|---|
+| `src/llive/perf/evolutionary/persona_evolution.py` | `run_persona_evolution()` (roster パラメータ化 = ID 追加で歴史人物も混在可) / `build_founder_genome` / `build_founder_individuals` / `is_founder` / `founder_persona_id` / `PersonaEvolutionResult` | **done** |
+| founder 種個体 | persona.factor_affinity を LIVE_VARIANT_GENOME_BOUNDS の思考因子 dim 0..9 に書込、残り 9 dim は bounds 中点。`individual_id="founder:<pid>"` で識別 | **done** |
+| winners.jsonl / lineage.mmd | 世代ごと top3 を `on_generation_end` で追記、run 後に Mermaid 系統樹出力 | **done** |
+| `scripts/demo_persona_evolution.py` | turnkey demo (smoke 確認済: 8 体×5 世代で best 0.697→0.760) | **done** |
+| `tests/unit/test_persona_evolution.py` | 22 テスト (founder/履歴/決定論/stub) | **done** |
+| `_proxy_fitness` | **proxy** (LLM を呼ばない)。`0.7*balance + 0.3*provenance`。honest disclosure: 実 LLM 評価ではない | **proxy (実 fitness 未配線)** |
+| `compare_against_llm_baselines` | 「現状 LLM との比較」interface。lleval 連携設計を docstring に記載 | **stub (NotImplementedError)** |
+
+honest disclosure / 未配線:
+
+- **fitness は proxy のみ** — 実 LLM タスク評価へは未配線。proxy 値をベンチとして
+  外部に出すときは「proxy」と明記必須 (feedback_benchmark_honest_disclosure)。
+- **LLM 比較は stub** — `compare_against_llm_baselines` は NotImplementedError。
+  実装には (1) proxy → 実 LLM-task fitness 差し替え、(2) lleval 連携が前提。
+  llive 被験者は on-prem only、cloud LLM ベースラインと measurement purity を
+  分けて記録する制約 (feedback_llive_measurement_purity)。
+
+### 検証
+
+```powershell
+Set-Location 'D:\projects\llive'; $env:PYTHONPATH='src'
+py -3.11 -m pytest tests/unit/test_persona_evolution.py tests/unit/test_evolutionary_persona.py -q
+# 46 passed
+py -3.11 -m pytest tests/unit -k "evolutionary or persona or lineage or genome" -q
+# 826 passed, 1657 deselected (既存回帰なし)
+```
+
+---
+
 ## 2026-05-19 (昼前) — M8.8 + M8.9 本実装 (continuation セッション)
 
 朝の M8.2〜M8.7 着地に続き、同セッションで残りの自律実装可能タスク

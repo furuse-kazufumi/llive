@@ -27,7 +27,16 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from llive import rust_ext
-from llive.rust_ext import _bulk_time_decay_py, _compute_surprise_py, _jaccard_py
+from llive.rust_ext import (
+    _bulk_time_decay_py,
+    _collusion_score_kernel_py,
+    _compute_surprise_py,
+    _jaccard_py,
+    _novelty_score_batch_py,
+    _persona_dissimilarity_pairwise_py,
+    _persona_dissimilarity_py,
+    _persona_id_to_u32,
+)
 
 
 def _isclose(a: float, b: float, tol: float = 1e-6) -> bool:
@@ -156,3 +165,365 @@ def test_bulk_time_decay_known_value():
     # exp(-7 / 14) ≈ 0.6065306597126334
     out = rust_ext.bulk_time_decay([("linked_concept", 1.0, 7.0)], {"linked_concept": 14.0})
     assert _isclose(out[0], math.exp(-0.5), tol=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# persona_dissimilarity (RUST-15 baseline)
+# ---------------------------------------------------------------------------
+
+
+_PERSONA_ID_STRATEGY = st.sampled_from(
+    [
+        "oka-kiyoshi",
+        "grothendieck",
+        "feynman",
+        "galois",
+        "von-neumann",
+        "newton",
+        "kant",
+        "socrates",
+        "laozi",
+        "sun-tzu",
+    ]
+)
+
+
+@settings(max_examples=80, deadline=None)
+@given(
+    a_ids=st.lists(_PERSONA_ID_STRATEGY, min_size=0, max_size=5, unique=True),
+    b_ids=st.lists(_PERSONA_ID_STRATEGY, min_size=0, max_size=5, unique=True),
+    a_aff=st.lists(
+        st.floats(min_value=0.0, max_value=1.0, allow_nan=False), min_size=10, max_size=10
+    ),
+    b_aff=st.lists(
+        st.floats(min_value=0.0, max_value=1.0, allow_nan=False), min_size=10, max_size=10
+    ),
+)
+def test_persona_dissimilarity_parity(a_ids, b_ids, a_aff, b_aff):
+    # `persona_dissimilarity` accepts string ids; both backends should agree.
+    active = rust_ext.persona_dissimilarity(a_ids, b_ids, a_aff, b_aff)
+    a_u32 = sorted({_persona_id_to_u32(s) for s in a_ids})
+    b_u32 = sorted({_persona_id_to_u32(s) for s in b_ids})
+    py = _persona_dissimilarity_py(a_u32, b_u32, list(a_aff), list(b_aff))
+    assert _isclose(py, active, tol=1e-6), (py, active)
+
+
+def test_persona_dissimilarity_identical_returns_zero():
+    aff = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    assert rust_ext.persona_dissimilarity(["newton"], ["newton"], aff, aff) == 0.0
+
+
+def test_persona_dissimilarity_both_empty_returns_zero():
+    aff = [0.5] * 10
+    assert rust_ext.persona_dissimilarity([], [], aff, aff) == 0.0
+
+
+def test_persona_dissimilarity_disjoint_ids_no_aff_diff_yields_half():
+    # 同じ affinity vector + 完全 disjoint id → (1 - 0) * 0.5 + 0 * 0.5 = 0.5
+    aff = [0.5] * 10
+    out = rust_ext.persona_dissimilarity(["newton"], ["kant"], aff, aff)
+    assert _isclose(out, 0.5, tol=1e-9), out
+
+
+def test_persona_dissimilarity_dim_mismatch_raises():
+    with pytest.raises((ValueError, Exception)):
+        rust_ext.persona_dissimilarity(["newton"], ["kant"], [0.5, 0.5], [0.5] * 10)
+
+
+def test_persona_dissimilarity_empty_affinity_raises():
+    with pytest.raises((ValueError, Exception)):
+        rust_ext.persona_dissimilarity(["newton"], ["kant"], [], [])
+
+
+@settings(max_examples=30, deadline=None)
+@given(
+    n=st.integers(min_value=2, max_value=8),
+    seed=st.integers(min_value=0, max_value=10_000),
+)
+def test_persona_dissimilarity_pairwise_parity(n, seed):
+    """Batch kernel と Python fallback の NxN 出力が 1e-6 で一致するか."""
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    rng = random.Random(seed)
+    pool = [
+        "oka-kiyoshi",
+        "grothendieck",
+        "feynman",
+        "galois",
+        "von-neumann",
+        "newton",
+        "kant",
+        "socrates",
+        "laozi",
+        "sun-tzu",
+    ]
+    ids_list = [rng.sample(pool, rng.randint(1, 3)) for _ in range(n)]
+    aff_matrix = [[rng.random() for _ in range(10)] for _ in range(n)]
+    active = persona_dissimilarity_pairwise(ids_list, aff_matrix)
+    sorted_ids = [
+        sorted({_persona_id_to_u32(s) for s in ids}) for ids in ids_list
+    ]
+    aff_list = [[float(x) for x in row] for row in aff_matrix]
+    py = _persona_dissimilarity_pairwise_py(sorted_ids, aff_list)
+    assert len(active) == n and len(py) == n
+    for i in range(n):
+        for j in range(n):
+            assert _isclose(active[i][j], py[i][j], tol=1e-6), (
+                i,
+                j,
+                active[i][j],
+                py[i][j],
+            )
+
+
+def test_persona_dissimilarity_pairwise_diagonal_zero():
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    out = persona_dissimilarity_pairwise(
+        [["newton"], ["feynman"], ["kant"]],
+        [[0.5] * 10, [0.5] * 10, [0.5] * 10],
+    )
+    for i in range(3):
+        assert out[i][i] == 0.0
+
+
+def test_persona_dissimilarity_pairwise_symmetric():
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    out = persona_dissimilarity_pairwise(
+        [["newton", "feynman"], ["kant"], ["galois"]],
+        [[0.1] * 10, [0.5] * 10, [0.9] * 10],
+    )
+    for i in range(3):
+        for j in range(3):
+            assert _isclose(out[i][j], out[j][i], tol=1e-9), (i, j)
+
+
+def test_persona_dissimilarity_pairwise_empty_input():
+    from llive.rust_ext import persona_dissimilarity_pairwise
+
+    assert persona_dissimilarity_pairwise([], []) == []
+
+
+# ---------------------------------------------------------------------------
+# collusion_score_kernel (RUST-16 baseline)
+# ---------------------------------------------------------------------------
+
+
+@settings(max_examples=30, deadline=None)
+@given(
+    n=st.integers(min_value=2, max_value=16),
+    seed=st.integers(min_value=0, max_value=10_000),
+)
+def test_collusion_score_kernel_parity(n, seed):
+    """Rust kernel と numpy fallback の出力が 1e-6 で一致するか."""
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    rng = np.random.default_rng(seed)
+    m = rng.uniform(0.0, 1.0, size=(n, n))
+    np.fill_diagonal(m, np.nan)
+    py = _collusion_score_kernel_py(m)
+    rs = collusion_score_kernel(m)
+    assert _isclose(py[0], rs[0], tol=1e-6), ("variance", py[0], rs[0])
+    assert _isclose(py[1], rs[1], tol=1e-6), ("symmetry", py[1], rs[1])
+    assert _isclose(py[2], rs[2], tol=1e-6), ("concentration", py[2], rs[2])
+
+
+def test_collusion_score_kernel_uniform_high_returns_low_variance():
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    m = np.full((6, 6), 0.95, dtype=np.float64)
+    np.fill_diagonal(m, np.nan)
+    var, _sym, conc = collusion_score_kernel(m)
+    assert var < 1e-9
+    assert _isclose(conc, 1.0, tol=1e-6)
+
+
+def test_collusion_score_kernel_symmetric_matrix_high_symmetry():
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    rng = np.random.default_rng(0)
+    m = rng.uniform(0.0, 1.0, size=(6, 6))
+    m = (m + m.T) / 2.0  # fully symmetric
+    np.fill_diagonal(m, np.nan)
+    _, sym, _ = collusion_score_kernel(m)
+    assert sym > 0.99, sym
+
+
+def test_collusion_score_kernel_too_small_returns_zeros():
+    import numpy as np
+
+    from llive.rust_ext import collusion_score_kernel
+
+    m = np.array([[1.0]], dtype=np.float64)
+    assert collusion_score_kernel(m) == (0.0, 0.0, 0.0)
+
+
+def test_collusion_score_kernel_matches_peer_evaluation_matrix():
+    """既存 ``PeerEvaluationMatrix.collusion_score()`` と output が一致するか."""
+    import numpy as np
+
+    from llive.perf.evolutionary import PeerEvaluationMatrix
+    from llive.rust_ext import collusion_score_kernel
+
+    rng = np.random.default_rng(7)
+    n = 8
+    m = rng.uniform(0.0, 1.0, size=(n, n))
+    peer = PeerEvaluationMatrix(
+        agent_ids=tuple(f"a{i}" for i in range(n)), matrix=m.copy()
+    )
+    expected = peer.collusion_score()
+    # collusion_score_kernel expects diagonal already NaN'd.
+    m_diag_nan = m.copy()
+    np.fill_diagonal(m_diag_nan, np.nan)
+    actual = collusion_score_kernel(m_diag_nan)
+    assert _isclose(expected["score_variance"], actual[0], tol=1e-6)
+    assert _isclose(expected["symmetry"], actual[1], tol=1e-6)
+    assert _isclose(expected["concentration"], actual[2], tol=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# novelty_score_batch (RUST-17 baseline)
+# ---------------------------------------------------------------------------
+
+
+@settings(max_examples=20, deadline=None)
+@given(
+    n=st.integers(min_value=1, max_value=8),
+    a_n=st.integers(min_value=1, max_value=30),
+    d=st.integers(min_value=2, max_value=10),
+    k=st.integers(min_value=1, max_value=10),
+    seed=st.integers(min_value=0, max_value=10_000),
+)
+def test_novelty_score_batch_parity(n, a_n, d, k, seed):
+    """Rust kernel と numpy fallback の出力が 1e-6 で一致するか."""
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    rng = np.random.default_rng(seed)
+    values = rng.uniform(0.0, 1.0, size=(n, d))
+    archive = rng.uniform(0.0, 1.0, size=(a_n, d))
+    rs = novelty_score_batch(values, archive, k)
+    py = _novelty_score_batch_py(values, archive, k)
+    assert len(rs) == n and len(py) == n
+    for i in range(n):
+        assert _isclose(rs[i], py[i], tol=1e-6), (i, rs[i], py[i])
+
+
+def test_novelty_score_batch_empty_archive_returns_one():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    out = novelty_score_batch(np.zeros((3, 5)), np.zeros((0, 5)), k=5)
+    assert out == [1.0, 1.0, 1.0]
+
+
+def test_novelty_score_batch_k_clamped_to_archive_size():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    # k=100 で archive size 3 → clamp to 3.
+    out = novelty_score_batch(
+        np.array([[0.5, 0.5]]),
+        np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]),
+        k=100,
+    )
+    assert len(out) == 1
+    # 3 距離はいずれも sqrt(0.5) (二等辺三角形の頂点が等距離).
+    import math
+
+    expected = math.sqrt(0.5)
+    assert _isclose(out[0], expected, tol=1e-6), (out[0], expected)
+
+
+def test_novelty_score_batch_dim_mismatch_raises():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    with pytest.raises((ValueError, Exception)):
+        novelty_score_batch(np.zeros((2, 3)), np.zeros((5, 4)), k=2)
+
+
+def test_novelty_score_batch_invalid_k_raises():
+    import numpy as np
+
+    from llive.rust_ext import novelty_score_batch
+
+    with pytest.raises((ValueError, Exception)):
+        novelty_score_batch(np.zeros((2, 3)), np.zeros((5, 3)), k=0)
+
+
+def test_novelty_score_batch_matches_novelty_scorer():
+    """既存 ``NoveltyScorer.novelty_batch`` と output が一致するか."""
+    import numpy as np
+
+    from llive.perf.evolutionary import (
+        Genome,
+        GenomeBounds,
+        Individual,
+        NoveltyScorer,
+        Population,
+    )
+    from llive.rust_ext import novelty_score_batch
+
+    rng = np.random.default_rng(13)
+    d = 5
+    bounds = GenomeBounds(lower=(0.0,) * d, upper=(1.0,) * d)
+    inds = [
+        Individual.from_genome(
+            Genome.from_values(rng.uniform(0.0, 1.0, size=d), bounds=bounds, labels=())
+        )
+        for _ in range(4)
+    ]
+    pop = Population(
+        individuals=inds, bounds=bounds, generation=0, seed=0, generation_seeds=[0]
+    )
+    scorer = NoveltyScorer(k=3)
+    for _ in range(8):
+        scorer.add_to_archive(rng.uniform(0.0, 1.0, size=d))
+    expected = scorer.novelty_batch(pop)
+
+    values = np.stack([ind.genome.as_array() for ind in pop.individuals])
+    archive = np.stack(scorer.archive)
+    actual = novelty_score_batch(values, archive, scorer.k)
+    for i in range(4):
+        assert _isclose(float(expected[i]), actual[i], tol=1e-6), (
+            i,
+            expected[i],
+            actual[i],
+        )
+
+
+def test_persona_dissimilarity_matches_persona_py_for_ontology():
+    """ontology の Persona 同士で persona.py:persona_dissimilarity と一致するか.
+
+    rust_ext は string id → u32 hash で持つので, Python (numpy) 経路の
+    persona_dissimilarity と数値的に一致しない可能性がある (Jaccard が
+    同 set サイズ + dim を共有する限り一致するはず). 簡易検証.
+    """
+    from llive.perf.evolutionary.persona import (
+        PersonaComposition,
+    )
+    from llive.perf.evolutionary.persona import (
+        persona_dissimilarity as py_persona_dissimilarity,
+    )
+
+    a = PersonaComposition(persona_ids=("newton",), weights=(1.0,))
+    b = PersonaComposition(persona_ids=("feynman",), weights=(1.0,))
+    a_aff = list(a.effective_factor_affinity())
+    b_aff = list(b.effective_factor_affinity())
+    py_val = py_persona_dissimilarity(a, b)
+    rust_val = rust_ext.persona_dissimilarity(
+        list(a.persona_ids), list(b.persona_ids), a_aff, b_aff
+    )
+    assert _isclose(py_val, rust_val, tol=1e-6), (py_val, rust_val)

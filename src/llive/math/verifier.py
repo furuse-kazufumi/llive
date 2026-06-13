@@ -111,6 +111,46 @@ def _free_symbols(*exprs: sympy.Expr) -> dict[str, sympy.Symbol]:
     return seen
 
 
+def _trig_normalised_zero(diff: sympy.Expr) -> bool:
+    """Decide if ``diff`` reduces to ``0`` under trig-aware normalisation.
+
+    Used as an *additive* fallback by :meth:`MathVerifier.check_equivalence`
+    only after the primary ``simplify(lhs - rhs) == 0`` check has already
+    returned non-equivalent. ``simplify`` leaves quotients such as
+    ``sin(n*theta)/sin(theta)`` un-rewritten, so equal trig identities (e.g.
+    the Chebyshev-polynomial form) are otherwise reported as not_equivalent.
+
+    The normalisation runs in two bounded, ordered stages — each is a single
+    straight-line transform followed by one ``simplify`` (no recursion, no
+    loops), so termination is guaranteed and the cost is at most two extra
+    ``simplify`` calls:
+
+    1. ``expand_trig`` — expands multiple/compound angles (``sin(n*x)``,
+       ``sin(a+b)``) into single-angle powers; resolves the common cases.
+    2. ``expand_trig(...).rewrite(exp)`` — falls back to the complex-exponential
+       form for identities that expand_trig alone leaves un-cancelled.
+
+    Returns ``True`` only when a stage simplifies the residue to exactly ``0``.
+    A genuinely non-equivalent ``diff`` keeps a non-zero residue through both
+    stages, so this cannot introduce a false positive. Any sympy failure is
+    swallowed and treated as "not zero" (fail-closed: do not upgrade to
+    equivalent on error).
+    """
+    for transform in (
+        lambda e: sympy.expand_trig(e),
+        lambda e: sympy.expand_trig(e).rewrite(sympy.exp),
+    ):
+        try:
+            if sympy.simplify(transform(diff)) == 0:
+                return True
+        except Exception:
+            # A transform / simplify blew up — stay conservative and report
+            # "not zero" so the verdict remains not_equivalent rather than
+            # risking a false positive.
+            continue
+    return False
+
+
 # Map sympy expressions to z3 — limited to the algebraic subset we ship in v0.7
 # (constants, +/-/*/division, power with int exponent, and the inequality ops).
 # Trig / transcendental functions raise so callers fall back to sympy-only paths.
@@ -243,6 +283,22 @@ class MathVerifier:
             r = _sympy_parse(rhs)
             diff = sympy.simplify(l - r)
             equivalent = diff == 0
+            if not equivalent:
+                # Additive trig-normalisation fallback. The primary
+                # ``simplify`` does not rewrite quotients like
+                # ``sin(n*theta)/sin(theta)`` into their Chebyshev-polynomial
+                # form, so genuinely equal trig identities are reported as
+                # not_equivalent (a general false-negative bug, not tied to any
+                # one domain). When — and only when — the primary path failed,
+                # re-normalise with ``expand_trig`` and, if still non-zero, the
+                # complex-exponential rewrite, then re-simplify. This never
+                # changes a verdict that already came out equivalent (it runs
+                # only on the not_equivalent branch) and a non-equivalent
+                # expression still simplifies to a non-zero residue, so no false
+                # positive is introduced. See test_galapago_reformulation.
+                if _trig_normalised_zero(l - r):
+                    equivalent = True
+                    diff = sympy.Integer(0)
             verdict = "equivalent" if equivalent else "not_equivalent"
             rationale = (
                 f"sympy.simplify({lhs} - {rhs}) -> {diff}"

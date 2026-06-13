@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from llive.evolution.change_op import apply_diff
+from llive.evolution.change_op_log import ChangeOpSequenceLog
 from llive.evolution.reservoir import FailedCandidate, FailedCandidateReservoir
 from llive.evolution.verifier import Invariants, VerificationResult, verify_diff
 from llive.schema.models import CandidateDiff, ContainerSpec
@@ -79,6 +80,7 @@ class SelfReflectionSession:
         generator: RadBackedIdeaGenerator | None = None,
         invariants: Invariants | None = None,
         use_smt: bool = True,
+        change_op_log: ChangeOpSequenceLog | None = None,
     ) -> None:
         self.detector = ContradictionDetector(
             registry=registry, window=window, min_samples=min_samples
@@ -88,6 +90,10 @@ class SelfReflectionSession:
         self.generator = generator or RadBackedIdeaGenerator()
         self.invariants = invariants or Invariants()
         self.use_smt = bool(use_smt)
+        # Optional: persist the real ChangeOp action sequence each verified diff
+        # materialises, so branch_predictor's synthetic hit_rate can later be
+        # overwritten by a measured one (SPEC-MESH-01 → -07). Off by default.
+        self.change_op_log = change_op_log
 
     # -- ingestion ---------------------------------------------------------
 
@@ -157,7 +163,18 @@ class SelfReflectionSession:
             _, ops = apply_diff(container, diff)
         except Exception as exc:
             return VerificationResult(ok=False, reasons=[f"apply_diff failed: {exc}"])
-        return verify_diff(container, ops, self.invariants, use_smt=self.use_smt)
+        result = verify_diff(container, ops, self.invariants, use_smt=self.use_smt)
+        if self.change_op_log is not None:
+            # Log the real materialised action sequence; `applied` records whether
+            # it cleared the static gate (the promotable stream).
+            self.change_op_log.record_ops(
+                ops,
+                source="self_reflection",
+                candidate_id=candidate.candidate_id,
+                container_id=container.container_id,
+                applied=result.ok,
+            )
+        return result
 
     def _spool_failure(
         self, candidate: GeneratedCandidate, verification: VerificationResult

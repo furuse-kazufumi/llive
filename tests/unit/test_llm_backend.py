@@ -289,3 +289,183 @@ def test_openai_backend_passes_base_url_env_to_client(
 
     OpenAIBackend()
     fake_openai.OpenAI.assert_called_once_with(base_url="http://localhost:8080/v1")
+
+
+# ---------------------------------------------------------------------------
+# Phase C-1.4 (Gemini #2 Stage 1, 2026-05-22): prefix_embeddings —
+# KV cache Memory Translator Embedding 結合経路.
+#
+# Open LLM (Ollama / llama.cpp / HF Transformers) で memory entry embedding を
+# inputs_embeds 経由で直接注入する経路. Mock は accept + count を返す.
+# ---------------------------------------------------------------------------
+
+
+def test_mock_backend_accepts_prefix_embeddings() -> None:
+    """MockBackend accepts prefix_embeddings — count appended to text + raw."""
+    backend = MockBackend()
+    req = GenerateRequest(
+        prompt="hello",
+        prefix_embeddings=[
+            ("mem_episodic_1", [0.1, 0.2, 0.3]),
+            ("mem_semantic_2", [0.4, 0.5, 0.6]),
+        ],
+    )
+    resp = backend.generate(req)
+    assert "2 prefix embeddings" in resp.text
+    assert resp.raw["prefix_count"] == 2
+    assert resp.raw["prefix_labels"] == ["mem_episodic_1", "mem_semantic_2"]
+
+
+def test_mock_backend_single_prefix_embedding_singular() -> None:
+    """Singular grammar — 1 embedding → 'prefix embedding' (not 'embeddings')."""
+    backend = MockBackend()
+    req = GenerateRequest(prompt="x", prefix_embeddings=[("only_one", [0.0])])
+    resp = backend.generate(req)
+    assert "1 prefix embedding" in resp.text
+    assert "1 prefix embeddings" not in resp.text
+
+
+def test_mock_backend_empty_prefix_embeddings_omits_raw() -> None:
+    """Empty list → no prefix_count/prefix_labels in raw (clean API surface)."""
+    backend = MockBackend()
+    req = GenerateRequest(prompt="x", prefix_embeddings=[])
+    resp = backend.generate(req)
+    assert "prefix_count" not in resp.raw
+    assert "prefix_labels" not in resp.raw
+    assert "prefix embedding" not in resp.text
+
+
+def test_mock_backend_supports_prefix_embeddings_flag() -> None:
+    """MockBackend.supports_prefix_embeddings is True (used as test double)."""
+    assert MockBackend().supports_prefix_embeddings is True
+
+
+def test_default_backend_does_not_support_prefix_embeddings() -> None:
+    """Abstract LLMBackend default is False — closed LLMs (Anthropic/OpenAI)
+    inherit this and must explicitly opt-in."""
+
+    class _Stub(LLMBackend):
+        name = "stub"
+
+        def generate(self, request: GenerateRequest) -> Any:
+            from llive.llm import GenerateResponse
+
+            return GenerateResponse(text="", backend=self.name)
+
+    assert _Stub().supports_prefix_embeddings is False
+
+
+# ---------------------------------------------------------------------------
+# HFTransformersBackend — Stage 1 inputs_embeds injection path
+# (heavy deps; tests use sys.modules monkeypatching to stay hermetic)
+# ---------------------------------------------------------------------------
+
+
+def _install_fake_transformers_torch(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    hidden_size: int = 4,
+) -> dict[str, Any]:
+    """Install mocked transformers + torch in sys.modules.
+
+    Returns a dict with handles to the mocks so tests can wire behaviour.
+    The mocked model exposes ``get_input_embeddings().embedding_dim`` and is
+    callable like the real ``nn.Embedding`` layer.
+    """
+    import sys
+
+    fake_torch = mock.MagicMock()
+    fake_torch.float32 = "float32_dtype"
+
+    # Embedding layer: callable + has embedding_dim attribute.
+    embed_layer = mock.MagicMock()
+    embed_layer.embedding_dim = hidden_size
+    embed_layer.return_value = "prompt_embeds_tensor"
+
+    fake_model = mock.MagicMock()
+    fake_model.get_input_embeddings.return_value = embed_layer
+    # .to(device) returns self for chaining; .eval() too.
+    fake_model.to.return_value = fake_model
+    fake_model.eval.return_value = None
+
+    fake_tokenizer = mock.MagicMock()
+    fake_tokenizer.eos_token_id = 0
+
+    fake_transformers = mock.MagicMock()
+    fake_transformers.AutoTokenizer.from_pretrained.return_value = fake_tokenizer
+    fake_transformers.AutoModelForCausalLM.from_pretrained.return_value = fake_model
+
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "transformers", fake_transformers)
+    return {
+        "torch": fake_torch,
+        "transformers": fake_transformers,
+        "model": fake_model,
+        "tokenizer": fake_tokenizer,
+        "embed_layer": embed_layer,
+    }
+
+
+def test_hf_backend_raises_when_deps_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without transformers/torch installed → explicit ModuleNotFoundError."""
+    import sys
+
+    # Ensure clean — neither module pre-loaded
+    monkeypatch.setitem(sys.modules, "transformers", None)
+    from llive.llm import HFTransformersBackend
+
+    with pytest.raises(ModuleNotFoundError, match="transformers torch"):
+        HFTransformersBackend()
+
+
+def test_hf_backend_supports_prefix_embeddings_flag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """HFTransformersBackend.supports_prefix_embeddings is True (Stage 1 entry)."""
+    _install_fake_transformers_torch(monkeypatch)
+    from llive.llm import HFTransformersBackend
+
+    assert HFTransformersBackend().supports_prefix_embeddings is True
+
+
+def test_resolve_backend_dispatches_hf_alias(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both 'hf' and 'huggingface' names resolve to HFTransformersBackend."""
+    _install_fake_transformers_torch(monkeypatch)
+    from llive.llm import HFTransformersBackend
+
+    assert isinstance(resolve_backend("hf"), HFTransformersBackend)
+    assert isinstance(resolve_backend("huggingface"), HFTransformersBackend)
+
+
+def test_hf_backend_model_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    """LLIVE_HF_MODEL env overrides DEFAULT_MODEL when no explicit arg."""
+    _install_fake_transformers_torch(monkeypatch)
+    monkeypatch.setenv("LLIVE_HF_MODEL", "meta-llama/Llama-3.2-1B")
+    from llive.llm import HFTransformersBackend
+
+    assert HFTransformersBackend().model_name == "meta-llama/Llama-3.2-1B"
+
+
+def test_hf_backend_rejects_dim_mismatch(monkeypatch: pytest.MonkeyPatch) -> None:
+    """prefix vector dim must match model hidden_size — else fail-closed.
+
+    Per CLAUDE.md MCP rules: input is validated each time it crosses a trust
+    boundary. A silently misinterpreted embedding would yield garbage output,
+    so we reject loudly instead.
+    """
+    handles = _install_fake_transformers_torch(monkeypatch, hidden_size=8)
+    fake_torch = handles["torch"]
+
+    # torch.as_tensor returns an object with .ndim / .shape / .unsqueeze
+    fake_tensor = mock.MagicMock()
+    fake_tensor.ndim = 1
+    fake_tensor.shape = (4,)  # mismatch — model hidden_size=8
+    fake_torch.as_tensor.return_value = fake_tensor
+
+    from llive.llm import HFTransformersBackend
+
+    backend = HFTransformersBackend()
+    with pytest.raises(ValueError, match="dim=4.*hidden_size=8"):
+        backend._build_inputs_embeds(
+            prompt="hello", prefix_embeddings=[("bad", [0.1, 0.2, 0.3, 0.4])]
+        )

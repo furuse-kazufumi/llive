@@ -97,6 +97,8 @@ class BayesianSurpriseGate:
         self,
         new_embedding: np.ndarray,
         memory_embeddings: np.ndarray | None,
+        *,
+        assume_normalized: bool = False,
     ) -> float:
         """Compute raw surprise (`1 - max cosine`).
 
@@ -104,6 +106,10 @@ class BayesianSurpriseGate:
         the cosine kernel runs in Rust under ``py.allow_threads``; otherwise
         falls back to the original numpy path. Both backends return
         bit-equivalent results to within 1e-6 (RUST-13 parity).
+
+        ``assume_normalized=True`` を渡すと numpy fallback path で memory 側の
+        再 normalize を skip (B-9-a). Rust path は常に正規化済を前提とした
+        ipdot 計算なので影響なし.
         """
         if memory_embeddings is None or memory_embeddings.size == 0:
             return 1.0
@@ -115,7 +121,10 @@ class BayesianSurpriseGate:
             mem_lists = [row.tolist() for row in mem_2d]
             return rust_ext.compute_surprise(new_flat, mem_lists)
         new = _l2_normalize(np.atleast_2d(new_embedding))
-        mem = _l2_normalize(np.atleast_2d(memory_embeddings))
+        if assume_normalized:
+            mem = np.atleast_2d(memory_embeddings)
+        else:
+            mem = _l2_normalize(np.atleast_2d(memory_embeddings))
         sims = (new @ mem.T).flatten()
         max_sim = float(sims.max()) if sims.size else -1.0
         return float(max(0.0, min(1.0, 1.0 - max_sim)))

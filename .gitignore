@@ -47,3 +47,7 @@ bench/_runs/
 # RAD コーパス (knowledge base, large, regenerable via scripts/import_rad.py)
 data/rad/
 !data/rad/README.md
+
+# Rust build artifacts (regenerable via maturin develop)
+crates/*/target/
+rust_ext/target/

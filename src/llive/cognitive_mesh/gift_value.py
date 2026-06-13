@@ -19,6 +19,7 @@ aggregate は重み付き平均、既定閾値 0.6。
 from __future__ import annotations
 
 import hashlib
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -73,7 +74,9 @@ class GiftValueEstimator:
         self.threshold = threshold
         self.weights = weights or DEFAULT_WEIGHTS
         self.cooldown = cooldown
-        self._history: list[_UtteranceHistoryEntry] = []
+        # B-9-b sliding-window deque: 古い entry を commit 時に popleft で
+        # 自動 evict し、_compute_novelty の走査範囲を cooldown 内に抑える.
+        self._history: deque[_UtteranceHistoryEntry] = deque()
 
     def estimate(
         self,
@@ -103,9 +106,15 @@ class GiftValueEstimator:
         )
 
     def commit(self, utterance: str, now: datetime | None = None) -> None:
-        """発話を実際に行ったら履歴に記録 (次回 novelty 計算に使う)."""
+        """発話を実際に行ったら履歴に記録 (次回 novelty 計算に使う).
+
+        cooldown を 2 倍以上超過した entry は自動 evict する (sliding window).
+        """
         if now is None:
             now = datetime.now()
+        evict_threshold = self.cooldown * 2
+        while self._history and (now - self._history[0].timestamp) > evict_threshold:
+            self._history.popleft()
         self._history.append(
             _UtteranceHistoryEntry(hash=self._hash(utterance), timestamp=now)
         )

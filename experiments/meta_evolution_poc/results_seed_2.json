@@ -1,0 +1,276 @@
+{
+  "seed": 2,
+  "n_generations": 50,
+  "use_counts": {
+    "tournament_gauss": 27,
+    "nsga2_novelty": 14,
+    "map_elites_niche": 9
+  },
+  "mean_deltas": {
+    "tournament_gauss": 0.707543356885744,
+    "nsga2_novelty": 0.39900373946175033,
+    "map_elites_niche": 0.08971712754886556
+  },
+  "final_scores": {
+    "tournament_gauss": 1.4623285295840662,
+    "nsga2_novelty": 1.466728159511855,
+    "map_elites_niche": 1.4083061049415169
+  },
+  "history": [
+    {
+      "gen": 0,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.07386257792596264
+    },
+    {
+      "gen": 1,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6793468228304053
+    },
+    {
+      "gen": 2,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.27792663086800723
+    },
+    {
+      "gen": 3,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.789985369136045
+    },
+    {
+      "gen": 4,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.45720829360186144
+    },
+    {
+      "gen": 5,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.08372885815660878
+    },
+    {
+      "gen": 6,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.738690329336383
+    },
+    {
+      "gen": 7,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7140605334898824
+    },
+    {
+      "gen": 8,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.3723088581787974
+    },
+    {
+      "gen": 9,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7488783725563017
+    },
+    {
+      "gen": 10,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.08447217266704238
+    },
+    {
+      "gen": 11,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.3835588047971019
+    },
+    {
+      "gen": 12,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6603926622320551
+    },
+    {
+      "gen": 13,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7227479035620428
+    },
+    {
+      "gen": 14,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.3950400974141306
+    },
+    {
+      "gen": 15,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.1272644356982341
+    },
+    {
+      "gen": 16,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.669640715006468
+    },
+    {
+      "gen": 17,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7063413923555935
+    },
+    {
+      "gen": 18,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.3553862978285105
+    },
+    {
+      "gen": 19,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7420732486185071
+    },
+    {
+      "gen": 20,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.1094017543490343
+    },
+    {
+      "gen": 21,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7165285504067662
+    },
+    {
+      "gen": 22,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.42052519564851315
+    },
+    {
+      "gen": 23,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6494621249923332
+    },
+    {
+      "gen": 24,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7391590498072038
+    },
+    {
+      "gen": 25,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.5028351409171185
+    },
+    {
+      "gen": 26,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.018077874838223734
+    },
+    {
+      "gen": 27,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6135294266422758
+    },
+    {
+      "gen": 28,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.324758429306784
+    },
+    {
+      "gen": 29,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7420729446726999
+    },
+    {
+      "gen": 30,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7064357828737033
+    },
+    {
+      "gen": 31,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7539171220369648
+    },
+    {
+      "gen": 32,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.436121543615375
+    },
+    {
+      "gen": 33,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7105285906187639
+    },
+    {
+      "gen": 34,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.11420190726251855
+    },
+    {
+      "gen": 35,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6915119751138432
+    },
+    {
+      "gen": 36,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.44342301056057554
+    },
+    {
+      "gen": 37,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6435142019109622
+    },
+    {
+      "gen": 38,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.3789070586910842
+    },
+    {
+      "gen": 39,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7121469426549367
+    },
+    {
+      "gen": 40,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.19007104292246665
+    },
+    {
+      "gen": 41,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.66177679421398
+    },
+    {
+      "gen": 42,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6460469770431528
+    },
+    {
+      "gen": 43,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.37183564007479813
+    },
+    {
+      "gen": 44,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7484636100569081
+    },
+    {
+      "gen": 45,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.6882497246554087
+    },
+    {
+      "gen": 46,
+      "chosen_id": "nsga2_novelty",
+      "delta": 0.4662173509618479
+    },
+    {
+      "gen": 47,
+      "chosen_id": "map_elites_niche",
+      "delta": 0.006373524119698798
+    },
+    {
+      "gen": 48,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7564261570950238
+    },
+    {
+      "gen": 49,
+      "chosen_id": "tournament_gauss",
+      "delta": 0.7517433119964769
+    }
+  ],
+  "k_proxies": {
+    "tournament_gauss": 175,
+    "nsga2_novelty": 173,
+    "map_elites_niche": 175
+  }
+}
