@@ -27,7 +27,7 @@ from __future__ import annotations
 import sympy
 from sympy import Integer, binomial, expand
 
-from llive.math import MathVerifier  # noqa: I001
+from llive.math import MathVerifier
 
 
 # ---------------------------------------------------------------------------
