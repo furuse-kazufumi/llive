@@ -29,7 +29,6 @@ from sympy import Integer, binomial, expand
 
 from llive.math import MathVerifier
 
-
 # ---------------------------------------------------------------------------
 # Helpers — generate the three polynomial forms of the Lucas U_n sequence.
 #
@@ -72,9 +71,9 @@ def _closed_form_U(n: int, *, sign: bool = True) -> sympy.Expr:
     p, q = sympy.symbols("p q")
     total = Integer(0)
     upper = (n - 1) // 2
-    for l in range(upper + 1):
-        coeff = (-1) ** l if sign else 1
-        total += coeff * binomial(n - 1 - l, l) * p ** (n - 1 - 2 * l) * q**l
+    for k in range(upper + 1):
+        coeff = (-1) ** k if sign else 1
+        total += coeff * binomial(n - 1 - k, k) * p ** (n - 1 - 2 * k) * q**k
     return expand(total)
 
 
