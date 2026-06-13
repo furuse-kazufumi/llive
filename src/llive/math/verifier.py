@@ -243,6 +243,22 @@ class MathVerifier:
             r = _sympy_parse(rhs)
             diff = sympy.simplify(l - r)
             equivalent = diff == 0
+            if not equivalent:
+                # Additive trig-normalisation fallback. The primary
+                # ``simplify`` does not rewrite quotients like
+                # ``sin(n*theta)/sin(theta)`` into their Chebyshev-polynomial
+                # form, so genuinely equal trig identities are reported as
+                # not_equivalent (a general false-negative bug, not tied to any
+                # one domain). When — and only when — the primary path failed,
+                # re-normalise with ``expand_trig`` and, if still non-zero, the
+                # complex-exponential rewrite, then re-simplify. This never
+                # changes a verdict that already came out equivalent (it runs
+                # only on the not_equivalent branch) and a non-equivalent
+                # expression still simplifies to a non-zero residue, so no false
+                # positive is introduced. See test_galapago_reformulation.
+                if _trig_normalised_zero(l - r):
+                    equivalent = True
+                    diff = sympy.Integer(0)
             verdict = "equivalent" if equivalent else "not_equivalent"
             rationale = (
                 f"sympy.simplify({lhs} - {rhs}) -> {diff}"
